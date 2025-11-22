@@ -1,0 +1,56 @@
+# Modular Affiliate Marketing System Blueprint
+
+A modular affiliate marketing system works like LEGO pieces: niches, offers, templates, funnels, and themes can all be swapped in or out without rebuilding anything from scratch.
+
+## Overview
+This architecture gives you:
+- Swappable niches
+- Swappable funnels
+- Swappable affiliate offers
+- AI-generated content
+- Multi-niche support
+- A drag-and-drop builder
+- Automated email reporting
+
+Recommended stack:
+- Next.js 14 frontend
+- Supabase (database + auth + storage)
+- Tailwind + shadcn/ui
+- Background workers (Supabase Edge Functions or Node + BullMQ)
+- Vercel for deployment
+
+## High-Level Architecture
+1. Core API
+2. Module Loader
+3. Frontend Shell
+4. Funnel Builder
+5. Funnel Renderer
+6. Affiliate Manager
+7. Automation Engine
+
+## Database Schema
+users, niches, offers, funnels, pages, clicks, conversions, templates, theme_presets
+
+## Module Contract
+{ module_id, name, version, routes, templates, assets, permissions }
+
+## Folder Structure
+repo/apps/web, admin, renderer; packages/ui, sdk, modules; infra; scripts
+
+## API Endpoints
+Auth, Modules, Funnels, Clicks & Tracking, AI Generation
+
+## Funnel Builder Workflow
+JSON-based schema for blocks.
+
+## Tracking Logic
+Redirect logging, attribution cookies.
+
+## AI & Automation Layer
+Generations, reports, triggers.
+
+## Deployment
+Vercel, Supabase, GitHub Actions.
+
+## Roadmap
+Sprint 1-6: auth to AI.
