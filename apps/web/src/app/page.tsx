@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <main className="min-h-screen">
       {/* Hero Section */}
-      <section className="flex min-h-screen flex-col items-center justify-center p-8 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500">
+      <section className="flex min-h-screen flex-col items-center justify-center p-8 bg-gradient-to-br from-blue-600 via-purple-600 to-green-500">
         <div className="max-w-4xl w-full text-center">
           <h1 className="text-6xl md:text-7xl font-extrabold mb-6 text-white drop-shadow-2xl">
             Launchpad<span className="text-yellow-300">4</span>Success
@@ -70,7 +70,7 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-8 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center">
+      <section className="py-20 px-8 bg-gradient-to-r from-purple-600 to-green-600 text-white text-center">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-4xl md:text-5xl font-extrabold mb-6 drop-shadow-lg">
             Ready to Launch Your Success?
