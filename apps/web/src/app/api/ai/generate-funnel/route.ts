@@ -1,21 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { generateFunnelContent } from '@/lib/openai'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { niche, offer_type, target_audience } = body
+    const { niche, productName, audience } = body
 
-    // Mock funnel generation - replace with actual AI service
+    if (!niche || !productName || !audience) {
+      return NextResponse.json(
+        { error: 'Missing required fields: niche, productName, audience' },
+        { status: 400 }
+      )
+    }
+
+    const content = await generateFunnelContent({
+      niche,
+      productName,
+      audience,
+    })
+
+    // Build funnel structure with AI-generated content
     const generatedFunnel = {
-      name: `${niche} ${offer_type} Funnel`,
+      name: `${productName} - ${niche} Funnel`,
       niche_id: niche.toLowerCase().replace(/\s+/g, '-'),
       blocks: [
         {
           type: 'hero',
           content: {
-            headline: `Transform Your ${niche} Journey`,
-            subheadline: `Join thousands who have achieved their ${niche} goals`,
-            cta: 'Get Started Free',
+            headline: content.headline,
+            subheadline: content.subheadline,
+            cta: content.cta,
           },
           style: {
             bg: 'gradient-blue',
@@ -25,12 +39,8 @@ export async function POST(request: NextRequest) {
         {
           type: 'benefits',
           content: {
-            title: 'Why Choose Us',
-            items: [
-              'Proven results in ' + niche,
-              'Expert guidance and support',
-              'Money-back guarantee',
-            ],
+            title: 'Why Choose This Offer',
+            items: content.benefits,
           },
           style: {
             bg: 'white',
@@ -41,7 +51,7 @@ export async function POST(request: NextRequest) {
           type: 'cta',
           content: {
             headline: 'Ready to Get Started?',
-            button_text: 'Claim Your Offer',
+            button_text: content.cta,
           },
           style: {
             bg: 'primary',
@@ -51,10 +61,11 @@ export async function POST(request: NextRequest) {
       ],
     }
 
-    return NextResponse.json({ funnel: generatedFunnel }, { status: 200 })
-  } catch (error) {
+    return NextResponse.json({ funnel: generatedFunnel, content }, { status: 200 })
+  } catch (error: any) {
+    console.error('AI funnel generation error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error.message || 'Failed to generate funnel' },
       { status: 500 }
     )
   }

@@ -1,43 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { generateContent, GenerateContentParams } from '@/lib/openai'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { type, context, niche } = body
-
-    // Placeholder for AI integration (OpenAI, Anthropic, etc.)
-    // In production, integrate with your preferred AI service
-    
-    const generatedContent = {
-      type,
-      content: generateMockContent(type, context, niche),
-      generated_at: new Date().toISOString(),
+    const params: GenerateContentParams = {
+      type: body.type,
+      niche: body.niche,
+      productName: body.productName,
+      audience: body.audience,
+      tone: body.tone,
+      context: body.context,
     }
 
-    return NextResponse.json({ content: generatedContent }, { status: 200 })
-  } catch (error) {
+    const content = await generateContent(params)
+
+    return NextResponse.json({ content }, { status: 200 })
+  } catch (error: any) {
+    console.error('AI generation error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error.message || 'Failed to generate content' },
       { status: 500 }
     )
-  }
-}
-
-function generateMockContent(type: string, context: any, niche: string) {
-  // Mock content generation - replace with actual AI integration
-  switch (type) {
-    case 'headline':
-      return `Transform Your ${niche} Journey Today`
-    case 'body':
-      return `Discover how our proven ${niche} system can help you achieve your goals faster than ever before.`
-    case 'cta':
-      return 'Get Started Now'
-    case 'email':
-      return {
-        subject: `Your ${niche} Success Starts Here`,
-        body: `Hi there!\n\nWe're excited to help you on your ${niche} journey...`,
-      }
-    default:
-      return 'Generated content'
   }
 }
