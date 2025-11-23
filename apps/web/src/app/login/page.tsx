@@ -28,14 +28,17 @@ export default function Login() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Login failed')
+        // Show specific error message from API
+        setError(data.error || 'Login failed. Please check your credentials.')
+        setLoading(false)
+        return
       }
 
       // Success - redirect to dashboard
       router.push('/dashboard')
     } catch (err: any) {
-      setError(err.message || 'Invalid email or password')
-    } finally {
+      console.error('Login error:', err)
+      setError(err.message || 'An unexpected error occurred. Please try again.')
       setLoading(false)
     }
   }
@@ -98,9 +101,15 @@ export default function Login() {
           <p className="text-center text-sm text-gray-600 mt-6">
             Don't have an account?{' '}
             <Link href="/signup" className="text-blue-600 font-semibold hover:underline">
-              Sign up
+              Sign up free
             </Link>
           </p>
+
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>First time here?</strong> Create an account first by clicking "Sign up free" above.
+            </p>
+          </div>
         </div>
       </div>
     </main>
