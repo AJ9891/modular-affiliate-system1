@@ -1,14 +1,14 @@
 # Keep only blueprint files, ignore everything else temporarily
-# Old React/Vite demo files
-AffiliateLaunchpad.jsx
-App.jsx
-index.css
-index.html
-main.jsx
-package.json
-postcss.config.js
-tailwind.config.js
-vite.config.js
+# Files moved to separate Affiliate-launchpad repository
+# AffiliateLaunchpad.jsx
+# App.jsx
+# index.css
+# index.html
+# main.jsx
+# package.json
+# postcss.config.js
+# tailwind.config.js
+# vite.config.js
 
 # Node modules and dependencies
 node_modules/
