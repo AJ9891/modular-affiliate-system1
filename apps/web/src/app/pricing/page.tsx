@@ -41,7 +41,7 @@ export default function Pricing() {
               </li>
             </ul>
             <Link
-              href="/signup"
+              href="/checkout?plan=starter"
               className="block text-center px-6 py-3 bg-gray-900 text-white font-bold rounded-lg hover:bg-gray-800 transition-colors"
             >
               Get Started
@@ -80,7 +80,7 @@ export default function Pricing() {
               </li>
             </ul>
             <Link
-              href="/signup"
+              href="/checkout?plan=pro"
               className="block text-center px-6 py-3 bg-yellow-400 text-gray-900 font-bold rounded-lg hover:bg-yellow-300 transition-colors"
             >
               Start Free Trial
@@ -116,7 +116,7 @@ export default function Pricing() {
               </li>
             </ul>
             <Link
-              href="/signup"
+              href="/checkout?plan=agency"
               className="block text-center px-6 py-3 bg-gradient-to-r from-blue-600 to-green-600 text-white font-bold rounded-lg hover:shadow-xl transition-all"
             >
               Contact Sales

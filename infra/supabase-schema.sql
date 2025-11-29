@@ -99,6 +99,45 @@ create table if not exists public.theme_presets (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- Leads (captured from funnels)
+create table if not exists public.leads (
+  id uuid default gen_random_uuid() primary key,
+  email text not null,
+  name text,
+  funnel_id uuid references public.funnels(funnel_id),
+  source text,
+  custom_fields jsonb,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Email Automations
+create table if not exists public.automations (
+  id uuid default gen_random_uuid() primary key,
+  sendshark_id text unique not null,
+  name text not null,
+  trigger text not null check (trigger in ('signup', 'purchase', 'abandoned_cart', 'funnel_entry', 'custom')),
+  config jsonb not null,
+  active boolean default true,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Email Campaigns
+create table if not exists public.email_campaigns (
+  id uuid default gen_random_uuid() primary key,
+  sendshark_id text unique not null,
+  user_id uuid references public.users(id),
+  name text not null,
+  subject text not null,
+  status text not null check (status in ('draft', 'scheduled', 'sending', 'sent', 'paused')),
+  scheduled_at timestamp with time zone,
+  sent_at timestamp with time zone,
+  stats jsonb,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
 -- Enable Row Level Security
 alter table public.users enable row level security;
 alter table public.niches enable row level security;
@@ -109,6 +148,9 @@ alter table public.clicks enable row level security;
 alter table public.conversions enable row level security;
 alter table public.templates enable row level security;
 alter table public.theme_presets enable row level security;
+alter table public.leads enable row level security;
+alter table public.automations enable row level security;
+alter table public.email_campaigns enable row level security;
 
 -- Create policies (basic examples - customize as needed)
 create policy "Users can view their own data" on public.users
@@ -131,3 +173,8 @@ create index idx_conversions_click_id on public.conversions(click_id);
 create index idx_conversions_converted_at on public.conversions(converted_at);
 create index idx_funnels_user_id on public.funnels(user_id);
 create index idx_funnels_niche_id on public.funnels(niche_id);
+create index idx_leads_email on public.leads(email);
+create index idx_leads_funnel_id on public.leads(funnel_id);
+create index idx_leads_created_at on public.leads(created_at);
+create index idx_email_campaigns_user_id on public.email_campaigns(user_id);
+create index idx_email_campaigns_status on public.email_campaigns(status);

@@ -22,6 +22,9 @@ export async function GET(request: NextRequest) {
       case '30d':
         startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
         break
+      case '90d':
+        startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+        break
       default:
         startDate = new Date('2020-01-01') // All time
     }
@@ -32,7 +35,7 @@ export async function GET(request: NextRequest) {
       .select('*')
       .gte('clicked_at', startDate.toISOString())
 
-    if (funnelId) {
+    if (funnelId && funnelId !== 'all') {
       clicksQuery = clicksQuery.eq('funnel_id', funnelId)
     }
 
@@ -44,20 +47,48 @@ export async function GET(request: NextRequest) {
     }
 
     // Get all conversions
-    const { data: conversions, error: conversionsError } = await supabase!
+    let conversionsQuery = supabase!
       .from('conversions')
       .select('*')
       .gte('converted_at', startDate.toISOString())
+
+    if (funnelId && funnelId !== 'all') {
+      // Get click IDs from this funnel
+      const funnelClickIds = clicks?.map(c => c.click_id) || []
+      if (funnelClickIds.length > 0) {
+        conversionsQuery = conversionsQuery.in('click_id', funnelClickIds)
+      }
+    }
+
+    const { data: conversions, error: conversionsError } = await conversionsQuery
 
     if (conversionsError) {
       return NextResponse.json({ error: conversionsError.message }, { status: 400 })
     }
 
+    // Get leads data
+    let leadsQuery = supabase!
+      .from('leads')
+      .select('*')
+      .gte('created_at', startDate.toISOString())
+
+    if (funnelId && funnelId !== 'all') {
+      leadsQuery = leadsQuery.eq('funnel_id', funnelId)
+    }
+
+    const { data: leads } = await leadsQuery
+
     // Calculate total stats
     const totalClicks = clicks?.length || 0
     const totalConversions = conversions?.length || 0
-    const conversionRate = totalClicks > 0 ? (totalConversions / totalClicks) * 100 : 0
+    const totalLeads = leads?.length || 0
+    const conversionRate = totalClicks > 0 ? (totalConversions / totalClicks) : 0
     const totalRevenue = conversions?.reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0) || 0
+    const avgRevenuePerLead = totalLeads > 0 ? totalRevenue / totalLeads : 0
+
+    // Mock email stats (replace with actual Sendshark data when integrated)
+    const emailsSent = totalLeads * 3 // Assume 3 emails per lead
+    const emailOpenRate = 0.35 // 35% open rate
 
     // Group clicks by source
     const clicksBySource = clicks?.reduce((acc: any[], click) => {
@@ -102,14 +133,49 @@ export async function GET(request: NextRequest) {
         utm_campaign: click.utm_campaign,
       })) || []
 
+    // Build recent activity feed
+    const recentActivity = []
+
+    // Add recent leads
+    leads?.slice(0, 10).forEach(lead => {
+      recentActivity.push({
+        id: lead.id,
+        type: 'lead',
+        description: `New lead: ${lead.email}`,
+        timestamp: new Date(lead.created_at),
+      })
+    })
+
+    // Add recent conversions
+    conversions?.slice(0, 10).forEach(conversion => {
+      recentActivity.push({
+        id: conversion.conversion_id,
+        type: 'conversion',
+        description: `New conversion`,
+        timestamp: new Date(conversion.converted_at),
+        amount: parseFloat(conversion.amount || 0),
+      })
+    })
+
+    // Sort by timestamp
+    recentActivity.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+
     return NextResponse.json({
-      totalClicks,
-      totalConversions,
-      conversionRate,
-      totalRevenue,
+      success: true,
+      stats: {
+        totalLeads,
+        totalClicks,
+        totalConversions,
+        totalRevenue,
+        conversionRate,
+        avgRevenuePerLead,
+        emailsSent,
+        emailOpenRate,
+      },
       clicksBySource,
       clicksByOffer,
       recentClicks,
+      recentActivity: recentActivity.slice(0, 20),
     })
   } catch (error) {
     console.error('Analytics error:', error)

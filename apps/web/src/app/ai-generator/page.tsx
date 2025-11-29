@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import Link from 'next/link'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function AIGeneratorPage() {
-  const router = useRouter()
+  const { user, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)
   const [generatedContent, setGeneratedContent] = useState<string>('')
   const [contentType, setContentType] = useState<'headline' | 'subheadline' | 'cta' | 'bullet-points' | 'full-page' | 'email'>('headline')
@@ -17,15 +17,12 @@ export default function AIGeneratorPage() {
     context: '',
   })
 
-  useEffect(() => {
-    checkAuth()
-  }, [])
-
-  async function checkAuth() {
-    const res = await fetch('/api/auth/me')
-    if (!res.ok) {
-      router.push('/login')
-    }
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-green-900 flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    )
   }
 
   async function handleGenerate(e: React.FormEvent) {
@@ -89,12 +86,12 @@ export default function AIGeneratorPage() {
                   onChange={(e) => setContentType(e.target.value as any)}
                   className="w-full px-4 py-3 rounded-lg bg-white/20 text-white border border-white/30 focus:border-yellow-400 focus:outline-none"
                 >
-                  <option value="headline">Headline</option>
-                  <option value="subheadline">Subheadline</option>
-                  <option value="cta">Call-to-Action</option>
-                  <option value="bullet-points">Bullet Points</option>
-                  <option value="full-page">Full Landing Page</option>
-                  <option value="email">Email Copy</option>
+                  <option value="headline" className="bg-gray-800 text-white">Headline</option>
+                  <option value="subheadline" className="bg-gray-800 text-white">Subheadline</option>
+                  <option value="cta" className="bg-gray-800 text-white">Call-to-Action</option>
+                  <option value="bullet-points" className="bg-gray-800 text-white">Bullet Points</option>
+                  <option value="full-page" className="bg-gray-800 text-white">Full Landing Page</option>
+                  <option value="email" className="bg-gray-800 text-white">Email Copy</option>
                 </select>
               </div>
 
@@ -145,10 +142,10 @@ export default function AIGeneratorPage() {
                   onChange={(e) => setFormData({ ...formData, tone: e.target.value as any })}
                   className="w-full px-4 py-3 rounded-lg bg-white/20 text-white border border-white/30 focus:border-yellow-400 focus:outline-none"
                 >
-                  <option value="professional">Professional</option>
-                  <option value="casual">Casual</option>
-                  <option value="urgent">Urgent</option>
-                  <option value="friendly">Friendly</option>
+                  <option value="professional" className="bg-gray-800 text-white">Professional</option>
+                  <option value="casual" className="bg-gray-800 text-white">Casual</option>
+                  <option value="urgent" className="bg-gray-800 text-white">Urgent</option>
+                  <option value="friendly" className="bg-gray-800 text-white">Friendly</option>
                 </select>
               </div>
 

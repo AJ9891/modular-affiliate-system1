@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState, useEffect } from 'react'
 import { 
   Rocket, 
@@ -16,26 +18,19 @@ import {
 } from 'lucide-react'
 
 /**
- * AffiliateLaunchpad - Unified Launch Dashboard
+ * Affiliate Launchpad - Main Launch Dashboard
  * 
- * This component combines the best features from both systems:
- * - Simple, guided launch workflow
- * - Quick-start funnel templates
- * - Integrated analytics dashboard
- * - Email automation setup
+ * Combines the best features:
+ * - Guided onboarding for new users
+ * - Quick-start templates
+ * - Real-time analytics dashboard
+ * - One-click funnel creation
  * - AI-powered content generation
- * 
- * Features:
- * 1. Step-by-step onboarding
- * 2. Quick funnel builder with templates
- * 3. One-click email setup
- * 4. Real-time performance tracking
- * 5. AI content assistant
  */
-export default function AffiliateLaunchpad() {
+export default function LaunchpadPage() {
   const [currentStep, setCurrentStep] = useState(0)
   const [setupComplete, setSetupComplete] = useState(false)
-  const [userProfile, setUserProfile] = useState(null)
+  const [userProfile, setUserProfile] = useState<any>(null)
   const [stats, setStats] = useState({
     funnels: 0,
     leads: 0,
@@ -44,19 +39,16 @@ export default function AffiliateLaunchpad() {
   })
 
   useEffect(() => {
-    // Load user profile and stats
     loadUserData()
   }, [])
 
   const loadUserData = async () => {
     try {
-      // Check if user exists and has completed setup
       const response = await fetch('/api/auth/me')
       if (response.ok) {
         const data = await response.json()
         setUserProfile(data.user)
         
-        // Load stats
         const statsResponse = await fetch('/api/analytics?range=30d')
         if (statsResponse.ok) {
           const statsData = await statsResponse.json()
@@ -180,8 +172,7 @@ export default function AffiliateLaunchpad() {
     }
   ]
 
-  const handleStepComplete = async (stepId) => {
-    // Mark step as complete and move to next
+  const handleStepComplete = async (stepId: string) => {
     if (stepId === 'launch') {
       setSetupComplete(true)
       await loadUserData()
@@ -190,7 +181,7 @@ export default function AffiliateLaunchpad() {
     }
   }
 
-  const createFunnelFromTemplate = async (template) => {
+  const createFunnelFromTemplate = async (template: any) => {
     try {
       const response = await fetch('/api/funnels', {
         method: 'POST',
@@ -211,17 +202,16 @@ export default function AffiliateLaunchpad() {
   }
 
   if (setupComplete || stats.funnels > 0) {
-    // Show main dashboard for returning users
+    // Main dashboard for returning users
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="max-w-7xl mx-auto px-4 py-12">
-          {/* Header */}
           <div className="mb-12">
             <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               Welcome Back! 🚀
             </h1>
             <p className="text-xl text-gray-600">
-              Your affiliate empire is growing. Here's what's happening.
+              Your affiliate empire is growing. Here&apos;s what&apos;s happening.
             </p>
           </div>
 
@@ -264,21 +254,24 @@ export default function AffiliateLaunchpad() {
           <div className="mb-12">
             <h2 className="text-2xl font-bold mb-6">Quick Actions</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {quickActions.map((action, index) => (
-                <a
-                  key={index}
-                  href={action.href}
-                  className={`
-                    bg-gradient-to-br ${action.color} 
-                    text-white rounded-xl shadow-lg p-6 
-                    hover:shadow-2xl transition-all transform hover:-translate-y-1
-                  `}
-                >
-                  <action.icon className="mb-4" size={32} />
-                  <h3 className="font-bold text-lg mb-2">{action.title}</h3>
-                  <p className="text-sm opacity-90">{action.description}</p>
-                </a>
-              ))}
+              {quickActions.map((action, index) => {
+                const ActionIcon = action.icon
+                return (
+                  <a
+                    key={index}
+                    href={action.href}
+                    className={`
+                      bg-gradient-to-br ${action.color} 
+                      text-white rounded-xl shadow-lg p-6 
+                      hover:shadow-2xl transition-all transform hover:-translate-y-1
+                    `}
+                  >
+                    <ActionIcon className="mb-4" size={32} />
+                    <h3 className="font-bold text-lg mb-2">{action.title}</h3>
+                    <p className="text-sm opacity-90">{action.description}</p>
+                  </a>
+                )
+              })}
             </div>
           </div>
 
@@ -310,7 +303,7 @@ export default function AffiliateLaunchpad() {
     )
   }
 
-  // Show onboarding for new users
+  // Onboarding for new users
   const step = launchSteps[currentStep]
   const StepIcon = step.icon
 
