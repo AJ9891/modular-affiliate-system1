@@ -168,12 +168,43 @@ class SendsharkService {
     email: string
     name?: string
     listId?: string
+    listName?: string // NEW: Can specify list by name instead of ID
     customFields?: Record<string, any>
     tags?: string[]
   }) {
+    let finalListId = params.listId
+    
+    // If listName is provided, find or create the list
+    if (params.listName && !params.listId) {
+      try {
+        // Try to find existing list by name
+        const lists = await this.request('/lists', { method: 'GET' })
+        const existingList = lists?.data?.find((list: any) => list.name === params.listName)
+        
+        if (existingList) {
+          finalListId = existingList.id
+          console.log(`Found existing list "${params.listName}" with ID: ${finalListId}`)
+        } else {
+          // Create new list with this name
+          const newList = await this.request('/lists', {
+            method: 'POST',
+            body: JSON.stringify({ name: params.listName }),
+          })
+          finalListId = newList?.data?.id
+          console.log(`Created new list "${params.listName}" with ID: ${finalListId}`)
+        }
+      } catch (error) {
+        console.error('Error finding/creating list:', error)
+        // Continue without list if it fails
+      }
+    }
+    
     return this.request('/subscribers', {
       method: 'POST',
-      body: JSON.stringify(params),
+      body: JSON.stringify({
+        ...params,
+        listId: finalListId
+      }),
     })
   }
 

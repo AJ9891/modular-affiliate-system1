@@ -25,7 +25,27 @@ export default function Login() {
         body: JSON.stringify(formData)
       })
 
-      const data = await response.json()
+      // Check if response has content before parsing JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Invalid response type:', contentType)
+        setError('Server error: Invalid response format')
+        setLoading(false)
+        return
+      }
+
+      const text = await response.text()
+      console.log('Login response:', text)
+
+      let data
+      try {
+        data = JSON.parse(text)
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError, 'Response:', text)
+        setError('Server error: Invalid response data')
+        setLoading(false)
+        return
+      }
 
       if (!response.ok) {
         // Show specific error message from API
@@ -35,6 +55,7 @@ export default function Login() {
       }
 
       // Success - redirect to dashboard
+      console.log('Login successful, redirecting to dashboard')
       router.push('/dashboard')
     } catch (err: any) {
       console.error('Login error:', err)

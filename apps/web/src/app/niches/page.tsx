@@ -1,6 +1,36 @@
+'use client'
+
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
 export default function Niches() {
+  const router = useRouter()
+  const [activating, setActivating] = useState<string | null>(null)
+
+  const activateNiche = async (nicheId: string, nicheName: string) => {
+    setActivating(nicheId)
+    
+    try {
+      const res = await fetch('/api/modules/activate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ moduleId: nicheId, moduleName: nicheName })
+      })
+
+      if (res.ok) {
+        // Redirect to launchpad with the selected niche
+        router.push(`/launchpad?niche=${nicheId}`)
+      } else {
+        // If not authenticated, redirect to signup
+        router.push('/signup')
+      }
+    } catch (error) {
+      console.error('Error activating niche:', error)
+      router.push('/signup')
+    }
+  }
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-green-500 p-8">
       <div className="max-w-6xl mx-auto">
@@ -27,12 +57,13 @@ export default function Niches() {
               <li>• Popular affiliate programs</li>
               <li>• Proven copy examples</li>
             </ul>
-            <Link
-              href="/signup"
-              className="block text-center px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors"
+            <button
+              onClick={() => activateNiche('health', 'Health & Wellness')}
+              disabled={activating === 'health'}
+              className="w-full px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
-              Use This Niche
-            </Link>
+              {activating === 'health' ? 'Activating...' : 'Use This Niche'}
+            </button>
           </div>
           
           <div className="bg-white rounded-2xl shadow-2xl p-8 hover:scale-105 transition-transform">
@@ -46,12 +77,13 @@ export default function Niches() {
               <li>• Trust-building templates</li>
               <li>• Compliance-ready copy</li>
             </ul>
-            <Link
-              href="/signup"
-              className="block text-center px-6 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-colors"
+            <button
+              onClick={() => activateNiche('finance', 'Finance & Investing')}
+              disabled={activating === 'finance'}
+              className="w-full px-6 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
             >
-              Use This Niche
-            </Link>
+              {activating === 'finance' ? 'Activating...' : 'Use This Niche'}
+            </button>
           </div>
           
           <div className="bg-white rounded-2xl shadow-2xl p-8 hover:scale-105 transition-transform">
@@ -65,12 +97,13 @@ export default function Niches() {
               <li>• Demo-focused funnels</li>
               <li>• Feature comparison pages</li>
             </ul>
-            <Link
-              href="/signup"
-              className="block text-center px-6 py-3 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition-colors"
+            <button
+              onClick={() => activateNiche('technology', 'Technology & Software')}
+              disabled={activating === 'technology'}
+              className="w-full px-6 py-3 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
             >
-              Use This Niche
-            </Link>
+              {activating === 'technology' ? 'Activating...' : 'Use This Niche'}
+            </button>
           </div>
           
           <div className="bg-white rounded-2xl shadow-2xl p-8 hover:scale-105 transition-transform">
@@ -84,12 +117,13 @@ export default function Niches() {
               <li>• Story-driven funnels</li>
               <li>• High conversion rates</li>
             </ul>
-            <Link
-              href="/signup"
-              className="block text-center px-6 py-3 bg-pink-600 text-white font-bold rounded-lg hover:bg-pink-700 transition-colors"
+            <button
+              onClick={() => activateNiche('dating', 'Dating & Relationships')}
+              disabled={activating === 'dating'}
+              className="w-full px-6 py-3 bg-pink-600 text-white font-bold rounded-lg hover:bg-pink-700 transition-colors disabled:opacity-50"
             >
-              Use This Niche
-            </Link>
+              {activating === 'dating' ? 'Activating...' : 'Use This Niche'}
+            </button>
           </div>
           
           <div className="bg-white rounded-2xl shadow-2xl p-8 hover:scale-105 transition-transform">
@@ -103,12 +137,13 @@ export default function Niches() {
               <li>• Webinar templates</li>
               <li>• Authority-building pages</li>
             </ul>
-            <Link
-              href="/signup"
-              className="block text-center px-6 py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition-colors"
+            <button
+              onClick={() => activateNiche('education', 'Education & Courses')}
+              disabled={activating === 'education'}
+              className="w-full px-6 py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
             >
-              Use This Niche
-            </Link>
+              {activating === 'education' ? 'Activating...' : 'Use This Niche'}
+            </button>
           </div>
           
           <div className="bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-2xl shadow-2xl p-8 hover:scale-105 transition-transform">
@@ -122,12 +157,13 @@ export default function Niches() {
               <li>• Import your own offers</li>
               <li>• Unlimited flexibility</li>
             </ul>
-            <Link
-              href="/signup"
-              className="block text-center px-6 py-3 bg-yellow-400 text-gray-900 font-bold rounded-lg hover:bg-yellow-300 transition-colors"
+            <button
+              onClick={() => activateNiche('custom', 'Custom Niche')}
+              disabled={activating === 'custom'}
+              className="w-full px-6 py-3 bg-yellow-400 text-gray-900 font-bold rounded-lg hover:bg-yellow-300 transition-colors disabled:opacity-50"
             >
-              Build Custom
-            </Link>
+              {activating === 'custom' ? 'Activating...' : 'Build Custom'}
+            </button>
           </div>
         </div>
       </div>

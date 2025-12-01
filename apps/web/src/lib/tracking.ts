@@ -113,16 +113,22 @@ export function buildAffiliateLink(
     campaign?: string
   }
 ): string {
-  const url = new URL(baseUrl)
-  
-  // Add tracking parameters
-  url.searchParams.set('aff_offer', offerId)
-  if (options?.funnelId) url.searchParams.set('aff_funnel', options.funnelId)
-  if (options?.source) url.searchParams.set('utm_source', options.source)
-  if (options?.medium) url.searchParams.set('utm_medium', options.medium)
-  if (options?.campaign) url.searchParams.set('utm_campaign', options.campaign)
-  
-  return url.toString()
+  try {
+    const url = new URL(baseUrl)
+    
+    // Add tracking parameters
+    url.searchParams.set('aff_offer', offerId)
+    if (options?.funnelId) url.searchParams.set('aff_funnel', options.funnelId)
+    if (options?.source) url.searchParams.set('utm_source', options.source)
+    if (options?.medium) url.searchParams.set('utm_medium', options.medium)
+    if (options?.campaign) url.searchParams.set('utm_campaign', options.campaign)
+    
+    return url.toString()
+  } catch (error) {
+    console.error('Invalid URL provided to buildAffiliateLink:', baseUrl, error)
+    // If URL is invalid, return the base URL as-is
+    return baseUrl
+  }
 }
 
 /**

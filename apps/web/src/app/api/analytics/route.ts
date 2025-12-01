@@ -134,7 +134,7 @@ export async function GET(request: NextRequest) {
       })) || []
 
     // Build recent activity feed
-    const recentActivity = []
+    const recentActivity: any[] = []
 
     // Add recent leads
     leads?.slice(0, 10).forEach(lead => {

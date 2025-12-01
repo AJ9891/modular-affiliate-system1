@@ -19,6 +19,8 @@ export default function OffersPage() {
   const [offers, setOffers] = useState<Offer[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [copiedType, setCopiedType] = useState<'tracking' | 'affiliate' | null>(null)
   const [newOffer, setNewOffer] = useState({
     name: '',
     description: '',
@@ -57,18 +59,24 @@ export default function OffersPage() {
     e.preventDefault()
     
     try {
+      console.log('Submitting offer:', newOffer)
+      
       const res = await fetch('/api/offers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newOffer),
       })
 
+      const data = await res.json()
+      console.log('Response:', data)
+
       if (res.ok) {
         setShowAddForm(false)
         setNewOffer({ name: '', description: '', affiliate_link: '', commission_rate: 0 })
         loadOffers()
       } else {
-        alert('Failed to add offer')
+        console.error('Failed to add offer:', data)
+        alert(`Failed to add offer: ${data.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Error adding offer:', error)
@@ -95,16 +103,38 @@ export default function OffersPage() {
   function copyTrackingLink(offerId: string) {
     const trackingLink = `${window.location.origin}/api/redirect/${offerId}`
     navigator.clipboard.writeText(trackingLink)
-    alert('Tracking link copied to clipboard!')
+    setCopiedId(offerId)
+    setCopiedType('tracking')
+    setTimeout(() => {
+      setCopiedId(null)
+      setCopiedType(null)
+    }, 2000)
   }
 
   function copyAffiliateLink(baseUrl: string, offerId: string) {
-    const link = buildAffiliateLink(baseUrl, offerId, {
-      source: 'launchpad',
-      medium: 'website',
-    })
-    navigator.clipboard.writeText(link)
-    alert('Affiliate link copied to clipboard!')
+    try {
+      const link = buildAffiliateLink(baseUrl, offerId, {
+        source: 'launchpad',
+        medium: 'website',
+      })
+      navigator.clipboard.writeText(link)
+      setCopiedId(offerId)
+      setCopiedType('affiliate')
+      setTimeout(() => {
+        setCopiedId(null)
+        setCopiedType(null)
+      }, 2000)
+    } catch (error) {
+      console.error('Error building affiliate link:', error)
+      // Fallback: just copy the base URL
+      navigator.clipboard.writeText(baseUrl)
+      setCopiedId(offerId)
+      setCopiedType('affiliate')
+      setTimeout(() => {
+        setCopiedId(null)
+        setCopiedType(null)
+      }, 2000)
+    }
   }
 
   if (loading) {
@@ -233,9 +263,13 @@ export default function OffersPage() {
                       </code>
                       <button
                         onClick={() => copyTrackingLink(offer.id)}
-                        className="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded font-semibold transition"
+                        className={`px-4 py-2 rounded font-semibold transition ${
+                          copiedId === offer.id && copiedType === 'tracking'
+                            ? 'bg-green-500 text-white'
+                            : 'bg-yellow-400 hover:bg-yellow-500 text-gray-900'
+                        }`}
                       >
-                        Copy
+                        {copiedId === offer.id && copiedType === 'tracking' ? 'Copied!' : 'Copy'}
                       </button>
                     </div>
                   </div>
@@ -248,9 +282,13 @@ export default function OffersPage() {
                       </code>
                       <button
                         onClick={() => copyAffiliateLink(offer.affiliate_link, offer.id)}
-                        className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded font-semibold transition"
+                        className={`px-4 py-2 rounded font-semibold transition ${
+                          copiedId === offer.id && copiedType === 'affiliate'
+                            ? 'bg-green-500 text-white'
+                            : 'bg-white/20 hover:bg-white/30 text-white'
+                        }`}
                       >
-                        Copy
+                        {copiedId === offer.id && copiedType === 'affiliate' ? 'Copied!' : 'Copy'}
                       </button>
                     </div>
                   </div>

@@ -11,9 +11,13 @@ export default function Pricing() {
         <h1 className="text-5xl font-bold text-white text-center mb-4">
           Simple, Transparent Pricing
         </h1>
-        <p className="text-xl text-white text-center mb-12 opacity-90">
+        <p className="text-xl text-white text-center mb-4 opacity-90">
           Choose the plan that fits your goals
         </p>
+        <div className="bg-orange-500 text-white text-center py-4 px-6 rounded-xl mb-12 max-w-3xl mx-auto border-4 border-white/30">
+          <p className="text-2xl font-bold mb-1">🦈 Sendshark Email Automation INCLUDED!</p>
+          <p className="text-lg">All plans include Sendshark at no extra cost - $97/mo value FREE! 🎉</p>
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Starter Plan */}
@@ -38,6 +42,10 @@ export default function Pricing() {
               <li className="flex items-start">
                 <span className="text-green-600 mr-2">✓</span>
                 <span>Email Support</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-orange-600 mr-2 text-xl">🦈</span>
+                <span className="font-bold">Sendshark Email Automation</span>
               </li>
             </ul>
             <Link
@@ -77,6 +85,10 @@ export default function Pricing() {
               <li className="flex items-start">
                 <span className="text-yellow-300 mr-2">✓</span>
                 <span>Priority Support</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-yellow-300 mr-2 text-xl">🦈</span>
+                <span className="font-bold">Sendshark Email Automation</span>
               </li>
             </ul>
             <Link

@@ -1,13 +1,21 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
 export default function CheckoutPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<'starter' | 'pro' | 'agency'>('pro')
+
+  useEffect(() => {
+    const plan = searchParams.get('plan') as 'starter' | 'pro' | 'agency'
+    if (plan && ['starter', 'pro', 'agency'].includes(plan)) {
+      setSelectedPlan(plan)
+    }
+  }, [searchParams])
 
   const plans = {
     starter: {

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Plus, Trash2, GripVertical, Eye, Code, Save } from 'lucide-react'
 
 interface BlockConfig {
@@ -13,12 +13,28 @@ interface BlockConfig {
 interface FunnelConfig {
   id?: string
   name: string
+  niche?: string
   blocks: BlockConfig[]
   theme: {
     primaryColor: string
     secondaryColor: string
     fontFamily: string
   }
+}
+
+interface EnhancedFunnelBuilderProps {
+  initialNiche?: string
+  funnelId?: string | null
+}
+
+const nicheData: Record<string, { name: string; emoji: string; color: string }> = {
+  health: { name: 'Health & Wellness', emoji: '💪', color: 'blue' },
+  finance: { name: 'Finance & Investing', emoji: '💰', color: 'green' },
+  technology: { name: 'Technology & Software', emoji: '💻', color: 'purple' },
+  dating: { name: 'Dating & Relationships', emoji: '❤️', color: 'pink' },
+  education: { name: 'Education & Courses', emoji: '🎓', color: 'indigo' },
+  custom: { name: 'Custom Niche', emoji: '✨', color: 'gray' },
+  general: { name: 'General', emoji: '🎯', color: 'slate' }
 }
 
 const blockTemplates: Record<string, Omit<BlockConfig, 'id'>> = {
@@ -126,9 +142,10 @@ const blockTemplates: Record<string, Omit<BlockConfig, 'id'>> = {
   }
 }
 
-export default function EnhancedFunnelBuilder() {
+export default function EnhancedFunnelBuilder({ initialNiche = 'general', funnelId }: EnhancedFunnelBuilderProps = {}) {
   const [funnel, setFunnel] = useState<FunnelConfig>({
     name: 'New Funnel',
+    niche: initialNiche,
     blocks: [],
     theme: {
       primaryColor: '#667eea',
@@ -139,6 +156,12 @@ export default function EnhancedFunnelBuilder() {
   const [selectedBlock, setSelectedBlock] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'builder' | 'preview' | 'code'>('builder')
   const [draggedBlock, setDraggedBlock] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (initialNiche) {
+      setFunnel(prev => ({ ...prev, niche: initialNiche }))
+    }
+  }, [initialNiche])
 
   const addBlock = (type: keyof typeof blockTemplates) => {
     const template = blockTemplates[type]
@@ -290,13 +313,19 @@ export default function EnhancedFunnelBuilder() {
       {/* Top Bar */}
       <div className="bg-white border-b px-6 py-4">
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex items-center gap-4">
             <input
               type="text"
               value={funnel.name}
               onChange={(e) => setFunnel(prev => ({ ...prev, name: e.target.value }))}
               className="text-2xl font-bold border-none focus:outline-none"
             />
+            {funnel.niche && nicheData[funnel.niche] && (
+              <div className={`px-4 py-2 bg-${nicheData[funnel.niche].color}-100 text-${nicheData[funnel.niche].color}-800 rounded-full text-sm font-semibold flex items-center gap-2`}>
+                <span>{nicheData[funnel.niche].emoji}</span>
+                <span>{nicheData[funnel.niche].name}</span>
+              </div>
+            )}
           </div>
           <div className="flex gap-4">
             <div className="flex gap-2 border rounded-lg p-1">

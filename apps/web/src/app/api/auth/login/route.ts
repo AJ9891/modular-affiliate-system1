@@ -7,7 +7,18 @@ export async function POST(request: NextRequest) {
   if (check) return check
   
   try {
-    const { email, password } = await request.json()
+    let body
+    try {
+      body = await request.json()
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError)
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      )
+    }
+
+    const { email, password } = body
 
     if (!email || !password) {
       return NextResponse.json(
@@ -38,10 +49,66 @@ export async function POST(request: NextRequest) {
 
     console.log('Login successful for:', email)
 
-    return NextResponse.json({ 
+    // Ensure user exists in public.users table using service role to bypass RLS
+    if (data.user && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      try {
+        const { createClient } = await import('@supabase/supabase-js')
+        const adminClient = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY,
+          {
+            auth: {
+              autoRefreshToken: false,
+              persistSession: false
+            }
+          }
+        )
+
+        const { error: upsertError } = await adminClient.from('users').upsert({
+          id: data.user.id,
+          email: data.user.email || email,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'id',
+          ignoreDuplicates: false
+        })
+        
+        if (upsertError) {
+          console.error('Failed to upsert user in public.users:', upsertError)
+        } else {
+          console.log('User ensured in public.users table')
+        }
+      } catch (err) {
+        console.error('Error upserting user:', err)
+      }
+    } else if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.warn('SUPABASE_SERVICE_ROLE_KEY not set - cannot ensure user in public.users table')
+    }
+
+    // Create a response with the session cookie
+    const response = NextResponse.json({ 
       user: data.user,
       session: data.session 
     }, { status: 200 })
+
+    // Set the session as a cookie
+    if (data.session) {
+      response.cookies.set('sb-access-token', data.session.access_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7 // 7 days
+      })
+      
+      response.cookies.set('sb-refresh-token', data.session.refresh_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7 // 7 days
+      })
+    }
+
+    return response
   } catch (error: any) {
     console.error('Login error:', error)
     return NextResponse.json(

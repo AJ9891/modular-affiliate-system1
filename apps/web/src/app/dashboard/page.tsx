@@ -98,7 +98,7 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-xl shadow-sm p-8">
+        <div className="bg-white rounded-xl shadow-sm p-8 mb-8">
           <h2 className="text-2xl font-bold mb-6">Quick Actions</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -146,6 +146,63 @@ export default function Dashboard() {
               <h3 className="text-lg font-bold mb-2 group-hover:text-blue-600">Browse Niches</h3>
               <p className="text-sm text-gray-600">Explore pre-built niche modules</p>
             </Link>
+          </div>
+        </div>
+
+        {/* Sendshark Email Automation CTA */}
+        <div className="bg-gradient-to-br from-orange-500 via-red-500 to-pink-500 rounded-xl shadow-2xl p-8 mb-8 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="text-5xl">📧</div>
+                <h2 className="text-3xl font-bold">Email Automation Included with Your Subscription!</h2>
+              </div>
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4 mb-4 border-2 border-white/40">
+                <p className="text-xl font-bold text-white mb-1">
+                  ✨ Great News! Sendshark is Already Included in Your Monthly Payment!
+                </p>
+                <p className="text-white/90">
+                  Your Launchpad4Success subscription covers Sendshark - no extra charges. Just click below to activate your account!
+                </p>
+              </div>
+              <p className="text-white/90 text-lg mb-4 max-w-3xl">
+                Automatically capture leads from your funnels and nurture them with powerful email sequences. 
+                Sendshark integrates seamlessly with Launchpad4Success to turn visitors into customers!
+              </p>
+              <ul className="space-y-2 mb-6 text-white/90">
+                <li className="flex items-center gap-2">
+                  <span className="text-2xl">✅</span>
+                  <span>Automatic lead capture from all your funnels</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-2xl">✅</span>
+                  <span>Pre-built email automation sequences</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-2xl">✅</span>
+                  <span>Professional email templates included</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-2xl">✅</span>
+                  <span>Track opens, clicks, and conversions</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-2xl">💰</span>
+                  <span className="font-bold">Already paid for with your subscription - No additional cost!</span>
+                </li>
+              </ul>
+              <a
+                href="https://sendshark.com/launch/ecfunnel?id=Abby9891"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block px-8 py-4 bg-white text-orange-600 font-bold rounded-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-xl"
+              >
+                Activate Your Sendshark Account (Included FREE) 🚀
+              </a>
+            </div>
+            <div className="hidden lg:block text-9xl ml-8">
+              🦈
+            </div>
           </div>
         </div>
 

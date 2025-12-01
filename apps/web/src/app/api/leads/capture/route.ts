@@ -25,6 +25,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Get funnel details to use funnel name as list name
+    let funnelName = 'Launchpad List'
+    if (funnelId) {
+      const { data: funnel } = await supabase
+        .from('funnels')
+        .select('name')
+        .eq('funnel_id', funnelId)
+        .single()
+      
+      if (funnel?.name) {
+        funnelName = funnel.name
+      }
+    }
+
     // Save lead to database
     const { data: lead, error: leadError } = await supabase
       .from('leads')
@@ -44,19 +58,25 @@ export async function POST(request: NextRequest) {
       throw new Error('Failed to save lead')
     }
 
-    // Add to Sendshark subscriber list
+    // Add to Sendshark with funnel name as list
     try {
+      console.log(`Adding subscriber to Sendshark list: "${funnelName}"`)
+      
       await sendshark.addSubscriber({
         email,
         name,
+        listName: funnelName, // Use funnel name as the list name!
         customFields: {
           ...customFields,
           funnelId,
+          funnelName,
           source,
           signupDate: new Date().toISOString()
         },
-        tags: [source, `funnel-${funnelId}`]
+        tags: [source || 'funnel', `funnel-${funnelId}`, funnelName]
       })
+      
+      console.log(`✅ Subscriber added to "${funnelName}" list`)
     } catch (emailError) {
       console.error('Sendshark add subscriber error:', emailError)
       // Continue even if email service fails
@@ -72,13 +92,18 @@ export async function POST(request: NextRequest) {
         .eq('active', true)
 
       if (automations && automations.length > 0) {
+        console.log(`Triggering ${automations.length} automation(s)`)
         for (const automation of automations) {
           await sendshark.triggerAutomation(automation.sendshark_id, {
             email,
             name,
+            funnelName,
             customFields
           })
         }
+        console.log('✅ Automations triggered')
+      } else {
+        console.log('No active automations found for trigger:', automationTrigger)
       }
     } catch (automationError) {
       console.error('Automation trigger error:', automationError)
@@ -88,7 +113,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ 
       success: true, 
       lead,
-      message: 'Lead captured successfully' 
+      funnelName,
+      message: `Lead captured and added to "${funnelName}" list` 
     })
   } catch (error) {
     console.error('Lead capture error:', error)

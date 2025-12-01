@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { checkSupabase } from '@/lib/check-supabase'
+import { createClient } from '@supabase/supabase-js'
 
 export async function GET() {
   const check = checkSupabase()
@@ -33,7 +34,21 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { name, description, affiliate_link, commission_rate, niche_id } = body
 
-    const { data, error } = await supabase!
+    console.log('Creating offer:', { name, description, affiliate_link, commission_rate, niche_id })
+
+    // Use service role client to bypass RLS
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
+    const { data, error } = await adminClient
       .from('offers')
       .insert({
         name,
@@ -41,18 +56,21 @@ export async function POST(request: NextRequest) {
         affiliate_link,
         commission_rate,
         niche_id,
-        is_active: true,
+        active: true,
       })
       .select()
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 })
+      console.error('Error creating offer:', error)
+      return NextResponse.json({ error: error.message, details: error }, { status: 400 })
     }
 
+    console.log('Offer created successfully:', data)
     return NextResponse.json({ offer: data[0] }, { status: 201 })
-  } catch (error) {
+  } catch (error: any) {
+    console.error('Exception creating offer:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error.message || 'Internal server error' },
       { status: 500 }
     )
   }
