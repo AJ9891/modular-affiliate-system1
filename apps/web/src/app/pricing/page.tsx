@@ -44,6 +44,10 @@ export default function Pricing() {
                 <span>Email Support</span>
               </li>
               <li className="flex items-start">
+                <span className="text-blue-600 mr-2">✓</span>
+                <span>Subdomain: yourname.launchpad4success.com</span>
+              </li>
+              <li className="flex items-start">
                 <span className="text-orange-600 mr-2 text-xl">🦈</span>
                 <span className="font-bold">Sendshark Email Automation</span>
               </li>
@@ -87,6 +91,10 @@ export default function Pricing() {
                 <span>Priority Support</span>
               </li>
               <li className="flex items-start">
+                <span className="text-yellow-300 mr-2">✓</span>
+                <span>Subdomain: yourname.launchpad4success.com</span>
+              </li>
+              <li className="flex items-start">
                 <span className="text-yellow-300 mr-2 text-xl">🦈</span>
                 <span className="font-bold">Sendshark Email Automation</span>
               </li>
@@ -121,6 +129,14 @@ export default function Pricing() {
               <li className="flex items-start">
                 <span className="text-green-600 mr-2">✓</span>
                 <span>Team Collaboration</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-green-600 mr-2">✓</span>
+                <span>API Access</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-purple-600 mr-2 font-bold">🌐</span>
+                <span className="font-bold">Custom Domain Setup Included</span>
               </li>
               <li className="flex items-start">
                 <span className="text-green-600 mr-2">✓</span>

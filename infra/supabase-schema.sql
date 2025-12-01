@@ -2,6 +2,12 @@
 create table if not exists public.users (
   id uuid references auth.users primary key,
   email text unique not null,
+  subdomain text unique,
+  custom_domain text unique,
+  sendshark_provisioned boolean default false,
+  stripe_customer_id text,
+  stripe_subscription_id text,
+  plan text check (plan in ('starter', 'pro', 'agency')),
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );

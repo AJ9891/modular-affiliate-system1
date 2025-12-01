@@ -146,6 +146,15 @@ export default function Dashboard() {
               <h3 className="text-lg font-bold mb-2 group-hover:text-blue-600">Browse Niches</h3>
               <p className="text-sm text-gray-600">Explore pre-built niche modules</p>
             </Link>
+            
+            <Link
+              href="/domains"
+              className="p-6 border-2 border-gray-200 rounded-xl hover:border-green-600 hover:shadow-lg transition-all group"
+            >
+              <div className="text-4xl mb-3">🌐</div>
+              <h3 className="text-lg font-bold mb-2 group-hover:text-green-600">Domain Settings</h3>
+              <p className="text-sm text-gray-600">Setup subdomain or custom domain</p>
+            </Link>
           </div>
         </div>
 
