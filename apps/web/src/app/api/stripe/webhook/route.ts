@@ -180,7 +180,11 @@ async function sendWelcomeEmail(email: string, listName: string) {
   try {
     // Send welcome email via Sendshark API
     await sendshark.sendEmail({
-      to: email,
+      to: { email },
+      from: {
+        email: 'support@launchpad4success.com',
+        name: 'Launchpad4Success Team'
+      },
       subject: '🎉 Welcome to Launchpad4Success + Sendshark!',
       html: `
         <h1>Welcome to Launchpad4Success!</h1>

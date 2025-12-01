@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
+export const runtime = 'edge'
+
 export default function CheckoutPage() {
   const router = useRouter()
   const searchParams = useSearchParams()

@@ -97,8 +97,10 @@ export async function POST(request: NextRequest) {
           await sendshark.triggerAutomation(automation.sendshark_id, {
             email,
             name,
-            funnelName,
-            customFields
+            customFields: {
+              ...customFields,
+              funnelName
+            }
           })
         }
         console.log('✅ Automations triggered')

@@ -3,6 +3,8 @@
 import EnhancedFunnelBuilder from '@/components/EnhancedFunnelBuilder'
 import { useSearchParams } from 'next/navigation'
 
+export const runtime = 'edge'
+
 export default function VisualBuilderPage() {
   const searchParams = useSearchParams()
   const niche = searchParams.get('niche') || 'general'
