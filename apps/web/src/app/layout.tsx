@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import "./globals.css"
 import { AuthProvider } from "@/contexts/AuthContext"
+import Sidebar from "@/components/Sidebar"
 
 export const metadata: Metadata = {
   title: "Launchpad4Success - Build High-Converting Affiliate Funnels",
@@ -16,7 +17,10 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthProvider>
-          {children}
+          <Sidebar />
+          <div className="lg:ml-64 min-h-screen">
+            {children}
+          </div>
         </AuthProvider>
       </body>
     </html>
