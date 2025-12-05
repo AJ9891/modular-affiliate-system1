@@ -11,6 +11,7 @@ const navigation = [
   { name: 'Funnel Builder', href: '/builder', icon: '🎨' },
   { name: 'Visual Builder', href: '/visual-builder', icon: '✨' },
   { name: 'AI Generator', href: '/ai-generator', icon: '🤖' },
+  { name: 'Downloads', href: '/downloads', icon: '📥' },
   { name: 'Analytics', href: '/analytics', icon: '📈' },
   { name: 'Niches', href: '/niches', icon: '🎯' },
   { name: 'Offers', href: '/offers', icon: '💰' },

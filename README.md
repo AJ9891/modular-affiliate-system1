@@ -10,6 +10,7 @@ A complete, production-ready affiliate marketing platform combining powerful fun
 - **7 Block Types** - Hero, Features, CTA, Testimonials, Pricing, FAQ, Email Capture
 - **Theme Customization** - Real-time color and font adjustments
 - **AI Content Generation** - Powered by OpenAI for headlines, copy, and full pages
+- **Lead Magnets** - Upload ebooks, PDFs, and digital downloads with email capture
 
 ### Email Marketing (Sendshark Integration)
 - **Automated Sequences** - Welcome series, abandoned cart recovery
@@ -34,6 +35,8 @@ A complete, production-ready affiliate marketing platform combining powerful fun
 
 ## 📁 Quick Links
 
+- **[Downloads Setup](./DOWNLOADS_SETUP.md)** - Set up lead magnets and file uploads
+- **[Downloads Documentation](./docs/DOWNLOADS.md)** - Complete downloads guide
 - **[Integration Summary](./INTEGRATION_SUMMARY.md)** - What's new and how to use it
 - **[Full Documentation](./docs/INTEGRATION.md)** - Complete feature guide
 - **[Sendshark Setup](./docs/SENDSHARK.md)** - Email integration instructions
@@ -85,6 +88,7 @@ Visit:
 - **Visual Builder**: http://localhost:3000/visual-builder
 - **Dashboard**: http://localhost:3000/dashboard
 - **AI Generator**: http://localhost:3000/ai-generator
+- **Downloads**: http://localhost:3000/downloads
 
 ## 🎯 Key Pages
 
@@ -94,6 +98,7 @@ Visit:
 | Dashboard | `/dashboard` | Analytics and performance metrics |
 | Visual Builder | `/visual-builder` | Drag-and-drop funnel creator |
 | Code Builder | `/builder` | JSON-based funnel editor |
+| Downloads | `/downloads` | Upload and manage lead magnets |
 | Offers | `/offers` | Manage affiliate offers |
 | Analytics | `/analytics` | Deep-dive analytics |
 | AI Generator | `/ai-generator` | AI-powered content creation |

@@ -32,20 +32,25 @@ export async function generateContent(params: GenerateContentParams): Promise<st
   const prompt = buildPrompt(params)
 
   try {
+    // Randomize temperature for more variety (0.7-1.0)
+    const temperature = 0.7 + Math.random() * 0.3
+    
     const completion = await openai.chat.completions.create({
       model: AI_MODELS.GPT35,
       messages: [
         {
           role: 'system',
-          content: 'You are an expert copywriter specializing in high-converting affiliate marketing funnels. Write compelling, persuasive copy that drives action.',
+          content: 'You are an expert copywriter specializing in high-converting affiliate marketing funnels. Write compelling, persuasive copy that drives action. Be creative and vary your approach.',
         },
         {
           role: 'user',
           content: prompt,
         },
       ],
-      temperature: 0.8,
+      temperature: temperature,
       max_tokens: 1000,
+      presence_penalty: 0.3,
+      frequency_penalty: 0.3,
     })
 
     return completion.choices[0]?.message?.content || ''
