@@ -11,16 +11,20 @@ export default function Pricing() {
         <h1 className="text-5xl font-bold text-white text-center mb-4">
           Simple, Transparent Pricing
         </h1>
-        <p className="text-xl text-white text-center mb-12 opacity-90">
+        <p className="text-xl text-white text-center mb-4 opacity-90">
           Choose the plan that fits your goals
         </p>
+        <div className="bg-orange-500 text-white text-center py-4 px-6 rounded-xl mb-12 max-w-3xl mx-auto border-4 border-white/30">
+          <p className="text-2xl font-bold mb-1">🦈 Sendshark Email Automation INCLUDED!</p>
+          <p className="text-lg">All plans include Sendshark at no extra cost - $97/mo value FREE! 🎉</p>
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Starter Plan */}
           <div className="bg-white rounded-2xl shadow-2xl p-8 hover:scale-105 transition-transform">
             <h3 className="text-2xl font-bold mb-2">Starter</h3>
             <div className="text-4xl font-bold mb-6">
-              $29<span className="text-xl text-gray-600">/mo</span>
+              $30<span className="text-xl text-gray-600">/mo</span>
             </div>
             <ul className="space-y-4 mb-8">
               <li className="flex items-start">
@@ -39,9 +43,17 @@ export default function Pricing() {
                 <span className="text-green-600 mr-2">✓</span>
                 <span>Email Support</span>
               </li>
+              <li className="flex items-start">
+                <span className="text-blue-600 mr-2">✓</span>
+                <span>Subdomain: yourname.launchpad4success.com</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-orange-600 mr-2 text-xl">🦈</span>
+                <span className="font-bold">Sendshark Email Automation</span>
+              </li>
             </ul>
             <Link
-              href="/signup"
+              href="/checkout?plan=starter"
               className="block text-center px-6 py-3 bg-gray-900 text-white font-bold rounded-lg hover:bg-gray-800 transition-colors"
             >
               Get Started
@@ -55,7 +67,7 @@ export default function Pricing() {
             </div>
             <h3 className="text-2xl font-bold mb-2">Pro</h3>
             <div className="text-4xl font-bold mb-6">
-              $79<span className="text-xl opacity-80">/mo</span>
+              $45<span className="text-xl opacity-80">/mo</span>
             </div>
             <ul className="space-y-4 mb-8">
               <li className="flex items-start">
@@ -78,12 +90,20 @@ export default function Pricing() {
                 <span className="text-yellow-300 mr-2">✓</span>
                 <span>Priority Support</span>
               </li>
+              <li className="flex items-start">
+                <span className="text-yellow-300 mr-2">✓</span>
+                <span>Subdomain: yourname.launchpad4success.com</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-yellow-300 mr-2 text-xl">🦈</span>
+                <span className="font-bold">Sendshark Email Automation</span>
+              </li>
             </ul>
             <Link
-              href="/signup"
+              href="/checkout?plan=pro"
               className="block text-center px-6 py-3 bg-yellow-400 text-gray-900 font-bold rounded-lg hover:bg-yellow-300 transition-colors"
             >
-              Start Free Trial
+              Get Started
             </Link>
           </div>
           
@@ -91,7 +111,7 @@ export default function Pricing() {
           <div className="bg-white rounded-2xl shadow-2xl p-8 hover:scale-105 transition-transform">
             <h3 className="text-2xl font-bold mb-2">Agency</h3>
             <div className="text-4xl font-bold mb-6">
-              $199<span className="text-xl text-gray-600">/mo</span>
+              $60<span className="text-xl text-gray-600">/mo</span>
             </div>
             <ul className="space-y-4 mb-8">
               <li className="flex items-start">
@@ -112,14 +132,22 @@ export default function Pricing() {
               </li>
               <li className="flex items-start">
                 <span className="text-green-600 mr-2">✓</span>
+                <span>API Access</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-purple-600 mr-2 font-bold">🌐</span>
+                <span className="font-bold">Custom Domain Setup Included</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-green-600 mr-2">✓</span>
                 <span>Dedicated Support</span>
               </li>
             </ul>
             <Link
-              href="/signup"
+              href="/checkout?plan=agency"
               className="block text-center px-6 py-3 bg-gradient-to-r from-blue-600 to-green-600 text-white font-bold rounded-lg hover:shadow-xl transition-all"
             >
-              Contact Sales
+              Get Started
             </Link>
           </div>
         </div>

@@ -1,13 +1,15 @@
 import Stripe from 'stripe'
 
 if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing STRIPE_SECRET_KEY environment variable')
+  console.warn('Warning: STRIPE_SECRET_KEY not set. Stripe features will be disabled.')
 }
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-11-20.acacia',
-  typescript: true,
-})
+export const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-11-17.clover',
+      typescript: true,
+    })
+  : null
 
 export const STRIPE_PLANS = {
   starter: {

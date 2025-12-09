@@ -7,10 +7,18 @@ export async function GET(request: NextRequest) {
   if (check) return check
   
   try {
-    const { data: { user }, error } = await supabase!.auth.getUser()
+    // Try to get the access token from cookies
+    const accessToken = request.cookies.get('sb-access-token')?.value
+    
+    if (!accessToken) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    }
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 401 })
+    // Set the session for this request
+    const { data: { user }, error } = await supabase!.auth.getUser(accessToken)
+
+    if (error || !user) {
+      return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
     }
 
     return NextResponse.json({ user }, { status: 200 })

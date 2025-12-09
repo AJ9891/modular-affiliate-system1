@@ -3,8 +3,35 @@ import Link from 'next/link'
 export default function Home() {
   return (
     <main className="min-h-screen">
+      {/* Navigation Bar */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <Link href="/" className="text-2xl font-bold text-purple-600">
+                Launchpad<span className="text-yellow-500">4</span>Success
+              </Link>
+            </div>
+            <div className="flex items-center gap-4">
+              <Link
+                href="/login"
+                className="px-4 py-2 text-gray-700 hover:text-purple-600 font-medium transition-colors"
+              >
+                Members Login
+              </Link>
+              <Link
+                href="/signup"
+                className="px-6 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-all shadow-md hover:shadow-lg"
+              >
+                Sign Up
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+
       {/* Hero Section */}
-      <section className="flex min-h-screen flex-col items-center justify-center p-8 bg-gradient-to-br from-blue-600 via-purple-600 to-green-500">
+      <section className="flex min-h-screen flex-col items-center justify-center p-8 bg-gradient-to-br from-blue-600 via-purple-600 to-green-500 pt-16">
         <div className="max-w-4xl w-full text-center">
           <h1 className="text-6xl md:text-7xl font-extrabold mb-6 text-white drop-shadow-2xl">
             Launchpad<span className="text-yellow-300">4</span>Success
