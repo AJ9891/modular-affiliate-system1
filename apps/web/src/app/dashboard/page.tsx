@@ -8,9 +8,11 @@ export default function Dashboard() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [teamData, setTeamData] = useState<any>(null)
 
   useEffect(() => {
     checkAuth()
+    loadTeamData()
   }, [])
 
   const checkAuth = async () => {
@@ -28,6 +30,18 @@ export default function Dashboard() {
       router.push('/login')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadTeamData = async () => {
+    try {
+      const response = await fetch('/api/team')
+      if (response.ok) {
+        const data = await response.json()
+        setTeamData(data)
+      }
+    } catch (error) {
+      console.error('Failed to load team data:', error)
     }
   }
 
@@ -73,6 +87,37 @@ export default function Dashboard() {
           <h1 className="text-4xl font-bold mb-2">Welcome back! 👋</h1>
           <p className="text-gray-600">Here's what's happening with your funnels</p>
         </div>
+
+        {/* Team Info Banner */}
+        {teamData && (teamData.isOwner || teamData.memberOf?.length > 0) && (
+          <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">👥</span>
+                <div>
+                  <p className="font-semibold text-purple-900">
+                    {teamData.isOwner 
+                      ? `Team: ${teamData.ownedTeam?.length || 0} member${teamData.ownedTeam?.length !== 1 ? 's' : ''}`
+                      : `You're part of ${teamData.memberOf?.length || 0} team${teamData.memberOf?.length !== 1 ? 's' : ''}`
+                    }
+                  </p>
+                  <p className="text-sm text-purple-700">
+                    {teamData.isOwner 
+                      ? 'Manage your team members and permissions'
+                      : 'Collaborate with your team on funnels'
+                    }
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/team"
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold"
+              >
+                Manage Team
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

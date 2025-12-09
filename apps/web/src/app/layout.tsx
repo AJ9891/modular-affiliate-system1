@@ -1,7 +1,9 @@
 import type { Metadata } from "next"
 import "./globals.css"
 import { AuthProvider } from "@/contexts/AuthContext"
-import Sidebar from "@/components/Sidebar"
+import ConditionalSidebar from "@/components/ConditionalSidebar"
+import ConditionalWrapper from "@/components/ConditionalWrapper"
+import AIChatWidget from "@/components/AIChatWidget"
 
 export const metadata: Metadata = {
   title: "Launchpad4Success - Build High-Converting Affiliate Funnels",
@@ -17,10 +19,11 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthProvider>
-          <Sidebar />
-          <div className="lg:ml-64 min-h-screen">
+          <ConditionalSidebar />
+          <ConditionalWrapper>
             {children}
-          </div>
+          </ConditionalWrapper>
+          <AIChatWidget />
         </AuthProvider>
       </body>
     </html>

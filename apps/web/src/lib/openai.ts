@@ -24,6 +24,50 @@ export interface GenerateContentParams {
   context?: string
 }
 
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'system'
+  content: string
+}
+
+export interface GenerateAIResponseParams {
+  systemPrompt: string
+  messages: ChatMessage[]
+  userMessage: string
+}
+
+export async function generateAIResponse(params: GenerateAIResponseParams): Promise<string> {
+  if (!openai) {
+    throw new Error('OpenAI API not configured. Please set OPENAI_API_KEY environment variable.')
+  }
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: AI_MODELS.GPT35,
+      messages: [
+        {
+          role: 'system',
+          content: params.systemPrompt
+        },
+        ...params.messages.map(msg => ({
+          role: msg.role as 'user' | 'assistant' | 'system',
+          content: msg.content
+        })),
+        {
+          role: 'user',
+          content: params.userMessage
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 500
+    })
+
+    return completion.choices[0]?.message?.content || 'I apologize, but I encountered an error generating a response. Please try again.'
+  } catch (error: any) {
+    console.error('OpenAI API Error:', error)
+    throw new Error(`Failed to generate AI response: ${error.message}`)
+  }
+}
+
 export async function generateContent(params: GenerateContentParams): Promise<string> {
   if (!openai) {
     throw new Error('OpenAI API not configured. Please set OPENAI_API_KEY environment variable.')

@@ -190,41 +190,154 @@ alter table public.downloads enable row level security;
 alter table public.download_logs enable row level security;
 
 -- Create policies (basic examples - customize as needed)
-create policy "Users can view their own data" on public.users
-  for select using (auth.uid() = id);
-
-create policy "Anyone can view active niches" on public.niches
-  for select using (active = true);
-
-create policy "Users can manage their own funnels" on public.funnels
-  for all using (auth.uid() = user_id);
-
-create policy "Anyone can view active offers" on public.offers
-  for select using (active = true);
-
-create policy "Users can manage their own downloads" on public.downloads
-  for all using (auth.uid() = user_id);
-
-create policy "Users can view download logs for their downloads" on public.download_logs
-  for select using (exists (
-    select 1 from public.downloads 
-    where downloads.id = download_logs.download_id 
-    and downloads.user_id = auth.uid()
-  ));
+do $$ 
+begin
+  if not exists (select 1 from pg_policies where tablename = 'users' and policyname = 'Users can view their own data') then
+    create policy "Users can view their own data" on public.users for select using (auth.uid() = id);
+  end if;
+  
+  if not exists (select 1 from pg_policies where tablename = 'niches' and policyname = 'Anyone can view active niches') then
+    create policy "Anyone can view active niches" on public.niches for select using (active = true);
+  end if;
+  
+  if not exists (select 1 from pg_policies where tablename = 'funnels' and policyname = 'Users can manage their own funnels') then
+    create policy "Users can manage their own funnels" on public.funnels for all using (auth.uid() = user_id);
+  end if;
+  
+  if not exists (select 1 from pg_policies where tablename = 'offers' and policyname = 'Anyone can view active offers') then
+    create policy "Anyone can view active offers" on public.offers for select using (active = true);
+  end if;
+  
+  if not exists (select 1 from pg_policies where tablename = 'downloads' and policyname = 'Users can manage their own downloads') then
+    create policy "Users can manage their own downloads" on public.downloads for all using (auth.uid() = user_id);
+  end if;
+  
+  if not exists (select 1 from pg_policies where tablename = 'download_logs' and policyname = 'Users can view download logs for their downloads') then
+    create policy "Users can view download logs for their downloads" on public.download_logs for select using (
+      exists (select 1 from public.downloads where downloads.id = download_logs.download_id and downloads.user_id = auth.uid())
+    );
+  end if;
+end $$;
 
 -- Create indexes for performance
-create index idx_clicks_funnel_id on public.clicks(funnel_id);
-create index idx_clicks_offer_id on public.clicks(offer_id);
-create index idx_clicks_clicked_at on public.clicks(clicked_at);
-create index idx_conversions_click_id on public.conversions(click_id);
-create index idx_conversions_converted_at on public.conversions(converted_at);
-create index idx_funnels_user_id on public.funnels(user_id);
-create index idx_funnels_niche_id on public.funnels(niche_id);
-create index idx_leads_email on public.leads(email);
-create index idx_leads_funnel_id on public.leads(funnel_id);
-create index idx_leads_created_at on public.leads(created_at);
-create index idx_email_campaigns_user_id on public.email_campaigns(user_id);
-create index idx_email_campaigns_status on public.email_campaigns(status);
-create index idx_downloads_user_id on public.downloads(user_id);
-create index idx_download_logs_download_id on public.download_logs(download_id);
-create index idx_download_logs_email on public.download_logs(email);
+create index if not exists idx_clicks_funnel_id on public.clicks(funnel_id);
+create index if not exists idx_clicks_offer_id on public.clicks(offer_id);
+create index if not exists idx_clicks_clicked_at on public.clicks(clicked_at);
+create index if not exists idx_conversions_click_id on public.conversions(click_id);
+create index if not exists idx_conversions_converted_at on public.conversions(converted_at);
+create index if not exists idx_funnels_user_id on public.funnels(user_id);
+create index if not exists idx_funnels_niche_id on public.funnels(niche_id);
+create index if not exists idx_leads_email on public.leads(email);
+create index if not exists idx_leads_funnel_id on public.leads(funnel_id);
+create index if not exists idx_leads_created_at on public.leads(created_at);
+create index if not exists idx_email_campaigns_user_id on public.email_campaigns(user_id);
+create index if not exists idx_email_campaigns_status on public.email_campaigns(status);
+create index if not exists idx_downloads_user_id on public.downloads(user_id);
+create index if not exists idx_download_logs_download_id on public.download_logs(download_id);
+create index if not exists idx_download_logs_email on public.download_logs(email);
+
+-- ============================================
+-- AI SUPPORT CHAT TABLES
+-- ============================================
+
+-- Chat conversations
+create table if not exists public.chat_conversations (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.users(id) on delete cascade,
+  title text,
+  status text check (status in ('active', 'resolved', 'archived')) default 'active',
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Chat messages
+create table if not exists public.chat_messages (
+  id uuid default gen_random_uuid() primary key,
+  conversation_id uuid references public.chat_conversations(id) on delete cascade not null,
+  role text check (role in ('user', 'assistant', 'system')) not null,
+  content text not null,
+  metadata jsonb,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Indexes for chat performance
+create index if not exists idx_chat_conversations_user on public.chat_conversations(user_id);
+create index if not exists idx_chat_conversations_status on public.chat_conversations(status);
+create index if not exists idx_chat_messages_conversation on public.chat_messages(conversation_id);
+create index if not exists idx_chat_messages_created on public.chat_messages(created_at);
+
+-- RLS for chat conversations
+alter table public.chat_conversations enable row level security;
+
+do $$
+begin
+  if not exists (select 1 from pg_policies where tablename = 'chat_conversations' and policyname = 'Users can view their own conversations') then
+    create policy "Users can view their own conversations" on public.chat_conversations for select using (auth.uid() = user_id);
+  end if;
+  
+  if not exists (select 1 from pg_policies where tablename = 'chat_conversations' and policyname = 'Users can create their own conversations') then
+    create policy "Users can create their own conversations" on public.chat_conversations for insert with check (auth.uid() = user_id);
+  end if;
+  
+  if not exists (select 1 from pg_policies where tablename = 'chat_conversations' and policyname = 'Users can update their own conversations') then
+    create policy "Users can update their own conversations" on public.chat_conversations for update using (auth.uid() = user_id);
+  end if;
+end $$;
+
+-- RLS for chat messages
+alter table public.chat_messages enable row level security;
+
+do $$
+begin
+  if not exists (select 1 from pg_policies where tablename = 'chat_messages' and policyname = 'Users can view messages in their conversations') then
+    create policy "Users can view messages in their conversations" on public.chat_messages for select using (
+      conversation_id in (select id from chat_conversations where user_id = auth.uid())
+    );
+  end if;
+  
+  if not exists (select 1 from pg_policies where tablename = 'chat_messages' and policyname = 'Users can create messages in their conversations') then
+    create policy "Users can create messages in their conversations" on public.chat_messages for insert with check (
+      conversation_id in (select id from chat_conversations where user_id = auth.uid())
+    );
+  end if;
+end $$;
+
+-- Function to automatically update conversation's updated_at
+create or replace function update_conversation_timestamp()
+returns trigger as $$
+begin
+  update chat_conversations 
+  set updated_at = now() 
+  where id = NEW.conversation_id;
+  return NEW;
+end;
+$$ language plpgsql;
+
+-- Trigger to update conversation timestamp on new message
+drop trigger if exists update_conversation_on_message on chat_messages;
+create trigger update_conversation_on_message
+  after insert on chat_messages
+  for each row execute function update_conversation_timestamp();
+
+-- Function to auto-generate conversation title from first message
+create or replace function generate_conversation_title()
+returns trigger as $$
+begin
+  if NEW.role = 'user' and (
+    select count(*) from chat_messages 
+    where conversation_id = NEW.conversation_id and role = 'user'
+  ) = 1 then
+    update chat_conversations
+    set title = substring(NEW.content from 1 for 50) || 
+                case when length(NEW.content) > 50 then '...' else '' end
+    where id = NEW.conversation_id and title is null;
+  end if;
+  return NEW;
+end;
+$$ language plpgsql;
+
+-- Trigger to generate title from first user message
+drop trigger if exists generate_title_on_first_message on chat_messages;
+create trigger generate_title_on_first_message
+  after insert on chat_messages
+  for each row execute function generate_conversation_title();

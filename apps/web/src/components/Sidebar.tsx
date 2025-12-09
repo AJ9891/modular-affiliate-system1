@@ -16,6 +16,7 @@ const navigation = [
   { name: 'Niches', href: '/niches', icon: '🎯' },
   { name: 'Offers', href: '/offers', icon: '💰' },
   { name: 'Domains', href: '/domains', icon: '🌐' },
+  { name: 'Team', href: '/team', icon: '👥' },
   { name: 'Pricing', href: '/pricing', icon: '💳' },
   { name: 'Features', href: '/features', icon: '⭐' },
 ]
@@ -83,6 +84,7 @@ export default function Sidebar() {
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
               className="w-full flex items-center justify-center gap-2 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
               <span>{isCollapsed ? '→' : '←'}</span>
               {!isCollapsed && <span className="text-sm">Collapse</span>}

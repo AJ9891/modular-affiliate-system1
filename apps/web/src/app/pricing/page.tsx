@@ -24,7 +24,7 @@ export default function Pricing() {
           <div className="bg-white rounded-2xl shadow-2xl p-8 hover:scale-105 transition-transform">
             <h3 className="text-2xl font-bold mb-2">Starter</h3>
             <div className="text-4xl font-bold mb-6">
-              $29<span className="text-xl text-gray-600">/mo</span>
+              $30<span className="text-xl text-gray-600">/mo</span>
             </div>
             <ul className="space-y-4 mb-8">
               <li className="flex items-start">
@@ -67,7 +67,7 @@ export default function Pricing() {
             </div>
             <h3 className="text-2xl font-bold mb-2">Pro</h3>
             <div className="text-4xl font-bold mb-6">
-              $79<span className="text-xl opacity-80">/mo</span>
+              $45<span className="text-xl opacity-80">/mo</span>
             </div>
             <ul className="space-y-4 mb-8">
               <li className="flex items-start">
@@ -103,7 +103,7 @@ export default function Pricing() {
               href="/checkout?plan=pro"
               className="block text-center px-6 py-3 bg-yellow-400 text-gray-900 font-bold rounded-lg hover:bg-yellow-300 transition-colors"
             >
-              Start Free Trial
+              Get Started
             </Link>
           </div>
           
@@ -111,7 +111,7 @@ export default function Pricing() {
           <div className="bg-white rounded-2xl shadow-2xl p-8 hover:scale-105 transition-transform">
             <h3 className="text-2xl font-bold mb-2">Agency</h3>
             <div className="text-4xl font-bold mb-6">
-              $199<span className="text-xl text-gray-600">/mo</span>
+              $60<span className="text-xl text-gray-600">/mo</span>
             </div>
             <ul className="space-y-4 mb-8">
               <li className="flex items-start">
@@ -147,7 +147,7 @@ export default function Pricing() {
               href="/checkout?plan=agency"
               className="block text-center px-6 py-3 bg-gradient-to-r from-blue-600 to-green-600 text-white font-bold rounded-lg hover:shadow-xl transition-all"
             >
-              Contact Sales
+              Get Started
             </Link>
           </div>
         </div>

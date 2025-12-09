@@ -64,15 +64,20 @@ export async function GET(
         .eq('id', id);
 
       // Also capture as a lead if email is provided
-      await supabase.from('leads').insert({
-        email: email,
-        funnel_id: funnelId || null,
-        source: 'download',
-        metadata: {
-          download_id: id,
-          download_title: download.title
-        }
-      }).then(() => {}).catch(() => {}); // Silent fail if lead already exists
+      // Silent fail if lead already exists
+      try {
+        await supabase.from('leads').insert({
+          email: email,
+          funnel_id: funnelId || null,
+          source: 'download',
+          metadata: {
+            download_id: id,
+            download_title: download.title
+          }
+        });
+      } catch {
+        // Ignore lead insertion errors (e.g., duplicate email)
+      }
     }
 
     // Redirect to the actual file
