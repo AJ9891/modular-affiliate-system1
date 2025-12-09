@@ -42,11 +42,39 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Launchpad 4 Success Brand Colors
+        brand: {
+          navy: "hsl(var(--navy))",
+          purple: "hsl(var(--purple))",
+          cyan: "hsl(var(--cyan))",
+          orange: "hsl(var(--orange))",
+          red: "hsl(var(--red))",
+          yellow: "hsl(var(--yellow))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      animation: {
+        'gradient-shift': 'gradient-shift 3s ease infinite',
+        'twinkle': 'twinkle 5s ease-in-out infinite',
+        'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
+      },
+      keyframes: {
+        'gradient-shift': {
+          '0%, 100%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+        },
+        'twinkle': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.7' },
+        },
+        'glow-pulse': {
+          '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+          '50%': { opacity: '0.8', transform: 'scale(1.05)' },
+        },
       },
     },
   },

@@ -4,48 +4,57 @@
 
 @layer base {
   :root {
+    /* Launchpad 4 Success Brand Colors */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 217 91% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 217 91% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --popover-foreground: 217 91% 10%;
+    --primary: 14 100% 57%; /* Vibrant Orange */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 263 51% 51%; /* Royal Purple */
+    --secondary-foreground: 0 0% 100%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --accent: 190 100% 50%; /* Cyan */
+    --accent-foreground: 217 91% 10%;
+    --destructive: 4 90% 58%; /* Bright Red */
+    --destructive-foreground: 0 0% 100%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+    --ring: 14 100% 57%;
+    --radius: 0.75rem;
+    
+    /* Custom brand colors */
+    --navy: 217 91% 10%;
+    --purple: 263 51% 51%;
+    --cyan: 190 100% 50%;
+    --orange: 14 100% 57%;
+    --red: 4 90% 58%;
+    --yellow: 45 100% 51%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --background: 217 91% 10%; /* Deep Navy */
+    --foreground: 0 0% 98%;
+    --card: 217 71% 15%;
+    --card-foreground: 0 0% 98%;
+    --popover: 217 71% 15%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 14 100% 57%; /* Vibrant Orange */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 263 51% 51%; /* Royal Purple */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 217 51% 20%;
+    --muted-foreground: 215 20.2% 75%;
+    --accent: 190 100% 50%; /* Cyan */
+    --accent-foreground: 217 91% 10%;
+    --destructive: 4 90% 58%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 217 51% 25%;
+    --input: 217 51% 25%;
+    --ring: 14 100% 57%;
   }
 }
 
@@ -55,6 +64,101 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
   }
 }
 
+/* Launchpad 4 Success Custom Styles */
+@layer components {
+  /* Gradient backgrounds */
+  .bg-brand-gradient {
+    background: linear-gradient(135deg, hsl(var(--navy)) 0%, hsl(var(--purple)) 50%, hsl(217 71% 20%) 100%);
+  }
+  
+  .bg-launch-gradient {
+    background: linear-gradient(135deg, hsl(var(--orange)) 0%, hsl(var(--red)) 50%, hsl(var(--yellow)) 100%);
+  }
+  
+  .bg-space-gradient {
+    background: linear-gradient(180deg, hsl(var(--navy)) 0%, hsl(217 71% 20%) 100%);
+  }
+  
+  /* Glowing effects */
+  .glow-orange {
+    box-shadow: 0 0 20px hsl(var(--orange) / 0.5), 0 0 40px hsl(var(--orange) / 0.3);
+  }
+  
+  .glow-cyan {
+    box-shadow: 0 0 20px hsl(var(--cyan) / 0.5), 0 0 40px hsl(var(--cyan) / 0.3);
+  }
+  
+  .glow-purple {
+    box-shadow: 0 0 20px hsl(var(--purple) / 0.5), 0 0 40px hsl(var(--purple) / 0.3);
+  }
+  
+  /* Animated gradient text */
+  .text-brand-gradient {
+    background: linear-gradient(90deg, hsl(var(--orange)), hsl(var(--red)), hsl(var(--yellow)));
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradient-shift 3s ease infinite;
+  }
+  
+  @keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+  
+  /* Starfield background */
+  .starfield {
+    background-image: 
+      radial-gradient(2px 2px at 20px 30px, white, transparent),
+      radial-gradient(2px 2px at 60px 70px, white, transparent),
+      radial-gradient(1px 1px at 50px 50px, white, transparent),
+      radial-gradient(1px 1px at 130px 80px, white, transparent),
+      radial-gradient(2px 2px at 90px 10px, white, transparent);
+    background-size: 200px 200px;
+    background-color: hsl(var(--navy));
+    animation: twinkle 5s ease-in-out infinite;
+  }
+  
+  @keyframes twinkle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+  
+  /* Button styles */
+  .btn-launch {
+    @apply bg-gradient-to-r from-orange-500 via-red-500 to-yellow-500;
+    @apply text-white font-bold px-6 py-3 rounded-lg;
+    @apply transition-all duration-300 transform hover:scale-105;
+    @apply shadow-lg hover:shadow-2xl;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn-launch::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s;
+  }
+  
+  .btn-launch:hover::before {
+    left: 100%;
+  }
+  
+  /* Card hover effects */
+  .card-launch {
+    @apply bg-card border border-purple-500/20 rounded-xl p-6;
+    @apply transition-all duration-300 hover:border-cyan-500/50;
+    @apply hover:shadow-lg hover:shadow-cyan-500/20;
+    @apply backdrop-blur-sm;
+  }
+}
