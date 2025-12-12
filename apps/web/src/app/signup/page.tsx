@@ -46,17 +46,17 @@ export default function Signup() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-green-500 flex items-center justify-center p-8">
+    <main className="min-h-screen bg-brand-gradient launch-pad flex items-center justify-center p-8">
       <div className="max-w-md w-full">
-        <Link href="/" className="text-white hover:underline mb-8 inline-block">
+        <Link href="/" className="text-white hover:text-brand-cyan mb-8 inline-block transition-colors">
           ← Back to Home
         </Link>
         
-        <div className="bg-white rounded-2xl shadow-2xl p-10">
-          <h1 className="text-3xl font-bold mb-2 text-center">
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-10 border-2 border-brand-purple/20">
+          <h1 className="text-3xl font-bold mb-2 text-center text-brand-navy">
             Create Your Account
           </h1>
-          <p className="text-gray-600 text-center mb-8">
+          <p className="text-brand-purple text-center mb-8">
             Start building funnels in minutes
           </p>
           
@@ -68,31 +68,31 @@ export default function Signup() {
           
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-semibold mb-2">Full Name</label>
+              <label className="block text-sm font-semibold mb-2 text-brand-purple">Full Name</label>
               <input
                 type="text"
                 placeholder="John Doe"
                 value={formData.fullName}
                 onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                 required
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-600 focus:outline-none"
+                className="w-full px-4 py-3 border-2 border-brand-purple/30 rounded-lg focus:border-brand-cyan focus:outline-none"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-semibold mb-2">Email Address</label>
+              <label className="block text-sm font-semibold mb-2 text-brand-purple">Email Address</label>
               <input
                 type="email"
                 placeholder="you@example.com"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-600 focus:outline-none"
+                className="w-full px-4 py-3 border-2 border-brand-purple/30 rounded-lg focus:border-brand-cyan focus:outline-none"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-semibold mb-2">Password</label>
+              <label className="block text-sm font-semibold mb-2 text-brand-purple">Password</label>
               <input
                 type="password"
                 placeholder="••••••••"
@@ -100,23 +100,23 @@ export default function Signup() {
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
                 minLength={6}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-600 focus:outline-none"
+                className="w-full px-4 py-3 border-2 border-brand-purple/30 rounded-lg focus:border-brand-cyan focus:outline-none"
               />
-              <p className="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+              <p className="text-xs text-brand-purple mt-1">Minimum 6 characters</p>
             </div>
             
             <button
               type="submit"
               disabled={loading}
-              className="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-green-600 text-white font-bold rounded-lg hover:shadow-xl transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full btn-launch py-4 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Creating Account...' : 'Create Account 🚀'}
+              {loading ? 'Creating Account...' : '3...2...1... LAUNCH! 🚀'}
             </button>
           </form>
           
-          <p className="text-center text-sm text-gray-600 mt-6">
+          <p className="text-center text-sm text-brand-purple mt-6">
             Already have an account?{' '}
-            <Link href="/login" className="text-blue-600 font-semibold hover:underline">
+            <Link href="/login" className="text-brand-cyan font-semibold hover:text-brand-orange transition-colors">
               Log in
             </Link>
           </p>

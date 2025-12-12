@@ -33,21 +33,22 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="flex min-h-screen flex-col items-center justify-center p-8 bg-brand-gradient starfield pt-16 relative overflow-hidden">
-        {/* Animated glow orbs */}
-        <div className="absolute top-20 left-10 w-64 h-64 bg-brand-purple/30 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-brand-orange/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      <section className="flex min-h-screen flex-col items-center justify-center p-8 bg-brand-gradient launch-pad pt-16 relative overflow-hidden">
+        {/* Rocket launch trail effects */}
+        <div className="absolute top-20 left-10 w-64 h-64 bg-brand-purple/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-brand-orange/15 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-full bg-gradient-to-t from-brand-orange/10 to-transparent opacity-30"></div>
         
         <div className="max-w-4xl w-full text-center relative z-10">
-          <h1 className="text-6xl md:text-8xl font-extrabold mb-6 text-white drop-shadow-2xl">
-            <span className="text-white">Launchpad</span>
-            <span className="text-brand-gradient">4</span>
-            <span className="text-white">Success</span>
+          <h1 className="text-5xl md:text-7xl font-extrabold mb-6 text-white drop-shadow-2xl break-words px-4 relative inline-flex items-center justify-center flex-wrap">
+            <span className="text-white relative z-20">Launchpad</span>
+            <span className="text-brand-gradient text-6xl md:text-8xl relative z-10 -mx-2">4</span>
+            <span className="text-white relative z-20">Success</span>
           </h1>
-          <p className="text-xl md:text-3xl text-brand-cyan font-bold mb-8 drop-shadow-lg glow-cyan">
+          <p className="text-xl md:text-3xl text-brand-cyan font-bold mb-8 drop-shadow-lg">
             Build High-Converting Affiliate Funnels in Minutes
           </p>
-          <p className="text-lg text-gray-200 mb-12 max-w-2xl mx-auto">
+          <p className="text-lg text-white mb-12 max-w-2xl mx-auto">
             The modular system that lets you create, launch, and scale profitable affiliate marketing campaigns without the technical headaches.
           </p>
           
@@ -69,9 +70,9 @@ export default function Home() {
           {/* Feature Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
             <div className="card-launch">
-              <div className="text-5xl mb-4">🎯</div>
-              <h2 className="text-2xl font-bold mb-3 text-white">Swappable Niches</h2>
-              <p className="text-gray-300 mb-4">
+              <div className="text-5xl mb-4">🚀</div>
+              <h2 className="text-2xl font-bold mb-3 text-brand-purple">Swappable Niches</h2>
+              <p className="text-brand-purple mb-4">
                 Switch between health, finance, tech, and more without starting over
               </p>
               <Link href="/niches" className="text-brand-cyan hover:text-brand-orange font-bold transition-colors inline-block">
@@ -80,9 +81,9 @@ export default function Home() {
             </div>
             
             <div className="card-launch">
-              <div className="text-5xl mb-4">🎨</div>
-              <h2 className="text-2xl font-bold mb-3 text-white">Drag & Drop Builder</h2>
-              <p className="text-gray-300 mb-4">
+              <div className="text-5xl mb-4">⚡</div>
+              <h2 className="text-2xl font-bold mb-3 text-brand-purple">Drag & Drop Builder</h2>
+              <p className="text-brand-purple mb-4">
                 Create stunning funnels with our visual builder - no coding required
               </p>
               <Link href="/builder" className="text-brand-cyan hover:text-brand-orange font-bold transition-colors inline-block">
@@ -91,9 +92,9 @@ export default function Home() {
             </div>
             
             <div className="card-launch">
-              <div className="text-5xl mb-4">🤖</div>
-              <h2 className="text-2xl font-bold mb-3 text-white">AI-Powered</h2>
-              <p className="text-gray-300 mb-4">
+              <div className="text-5xl mb-4">🎯</div>
+              <h2 className="text-2xl font-bold mb-3 text-brand-purple">AI-Powered</h2>
+              <p className="text-brand-purple mb-4">
                 Let AI write your copy and analyze your campaigns automatically
               </p>
               <Link href="/features" className="text-brand-cyan hover:text-brand-orange font-bold transition-colors inline-block">
@@ -118,7 +119,7 @@ export default function Home() {
             href="/signup"
             className="inline-block px-12 py-5 bg-white text-brand-navy text-lg font-bold rounded-lg hover:bg-gray-100 transition-all transform hover:scale-110 shadow-2xl glow-orange"
           >
-            Start Your Free Trial ✨
+            3...2...1... LAUNCH! 🚀
           </Link>
         </div>
       </section>

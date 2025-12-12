@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const navigation = [
   { name: 'Home', href: '/', icon: '🏠' },
@@ -25,29 +25,43 @@ export default function Sidebar() {
   const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = useState(false)
 
+  // Load collapse state from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('sidebarCollapsed')
+    if (saved !== null) {
+      setIsCollapsed(saved === 'true')
+    }
+  }, [])
+
+  // Update localStorage and body attribute when collapse state changes
+  useEffect(() => {
+    localStorage.setItem('sidebarCollapsed', String(isCollapsed))
+    document.body.setAttribute('data-sidebar-collapsed', String(isCollapsed))
+  }, [isCollapsed])
+
   return (
     <>
       {/* Mobile menu button */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-purple-600 text-white rounded-lg shadow-lg"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-brand-purple text-white rounded-lg shadow-lg"
       >
         {isCollapsed ? '☰' : '✕'}
       </button>
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-full bg-white border-r border-gray-200 shadow-lg transition-all duration-300 z-40 ${
+        className={`fixed left-0 top-0 h-full bg-white border-r-2 border-brand-purple/20 shadow-lg transition-all duration-300 z-40 ${
           isCollapsed ? '-translate-x-full lg:translate-x-0 lg:w-20' : 'translate-x-0 w-64'
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-b-2 border-brand-purple/20">
             <Link href="/" className="flex items-center gap-2">
               {!isCollapsed && (
-                <span className="text-xl font-bold text-purple-600">
-                  Launchpad<span className="text-yellow-500">4</span>Success
+                <span className="text-xl font-bold">
+                  <span className="text-brand-purple">Launchpad</span><span className="text-brand-orange">4</span><span className="text-brand-purple">Success</span>
                 </span>
               )}
               {isCollapsed && <span className="text-2xl">🚀</span>}
@@ -65,8 +79,8 @@ export default function Sidebar() {
                       href={item.href}
                       className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                         isActive
-                          ? 'bg-purple-100 text-purple-700 font-semibold'
-                          : 'text-gray-700 hover:bg-gray-100'
+                          ? 'bg-brand-purple/10 text-brand-purple font-semibold border-l-4 border-brand-orange'
+                          : 'text-brand-navy hover:bg-brand-cyan/10'
                       }`}
                       title={isCollapsed ? item.name : ''}
                     >
@@ -80,10 +94,10 @@ export default function Sidebar() {
           </nav>
 
           {/* Collapse button (desktop) */}
-          <div className="hidden lg:block p-4 border-t border-gray-200">
+          <div className="hidden lg:block p-4 border-t-2 border-brand-purple/20">
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-brand-purple hover:bg-brand-purple/10 rounded-lg transition-colors font-semibold"
               title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
               <span>{isCollapsed ? '→' : '←'}</span>

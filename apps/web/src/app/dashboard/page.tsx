@@ -52,10 +52,10 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-brand-gradient launch-pad">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-orange mx-auto mb-4"></div>
+          <p className="text-white">Loading...</p>
         </div>
       </div>
     )
@@ -64,16 +64,16 @@ export default function Dashboard() {
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-brand-navy shadow-lg border-b border-brand-purple/30">
         <div className="max-w-7xl mx-auto px-8 py-4 flex justify-between items-center">
           <Link href="/dashboard" className="text-2xl font-bold">
-            Launchpad<span className="text-yellow-400">4</span>Success
+            <span className="text-white">Launchpad</span><span className="text-brand-orange">4</span><span className="text-white">Success</span>
           </Link>
           <div className="flex items-center gap-4">
-            <span className="text-gray-600">{user?.email}</span>
+            <span className="text-gray-300">{user?.email}</span>
             <button
               onClick={handleLogout}
-              className="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
+              className="px-4 py-2 text-sm bg-brand-purple text-white hover:bg-brand-orange rounded-lg transition-colors font-semibold"
             >
               Logout
             </button>
@@ -90,18 +90,18 @@ export default function Dashboard() {
 
         {/* Team Info Banner */}
         {teamData && (teamData.isOwner || teamData.memberOf?.length > 0) && (
-          <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-8">
+          <div className="bg-brand-purple/10 border-2 border-brand-purple/30 rounded-xl p-4 mb-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">👥</span>
                 <div>
-                  <p className="font-semibold text-purple-900">
+                  <p className="font-semibold text-brand-purple">
                     {teamData.isOwner 
                       ? `Team: ${teamData.ownedTeam?.length || 0} member${teamData.ownedTeam?.length !== 1 ? 's' : ''}`
                       : `You're part of ${teamData.memberOf?.length || 0} team${teamData.memberOf?.length !== 1 ? 's' : ''}`
                     }
                   </p>
-                  <p className="text-sm text-purple-700">
+                  <p className="text-sm text-brand-navy">
                     {teamData.isOwner 
                       ? 'Manage your team members and permissions'
                       : 'Collaborate with your team on funnels'
@@ -111,7 +111,7 @@ export default function Dashboard() {
               </div>
               <Link
                 href="/team"
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold"
+                className="px-4 py-2 bg-brand-purple text-white rounded-lg hover:bg-brand-orange font-semibold transition-colors"
               >
                 Manage Team
               </Link>
@@ -121,24 +121,24 @@ export default function Dashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-600">
-            <div className="text-sm text-gray-600 mb-1">Total Funnels</div>
-            <div className="text-3xl font-bold">0</div>
+          <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-brand-purple">
+            <div className="text-sm text-brand-purple mb-1 font-semibold">Total Funnels</div>
+            <div className="text-3xl font-bold text-brand-navy">0</div>
           </div>
           
-          <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-600">
-            <div className="text-sm text-gray-600 mb-1">Total Clicks</div>
-            <div className="text-3xl font-bold">0</div>
+          <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-brand-cyan">
+            <div className="text-sm text-brand-cyan mb-1 font-semibold">Total Clicks</div>
+            <div className="text-3xl font-bold text-brand-navy">0</div>
           </div>
           
-          <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-purple-600">
-            <div className="text-sm text-gray-600 mb-1">Conversions</div>
-            <div className="text-3xl font-bold">0</div>
+          <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-brand-orange">
+            <div className="text-sm text-brand-orange mb-1 font-semibold">Conversions</div>
+            <div className="text-3xl font-bold text-brand-navy">0</div>
           </div>
           
-          <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-yellow-500">
-            <div className="text-sm text-gray-600 mb-1">Revenue</div>
-            <div className="text-3xl font-bold">$0</div>
+          <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-brand-purple">
+            <div className="text-sm text-brand-purple mb-1 font-semibold">Revenue</div>
+            <div className="text-3xl font-bold text-brand-navy">$0</div>
           </div>
         </div>
 

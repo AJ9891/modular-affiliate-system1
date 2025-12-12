@@ -65,17 +65,17 @@ export default function Login() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-green-500 flex items-center justify-center p-8">
+    <main className="min-h-screen bg-brand-gradient launch-pad flex items-center justify-center p-8">
       <div className="max-w-md w-full">
-        <Link href="/" className="text-white hover:underline mb-8 inline-block">
+        <Link href="/" className="text-white hover:text-brand-cyan mb-8 inline-block transition-colors">
           ← Back to Home
         </Link>
         
-        <div className="bg-white rounded-2xl shadow-2xl p-10">
-          <h1 className="text-3xl font-bold mb-2 text-center">
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-10 border-2 border-brand-purple/20">
+          <h1 className="text-3xl font-bold mb-2 text-center text-brand-navy">
             Welcome Back
           </h1>
-          <p className="text-gray-600 text-center mb-8">
+          <p className="text-brand-purple text-center mb-8">
             Log in to your Launchpad4Success account
           </p>
           
@@ -87,47 +87,47 @@ export default function Login() {
           
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-semibold mb-2">Email Address</label>
+              <label className="block text-sm font-semibold mb-2 text-brand-purple">Email Address</label>
               <input
                 type="email"
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="you@example.com"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-600 focus:outline-none"
+                className="w-full px-4 py-3 border-2 border-brand-purple/30 rounded-lg focus:border-brand-cyan focus:outline-none"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-semibold mb-2">Password</label>
+              <label className="block text-sm font-semibold mb-2 text-brand-purple">Password</label>
               <input
                 type="password"
                 required
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder="••••••••"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-600 focus:outline-none"
+                className="w-full px-4 py-3 border-2 border-brand-purple/30 rounded-lg focus:border-brand-cyan focus:outline-none"
               />
             </div>
             
             <button
               type="submit"
               disabled={loading}
-              className="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-green-600 text-white font-bold rounded-lg hover:shadow-xl transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full btn-launch py-4 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Logging in...' : 'Log In 🚀'}
             </button>
           </form>
           
-          <p className="text-center text-sm text-gray-600 mt-6">
+          <p className="text-center text-sm text-brand-purple mt-6">
             Don't have an account?{' '}
-            <Link href="/signup" className="text-blue-600 font-semibold hover:underline">
+            <Link href="/signup" className="text-brand-cyan font-semibold hover:text-brand-orange transition-colors">
               Sign up free
             </Link>
           </p>
 
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800">
+          <div className="mt-6 p-4 bg-brand-cyan/10 border border-brand-cyan/30 rounded-lg">
+            <p className="text-sm text-brand-navy">
               <strong>First time here?</strong> Create an account first by clicking "Sign up free" above.
             </p>
           </div>
