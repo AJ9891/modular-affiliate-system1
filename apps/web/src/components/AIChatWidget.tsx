@@ -75,18 +75,43 @@ export default function AIChatWidget({ mode = 'support' }: AIChatWidgetProps) {
   }
 
   async function handleAction(action: ChatAction) {
-    switch (action.action) {
-      case 'CREATE_CHECKOUT':
-        if (action.plan) {
-          router.push(`/checkout?plan=${action.plan}`)
-        }
-        break
-      case 'VIEW_PRICING':
-        router.push('/pricing')
-        break
-      case 'START_TRIAL':
-        router.push('/signup')
-        break
+    try {
+      switch (action.action) {
+        case 'CREATE_CHECKOUT':
+          if (action.plan) {
+            // Get user email if available
+            let email = ''
+            if (isAuthenticated && userId) {
+              const userResponse = await fetch('/api/auth/me')
+              if (userResponse.ok) {
+                const userData = await userResponse.json()
+                email = userData.user?.email || ''
+              }
+            }
+
+            // Create Stripe checkout session
+            const res = await fetch('/api/stripe/create-subscription-checkout', {
+              method: 'POST',
+              body: JSON.stringify({
+                plan: action.plan,
+                userId: userId || null,
+                email,
+              }),
+            })
+
+            const { url } = await res.json()
+            window.location.href = url
+          }
+          break
+        case 'VIEW_PRICING':
+          router.push('/pricing')
+          break
+        case 'START_TRIAL':
+          router.push('/signup')
+          break
+      }
+    } catch (error) {
+      console.error('Action handling error:', error)
     }
   }
 
