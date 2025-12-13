@@ -12,11 +12,10 @@ export async function POST(req: NextRequest) {
 
   // Check admin flag
   const { data: profile } = await supabase
-    .from('profiles')
+    .from('users')
     .select('is_admin')
     .eq('id', user.id)
     .single()
-    .maybeSingle()
   
   if (!profile?.is_admin) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 })

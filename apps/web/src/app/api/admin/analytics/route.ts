@@ -11,11 +11,10 @@ export async function GET(req: NextRequest) {
   }
 
   const { data: profile } = await supabase
-    .from('profiles')
+    .from('users')
     .select('is_admin')
     .eq('id', user.id)
     .single()
-    .maybeSingle()
   
   if (!profile?.is_admin) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 })
