@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 
 interface Message {
   id: string
@@ -9,13 +10,25 @@ interface Message {
   created_at: string
 }
 
-export default function AIChatWidget() {
+interface ChatAction {
+  action: 'CREATE_CHECKOUT' | 'VIEW_PRICING' | 'START_TRIAL'
+  plan?: 'starter' | 'pro' | 'agency'
+}
+
+interface AIChatWidgetProps {
+  mode?: 'support' | 'sales'
+}
+
+export default function AIChatWidget({ mode = 'support' }: AIChatWidgetProps) {
+  const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [conversationId, setConversationId] = useState<string | null>(null)
+  const [sessionId] = useState(() => `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -29,9 +42,46 @@ export default function AIChatWidget() {
   async function checkAuth() {
     try {
       const response = await fetch('/api/auth/me')
-      setIsAuthenticated(response.ok)
+      if (response.ok) {
+        const data = await response.json()
+        setIsAuthenticated(true)
+        setUserId(data.user?.id || null)
+      } else {
+        setIsAuthenticated(false)
+      }
     } catch {
       setIsAuthenticated(false)
+    }
+  }
+
+  function parseActionFromResponse(content: string): { text: string; action: ChatAction | null } {
+    const actionMatch = content.match(/ACTION:\s*({[^}]+})/i)
+    if (!actionMatch) {
+      return { text: content, action: null }
+    }
+
+    try {
+      const action = JSON.parse(actionMatch[1]) as ChatAction
+      const text = content.replace(/ACTION:\s*{[^}]+}/i, '').trim()
+      return { text, action }
+    } catch {
+      return { text: content, action: null }
+    }
+  }
+
+  async function handleAction(action: ChatAction) {
+    switch (action.action) {
+      case 'CREATE_CHECKOUT':
+        if (action.plan) {
+          router.push(`/checkout?plan=${action.plan}`)
+        }
+        break
+      case 'VIEW_PRICING':
+        router.push('/pricing')
+        break
+      case 'START_TRIAL':
+        router.push('/signup')
+        break
     }
   }
 
@@ -66,34 +116,89 @@ export default function AIChatWidget() {
     setMessages(prev => [...prev, tempUserMsg])
 
     try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conversationId,
-          message: userMessage
+      if (mode === 'sales') {
+        // Sales bot with streaming
+        const response = await fetch('/api/sales-chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: messages.map(m => ({ role: m.role, content: m.content })).concat([
+              { role: 'user', content: userMessage }
+            ]),
+            sessionId,
+            userId
+          })
         })
-      })
 
-      if (!response.ok) {
-        throw new Error('Failed to send message')
+        if (!response.ok) throw new Error('Failed to send message')
+
+        const reader = response.body?.getReader()
+        const decoder = new TextDecoder()
+        let fullResponse = ''
+
+        // Create placeholder for streaming response
+        const assistantMsgId = `assistant-${Date.now()}`
+        setMessages(prev => [...prev, {
+          id: assistantMsgId,
+          role: 'assistant',
+          content: '',
+          created_at: new Date().toISOString()
+        }])
+
+        // Stream the response
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+
+            const chunk = decoder.decode(value)
+            fullResponse += chunk
+
+            // Update message with streamed content
+            setMessages(prev => prev.map(m => 
+              m.id === assistantMsgId ? { ...m, content: fullResponse } : m
+            ))
+          }
+        }
+
+        // Parse and handle any actions
+        const { text, action } = parseActionFromResponse(fullResponse)
+        
+        // Update final message with cleaned text
+        setMessages(prev => prev.map(m => 
+          m.id === assistantMsgId ? { ...m, content: text } : m
+        ))
+
+        // Execute action if present
+        if (action) {
+          await handleAction(action)
+        }
+      } else {
+        // Support bot (existing logic)
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            conversationId,
+            message: userMessage
+          })
+        })
+
+        if (!response.ok) throw new Error('Failed to send message')
+
+        const data = await response.json()
+        
+        if (!conversationId) {
+          setConversationId(data.conversationId)
+        }
+
+        setMessages(prev => [...prev.filter(m => m.id !== tempUserMsg.id), 
+          tempUserMsg, 
+          data.message
+        ])
       }
-
-      const data = await response.json()
-      
-      // Update conversation ID if new
-      if (!conversationId) {
-        setConversationId(data.conversationId)
-      }
-
-      // Add AI response
-      setMessages(prev => [...prev.filter(m => m.id !== tempUserMsg.id), 
-        tempUserMsg, 
-        data.message
-      ])
     } catch (error) {
       console.error('Failed to send message:', error)
-      // Add error message
       setMessages(prev => [...prev, {
         id: `error-${Date.now()}`,
         role: 'assistant',
@@ -161,9 +266,18 @@ export default function AIChatWidget() {
     }
   }
 
-  if (!isAuthenticated) {
-    return null // Don't show chat for unauthenticated users
+  // Show sales mode for everyone, support mode only for authenticated users
+  if (mode === 'support' && !isAuthenticated) {
+    return null
   }
+
+  const isSalesMode = mode === 'sales'
+  const chatTitle = isSalesMode ? 'Launchpad 4 Success' : 'AI Support'
+  const chatSubtitle = isSalesMode ? 'How can I help you today?' : 'Always here to help'
+  const chatIcon = isSalesMode ? '🚀' : '🤖'
+  const gradientColors = isSalesMode 
+    ? 'from-brand-purple to-brand-cyan' 
+    : 'from-purple-600 to-blue-600'
 
   return (
     <>
@@ -171,10 +285,10 @@ export default function AIChatWidget() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 flex items-center justify-center z-50 hover:scale-110"
-          aria-label="Open AI support chat"
+          className={`fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-r ${gradientColors} text-white rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 flex items-center justify-center z-50 hover:scale-110`}
+          aria-label={`Open ${isSalesMode ? 'sales' : 'support'} chat`}
         >
-          <span className="text-2xl">💬</span>
+          <span className="text-2xl">{chatIcon}</span>
         </button>
       )}
 
@@ -182,18 +296,18 @@ export default function AIChatWidget() {
       {isOpen && (
         <div className="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 border border-gray-200">
           {/* Header */}
-          <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4 rounded-t-2xl flex items-center justify-between">
+          <div className={`bg-gradient-to-r ${gradientColors} text-white p-4 rounded-t-2xl flex items-center justify-between`}>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                <span className="text-xl">🤖</span>
+                <span className="text-xl">{chatIcon}</span>
               </div>
               <div>
-                <h3 className="font-bold">AI Support</h3>
-                <p className="text-xs text-white/80">Always here to help</p>
+                <h3 className="font-bold">{chatTitle}</h3>
+                <p className="text-xs text-white/80">{chatSubtitle}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {conversationId && (
+              {!isSalesMode && conversationId && (
                 <button
                   onClick={escalateToHumanSupport}
                   className="p-2 hover:bg-white/10 rounded-lg transition-colors"
@@ -202,7 +316,7 @@ export default function AIChatWidget() {
                   <span className="text-lg">🙋</span>
                 </button>
               )}
-              {conversationId && (
+              {messages.length > 0 && (
                 <button
                   onClick={startNewConversation}
                   className="text-white/80 hover:text-white text-sm px-2 py-1 rounded hover:bg-white/10"
@@ -228,27 +342,54 @@ export default function AIChatWidget() {
                 <div className="text-6xl mb-4">👋</div>
                 <h4 className="font-bold text-gray-900 mb-2">Hi! How can I help?</h4>
                 <p className="text-sm text-gray-600">
-                  Ask me anything about Launchpad4Success!
+                  {isSalesMode 
+                    ? 'Ask me anything about Launchpad 4 Success!'
+                    : 'Ask me anything about Launchpad4Success!'}
                 </p>
                 <div className="mt-6 space-y-2">
-                  <button
-                    onClick={() => setInput('How do I create a funnel?')}
-                    className="block w-full text-left px-4 py-2 bg-white rounded-lg text-sm text-gray-700 hover:bg-purple-50 border border-gray-200"
-                  >
-                    How do I create a funnel?
-                  </button>
-                  <button
-                    onClick={() => setInput('What features are in each plan?')}
-                    className="block w-full text-left px-4 py-2 bg-white rounded-lg text-sm text-gray-700 hover:bg-purple-50 border border-gray-200"
-                  >
-                    What features are in each plan?
-                  </button>
-                  <button
-                    onClick={() => setInput('How do I set up my custom domain?')}
-                    className="block w-full text-left px-4 py-2 bg-white rounded-lg text-sm text-gray-700 hover:bg-purple-50 border border-gray-200"
-                  >
-                    How do I set up my custom domain?
-                  </button>
+                  {isSalesMode ? (
+                    <>
+                      <button
+                        onClick={() => setInput("I'm interested in affiliate marketing but don't know where to start")}
+                        className="block w-full text-left px-4 py-2 bg-white rounded-lg text-sm text-gray-700 hover:bg-purple-50 border border-gray-200"
+                      >
+                        I'm new to affiliate marketing
+                      </button>
+                      <button
+                        onClick={() => setInput('What are your plans and pricing?')}
+                        className="block w-full text-left px-4 py-2 bg-white rounded-lg text-sm text-gray-700 hover:bg-purple-50 border border-gray-200"
+                      >
+                        What are your plans?
+                      </button>
+                      <button
+                        onClick={() => setInput('How does Launchpad compare to other tools?')}
+                        className="block w-full text-left px-4 py-2 bg-white rounded-lg text-sm text-gray-700 hover:bg-purple-50 border border-gray-200"
+                      >
+                        How does this compare to other tools?
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => setInput('How do I create a funnel?')}
+                        className="block w-full text-left px-4 py-2 bg-white rounded-lg text-sm text-gray-700 hover:bg-purple-50 border border-gray-200"
+                      >
+                        How do I create a funnel?
+                      </button>
+                      <button
+                        onClick={() => setInput('What features are in each plan?')}
+                        className="block w-full text-left px-4 py-2 bg-white rounded-lg text-sm text-gray-700 hover:bg-purple-50 border border-gray-200"
+                      >
+                        What features are in each plan?
+                      </button>
+                      <button
+                        onClick={() => setInput('How do I set up my custom domain?')}
+                        className="block w-full text-left px-4 py-2 bg-white rounded-lg text-sm text-gray-700 hover:bg-purple-50 border border-gray-200"
+                      >
+                        How do I set up my custom domain?
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -307,9 +448,9 @@ export default function AIChatWidget() {
             </div>
             <div className="flex items-center justify-between mt-2">
               <p className="text-xs text-gray-500">
-                AI-powered support
+                {isSalesMode ? 'AI-powered sales assistant' : 'AI-powered support'}
               </p>
-              {conversationId && (
+              {!isSalesMode && conversationId && (
                 <button
                   onClick={escalateToHumanSupport}
                   className="text-xs text-purple-600 hover:text-purple-700 font-medium"

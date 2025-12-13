@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import AIChatWidget from '@/components/AIChatWidget'
 
 export default function Home() {
   return (
@@ -123,6 +124,9 @@ export default function Home() {
           </Link>
         </div>
       </section>
+
+      {/* Sales Chat Widget */}
+      <AIChatWidget mode="sales" />
     </main>
   )
 }
