@@ -252,19 +252,19 @@ class SendsharkService {
           <div class="stats">
             <div class="stat-row">
               <span class="stat-label">Total Views</span>
-              <span class="stat-value">${stats.views.toLocaleString()}</span>
+              <span class="stat-value">${(stats.views ?? 0).toLocaleString()}</span>
             </div>
             <div class="stat-row">
               <span class="stat-label">Clicks</span>
-              <span class="stat-value">${stats.clicks.toLocaleString()}</span>
+              <span class="stat-value">${(stats.clicks ?? 0).toLocaleString()}</span>
             </div>
             <div class="stat-row">
               <span class="stat-label">Conversions</span>
-              <span class="stat-value">${stats.conversions.toLocaleString()}</span>
+              <span class="stat-value">${(stats.conversions ?? 0).toLocaleString()}</span>
             </div>
             <div class="stat-row">
               <span class="stat-label">Revenue</span>
-              <span class="stat-value">$${stats.revenue.toLocaleString()}</span>
+              <span class="stat-value">$${(stats.revenue ?? 0).toLocaleString()}</span>
             </div>
             <div class="stat-row">
               <span class="stat-label">Click Rate</span>

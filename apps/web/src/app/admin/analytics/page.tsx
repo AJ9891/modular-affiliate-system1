@@ -40,13 +40,13 @@ export default function AdminAnalytics() {
       }
       setUser(user)
 
-      const { data: profile } = await supabase
-        .from('profiles')
+      const { data: adminUser, error: adminError } = await supabase
+        .from('users')
         .select('is_admin')
         .eq('id', user.id)
         .single()
 
-      if (!profile?.is_admin) {
+      if (adminError || !adminUser?.is_admin) {
         router.push('/dashboard')
         return
       }
@@ -104,8 +104,25 @@ export default function AdminAnalytics() {
     )
   }
 
-  const totalRequests = data?.totals?.reduce((sum, t) => sum + t.requests, 0) || 0
-  const totalCost = data?.totals?.reduce((sum, t) => sum + t.total_cost, 0) || 0
+  // Safely calculate totals with proper type checking
+  let totalRequests = 0
+  let totalCost = 0
+  
+  if (data?.totals && Array.isArray(data.totals)) {
+    totalRequests = data.totals.reduce((sum, t) => {
+      if (!t) return sum
+      // Parse requests as integer, handling any type
+      const requests = typeof t.requests === 'number' ? t.requests : parseInt(String(t.requests || 0))
+      return sum + (isNaN(requests) ? 0 : requests)
+    }, 0)
+    
+    totalCost = data.totals.reduce((sum, t) => {
+      if (!t) return sum
+      // Parse cost as float, handling any type
+      const cost = typeof t.total_cost === 'number' ? t.total_cost : parseFloat(String(t.total_cost || 0))
+      return sum + (isNaN(cost) ? 0 : cost)
+    }, 0)
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -135,11 +152,15 @@ export default function AdminAnalytics() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="bg-brand-purple/10 rounded-xl p-6 border-2 border-brand-purple/30">
               <div className="text-sm text-brand-purple font-semibold mb-1">Total Requests</div>
-              <div className="text-3xl font-bold text-brand-navy">{totalRequests.toLocaleString()}</div>
+              <div className="text-3xl font-bold text-brand-navy">
+                {totalRequests.toLocaleString()}
+              </div>
             </div>
             <div className="bg-brand-orange/10 rounded-xl p-6 border-2 border-brand-orange/30">
               <div className="text-sm text-brand-orange font-semibold mb-1">Total Cost</div>
-              <div className="text-3xl font-bold text-brand-navy">${totalCost.toFixed(2)}</div>
+              <div className="text-3xl font-bold text-brand-navy">
+                ${totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
             </div>
           </div>
 
@@ -158,18 +179,34 @@ export default function AdminAnalytics() {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.totals.map((t) => (
-                      <tr key={t.provider} className="border-b border-brand-purple/10 hover:bg-brand-purple/5">
-                        <td className="py-3 px-4 font-semibold text-brand-navy">{t.provider}</td>
-                        <td className="py-3 px-4 text-right text-brand-navy">{t.requests.toLocaleString()}</td>
-                        <td className="py-3 px-4 text-right text-brand-orange font-semibold">
-                          ${Number(t.total_cost).toFixed(2)}
-                        </td>
-                        <td className="py-3 px-4 text-right text-brand-cyan">
-                          ${(Number(t.total_cost) / t.requests).toFixed(4)}
-                        </td>
-                      </tr>
-                    ))}
+                    {data.totals.map((t, idx) => {
+                      if (!t) return null
+                      
+                      // Safely parse numeric values, handling any potential date/string values
+                      const totalCostRaw = t.total_cost
+                      const requestsRaw = t.requests
+                      
+                      const totalCost = typeof totalCostRaw === 'number' ? totalCostRaw : parseFloat(String(totalCostRaw || 0))
+                      const requests = typeof requestsRaw === 'number' ? requestsRaw : parseInt(String(requestsRaw || 0))
+                      const avgCost = requests > 0 && !isNaN(totalCost) ? totalCost / requests : 0
+                      
+                      return (
+                        <tr key={t.provider || `unknown-${idx}`} className="border-b border-brand-purple/10 hover:bg-brand-purple/5">
+                          <td className="py-3 px-4 font-semibold text-brand-navy">{String(t.provider || 'Unknown')}</td>
+                          <td className="py-3 px-4 text-right text-brand-navy">
+                            {(isNaN(requests) ? 0 : requests).toLocaleString()}
+                          </td>
+                          <td className="py-3 px-4 text-right text-brand-orange font-semibold">
+                            ${(isNaN(totalCost) ? 0 : totalCost).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                          <td className="py-3 px-4 text-right text-brand-cyan">
+                            {requests > 0 && !isNaN(avgCost) && avgCost > 0
+                              ? `$${avgCost.toFixed(4)}`
+                              : '$0.0000'}
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>

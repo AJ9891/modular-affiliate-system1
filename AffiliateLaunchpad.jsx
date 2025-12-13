@@ -240,7 +240,7 @@ export default function AffiliateLaunchpad() {
                 <span className="text-gray-600">Total Leads</span>
                 <Users className="text-green-500" size={24} />
               </div>
-              <div className="text-3xl font-bold">{stats.leads.toLocaleString()}</div>
+              <div className="text-3xl font-bold">{(stats.leads ?? 0).toLocaleString()}</div>
             </div>
 
             <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-purple-500">
@@ -248,7 +248,7 @@ export default function AffiliateLaunchpad() {
                 <span className="text-gray-600">Revenue</span>
                 <DollarSign className="text-purple-500" size={24} />
               </div>
-              <div className="text-3xl font-bold">${stats.revenue.toLocaleString()}</div>
+              <div className="text-3xl font-bold">${(stats.revenue ?? 0).toLocaleString()}</div>
             </div>
 
             <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-orange-500">

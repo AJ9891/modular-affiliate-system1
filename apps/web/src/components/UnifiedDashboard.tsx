@@ -162,21 +162,21 @@ export default function UnifiedDashboard() {
         <StatCard
           icon={Users}
           label="Total Leads"
-          value={stats.totalLeads.toLocaleString()}
+          value={(stats.totalLeads ?? 0).toLocaleString()}
           change="+12%"
           color="bg-blue-500"
         />
         <StatCard
           icon={TrendingUp}
           label="Conversions"
-          value={stats.totalConversions.toLocaleString()}
+          value={(stats.totalConversions ?? 0).toLocaleString()}
           change="+8%"
           color="bg-green-500"
         />
         <StatCard
           icon={DollarSign}
           label="Revenue"
-          value={`$${stats.totalRevenue.toLocaleString()}`}
+          value={`$${(stats.totalRevenue ?? 0).toLocaleString()}`}
           change="+15%"
           color="bg-purple-500"
         />
@@ -214,7 +214,7 @@ export default function UnifiedDashboard() {
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="font-bold text-lg mb-4">Emails Sent</h3>
           <div className="text-4xl font-bold text-purple-600 mb-2">
-            {stats.emailsSent.toLocaleString()}
+            {(stats.emailsSent ?? 0).toLocaleString()}
           </div>
           <p className="text-sm text-gray-600">
             Across all campaigns and automations

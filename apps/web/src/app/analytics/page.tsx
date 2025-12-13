@@ -102,22 +102,22 @@ export default function AnalyticsPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
             <div className="text-blue-200 text-sm mb-2">Total Clicks</div>
-            <div className="text-4xl font-bold text-white">{analytics.totalClicks.toLocaleString()}</div>
+            <div className="text-4xl font-bold text-white">{(analytics.totalClicks ?? 0).toLocaleString()}</div>
           </div>
 
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
             <div className="text-blue-200 text-sm mb-2">Conversions</div>
-            <div className="text-4xl font-bold text-white">{analytics.totalConversions.toLocaleString()}</div>
+            <div className="text-4xl font-bold text-white">{(analytics.totalConversions ?? 0).toLocaleString()}</div>
           </div>
 
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
             <div className="text-blue-200 text-sm mb-2">Conversion Rate</div>
-            <div className="text-4xl font-bold text-white">{analytics.conversionRate.toFixed(2)}%</div>
+            <div className="text-4xl font-bold text-white">{(analytics.conversionRate ?? 0).toFixed(2)}%</div>
           </div>
 
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
             <div className="text-blue-200 text-sm mb-2">Total Revenue</div>
-            <div className="text-4xl font-bold text-white">${analytics.totalRevenue.toLocaleString()}</div>
+            <div className="text-4xl font-bold text-white">${(analytics.totalRevenue ?? 0).toLocaleString()}</div>
           </div>
         </div>
 
