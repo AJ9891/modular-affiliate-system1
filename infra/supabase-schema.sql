@@ -88,6 +88,19 @@ create table if not exists public.conversions (
   converted_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- Affiliate Clicks (partner referral tracking)
+create table if not exists public.affiliate_clicks (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.users(id),
+  partner text not null,
+  source text,
+  metadata jsonb,
+  clicked_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+create index if not exists idx_affiliate_clicks_partner on public.affiliate_clicks(partner);
+create index if not exists idx_affiliate_clicks_user_id on public.affiliate_clicks(user_id);
+
 -- Templates
 create table if not exists public.templates (
   id uuid default gen_random_uuid() primary key,
