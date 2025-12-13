@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { stripe } from '@/lib/stripe'
+import { stripe, dollarsToCredits } from '@/lib/stripe'
 import { supabase } from '@/lib/supabase'
 import { sendshark } from '@/lib/sendshark'
 import { headers } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
+import Stripe from 'stripe'
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || ''
 
@@ -42,6 +43,10 @@ export async function POST(request: NextRequest) {
     switch (event.type) {
       case 'checkout.session.completed':
         await handleCheckoutSessionCompleted(event.data.object)
+        // Also handle credit topup if metadata indicates it's a topup
+        if (event.data.object.metadata?.target_user_id) {
+          await handleCreditTopup(event.data.object)
+        }
         break
 
       case 'customer.subscription.updated':
@@ -71,6 +76,105 @@ export async function POST(request: NextRequest) {
       { error: 'Webhook handler failed' },
       { status: 500 }
     )
+  }
+}
+
+async function handleCreditTopup(session: Stripe.Checkout.Session) {
+  const sessionId = session.id
+  const adminId = session.metadata?.admin_id
+  const targetUserId = session.metadata?.target_user_id
+  const amountUsd = parseFloat(session.metadata?.amount_usd || '0')
+
+  if (!targetUserId || !supabase) return
+
+  try {
+    // Use service role client to bypass RLS
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
+    // Get topup record
+    const { data: topupData, error: topupErr } = await adminClient
+      .from('topups')
+      .select('id')
+      .eq('stripe_checkout_session', sessionId)
+      .single()
+
+    if (topupErr || !topupData) {
+      console.error('Topup record not found:', topupErr)
+      return
+    }
+
+    // Update topup status
+    const { error: updateErr } = await adminClient
+      .from('topups')
+      .update({
+        status: 'succeeded',
+        stripe_payment_intent: session.payment_intent as string,
+        updated_at: new Date().toISOString()
+      })
+      .eq('stripe_checkout_session', sessionId)
+
+    if (updateErr) {
+      console.error('Failed to update topup status:', updateErr)
+      return
+    }
+
+    const credits = dollarsToCredits(amountUsd)
+
+    // Try to call apply_topup RPC
+    const { error: rpcErr } = await adminClient.rpc('apply_topup', {
+      t_id: topupData.id,
+      t_admin: adminId
+    })
+
+    // If RPC fails, fallback to direct upsert
+    if (rpcErr) {
+      console.warn('RPC apply_topup failed, using direct upsert:', rpcErr)
+      
+      // Get current credits
+      const { data: currentCredits } = await adminClient
+        .from('user_credits')
+        .select('credits')
+        .eq('user_id', targetUserId)
+        .single()
+
+      const newCredits = (currentCredits?.credits || 0) + credits
+
+      const { error: upsertErr } = await adminClient
+        .from('user_credits')
+        .upsert(
+          {
+            user_id: targetUserId,
+            credits: newCredits,
+            updated_at: new Date().toISOString()
+          },
+          { onConflict: 'user_id' }
+        )
+
+      if (upsertErr) {
+        console.error('Failed to upsert credits:', upsertErr)
+        return
+      }
+    }
+
+    // Store a log
+    await adminClient.from('topup_logs').insert({
+      topup_id: topupData.id,
+      event: 'checkout.session.completed',
+      payload: session
+    })
+
+    console.log(`✅ Credit topup completed: ${credits} credits added to user ${targetUserId}`)
+  } catch (error) {
+    console.error('Error handling credit topup:', error)
   }
 }
 

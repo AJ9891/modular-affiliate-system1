@@ -8,9 +8,13 @@ create table if not exists public.users (
   stripe_customer_id text,
   stripe_subscription_id text,
   plan text check (plan in ('starter', 'pro', 'agency')),
+  is_admin boolean default false,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
+
+-- Index for admin lookups
+create index if not exists idx_users_is_admin on public.users(is_admin) where is_admin = true;
 
 -- Niches (module definitions)
 create table if not exists public.niches (
