@@ -222,12 +222,30 @@ export async function POST(req: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         let fullResponse = ''
+        let actionPayload = null
 
         for await (const chunk of completion) {
           const token = chunk.choices[0]?.delta?.content
           if (token) {
             fullResponse += token
-            controller.enqueue(encoder.encode(token))
+
+            // Check for action in the accumulated response
+            if (fullResponse.includes('"action"') && !actionPayload) {
+              try {
+                actionPayload = JSON.parse(
+                  fullResponse.match(/\{[\s\S]*\}/)?.[0] ?? ''
+                )
+              } catch {}
+            }
+
+            controller.enqueue(
+              encoder.encode(
+                JSON.stringify({
+                  message: token,
+                  action: actionPayload,
+                })
+              )
+            )
           }
         }
 

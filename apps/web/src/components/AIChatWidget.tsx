@@ -55,18 +55,23 @@ export default function AIChatWidget({ mode = 'support' }: AIChatWidgetProps) {
   }
 
   function parseActionFromResponse(content: string): { text: string; action: ChatAction | null } {
-    const actionMatch = content.match(/ACTION:\s*({[^}]+})/i)
-    if (!actionMatch) {
+    let actionPayload: ChatAction | null = null
+
+    if (content.includes('"action"')) {
+      try {
+        actionPayload = JSON.parse(
+          content.match(/\{[\s\S]*\}/)?.[0] ?? ''
+        ) as ChatAction
+      } catch {}
+    }
+
+    if (!actionPayload) {
       return { text: content, action: null }
     }
 
-    try {
-      const action = JSON.parse(actionMatch[1]) as ChatAction
-      const text = content.replace(/ACTION:\s*{[^}]+}/i, '').trim()
-      return { text, action }
-    } catch {
-      return { text: content, action: null }
-    }
+    // Remove the action JSON from the display text
+    const text = content.replace(/\{[\s\S]*\}/, '').replace(/ACTION:\s*/i, '').trim()
+    return { text, action: actionPayload }
   }
 
   async function handleAction(action: ChatAction) {
@@ -135,6 +140,7 @@ export default function AIChatWidget({ mode = 'support' }: AIChatWidgetProps) {
         const reader = response.body?.getReader()
         const decoder = new TextDecoder()
         let fullResponse = ''
+        let detectedAction: ChatAction | null = null
 
         // Create placeholder for streaming response
         const assistantMsgId = `assistant-${Date.now()}`
@@ -152,26 +158,42 @@ export default function AIChatWidget({ mode = 'support' }: AIChatWidgetProps) {
             if (done) break
 
             const chunk = decoder.decode(value)
-            fullResponse += chunk
+            
+            try {
+              // Parse structured response
+              const data = JSON.parse(chunk)
+              fullResponse += data.message
+              
+              // Capture action when detected
+              if (data.action && !detectedAction) {
+                detectedAction = data.action
+              }
 
-            // Update message with streamed content
-            setMessages(prev => prev.map(m => 
-              m.id === assistantMsgId ? { ...m, content: fullResponse } : m
-            ))
+              // Update message with streamed content
+              setMessages(prev => prev.map(m => 
+                m.id === assistantMsgId ? { ...m, content: fullResponse } : m
+              ))
+            } catch {
+              // Fallback for non-JSON chunks
+              fullResponse += chunk
+              setMessages(prev => prev.map(m => 
+                m.id === assistantMsgId ? { ...m, content: fullResponse } : m
+              ))
+            }
           }
         }
 
-        // Parse and handle any actions
-        const { text, action } = parseActionFromResponse(fullResponse)
+        // Clean up action JSON from display text if present
+        const { text } = parseActionFromResponse(fullResponse)
         
         // Update final message with cleaned text
         setMessages(prev => prev.map(m => 
           m.id === assistantMsgId ? { ...m, content: text } : m
         ))
 
-        // Execute action if present
-        if (action) {
-          await handleAction(action)
+        // Execute action if detected during streaming
+        if (detectedAction) {
+          await handleAction(detectedAction)
         }
       } else {
         // Support bot (existing logic)
