@@ -4,6 +4,7 @@ import { AuthProvider } from "@/contexts/AuthContext"
 import ConditionalSidebar from "@/components/ConditionalSidebar"
 import ConditionalWrapper from "@/components/ConditionalWrapper"
 import AIChatWidget from "@/components/AIChatWidget"
+import Footer from "@/components/Footer"
 
 export const metadata: Metadata = {
   title: "Launchpad4Success - Build High-Converting Affiliate Funnels",
@@ -17,13 +18,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className="flex flex-col min-h-screen">
         <AuthProvider>
           <ConditionalSidebar />
           <ConditionalWrapper>
             {children}
           </ConditionalWrapper>
           <AIChatWidget />
+          <Footer />
         </AuthProvider>
       </body>
     </html>
