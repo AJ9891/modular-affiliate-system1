@@ -166,16 +166,17 @@ export default function AIChatWidget({ mode = 'support' }: AIChatWidgetProps) {
         const decoder = new TextDecoder()
         let fullResponse = ''
         let detectedAction: ChatAction | null = null
+        let buffer = ''
 
         // Create placeholder for streaming response
         const assistantMsgId = `assistant-${Date.now()}`
         setMessages(prev => [...prev, {
           id: assistantMsgId,
           role: 'assistant',
-          content: '',
+          content: '...',
           created_at: new Date().toISOString()
         }])
-
+        
         // Stream the response
         if (reader) {
           while (true) {
@@ -183,38 +184,69 @@ export default function AIChatWidget({ mode = 'support' }: AIChatWidgetProps) {
             if (done) break
 
             const chunk = decoder.decode(value)
+            buffer += chunk
             
-            try {
-              // Parse structured response
-              const data = JSON.parse(chunk)
-              fullResponse += data.message
+            // Try to extract complete JSON objects from buffer
+            let startIndex = 0
+            let braceCount = 0
+            let inString = false
+            let escape = false
+            
+            for (let i = 0; i < buffer.length; i++) {
+              const char = buffer[i]
               
-              // Capture action when detected
-              if (data.action && !detectedAction) {
-                detectedAction = data.action
+              if (escape) {
+                escape = false
+                continue
               }
-
-              // Update message with streamed content
-              setMessages(prev => prev.map(m => 
-                m.id === assistantMsgId ? { ...m, content: fullResponse } : m
-              ))
-            } catch {
-              // Fallback for non-JSON chunks
-              fullResponse += chunk
-              setMessages(prev => prev.map(m => 
-                m.id === assistantMsgId ? { ...m, content: fullResponse } : m
-              ))
+              
+              if (char === '\\') {
+                escape = true
+                continue
+              }
+              
+              if (char === '"' && !escape) {
+                inString = !inString
+                continue
+              }
+              
+              if (!inString) {
+                if (char === '{') {
+                  if (braceCount === 0) startIndex = i
+                  braceCount++
+                } else if (char === '}') {
+                  braceCount--
+                  if (braceCount === 0) {
+                    // Complete JSON object found
+                    const jsonStr = buffer.substring(startIndex, i + 1)
+                    try {
+                      const data = JSON.parse(jsonStr)
+                      if (data.message) {
+                        fullResponse += data.message
+                        
+                        // Update message with streamed content
+                        setMessages(prev => prev.map(m => 
+                          m.id === assistantMsgId ? { ...m, content: fullResponse } : m
+                        ))
+                      }
+                      
+                      // Capture action when detected
+                      if (data.action && !detectedAction) {
+                        detectedAction = data.action
+                      }
+                    } catch (e) {
+                      console.warn('Failed to parse JSON:', jsonStr)
+                    }
+                    
+                    // Remove processed JSON from buffer
+                    buffer = buffer.substring(i + 1)
+                    i = -1 // Reset loop
+                  }
+                }
+              }
             }
           }
         }
-
-        // Clean up action JSON from display text if present
-        const { text } = parseActionFromResponse(fullResponse)
-        
-        // Update final message with cleaned text
-        setMessages(prev => prev.map(m => 
-          m.id === assistantMsgId ? { ...m, content: text } : m
-        ))
 
         // Execute action if detected during streaming
         if (detectedAction) {
