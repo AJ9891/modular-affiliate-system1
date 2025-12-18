@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase-client'
 
 export const runtime = 'edge'
 
@@ -486,7 +486,7 @@ export default function LaunchpadPage() {
               onClick={() => {
                 setSetupComplete(true)
                 setShowSuccessScreen(false)
-                loadUserData()
+                loadUser()
               }}
               className="flex-1 px-6 py-4 bg-gray-800 text-white font-bold rounded-lg hover:bg-gray-900 transition"
             >
