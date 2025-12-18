@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 
 export const runtime = 'edge'
 
@@ -21,6 +22,15 @@ import {
   Sparkles
 } from 'lucide-react'
 
+// Step mapping - single source of truth
+const STEPS = {
+  WELCOME: 1,
+  NICHE: 2,
+  OFFERS: 3,
+  EMAIL: 4,
+  COMPLETE: 5,
+} as const
+
 /**
  * Affiliate Launchpad - Main Launch Dashboard
  * 
@@ -33,7 +43,9 @@ import {
  */
 export default function LaunchpadPage() {
   const searchParams = useSearchParams()
-  const [currentStep, setCurrentStep] = useState(0)
+  const router = useRouter()
+  const [currentStep, setCurrentStep] = useState<number | null>(null)
+  const [userData, setUserData] = useState<any>(null)
   const [setupComplete, setSetupComplete] = useState(false)
   const [userProfile, setUserProfile] = useState<any>(null)
   const [selectedNiche, setSelectedNiche] = useState<string>('')
@@ -48,38 +60,90 @@ export default function LaunchpadPage() {
   })
 
   useEffect(() => {
-    loadUserData()
-    
-    // Check if a niche was selected
-    const niche = searchParams.get('niche')
-    if (niche) {
-      setSelectedNiche(niche)
-      // Skip to the funnel creation step
-      setCurrentStep(2)
-    }
-  }, [searchParams])
+    loadUser()
+  }, [])
 
-  const loadUserData = async () => {
+  const loadUser = async () => {
     try {
-      const response = await fetch('/api/auth/me')
-      if (response.ok) {
-        const data = await response.json()
-        setUserProfile(data.user)
-        
-        const statsResponse = await fetch('/api/analytics?range=30d')
-        if (statsResponse.ok) {
-          const statsData = await statsResponse.json()
-          setStats({
-            funnels: statsData.totalFunnels || 0,
-            leads: statsData.stats?.totalLeads || 0,
-            revenue: statsData.stats?.totalRevenue || 0,
-            conversions: statsData.stats?.totalConversions || 0
-          })
-        }
+      const { data: auth } = await supabase.auth.getUser()
+      if (!auth?.user) {
+        router.push('/login')
+        return
+      }
+
+      const { data } = await supabase
+        .from('users')
+        .select('onboarding_step, max_launchpads, plan, email')
+        .eq('id', auth.user.id)
+        .single()
+
+      if (!data) return
+
+      setUserData(data)
+      setUserProfile(data)
+      
+      // Pro users with completed onboarding skip to dashboard
+      if (data.max_launchpads > 1 && data.onboarding_step === STEPS.COMPLETE) {
+        router.push('/dashboard')
+        return
+      }
+
+      // Check capacity before allowing new launchpad
+      const canCreate = await canCreateLaunchpad(auth.user.id, data.max_launchpads)
+      if (!canCreate) {
+        router.push('/pricing')
+        return
+      }
+
+      setCurrentStep(data.onboarding_step ?? STEPS.WELCOME)
+
+      // Load stats
+      const statsResponse = await fetch('/api/analytics?range=30d')
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json()
+        setStats({
+          funnels: statsData.totalFunnels || 0,
+          leads: statsData.stats?.totalLeads || 0,
+          revenue: statsData.stats?.totalRevenue || 0,
+          conversions: statsData.stats?.totalConversions || 0
+        })
       }
     } catch (error) {
-      console.error('Failed to load user data:', error)
+      console.error('Failed to load user:', error)
     }
+  }
+
+  const canCreateLaunchpad = async (userId: string, maxLaunchpads: number) => {
+    const { count } = await supabase
+      .from('funnels')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('active', true)
+
+    return (count || 0) < maxLaunchpads
+  }
+
+  const advanceStep = async (nextStep: number) => {
+    if (!userData) return
+
+    setCurrentStep(nextStep)
+
+    const { data: auth } = await supabase.auth.getUser()
+    if (!auth?.user) return
+
+    await supabase
+      .from('users')
+      .update({ onboarding_step: nextStep })
+      .eq('id', auth.user.id)
+  }
+
+  // Prevent flicker and step-jumping
+  if (currentStep === null) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF5714]"></div>
+      </div>
+    )
   }
 
   const launchSteps = [
@@ -215,10 +279,10 @@ export default function LaunchpadPage() {
       } else {
         console.log('No template found, completing setup')
         setSetupComplete(true)
-        await loadUserData()
+        await loadUser()
       }
     } else {
-      setCurrentStep(prev => prev + 1)
+      await advanceStep(currentStep + 1)
     }
   }
 
@@ -739,9 +803,9 @@ export default function LaunchpadPage() {
             <ArrowRight size={20} />
           </button>
 
-          {currentStep > 0 && (
+          {currentStep > STEPS.WELCOME && (
             <button
-              onClick={() => setCurrentStep(prev => prev - 1)}
+              onClick={() => advanceStep(currentStep - 1)}
               className="mt-4 text-gray-600 hover:text-gray-800"
             >
               ← Back
