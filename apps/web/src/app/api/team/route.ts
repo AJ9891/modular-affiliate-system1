@@ -67,11 +67,11 @@ export async function POST(request: NextRequest) {
     // Check if user has Agency plan
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('plan')
+      .select('plan, is_admin')
       .eq('id', user.id)
       .single()
 
-    if (userError || userData?.plan !== 'agency') {
+    if (userError || (!userData?.is_admin && userData?.plan !== 'agency')) {
       return NextResponse.json({ 
         error: 'Team collaboration is only available on the Agency plan' 
       }, { status: 403 })

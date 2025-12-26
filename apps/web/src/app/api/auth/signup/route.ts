@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 import { checkSupabase } from '@/lib/check-supabase'
 import { createClient } from '@supabase/supabase-js'
 
@@ -7,10 +8,12 @@ export async function POST(request: NextRequest) {
   const check = checkSupabase()
   if (check) return check
   
+  const supabase = createRouteHandlerClient({ cookies })
+  
   try {
     const { email, password } = await request.json()
 
-    const { data, error } = await supabase!.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
     })

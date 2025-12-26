@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
 
     const { data: userData } = await adminClient
       .from('users')
-      .select('custom_domain, subdomain, subscription_plan, email')
+      .select('custom_domain, subdomain, subscription_plan, email, is_admin')
       .eq('id', user.id)
       .single()
 
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       subdomain: userData?.subdomain || null,
       customDomain: userData?.custom_domain || null,
       plan: userData?.subscription_plan || 'starter',
-      canAddCustomDomain: userData?.subscription_plan === 'agency'
+      canAddCustomDomain: userData?.is_admin || userData?.subscription_plan === 'agency'
     })
   } catch (error: any) {
     console.error('Error fetching domains:', error)
@@ -91,11 +91,11 @@ export async function POST(request: NextRequest) {
     // Get user's subscription plan
     const { data: userData } = await adminClient
       .from('users')
-      .select('subscription_plan')
+      .select('subscription_plan, is_admin')
       .eq('id', user.id)
       .single()
 
-    if (type === 'custom' && userData?.subscription_plan !== 'agency') {
+    if (type === 'custom' && !userData?.is_admin && userData?.subscription_plan !== 'agency') {
       return NextResponse.json(
         { error: 'Custom domains are only available on Agency plan' },
         { status: 403 }

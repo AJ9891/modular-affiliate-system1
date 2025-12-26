@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 import { checkSupabase } from '@/lib/check-supabase'
 
 export async function POST(request: NextRequest) {
   const check = checkSupabase()
   if (check) return check
+  
+  const supabase = createRouteHandlerClient({ cookies })
   
   try {
     let body
@@ -29,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     console.log('Login attempt for:', email)
 
-    const { data, error } = await supabase!.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
@@ -85,30 +88,10 @@ export async function POST(request: NextRequest) {
       console.warn('SUPABASE_SERVICE_ROLE_KEY not set - cannot ensure user in public.users table')
     }
 
-    // Create a response with the session cookie
-    const response = NextResponse.json({ 
+    return NextResponse.json({ 
       user: data.user,
       session: data.session 
     }, { status: 200 })
-
-    // Set the session as a cookie
-    if (data.session) {
-      response.cookies.set('sb-access-token', data.session.access_token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7 // 7 days
-      })
-      
-      response.cookies.set('sb-refresh-token', data.session.refresh_token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7 // 7 days
-      })
-    }
-
-    return response
   } catch (error: any) {
     console.error('Login error:', error)
     return NextResponse.json(

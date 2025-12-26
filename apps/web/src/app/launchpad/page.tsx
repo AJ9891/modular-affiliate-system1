@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase-client'
+import { supabase } from '@/lib/supabase'
 
 export const runtime = 'edge'
 
@@ -21,6 +21,8 @@ import {
   Users,
   Sparkles
 } from 'lucide-react'
+
+import OnboardingSlideshow from '@/components/OnboardingSlides'
 
 // Step mapping - single source of truth
 const STEPS = {
@@ -48,10 +50,12 @@ export default function LaunchpadPage() {
   const [userData, setUserData] = useState<any>(null)
   const [setupComplete, setSetupComplete] = useState(false)
   const [userProfile, setUserProfile] = useState<any>(null)
+  const [userId, setUserId] = useState<string>('')
   const [selectedNiche, setSelectedNiche] = useState<string>('')
   const [selectedTemplate, setSelectedTemplate] = useState<string>('')
   const [createdFunnel, setCreatedFunnel] = useState<any>(null)
   const [showSuccessScreen, setShowSuccessScreen] = useState(false)
+  const [showOnboardingSlides, setShowOnboardingSlides] = useState(false)
   const [stats, setStats] = useState({
     funnels: 0,
     leads: 0,
@@ -65,37 +69,50 @@ export default function LaunchpadPage() {
 
   const loadUser = async () => {
     try {
-      const { data: auth } = await supabase.auth.getUser()
-      if (!auth?.user) {
+      const response = await fetch('/api/auth/me')
+      if (!response.ok) {
         router.push('/login')
         return
       }
 
+      const authData = await response.json()
+      const user = authData.user
+
       const { data } = await supabase
         .from('users')
-        .select('onboarding_step, max_launchpads, plan, email')
-        .eq('id', auth.user.id)
+        .select('onboarding_step, max_launchpads, plan, email, is_admin, onboarding_seen')
+        .eq('id', user.id)
         .single()
 
       if (!data) return
 
       setUserData(data)
       setUserProfile(data)
+      setUserId(user.id)
+      
+      console.log('User data:', data)
+      console.log('Onboarding step:', data.onboarding_step, 'Max launchpads:', data.max_launchpads, 'Is admin:', data.is_admin)
       
       // Pro users with completed onboarding skip to dashboard
       if (data.max_launchpads > 1 && data.onboarding_step === STEPS.COMPLETE) {
+        console.log('Redirecting pro user to dashboard')
         router.push('/dashboard')
         return
       }
 
       // Check capacity before allowing new launchpad
-      const canCreate = await canCreateLaunchpad(auth.user.id, data.max_launchpads)
-      if (!canCreate) {
-        router.push('/pricing')
-        return
+      const canCreate = data.is_admin || await canCreateLaunchpad(user.id, data.max_launchpads)
+      console.log('Can create launchpad:', canCreate, 'Max:', data.max_launchpads, 'Is admin:', data.is_admin)
+      
+      // Allow access to launchpad for onboarding, but track if they can create
+      const onboardingStep = data.onboarding_step ?? STEPS.WELCOME
+      setCurrentStep(onboardingStep)
+      setUserData({ ...data, canCreateLaunchpad: canCreate })
+      
+      // Show onboarding slides for users who haven't seen them yet
+      if (!data.onboarding_seen) {
+        setShowOnboardingSlides(true)
       }
-
-      setCurrentStep(data.onboarding_step ?? STEPS.WELCOME)
 
       // Load stats
       const statsResponse = await fetch('/api/analytics?range=30d')
@@ -295,6 +312,13 @@ export default function LaunchpadPage() {
   }
 
   const createFunnelFromTemplate = async (template: any, isLaunching = false) => {
+    // Check if user can create launchpads (admins bypass limits)
+    if (!userData?.is_admin && !userData?.canCreateLaunchpad) {
+      alert('You have reached your launchpad limit. Please upgrade your plan to create more launchpads.')
+      router.push('/pricing')
+      return
+    }
+    
     try {
       console.log('Creating funnel...', { template, niche: selectedNiche })
       
@@ -378,6 +402,11 @@ export default function LaunchpadPage() {
   const copyFunnelUrl = () => {
     navigator.clipboard.writeText(getFunnelUrl())
     alert('Funnel URL copied to clipboard!')
+  }
+
+  // Show onboarding slides for new users
+  if (showOnboardingSlides) {
+    return <OnboardingSlideshow userId={userId} />
   }
 
   // Success screen after launch
@@ -486,7 +515,7 @@ export default function LaunchpadPage() {
               onClick={() => {
                 setSetupComplete(true)
                 setShowSuccessScreen(false)
-                loadUser()
+                window.location.href = '/dashboard'
               }}
               className="flex-1 px-6 py-4 bg-gray-800 text-white font-bold rounded-lg hover:bg-gray-900 transition"
             >

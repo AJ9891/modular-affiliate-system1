@@ -1,8 +1,4 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import StripeConnectSection from '@/components/StripeConnectSection'
 
 export default function Dashboard() {
   const router = useRouter()
@@ -141,6 +137,9 @@ export default function Dashboard() {
             <div className="text-3xl font-bold text-brand-navy">$0</div>
           </div>
         </div>
+
+        {/* Stripe Connect Section */}
+        <StripeConnectSection />
 
         {/* Quick Actions */}
         <div className="bg-white rounded-xl shadow-sm p-8 mb-8">

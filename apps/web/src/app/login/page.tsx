@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 
 export default function Login() {
   const router = useRouter()
@@ -52,6 +53,14 @@ export default function Login() {
         setError(data.error || 'Login failed. Please check your credentials.')
         setLoading(false)
         return
+      }
+
+      // Set the session on the client-side
+      if (data.session) {
+        await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token
+        })
       }
 
       // Success - redirect to dashboard
