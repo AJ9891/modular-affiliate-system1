@@ -20,7 +20,7 @@
     "openai": "^6.9.1",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
-    "stripe": "^20.0.0",
+    "stripe": "^20.1.0",
     "tailwind-merge": "^2.3.0"
   },
   "devDependencies": {
