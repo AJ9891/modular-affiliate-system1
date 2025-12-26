@@ -11,12 +11,13 @@ export async function PUT(
   
   try {
     const body = await request.json()
-    const { name, blocks } = body
+    const { name, blocks, slug } = body
 
     const { data, error } = await supabase!
       .from('funnels')
       .update({
         name,
+        slug,
         blocks: JSON.stringify(blocks),
         updated_at: new Date().toISOString(),
       })
