@@ -1,4 +1,9 @@
+'use client'
+
 import StripeConnectSection from '@/components/StripeConnectSection'
+import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
 
 export default function Dashboard() {
   const router = useRouter()
