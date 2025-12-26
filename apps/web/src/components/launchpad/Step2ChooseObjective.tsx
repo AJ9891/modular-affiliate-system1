@@ -6,6 +6,7 @@ import { Target, Users, Lightbulb, ArrowRight } from 'lucide-react'
 interface Step2ChooseObjectiveProps {
   onNext: (objective: string) => void
   selectedObjective?: string
+  onBack?: () => void
 }
 
 const OBJECTIVES = [
@@ -32,7 +33,7 @@ const OBJECTIVES = [
   }
 ]
 
-export default function Step2ChooseObjective({ onNext, selectedObjective }: Step2ChooseObjectiveProps) {
+export default function Step2ChooseObjective({ onNext, selectedObjective, onBack }: Step2ChooseObjectiveProps) {
   const [selected, setSelected] = useState(selectedObjective || '')
 
   const handleNext = () => {
@@ -87,12 +88,20 @@ export default function Step2ChooseObjective({ onNext, selectedObjective }: Step
         })}
       </div>
 
-      <div className="flex justify-center">
+      <div className="flex justify-between">
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Back
+          </button>
+        )}
         <button
           onClick={handleNext}
           disabled={!selected}
           className={`
-            inline-flex items-center gap-2 px-8 py-3 rounded-lg font-semibold transition-colors
+            inline-flex items-center gap-2 px-8 py-3 rounded-lg font-semibold transition-colors ml-auto
             ${selected
               ? 'bg-blue-600 text-white hover:bg-blue-700'
               : 'bg-gray-200 text-gray-400 cursor-not-allowed'

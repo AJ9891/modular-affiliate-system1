@@ -4,11 +4,12 @@ import React, { useState } from 'react'
 import { ArrowRight, Eye, ExternalLink } from 'lucide-react'
 
 interface Step4PreviewTestProps {
-  onNext: () => void
   funnelUrl?: string
+  onTestComplete: () => void
+  onBack?: () => void
 }
 
-export default function Step4PreviewTest({ onNext, funnelUrl }: Step4PreviewTestProps) {
+export default function Step4PreviewTest({ funnelUrl, onTestComplete, onBack }: Step4PreviewTestProps) {
   const [hasTested, setHasTested] = useState(false)
 
   return (
@@ -76,11 +77,19 @@ export default function Step4PreviewTest({ onNext, funnelUrl }: Step4PreviewTest
         </div>
       </div>
 
-      {/* Action Button */}
-      <div className="flex justify-center">
+      {/* Action Buttons */}
+      <div className="flex justify-between">
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Back
+          </button>
+        )}
         <button
-          onClick={onNext}
-          className="inline-flex items-center gap-2 bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+          onClick={onTestComplete}
+          className="inline-flex items-center gap-2 bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors ml-auto"
         >
           Looks Good — Continue
           <ArrowRight className="w-5 h-5" />

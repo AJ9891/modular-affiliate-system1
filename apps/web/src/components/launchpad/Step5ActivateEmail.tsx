@@ -4,10 +4,12 @@ import React, { useState } from 'react'
 import { ArrowRight, Mail, ExternalLink, CheckCircle } from 'lucide-react'
 
 interface Step5ActivateEmailProps {
-  onNext: () => void
+  funnelUrl?: string
+  onEmailComplete: () => void
+  onBack?: () => void
 }
 
-export default function Step5ActivateEmail({ onNext }: Step5ActivateEmailProps) {
+export default function Step5ActivateEmail({ funnelUrl, onEmailComplete, onBack }: Step5ActivateEmailProps) {
   const [hasActivated, setHasActivated] = useState(false)
 
   const handleActivate = () => {
@@ -18,7 +20,7 @@ export default function Step5ActivateEmail({ onNext }: Step5ActivateEmailProps) 
   const handleConfirmActivated = () => {
     setHasActivated(true)
     setTimeout(() => {
-      onNext()
+      onEmailComplete()
     }, 1000)
   }
 
@@ -55,6 +57,14 @@ export default function Step5ActivateEmail({ onNext }: Step5ActivateEmailProps) 
 
       {/* Action Buttons */}
       <div className="space-y-4">
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-lg font-semibold border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Back
+          </button>
+        )}
         <button
           onClick={handleActivate}
           className="w-full inline-flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors"

@@ -187,7 +187,7 @@ export default function LaunchpadPage() {
   }
 
   const handleBack = () => {
-    if (currentStep > STEPS.MISSION_BRIEFING) {
+    if (currentStep !== null && currentStep > STEPS.MISSION_BRIEFING) {
       advanceStep(currentStep - 1)
     }
   }
@@ -380,7 +380,6 @@ export default function LaunchpadPage() {
         {currentStep === STEPS.CHOOSE_OBJECTIVE && (
           <Step2ChooseObjective
             selectedObjective={selectedObjective}
-            onObjectiveSelect={handleObjectiveSelect}
             onNext={handleObjectiveComplete}
             onBack={handleBack}
           />

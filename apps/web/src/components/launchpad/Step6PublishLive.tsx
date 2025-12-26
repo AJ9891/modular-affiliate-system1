@@ -4,11 +4,12 @@ import React, { useState } from 'react'
 import { ArrowRight, Rocket, AlertTriangle, ExternalLink } from 'lucide-react'
 
 interface Step6PublishLiveProps {
-  onNext: () => void
   funnelUrl?: string
+  onPublishComplete: () => void
+  onBack?: () => void
 }
 
-export default function Step6PublishLive({ onNext, funnelUrl }: Step6PublishLiveProps) {
+export default function Step6PublishLive({ funnelUrl, onPublishComplete, onBack }: Step6PublishLiveProps) {
   const [isConfirmed, setIsConfirmed] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)
 
@@ -20,7 +21,7 @@ export default function Step6PublishLive({ onNext, funnelUrl }: Step6PublishLive
     // Simulate publishing process
     setTimeout(() => {
       setIsPublishing(false)
-      onNext()
+      onPublishComplete()
     }, 2000)
   }
 
@@ -85,7 +86,15 @@ export default function Step6PublishLive({ onNext, funnelUrl }: Step6PublishLive
       )}
 
       {/* Publish Button */}
-      <div className="flex justify-center">
+      <div className="flex justify-between">
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-2 px-6 py-4 rounded-lg font-semibold border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Back
+          </button>
+        )}
         <button
           onClick={handlePublish}
           disabled={!isConfirmed || isPublishing}

@@ -5,18 +5,20 @@ import { ArrowRight, Sparkles, FileText } from 'lucide-react'
 import EnhancedFunnelBuilder from '@/components/EnhancedFunnelBuilder'
 
 interface Step3BuildFunnelProps {
-  onNext: () => void
-  funnelId?: string
+  onFunnelComplete: (funnelUrl: string) => void
+  selectedObjective?: string
+  onBack?: () => void
+  funnelId?: string | null
 }
 
-export default function Step3BuildFunnel({ onNext, funnelId }: Step3BuildFunnelProps) {
+export default function Step3BuildFunnel({ onFunnelComplete, selectedObjective, onBack, funnelId }: Step3BuildFunnelProps) {
   const [isSaved, setIsSaved] = useState(false)
 
   const handleSave = () => {
     setIsSaved(true)
     // In a real implementation, this would save the funnel
     setTimeout(() => {
-      onNext()
+      onFunnelComplete('/f/example-funnel') // Mock funnel URL
     }, 1000)
   }
 
@@ -77,12 +79,20 @@ export default function Step3BuildFunnel({ onNext, funnelId }: Step3BuildFunnelP
       </div>
 
       {/* Action Buttons */}
-      <div className="flex justify-end mt-6">
+      <div className="flex justify-between mt-6">
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Back
+          </button>
+        )}
         <button
           onClick={handleSave}
           disabled={isSaved}
           className={`
-            inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors
+            inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors ml-auto
             ${isSaved
               ? 'bg-green-600 text-white cursor-not-allowed'
               : 'bg-blue-600 text-white hover:bg-blue-700'

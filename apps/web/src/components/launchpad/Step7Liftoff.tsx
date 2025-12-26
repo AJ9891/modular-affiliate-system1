@@ -1,15 +1,25 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { CheckCircle, ExternalLink, BarChart3, Edit, Users } from 'lucide-react'
 
 interface Step7LiftoffProps {
   funnelUrl: string
+  onComplete?: () => void
   onViewAnalytics?: () => void
   onEditFunnel?: () => void
 }
 
-export default function Step7Liftoff({ funnelUrl, onViewAnalytics, onEditFunnel }: Step7LiftoffProps) {
+export default function Step7Liftoff({ funnelUrl, onComplete, onViewAnalytics, onEditFunnel }: Step7LiftoffProps) {
+  useEffect(() => {
+    if (onComplete) {
+      // Auto-complete after a short delay to show the success message
+      const timer = setTimeout(() => {
+        onComplete()
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [onComplete])
   return (
     <div className="max-w-2xl mx-auto px-6 py-12">
       <div className="text-center mb-8">
