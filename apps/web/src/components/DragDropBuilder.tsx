@@ -433,10 +433,11 @@ export default function DragDropBuilder({ initialBlocks = [], onSave }: DragDrop
 }
 
 function BlockPreview({ block }: { block: FunnelBlock }) {
-  const style = {
+  const paddingValue = designTokens.spacing[block.style.padding as keyof typeof designTokens.spacing] || designTokens.spacing.md;
+  const style: React.CSSProperties = {
     backgroundColor: block.style.backgroundColor || '#fff',
     color: block.style.textColor || '#000',
-    padding: designTokens.spacing[block.style.padding as keyof typeof designTokens.spacing] || designTokens.spacing.md,
+    padding: typeof paddingValue === 'string' ? paddingValue : `${paddingValue}px`,
   }
 
   return (
