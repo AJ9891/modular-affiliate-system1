@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import "./globals.css"
 import { AuthProvider } from "@/contexts/AuthContext"
+import { BrandModeProvider } from "@/contexts/BrandModeContext"
 import ConditionalSidebar from "@/components/ConditionalSidebar"
 import ConditionalWrapper from "@/components/ConditionalWrapper"
 import AIChatWidget from "@/components/AIChatWidget"
@@ -64,12 +65,14 @@ export default function RootLayout({
       </head>
       <body className="flex flex-col min-h-screen">
         <AuthProvider>
-          <ConditionalSidebar />
-          <ConditionalWrapper>
-            {children}
-          </ConditionalWrapper>
-          <AIChatWidget />
-          <Footer />
+          <BrandModeProvider>
+            <ConditionalSidebar />
+            <ConditionalWrapper>
+              {children}
+            </ConditionalWrapper>
+            <AIChatWidget />
+            <Footer />
+          </BrandModeProvider>
         </AuthProvider>
       </body>
     </html>
