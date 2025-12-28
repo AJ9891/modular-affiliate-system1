@@ -33,12 +33,12 @@ Return JSON:
 
 export const ANTIGURU_FALLBACK = {
   intro:
-    'There's a lot of loud promises in this space. We decided to be specific instead.',
+    "There's a lot of loud promises in this space. We decided to be specific instead.",
   items: [
     {
       not: '"Make money while you sleep."',
       instead:
-        'Build systems that work when you show up—and keep working when you don't.'
+        "Build systems that work when you show up—and keep working when you don't."
     },
     {
       not: '"No work required."',
@@ -48,7 +48,7 @@ export const ANTIGURU_FALLBACK = {
     {
       not: '"Just copy my funnel."',
       instead:
-        'Understand why funnels work so you're not stuck copying forever.'
+        "Understand why funnels work so you're not stuck copying forever."
     },
     {
       not: '"Guaranteed results."',

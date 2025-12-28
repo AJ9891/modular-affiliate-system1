@@ -1,6 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 import { BRAND_MODES, BrandMode, BrandModeKey } from '@/contexts/BrandModeContext'
 
+// Re-export types for convenience
+export type { BrandMode, BrandModeKey }
+
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!

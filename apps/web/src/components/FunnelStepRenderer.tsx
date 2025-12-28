@@ -1,8 +1,15 @@
 import { FunnelStepType, FUNNEL_FLOW } from "@/config/funnelFlow";
 import { useBrandMode } from "@/contexts/BrandModeContext";
 import { STEP_COMPONENTS } from "./stepRegistry";
+import { ROCKET_FALLBACK_COPY } from "@/lib/brandModes";
 
-export const FunnelStepRenderer = ({ step }: { step: FunnelStepType }) => {
+export const FunnelStepRenderer = ({ 
+  step,
+  content 
+}: { 
+  step: FunnelStepType
+  content?: any 
+}) => {
   const { mode } = useBrandMode();
   
   const allowedSteps = FUNNEL_FLOW;
@@ -12,5 +19,9 @@ export const FunnelStepRenderer = ({ step }: { step: FunnelStepType }) => {
   }
   
   const Component = STEP_COMPONENTS[step][mode];
-  return <Component />;
+  
+  // Provide fallback content if none is provided
+  const defaultContent = step === 'hero' ? ROCKET_FALLBACK_COPY : {};
+  
+  return <Component content={content || defaultContent} />;
 };

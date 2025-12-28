@@ -4,7 +4,7 @@ import { getComponentsByBrand } from '@/components/componentRegistry'
 import { shouldRenderComponent, FunnelComponent } from '@/lib/componentFiltering'
 
 /**
- * Example: Rendering a funnel with brand-aware component filtering
+ * Example: Rendering a funnel with brand-aware component filtering (Server-side)
  */
 export async function renderFunnelWithBrand(funnelId: string, blocks: FunnelComponent[]) {
   // 1. Get the funnel's brand mode from the database

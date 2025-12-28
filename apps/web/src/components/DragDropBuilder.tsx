@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { BrandMode, useBrandMode } from '@/contexts/BrandModeContext'
+import { BrandModeKey, useBrandMode } from '@/contexts/BrandModeContext'
 import { designTokens } from '@/config/designTokens'
 import { COMPONENT_CONTRACTS } from '@/types/component'
 
@@ -10,7 +10,7 @@ export interface FunnelBlock {
   type: 'hero' | 'benefits' | 'testimonials' | 'cta' | 'features' | 'pricing'
   content: Record<string, any>
   style: Record<string, any>
-  brandMode?: BrandMode
+  brandMode?: BrandModeKey
 }
 
 interface DragDropBuilderProps {
