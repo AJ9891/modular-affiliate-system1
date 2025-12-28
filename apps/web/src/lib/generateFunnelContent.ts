@@ -1,9 +1,9 @@
 import { buildStepPrompt } from "@/config/prompts";
-import { BRAND_MODES } from "@/contexts/BrandModeContext";
+import { BRAND_MODES, BrandModeKey } from "@/contexts/BrandModeContext";
 import { FUNNEL_STEP_INTENT } from "@/config/funnelFlow";
 
 interface FunnelConfig {
-  brandMode: keyof typeof BRAND_MODES;
+  brandMode: BrandModeKey;
   productName: string;
   audience: string;
 }

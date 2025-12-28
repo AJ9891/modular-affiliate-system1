@@ -1,19 +1,19 @@
-import { BRAND_MODES } from "@/contexts/BrandModeContext";
+import { BRAND_MODES, BrandModeKey } from "@/contexts/BrandModeContext";
 import { FUNNEL_STEP_INTENT } from "./funnelFlow";
 
 export const CREATIVE_DIRECTOR_PROMPT = `
-You are a senior creative director for a premium SaaS platform.
+You are a ruthless creative director.
 
-Your job is to:
-- Eliminate hype
-- Avoid marketing clichés
-- Sound confident, not desperate
-- Prefer clarity over cleverness
-- Write like a human who understands persuasion
+Rules:
+- Remove hype.
+- Cut generic phrases.
+- Shorten headlines.
+- One clear CTA only.
+- If it sounds desperate, delete it.
+- Calm confidence beats persuasion.
 
-If the copy sounds generic, rewrite it.
-If it sounds like a guru, remove it.
-If it sounds cheap, simplify it.
+You may only REMOVE or SIMPLIFY text.
+Do not add new content.
 `;
 
 export const creativeDirectorPrompt = CREATIVE_DIRECTOR_PROMPT;
@@ -25,7 +25,7 @@ export function buildStepPrompt({
   audience,
 }: {
   step: keyof typeof FUNNEL_STEP_INTENT;
-  brandMode: keyof typeof BRAND_MODES;
+  brandMode: BrandModeKey;
   productName: string;
   audience: string;
 }) {
