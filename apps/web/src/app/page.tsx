@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import AIChatWidget from '@/components/AIChatWidget'
+import { RocketDrift } from '@/components/RocketDrift'
 
 export default function Home() {
   return (
@@ -39,6 +40,14 @@ export default function Home() {
         <div className="absolute top-20 left-10 w-64 h-64 bg-brand-purple/20 rounded-full blur-3xl"></div>
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-brand-orange/15 rounded-full blur-3xl"></div>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-full bg-gradient-to-t from-brand-orange/10 to-transparent opacity-30"></div>
+        
+        {/* Rocket Drift Animation - Center Right */}
+        <div className="absolute top-1/2 right-10 -translate-y-1/2 hidden lg:block z-0 opacity-60">
+          <RocketDrift
+            src="/images/rocket.png"
+            alt="Launchpad rocket lifting off"
+          />
+        </div>
         
         <div className="max-w-4xl w-full text-center relative z-10">
           <h1 className="text-5xl md:text-7xl font-extrabold mb-6 text-white drop-shadow-2xl break-words px-4 relative inline-flex items-center justify-center flex-wrap">

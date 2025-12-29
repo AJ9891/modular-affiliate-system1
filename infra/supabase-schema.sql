@@ -122,6 +122,18 @@ create table if not exists public.theme_presets (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- Brand Modes
+create table if not exists public.brand_modes (
+  id text primary key,
+  name text not null,
+  description text not null,
+  is_system boolean default false,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+comment on table public.brand_modes is 'Stores brand mode configurations for different brand personalities and themes';
+
 -- Leads (captured from funnels)
 create table if not exists public.leads (
   id uuid default gen_random_uuid() primary key,

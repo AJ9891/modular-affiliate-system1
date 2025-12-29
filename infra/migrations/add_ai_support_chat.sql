@@ -32,36 +32,38 @@ create index if not exists idx_chat_messages_created on public.chat_messages(cre
 -- Conversations: users can only see their own
 alter table public.chat_conversations enable row level security;
 
-create policy "Users can view their own conversations"
-  on public.chat_conversations for select
-  using (auth.uid() = user_id);
-
-create policy "Users can create their own conversations"
-  on public.chat_conversations for insert
-  with check (auth.uid() = user_id);
-
-create policy "Users can update their own conversations"
-  on public.chat_conversations for update
-  using (auth.uid() = user_id);
+do $$
+begin
+  if not exists (select 1 from pg_policies where tablename = 'chat_conversations' and policyname = 'Users can view their own conversations') then
+    create policy "Users can view their own conversations" on public.chat_conversations for select using (auth.uid() = user_id);
+  end if;
+  
+  if not exists (select 1 from pg_policies where tablename = 'chat_conversations' and policyname = 'Users can create their own conversations') then
+    create policy "Users can create their own conversations" on public.chat_conversations for insert with check (auth.uid() = user_id);
+  end if;
+  
+  if not exists (select 1 from pg_policies where tablename = 'chat_conversations' and policyname = 'Users can update their own conversations') then
+    create policy "Users can update their own conversations" on public.chat_conversations for update using (auth.uid() = user_id);
+  end if;
+end $$;
 
 -- Messages: users can see messages in their conversations
 alter table public.chat_messages enable row level security;
 
-create policy "Users can view messages in their conversations"
-  on public.chat_messages for select
-  using (
-    conversation_id in (
-      select id from chat_conversations where user_id = auth.uid()
-    )
-  );
-
-create policy "Users can create messages in their conversations"
-  on public.chat_messages for insert
-  with check (
-    conversation_id in (
-      select id from chat_conversations where user_id = auth.uid()
-    )
-  );
+do $$
+begin
+  if not exists (select 1 from pg_policies where tablename = 'chat_messages' and policyname = 'Users can view messages in their conversations') then
+    create policy "Users can view messages in their conversations" on public.chat_messages for select using (
+      conversation_id in (select id from chat_conversations where user_id = auth.uid())
+    );
+  end if;
+  
+  if not exists (select 1 from pg_policies where tablename = 'chat_messages' and policyname = 'Users can create messages in their conversations') then
+    create policy "Users can create messages in their conversations" on public.chat_messages for insert with check (
+      conversation_id in (select id from chat_conversations where user_id = auth.uid())
+    );
+  end if;
+end $$;
 
 -- Function to automatically update conversation's updated_at
 create or replace function update_conversation_timestamp()
@@ -75,6 +77,7 @@ end;
 $$ language plpgsql;
 
 -- Trigger to update conversation timestamp on new message
+drop trigger if exists update_conversation_on_message on chat_messages;
 create trigger update_conversation_on_message
   after insert on chat_messages
   for each row execute function update_conversation_timestamp();
@@ -96,6 +99,7 @@ begin
 end;
 $$ language plpgsql;
 
+drop trigger if exists generate_title_on_first_message on chat_messages;
 -- Trigger to generate title from first user message
 create trigger generate_title_on_first_message
   after insert on chat_messages

@@ -32,20 +32,27 @@ alter table public.downloads enable row level security;
 alter table public.download_logs enable row level security;
 
 -- Create policies
-create policy "Users can manage their own downloads" on public.downloads
-  for all using (auth.uid() = user_id);
-
-create policy "Users can view download logs for their downloads" on public.download_logs
-  for select using (exists (
-    select 1 from public.downloads 
-    where downloads.id = download_logs.download_id 
-    and downloads.user_id = auth.uid()
-  ));
+do $$
+begin
+  if not exists (select 1 from pg_policies where tablename = 'downloads' and policyname = 'Users can manage their own downloads') then
+    create policy "Users can manage their own downloads" on public.downloads for all using (auth.uid() = user_id);
+  end if;
+  
+  if not exists (select 1 from pg_policies where tablename = 'download_logs' and policyname = 'Users can view download logs for their downloads') then
+    create policy "Users can view download logs for their downloads" on public.download_logs for select using (
+      exists (
+        select 1 from public.downloads 
+        where downloads.id = download_logs.download_id 
+        and downloads.user_id = auth.uid()
+      )
+    );
+  end if;
+end $$;
 
 -- Create indexes
-create index idx_downloads_user_id on public.downloads(user_id);
-create index idx_download_logs_download_id on public.download_logs(download_id);
-create index idx_download_logs_email on public.download_logs(email);
+create index if not exists idx_downloads_user_id on public.downloads(user_id);
+create index if not exists idx_download_logs_download_id on public.download_logs(download_id);
+create index if not exists idx_download_logs_email on public.download_logs(email);
 
 -- Create storage bucket for downloads
 insert into storage.buckets (id, name, public)
@@ -53,22 +60,33 @@ values ('downloads', 'downloads', true)
 on conflict (id) do nothing;
 
 -- Set up storage policies
-create policy "Users can upload their own files"
-on storage.objects for insert
-to authenticated
-with check (bucket_id = 'downloads' and (storage.foldername(name))[1] = auth.uid()::text);
-
-create policy "Users can view their own files"
-on storage.objects for select
-to authenticated
-using (bucket_id = 'downloads' and (storage.foldername(name))[1] = auth.uid()::text);
-
-create policy "Users can delete their own files"
-on storage.objects for delete
-to authenticated
-using (bucket_id = 'downloads' and (storage.foldername(name))[1] = auth.uid()::text);
-
-create policy "Public access to files"
-on storage.objects for select
-to public
-using (bucket_id = 'downloads');
+do $$
+begin
+  if not exists (select 1 from pg_policies where tablename = 'objects' and schemaname = 'storage' and policyname = 'Users can upload their own files') then
+    create policy "Users can upload their own files"
+    on storage.objects for insert
+    to authenticated
+    with check (bucket_id = 'downloads' and (storage.foldername(name))[1] = auth.uid()::text);
+  end if;
+  
+  if not exists (select 1 from pg_policies where tablename = 'objects' and schemaname = 'storage' and policyname = 'Users can view their own files') then
+    create policy "Users can view their own files"
+    on storage.objects for select
+    to authenticated
+    using (bucket_id = 'downloads' and (storage.foldername(name))[1] = auth.uid()::text);
+  end if;
+  
+  if not exists (select 1 from pg_policies where tablename = 'objects' and schemaname = 'storage' and policyname = 'Users can delete their own files') then
+    create policy "Users can delete their own files"
+    on storage.objects for delete
+    to authenticated
+    using (bucket_id = 'downloads' and (storage.foldername(name))[1] = auth.uid()::text);
+  end if;
+  
+  if not exists (select 1 from pg_policies where tablename = 'objects' and schemaname = 'storage' and policyname = 'Public access to files') then
+    create policy "Public access to files"
+    on storage.objects for select
+    to public
+    using (bucket_id = 'downloads');
+  end if;
+end $$;
