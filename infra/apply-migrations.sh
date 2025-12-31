@@ -46,6 +46,7 @@ MIGRATIONS=(
   "add_ai_chat_only.sql"
   "add_ai_support_chat.sql"
   "optimize_rls_and_performance.sql"
+  "add_funnel_rls_policies.sql"
 )
 
 # Counters
