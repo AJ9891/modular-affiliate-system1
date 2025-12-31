@@ -14,12 +14,12 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { usePersonality } from './PersonalityContext'
+import { usePersonality } from '@/lib/personality/PersonalityContext'
 import { 
   resolveSoundBehavior, 
   shouldPlaySound,
   getSoundFilePath 
-} from './soundBehavior'
+} from '@/lib/personality/soundBehavior'
 
 /**
  * Sound trigger types

@@ -166,7 +166,7 @@ export async function generateOnServer(
   'use server'
   
   // Resolve personality
-  const personality = resolvePersonality(brandMode)
+  const personality = resolvePersonality(brandMode as any)
   const promptProfile = resolveAIPrompt(personality)
   
   // Generate

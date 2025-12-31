@@ -159,7 +159,7 @@ export function getHeroAnimationVariants(behavior: HeroBehavior) {
         x: 0,
         transition: {
           duration: behavior.headlineStyle === 'fractured' ? 0.3 : 0.6,
-          ease: behavior.headlineStyle === 'fractured' ? 'easeOut' : 'easeInOut'
+          ease: behavior.headlineStyle === 'fractured' ? 'easeOut' as const : 'easeInOut' as const
         }
       }
     },

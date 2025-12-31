@@ -6,7 +6,7 @@
 
 import { resolvePersonality } from '@/lib/personality'
 import { resolveAIPrompt } from './promptResolver'
-import type { AIPromptProfile, BrandMode } from './types'
+import type { AIPromptProfile, BrandModeId } from './types'
 
 /**
  * Example 1: Basic AI Generation
@@ -14,7 +14,7 @@ import type { AIPromptProfile, BrandMode } from './types'
  * The simplest case - generate content respecting personality
  */
 export async function generateContent(
-  brandMode: BrandMode | string,
+  brandMode: BrandModeId | string,
   userPrompt: string
 ) {
   // Resolve personality from brand_mode
@@ -40,7 +40,7 @@ export async function generateContent(
  * Generate hero copy with personality enforcement
  */
 export async function generateHeroSection(
-  brandMode: BrandMode | string,
+  brandMode: BrandModeId | string,
   niche: string,
   productName: string
 ) {
@@ -70,7 +70,7 @@ Remember: ${promptProfile.forbidden.map(f => `Never ${f}`).join('. ')}.
  * Generate personality-consistent email series
  */
 export async function generateEmailSequence(
-  brandMode: BrandMode | string,
+  brandMode: BrandModeId | string,
   context: {
     productName: string
     audience: string
@@ -137,7 +137,7 @@ export function validateGeneratedContent(
  * Example 5: Complete Flow with Validation
  */
 export async function generateAndValidate(
-  brandMode: BrandMode | string,
+  brandMode: BrandModeId | string,
   userPrompt: string,
   maxRetries = 3
 ) {
