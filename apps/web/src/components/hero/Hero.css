@@ -1,0 +1,125 @@
+/**
+ * Hero Styles
+ * 
+ * Base styles for hero component.
+ * Personality-specific styles applied via data attributes.
+ */
+
+/* Base hero styles */
+.hero-root {
+  @apply relative w-full py-20 px-6;
+}
+
+.hero-high-tension {
+  @apply overflow-hidden;
+}
+
+.hero-glitchable {
+  @apply will-change-transform;
+}
+
+/* Headline styles */
+.hero-headline {
+  @apply text-4xl md:text-6xl font-bold mb-6;
+}
+
+.hero-headline-confident {
+  @apply tracking-tight leading-tight;
+}
+
+.hero-headline-flat {
+  @apply tracking-normal leading-relaxed font-normal;
+}
+
+.hero-headline-fractured {
+  @apply tracking-wider leading-loose;
+  font-family: 'Space Mono', monospace;
+}
+
+.hero-headline-urgent {
+  @apply uppercase;
+}
+
+/* Subcopy styles */
+.hero-subcopy {
+  @apply text-lg md:text-xl mb-8;
+}
+
+.hero-subcopy-minimal {
+  @apply text-gray-600 max-w-md;
+}
+
+.hero-subcopy-explanatory {
+  @apply text-gray-700 max-w-2xl leading-relaxed;
+}
+
+.hero-subcopy-resistant {
+  @apply text-gray-500 max-w-xl italic;
+}
+
+/* Glitch animation */
+@keyframes glitch {
+  0% {
+    transform: translate(0);
+    opacity: 1;
+  }
+  20% {
+    transform: translate(-2px, 2px);
+    opacity: 0.8;
+  }
+  40% {
+    transform: translate(2px, -2px);
+    opacity: 0.9;
+  }
+  60% {
+    transform: translate(-1px, 1px);
+    opacity: 0.7;
+  }
+  80% {
+    transform: translate(1px, -1px);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(0);
+    opacity: 1;
+  }
+}
+
+.animate-glitch {
+  animation: glitch 0.1s linear;
+}
+
+/* Glitch intensity data attributes */
+[data-glitch-intensity="0.8"] {
+  @apply text-red-500;
+  text-shadow: 2px 0 0 cyan, -2px 0 0 magenta;
+}
+
+[data-glitch-intensity="0.4"] {
+  text-shadow: 1px 0 0 cyan, -1px 0 0 magenta;
+}
+
+/* Style-specific adjustments */
+[data-style="fractured"] {
+  letter-spacing: 0.1em;
+}
+
+[data-style="flat"] {
+  font-weight: 400;
+}
+
+[data-style="confident"] {
+  font-weight: 700;
+}
+
+[data-style="minimal"] {
+  @apply text-sm;
+}
+
+[data-style="explanatory"] {
+  @apply text-base;
+}
+
+[data-style="resistant"] {
+  @apply text-sm opacity-80;
+}
