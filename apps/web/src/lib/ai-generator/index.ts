@@ -1,3 +1,23 @@
+/**
+ * AI Generator - Public API
+ * 
+ * Personality-governed AI content generation
+ */
+
+// New API (recommended)
+export type {
+  AIPromptProfile,
+  AIGenerationRequest,
+  AIGenerationResponse
+} from './types';
+
+export { resolveAIPrompt } from './promptResolver';
+
+export { aiMeltdown } from './brandModes/aiMeltdown';
+export { antiGuru } from './brandModes/antiGuru';
+export { rocketFuture } from './brandModes/rocketFuture';
+
+// Legacy API (deprecated)
 export type {
   BrandModeId,
   BrandPersonality,
