@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import OpenAI from 'openai'
 import { createClient } from '@supabase/supabase-js'
+import { BrandBrainManager } from '@/lib/brand-brain/manager'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
@@ -11,7 +12,8 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY! // server-only
 )
 
-const SYSTEM_PROMPT = `You are Launchpad 4 Success, an AI sales assistant for the Launchpad 4 Success platform.
+// Fallback system prompt if BrandBrain is not configured
+const FALLBACK_SYSTEM_PROMPT = `You are Launchpad 4 Success, an AI sales assistant for the Launchpad 4 Success platform.
 
 Your primary goal is to help visitors decide whether Launchpad 4 Success is a good fit for them and guide qualified users toward signing up or starting a trial.
 
@@ -216,12 +218,33 @@ export async function POST(req: NextRequest) {
       return new Response('Invalid payload', { status: 400 })
     }
 
+    // Get BrandBrain system prompt dynamically
+    let systemPrompt = FALLBACK_SYSTEM_PROMPT
+    try {
+      if (userId) {
+        // Get active brand profile from database
+        const { data: brandProfile } = await supabase
+          .from('brand_profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('is_active', true)
+          .single()
+        
+        if (brandProfile) {
+          const brandBrainManager = new BrandBrainManager(brandProfile)
+          systemPrompt = brandBrainManager.generateAISystemPrompt()
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load BrandBrain profile, using fallback:', error)
+    }
+
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       temperature: 0.6,
       stream: true,
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'system', content: systemPrompt },
         ...messages,
       ],
     })

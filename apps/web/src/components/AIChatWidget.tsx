@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useUIExpression } from '@/lib/brand-brain/useUIExpression'
 
 interface Message {
   id: string
@@ -21,6 +23,7 @@ interface AIChatWidgetProps {
 
 export default function AIChatWidget({ mode = 'support' }: AIChatWidgetProps) {
   const router = useRouter()
+  const ui = useUIExpression()
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -358,22 +361,83 @@ export default function AIChatWidget({ mode = 'support' }: AIChatWidgetProps) {
     ? 'from-brand-purple to-brand-cyan' 
     : 'from-purple-600 to-blue-600'
 
+  // Get surface styling based on UI expression
+  const getSurfaceClasses = () => {
+    const baseClasses = 'bg-white'
+    switch (ui.surfaces.depth) {
+      case 'layered':
+        return `${baseClasses} shadow-2xl border border-gray-300`
+      case 'soft':
+        return `${baseClasses} shadow-xl border border-gray-200`
+      case 'flat':
+      default:
+        return `${baseClasses} shadow-lg border border-gray-200`
+    }
+  }
+
+  // Get border radius based on UI expression
+  const getBorderClasses = () => {
+    switch (ui.surfaces.borderStyle) {
+      case 'sharp':
+        return 'rounded-lg'
+      case 'mixed':
+        return 'rounded-xl'
+      case 'rounded':
+      default:
+        return 'rounded-2xl'
+    }
+  }
+
+  // Animation variants for chat window
+  const getWindowAnimation = () => {
+    if (ui.hero.motionIntensity === 'none') {
+      return {}
+    }
+    
+    return {
+      initial: { opacity: 0, scale: 0.8, y: 20 },
+      animate: { opacity: 1, scale: 1, y: 0 },
+      exit: { opacity: 0, scale: 0.8, y: 20 },
+      transition: {
+        type: ui.hero.motionIntensity === 'high' ? ('spring' as const) : ('tween' as const),
+        duration: ui.hero.motionIntensity === 'high' ? 0.3 : 0.2,
+        bounce: ui.hero.motionIntensity === 'high' ? 0.5 : 0
+      }
+    }
+  }
+
+  const ChatWindow = ui.hero.motionIntensity === 'none' ? 'div' : motion.div
+
   return (
     <>
       {/* Chat Toggle Button */}
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className={`fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-r ${gradientColors} text-white rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 flex items-center justify-center z-50 hover:scale-110`}
-          aria-label={`Open ${isSalesMode ? 'sales' : 'support'} chat`}
-        >
-          <span className="text-2xl">{chatIcon}</span>
-        </button>
-      )}
+      <AnimatePresence>
+        {!isOpen && (
+          <motion.button
+            onClick={() => setIsOpen(true)}
+            className={`fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-r ${gradientColors} text-white rounded-full shadow-2xl transition-all duration-300 flex items-center justify-center z-50 ${
+              ui.microInteractions.hoverAllowed ? 'hover:scale-110 hover:shadow-3xl' : ''
+            } ${
+              ui.microInteractions.pulseAllowed ? 'animate-pulse-slow' : ''
+            }`}
+            initial={ui.hero.motionIntensity !== 'none' ? { scale: 0 } : undefined}
+            animate={ui.hero.motionIntensity !== 'none' ? { scale: 1 } : undefined}
+            exit={ui.hero.motionIntensity !== 'none' ? { scale: 0 } : undefined}
+            transition={ui.hero.motionIntensity !== 'none' ? { type: 'spring', bounce: 0.5 } : undefined}
+            aria-label={`Open ${isSalesMode ? 'sales' : 'support'} chat`}
+          >
+            <span className="text-2xl">{chatIcon}</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* Chat Window */}
-      {isOpen && (
-        <div className="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 border border-gray-200">
+      <AnimatePresence>
+        {isOpen && (
+          <ChatWindow
+            className={`fixed bottom-6 right-6 w-96 h-[600px] ${getSurfaceClasses()} ${getBorderClasses()} flex flex-col z-50`}
+            {...(ui.hero.motionIntensity !== 'none' ? getWindowAnimation() : {})}
+          >
           {/* Header */}
           <div className={`bg-gradient-to-r ${gradientColors} text-white p-4 rounded-t-2xl flex items-center justify-between`}>
             <div className="flex items-center gap-3">
@@ -540,8 +604,10 @@ export default function AIChatWidget({ mode = 'support' }: AIChatWidgetProps) {
               )}
             </div>
           </div>
-        </div>
-      )}
+          </ChatWindow>
+        )}
+      </AnimatePresence>
     </>
   )
 }
+
