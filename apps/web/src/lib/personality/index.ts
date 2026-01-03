@@ -49,7 +49,70 @@ export type {
 
 export {
   resolveHeroBehavior,
-  getHeroClasses,
+  getHeroClasses
+} from './heroBehavior';
+
+// Copy Contract System
+export type {
+  CopyContract
+} from './copyContract';
+
+export {
+  resolveHeroCopyContract,
+  resolveFeatureCopyContract,
+  resolveErrorCopyContract,
+  validateCopy
+} from './copyContract';
+
+// AI Profile System
+export type {
+  AIProfile
+} from './aiProfile';
+
+export {
+  resolveAIPrompt,
+  buildConstraintList,
+  validateAIOutput
+} from './aiProfile';
+
+// Prompt Builder System
+export type {
+  PromptConfig
+} from './promptBuilder';
+
+export {
+  buildHeroPrompt,
+  buildFeaturePrompt,
+  buildErrorPrompt,
+  buildAffiliatePrompt,
+  buildOnboardingPrompt,
+  generateAI
+} from './promptBuilder';
+
+// Complete Cascade Pattern
+export type {
+  HeroContent,
+  FeatureContent,
+  ErrorContent,
+  AffiliateContent,
+  OnboardingContent,
+  EmptyStateContent
+} from './cascade';
+
+export {
+  generateHeroCopy,
+  generateFeatureCopy,
+  generateErrorCopy,
+  generateAffiliateCopy,
+  generateOnboardingCopy,
+  generateEmptyStateCopy,
+  generateCompleteFunnel,
+  previewCascade,
+  getCascadeSummary
+} from './cascade';
+
+// Additional hero utilities
+export {
   getHeroAnimationVariants,
   getHeroGlitchParams
 } from './heroBehavior';

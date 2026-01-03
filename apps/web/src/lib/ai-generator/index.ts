@@ -12,6 +12,7 @@ export type {
 } from './types';
 
 export { resolveAIPrompt } from './promptResolver';
+export { buildHeroPrompt } from './generateHeroCopy';
 
 export { aiMeltdown } from './brandModes/aiMeltdown';
 export { antiGuru } from './brandModes/antiGuru';
