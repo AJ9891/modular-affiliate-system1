@@ -28,9 +28,17 @@ const AI_MELTDOWN_PERSONALITY: PersonalityProfile = {
   // Core behavioral rules
   authorityTone: 'unraveling',
   humorDensity: 'glitchy',
-  motionStyle: 'unstable',
   soundProfile: 'glitch_comm',
   trustPosture: 'co-conspirator',
+
+  // Visual behavior (ambient agreement with chaos)
+  visuals: {
+    motionProfile: 'unstable',
+    ornamentLevel: 'expressive',
+    contrastBias: 'broken',
+    animationBudget: 'low',
+    spatialRhythm: 'compressed'
+  },
 
   // Vocabulary rules
   vocabulary: {
@@ -85,9 +93,17 @@ const ANTI_GURU_PERSONALITY: PersonalityProfile = {
   // Core behavioral rules
   authorityTone: 'blunt',
   humorDensity: 'dry',
-  motionStyle: 'minimal',
   soundProfile: 'ambient_checklist',
   trustPosture: 'peer',
+
+  // Visual behavior (ambient agreement with directness)
+  visuals: {
+    motionProfile: 'flat',
+    ornamentLevel: 'none',
+    contrastBias: 'high',
+    animationBudget: 'zero',
+    spatialRhythm: 'generous'
+  },
 
   // Vocabulary rules
   vocabulary: {
@@ -152,9 +168,17 @@ const ROCKET_FUTURE_PERSONALITY: PersonalityProfile = {
   // Core behavioral rules
   authorityTone: 'calm',
   humorDensity: 'dry',
-  motionStyle: 'procedural',
   soundProfile: 'procedural_hum',
   trustPosture: 'mentor',
+
+  // Visual behavior (ambient agreement with optimism)
+  visuals: {
+    motionProfile: 'calm',
+    ornamentLevel: 'light',
+    contrastBias: 'neutral',
+    animationBudget: 'micro-only',
+    spatialRhythm: 'standard'
+  },
 
   // Vocabulary rules
   vocabulary: {
@@ -190,6 +214,17 @@ const ROCKET_FUTURE_PERSONALITY: PersonalityProfile = {
   },
 
   // Content generation
+  contentGeneration: {
+    paragraphLength: 'medium',
+    sentenceStructure: 'varied',
+    callToActionStyle: 'soft',
+    storytellingMode: 'narrative-driven'
+  },
+
+  // System hints
+  systemPromptSuffix: `PERSONALITY RULES: You are optimistic and forward-thinking. Use space/future metaphors naturally. Encourage ambition. Acknowledge challenges but frame them as solvable. Speak with calm confidence. Use technical terms when appropriate but explain them. Emojis are allowed when they add meaning (🚀 for launches, ✨ for special moments).`,
+  fallbackBehavior: 'maintain-character'
+};
   contentGeneration: {
     paragraphLength: 'medium',
     sentenceStructure: 'varied',

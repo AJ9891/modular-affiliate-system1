@@ -10,13 +10,19 @@ export type {
   BrandMode,
   AuthorityTone,
   HumorDensity,
-  MotionStyle,
+  MotionProfile,
+  OrnamentLevel,
+  ContrastBias,
+  AnimationBudget,
+  SpatialRhythm,
   SoundProfile,
   TrustPosture,
   VocabularyRules,
   InteractionRules,
   ContentGenerationRules,
-  PersonalityProfile
+  VisualBehaviorRules,
+  PersonalityProfile,
+  PersonalityContext
 } from './types';
 
 export { 
@@ -32,6 +38,24 @@ export {
   getSystemPrompt
 } from './resolvePersonality';
 
+// Expression resolvers - Components ask: "How should I behave?"
+export type {
+  VisualTokens,
+  MotionTokens
+} from './resolvers';
+
+export {
+  resolveVisualTokens,
+  resolveMotionTokens,
+  resolveToneProfile,
+  resolveSoundProfile,
+  resolveIconStyle,
+  getPersonalityContext,
+  // Legacy aliases
+  resolveVisualProfile,
+  resolveMotionProfile
+} from './resolvers';
+
 // React integration
 export {
   PersonalityProvider,
@@ -39,7 +63,8 @@ export {
   withPersonality,
   usePersonalityMotion,
   usePersonalitySound,
-  usePersonalityValidation
+  usePersonalityValidation,
+  usePersonalityExpression // NEW: Context-aware hook for visual/motion/sound
 } from './PersonalityContext';
 
 // Domain-specific resolvers

@@ -1,4 +1,5 @@
 import OpenAI from 'openai'
+import { BrandBrainManager } from './brand-brain/manager'
 
 if (!process.env.OPENAI_API_KEY) {
   console.warn('Warning: OPENAI_API_KEY not set. AI features will be disabled.')
@@ -22,6 +23,7 @@ export interface GenerateContentParams {
   audience?: string
   tone?: 'professional' | 'casual' | 'urgent' | 'friendly'
   context?: string
+  brandBrain?: any // Optional BrandBrain profile to enforce brand guidelines
 }
 
 export interface ChatMessage {
@@ -73,6 +75,25 @@ export async function generateContent(params: GenerateContentParams): Promise<st
     throw new Error('OpenAI API not configured. Please set OPENAI_API_KEY environment variable.')
   }
 
+  // Initialize BrandBrain manager with profile if provided
+  const brandManager = new BrandBrainManager(params.brandBrain);
+  const brandBrain = brandManager.getBrandBrain();
+
+  // Build system prompt with BrandBrain guidelines
+  let systemPrompt = 'You are an expert copywriter specializing in high-converting affiliate marketing funnels. Write compelling, persuasive copy that drives action.';
+  
+  if (params.brandBrain) {
+    // If BrandBrain is provided, use its rules
+    systemPrompt = brandManager.generateAISystemPrompt();
+  } else {
+    // Add basic brand guidelines from default profile
+    systemPrompt += `\n\nBRAND GUIDELINES:\n`;
+    systemPrompt += `- Voice: ${brandBrain.personalityProfile.voice.tone}\n`;
+    systemPrompt += `- Formality: ${brandBrain.personalityProfile.voice.formalityLevel}/5\n`;
+    systemPrompt += `- Avoid: ${brandBrain.soundPolicy.wordChoice.avoid.join(', ')}\n`;
+    systemPrompt += `- Never make these claims: ${brandBrain.forbiddenClaims.legal.financialGuarantees.join(', ')}\n`;
+  }
+
   const prompt = buildPrompt(params)
 
   try {
@@ -84,7 +105,7 @@ export async function generateContent(params: GenerateContentParams): Promise<st
       messages: [
         {
           role: 'system',
-          content: 'You are an expert copywriter specializing in high-converting affiliate marketing funnels. Write compelling, persuasive copy that drives action. Be creative and vary your approach.',
+          content: systemPrompt,
         },
         {
           role: 'user',
@@ -97,7 +118,17 @@ export async function generateContent(params: GenerateContentParams): Promise<st
       frequency_penalty: 0.3,
     })
 
-    return completion.choices[0]?.message?.content || ''
+    const generatedContent = completion.choices[0]?.message?.content || '';
+    
+    // Validate generated content against BrandBrain rules
+    const validation = brandManager.validateContent(generatedContent, params.brandBrain?.id || 'default');
+    
+    // If there are critical errors, log them (in production, you might want to regenerate)
+    if (validation.violations.some(v => v.severity === 'error')) {
+      console.warn('Generated content has brand violations:', validation.violations);
+    }
+
+    return generatedContent;
   } catch (error) {
     console.error('OpenAI API error:', error)
     throw new Error('Failed to generate content')

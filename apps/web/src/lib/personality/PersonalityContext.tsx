@@ -14,9 +14,10 @@
 
 import React, { createContext, useContext, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
-import type { PersonalityProfile, BrandMode } from './types';
+import type { PersonalityProfile, BrandMode, PersonalityContext as PersonalityContextType } from './types';
 import { resolvePersonality } from './resolvePersonality';
 import { getRoutePersonality } from './routePersonality';
+import { getPersonalityContext } from './resolvers';
 
 /**
  * Context value shape
@@ -25,6 +26,7 @@ interface PersonalityContextValue {
   personality: PersonalityProfile;
   brandMode: BrandMode;
   isRouteOverride: boolean;
+  context: PersonalityContextType; // NEW: Route-based context
 }
 
 /**
@@ -64,19 +66,31 @@ export function PersonalityProvider({
 }: PersonalityProviderProps) {
   const pathname = usePathname();
   
+  // Get route-based context (NEW: controls visual weight, motion, sound)
+  const routeContext = useMemo(() => {
+    return getPersonalityContext(pathname || '/');
+  }, [pathname]);
+  
   // Determine effective brand mode
+  // Priority: 1. Route context forceBrandMode, 2. Route override, 3. User preference
   const effectiveBrandMode = useMemo(() => {
+    // Launchpad gets hard override to rocket_future
+    if (routeContext.forceBrandMode) {
+      return routeContext.forceBrandMode;
+    }
+    
     if (enableRouteOverrides && pathname) {
       return getRoutePersonality(pathname, brandMode);
     }
     return brandMode;
-  }, [pathname, brandMode, enableRouteOverrides]);
+  }, [pathname, brandMode, enableRouteOverrides, routeContext]);
   
   // Check if using route override
   const isRouteOverride = useMemo(() => {
+    if (routeContext.forceBrandMode) return true;
     if (!enableRouteOverrides || !pathname) return false;
     return getRoutePersonality(pathname, brandMode) !== (brandMode || 'anti_guru');
-  }, [pathname, brandMode, enableRouteOverrides]);
+  }, [pathname, brandMode, enableRouteOverrides, routeContext]);
   
   // Resolve personality once, memoize it
   const personality = useMemo(
@@ -88,9 +102,10 @@ export function PersonalityProvider({
     () => ({
       personality,
       brandMode: personality.mode,
-      isRouteOverride
+      isRouteOverride,
+      context: routeContext // NEW: Provide context for visual/motion/sound modulation
     }),
-    [personality, isRouteOverride]
+    [personality, isRouteOverride, routeContext]
   );
 
   return (
@@ -279,4 +294,52 @@ export function usePersonalityValidation() {
       return personality.vocabulary?.preferredPhrases || [];
     }
   }), [personality]);
+}
+
+/**
+ * Hook: usePersonalityExpression
+ * 
+ * Get context-aware visual and motion tokens.
+ * This respects route-based modulation (visual weight, motion allowed, sound allowed).
+ * 
+ * Usage:
+ * ```tsx
+ * function MyComponent() {
+ *   const { visual, motion, sound } = usePersonalityExpression();
+ *   
+ *   return (
+ *     <motion.div 
+ *       className={visual.spacing.content}
+ *       {...motion.enter}
+ *     >
+ *       <Card className={visual.borders.radius}>
+ *         {content}
+ *       </Card>
+ *     </motion.div>
+ *   );
+ * }
+ * ```
+ */
+export function usePersonalityExpression() {
+  const { personality, context } = usePersonality();
+  
+  // Lazy import resolvers to avoid circular dependencies
+  const { resolveVisualTokens, resolveMotionTokens, resolveSoundProfile } = require('./resolvers');
+  
+  const visual = useMemo(
+    () => resolveVisualTokens(personality, context.visualWeight),
+    [personality, context.visualWeight]
+  );
+  
+  const motion = useMemo(
+    () => resolveMotionTokens(personality, context.motionAllowed),
+    [personality, context.motionAllowed]
+  );
+  
+  const sound = useMemo(
+    () => resolveSoundProfile(personality, context.soundAllowed),
+    [personality, context.soundAllowed]
+  );
+  
+  return { visual, motion, sound, context };
 }

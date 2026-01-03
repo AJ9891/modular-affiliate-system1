@@ -34,12 +34,48 @@ export type HumorDensity =
   | 'glitchy';  // Unpredictable, absurdist
 
 /**
- * Motion Style: How UI elements move
+ * Motion Profile: How the interface moves
+ * Behavioral primitive, not animation library
  */
-export type MotionStyle = 
-  | 'minimal'       // Only essential transitions
-  | 'procedural'    // Algorithmic, generative patterns
-  | 'unstable';     // Jittery, glitchy, unpredictable
+export type MotionProfile = 
+  | 'calm'          // Deliberate, smooth, predictable
+  | 'flat'          // Minimal or no motion
+  | 'unstable';     // Jittery, unpredictable, chaotic
+
+/**
+ * Ornament Level: How much visual decoration
+ * Not about "style" but about restraint
+ */
+export type OrnamentLevel = 
+  | 'none'          // Brutalist, zero decoration
+  | 'light'         // Subtle hints, gentle touches
+  | 'expressive';   // Full visual language, layered
+
+/**
+ * Contrast Bias: Visual separation strategy
+ * Not about colors, about hierarchy
+ */
+export type ContrastBias = 
+  | 'neutral'       // Standard separation, comfortable
+  | 'high'          // Sharp boundaries, clear hierarchy
+  | 'broken';       // Intentional clashes, visual tension
+
+/**
+ * Animation Budget: How much motion is allowed
+ * Performance and attention constraint
+ */
+export type AnimationBudget = 
+  | 'zero'          // No animations, instant states
+  | 'micro-only'    // Only micro-interactions
+  | 'low';          // Essential transitions only
+
+/**
+ * Spatial Rhythm: How content flows through space
+ */
+export type SpatialRhythm = 
+  | 'generous'      // Lots of breathing room
+  | 'standard'      // Balanced, familiar
+  | 'compressed';   // Tight, information-dense
 
 /**
  * Sound Profile: Governed sound behavior
@@ -92,6 +128,30 @@ export interface ContentGenerationRules {
 }
 
 /**
+ * Visual Behavior Rules: How the interface appears and feels
+ * 
+ * CRITICAL: These are behavioral primitives, not CSS values.
+ * They describe HOW to behave, not WHAT colors to use.
+ * 
+ * Visual personality:
+ * - Changes how things appear
+ * - Reinforces the tone user chose
+ * - Makes platform feel cohesive
+ * 
+ * Visual personality NEVER:
+ * - Changes user data
+ * - Changes funnel logic
+ * - Changes AI output rules
+ */
+export interface VisualBehaviorRules {
+  motionProfile: MotionProfile;         // How things move
+  ornamentLevel: OrnamentLevel;         // How much decoration
+  contrastBias: ContrastBias;           // Visual separation strategy
+  animationBudget: AnimationBudget;     // How much motion allowed
+  spatialRhythm: SpatialRhythm;         // Content flow through space
+}
+
+/**
  * PersonalityProfile: The complete behavioral blueprint
  * 
  * This is the single source of truth for how the platform behaves.
@@ -108,9 +168,11 @@ export interface PersonalityProfile {
   // Core behavioral rules
   authorityTone: AuthorityTone;
   humorDensity: HumorDensity;
-  motionStyle: MotionStyle;
   trustPosture: TrustPosture;
   soundProfile: SoundProfile;
+
+  // Visual behavior (ambient agreement with chosen tone)
+  visuals: VisualBehaviorRules;
 
   // Extended rules (optional for deeper customization)
   vocabulary?: VocabularyRules;
@@ -136,3 +198,39 @@ export function isBrandMode(value: unknown): value is BrandMode {
  * Default personality when brand_mode is null or unknown
  */
 export const DEFAULT_BRAND_MODE: BrandMode = 'anti_guru';
+
+/**
+ * Personality Context: Route-aware modulation
+ * 
+ * This tells the UI how much personality to express based on WHERE the user is.
+ * Context modulates personality, it doesn't replace it.
+ * 
+ * visualWeight: How much personality should show
+ * - 'none': Invisible, pure function
+ * - 'low': Minimal hints, respectful
+ * - 'medium': Balanced expression
+ * - 'high': Full personality presence
+ * 
+ * motionAllowed: Can UI elements animate?
+ * soundAllowed: Can sounds play?
+ * forceBrandMode: Hard override (use sparingly, only for sacred zones)
+ */
+export type PersonalityContext = {
+  visualWeight: 'none' | 'low' | 'medium' | 'high';
+  motionAllowed: boolean;
+  soundAllowed: boolean;
+  forceBrandMode?: BrandMode;
+};
+
+/**
+ * Personality Context: Controls intensity of personality expression
+ * 
+ * Different parts of the app need different levels of personality.
+ * Critical UI = minimal expression. Marketing pages = full expression.
+ */
+export type PersonalityContext = {
+  visualWeight: 'none' | 'low' | 'medium' | 'high';
+  motionAllowed: boolean;
+  soundAllowed: boolean;
+  forceBrandMode?: BrandMode;
+};
