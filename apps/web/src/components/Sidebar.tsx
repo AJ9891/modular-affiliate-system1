@@ -3,11 +3,25 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
 
-const navigation = [
+interface NavigationItem {
+  name: string
+  href: string
+  icon: string
+  isLaunchpad?: boolean
+}
+
+const launchpadItem: NavigationItem = { 
+  name: 'Launchpad', 
+  href: '/launchpad', 
+  icon: '🚀',
+  isLaunchpad: true
+}
+
+const regularNavigation: NavigationItem[] = [
   { name: 'Home', href: '/', icon: '🏠' },
   { name: 'Dashboard', href: '/dashboard', icon: '📊' },
-  { name: 'Launchpad', href: '/launchpad', icon: '🚀' },
   { name: 'Funnel Builder', href: '/builder', icon: '🎨' },
   { name: 'Visual Builder', href: '/visual-builder', icon: '✨' },
   { name: 'AI Generator', href: '/ai-generator', icon: '🤖' },
@@ -24,6 +38,35 @@ const navigation = [
 export default function Sidebar() {
   const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [onboardingComplete, setOnboardingComplete] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  // Load onboarding status
+  useEffect(() => {
+    async function checkOnboardingStatus() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          setLoading(false)
+          return
+        }
+
+        const { data: profile } = await supabase
+          .from('users')
+          .select('onboarding_complete')
+          .eq('id', user.id)
+          .single()
+
+        setOnboardingComplete(profile?.onboarding_complete || false)
+      } catch (error) {
+        console.error('Error checking onboarding status:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    checkOnboardingStatus()
+  }, [])
 
   // Load collapse state from localStorage on mount
   useEffect(() => {
@@ -38,6 +81,15 @@ export default function Sidebar() {
     localStorage.setItem('sidebarCollapsed', String(isCollapsed))
     document.body.setAttribute('data-sidebar-collapsed', String(isCollapsed))
   }, [isCollapsed])
+
+  // Build navigation array based on onboarding status
+  const navigation = onboardingComplete
+    ? [...regularNavigation, launchpadItem] // Launchpad at bottom
+    : [launchpadItem, ...regularNavigation] // Launchpad at top
+
+  const handleReOnboard = () => {
+    setOnboardingComplete(false)
+  }
 
   return (
     <>
@@ -73,8 +125,15 @@ export default function Sidebar() {
             <ul className="space-y-1 px-2">
               {navigation.map((item) => {
                 const isActive = pathname === item.href
+                const isLaunchpadAtBottom = onboardingComplete && item.isLaunchpad
+                
                 return (
-                  <li key={item.name}>
+                  <li 
+                    key={item.name}
+                    className={`transition-all duration-500 ${
+                      isLaunchpadAtBottom ? 'opacity-40 hover:opacity-100' : ''
+                    }`}
+                  >
                     <Link
                       href={item.href}
                       className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
@@ -91,6 +150,20 @@ export default function Sidebar() {
                 )
               })}
             </ul>
+            
+            {/* Re-onboard Button (only show if onboarding is complete and sidebar is expanded) */}
+            {onboardingComplete && !isCollapsed && (
+              <div className="px-4 mt-4">
+                <button
+                  onClick={handleReOnboard}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-brand-purple/60 hover:text-brand-purple hover:bg-brand-purple/5 rounded-lg transition-colors border border-brand-purple/20"
+                  title="Re-start the onboarding experience"
+                >
+                  <span>🔄</span>
+                  <span>Re-onboard</span>
+                </button>
+              </div>
+            )}
           </nav>
 
           {/* Collapse button (desktop) */}
