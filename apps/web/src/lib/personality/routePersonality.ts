@@ -18,8 +18,7 @@ import type { BrandMode } from './types'
  */
 const ROUTE_PERSONALITY_MAP: Record<string, BrandMode> = {
   '/onboarding': 'rocket_future',
-  '/admin': 'anti_guru',
-  '/marketing/chaos': 'ai_meltdown',
+  '/launchpad': 'rocket_future',
 }
 
 /**
