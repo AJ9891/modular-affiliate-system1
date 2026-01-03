@@ -13,8 +13,10 @@
 'use client';
 
 import React, { createContext, useContext, useMemo } from 'react';
+import { usePathname } from 'next/navigation';
 import type { PersonalityProfile, BrandMode } from './types';
 import { resolvePersonality } from './resolvePersonality';
+import { getRoutePersonality } from './routePersonality';
 
 /**
  * Context value shape
@@ -22,6 +24,7 @@ import { resolvePersonality } from './resolvePersonality';
 interface PersonalityContextValue {
   personality: PersonalityProfile;
   brandMode: BrandMode;
+  isRouteOverride: boolean;
 }
 
 /**
@@ -35,6 +38,7 @@ const PersonalityContext = createContext<PersonalityContextValue | null>(null);
 interface PersonalityProviderProps {
   children: React.ReactNode;
   brandMode?: BrandMode | null;
+  enableRouteOverrides?: boolean; // Default: false
 }
 
 /**
@@ -46,24 +50,47 @@ interface PersonalityProviderProps {
  * <PersonalityProvider brandMode={user?.brand_mode}>
  *   <App />
  * </PersonalityProvider>
+ * 
+ * // With route overrides (use sparingly)
+ * <PersonalityProvider brandMode={user?.brand_mode} enableRouteOverrides>
+ *   <App />
+ * </PersonalityProvider>
  * ```
  */
 export function PersonalityProvider({ 
   children, 
-  brandMode 
+  brandMode,
+  enableRouteOverrides = false
 }: PersonalityProviderProps) {
+  const pathname = usePathname();
+  
+  // Determine effective brand mode
+  const effectiveBrandMode = useMemo(() => {
+    if (enableRouteOverrides && pathname) {
+      return getRoutePersonality(pathname, brandMode);
+    }
+    return brandMode;
+  }, [pathname, brandMode, enableRouteOverrides]);
+  
+  // Check if using route override
+  const isRouteOverride = useMemo(() => {
+    if (!enableRouteOverrides || !pathname) return false;
+    return getRoutePersonality(pathname, brandMode) !== (brandMode || 'anti_guru');
+  }, [pathname, brandMode, enableRouteOverrides]);
+  
   // Resolve personality once, memoize it
   const personality = useMemo(
-    () => resolvePersonality(brandMode),
-    [brandMode]
+    () => resolvePersonality(effectiveBrandMode),
+    [effectiveBrandMode]
   );
 
   const value = useMemo(
     () => ({
       personality,
-      brandMode: personality.mode
+      brandMode: personality.mode,
+      isRouteOverride
     }),
-    [personality]
+    [personality, isRouteOverride]
   );
 
   return (

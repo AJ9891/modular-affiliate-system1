@@ -117,6 +117,13 @@ export {
   getHeroGlitchParams
 } from './heroBehavior';
 
+// Route-based personality (use sparingly)
+export {
+  getRoutePersonality,
+  hasRouteOverride,
+  getRouteOverrides
+} from './routePersonality';
+
 // Sound system
 export type {
   SoundBehavior,

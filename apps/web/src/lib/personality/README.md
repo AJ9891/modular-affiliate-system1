@@ -183,6 +183,7 @@ const funnel = await generateCompleteFunnel('rocket_future', {
 - **[CASCADE_ARCHITECTURE.md](./CASCADE_ARCHITECTURE.md)** - Deep dive into the pattern
 - **[EXAMPLES.tsx](./EXAMPLES.tsx)** - Working code examples for every use case
 - **[INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md)** - Step-by-step integration
+- **[ROUTE_OVERRIDES.md](./ROUTE_OVERRIDES.md)** - Route-based personality (use sparingly)
 - **[types.ts](./types.ts)** - Full type definitions
 
 ## Anti-Patterns
