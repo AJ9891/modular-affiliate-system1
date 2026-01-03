@@ -17,7 +17,6 @@ import type { BrandMode } from './types'
  * These override user brand_mode for specific routes
  */
 const ROUTE_PERSONALITY_MAP: Record<string, BrandMode> = {
-  '/onboarding': 'rocket_future',
   '/launchpad': 'rocket_future',
 }
 
