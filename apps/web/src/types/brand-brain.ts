@@ -5,6 +5,11 @@
  *              + Sound Policy + Forbidden Claims
  */
 
+import type { UIExpressionProfile } from './ui-expression';
+
+// Re-export UIExpressionProfile for convenience
+export type { UIExpressionProfile } from './ui-expression';
+
 export interface PersonalityProfile {
   /** Brand name */
   brandName: string;
@@ -147,35 +152,6 @@ export interface UIBehaviorConstraints {
     screenReaderOptimized: boolean;
   };
 }
-
-export type UIExpressionProfile = {
-  hero: {
-    variants: ('meltdown' | 'anti-guru' | 'rocket')[];
-    motionIntensity: 'none' | 'low' | 'medium' | 'high';
-    visualNoise: 'none' | 'controlled' | 'expressive';
-  };
-
-  typography: {
-    tone: 'flat' | 'confident' | 'playful' | 'fractured';
-    emphasisStyle: 'none' | 'underline' | 'highlight' | 'strike';
-  };
-
-  surfaces: {
-    depth: 'flat' | 'soft' | 'layered';
-    borderStyle: 'sharp' | 'rounded' | 'mixed';
-  };
-
-  microInteractions: {
-    hoverAllowed: boolean;
-    glitchAllowed: boolean;
-    pulseAllowed: boolean;
-  };
-
-  sound: {
-    ambientProfiles: ('checklist' | 'hum' | 'glitch')[];
-    maxVolume: number;
-  };
-};
 
 export interface SoundPolicy {
   /** Overall brand voice characteristics */
