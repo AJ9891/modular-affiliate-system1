@@ -1,0 +1,5 @@
+# This file ensures the audio directory is tracked by git
+# Add your ambient audio files here:
+# - rocket-checklist-ambient.mp3
+# - rocket-hum-ambient.mp3 (optional)
+# - glitch-ambient.mp3 (optional)

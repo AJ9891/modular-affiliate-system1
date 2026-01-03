@@ -11,6 +11,7 @@ import Step4PreviewTest from '@/components/launchpad/Step4PreviewTest'
 import Step5ActivateEmail from '@/components/launchpad/Step5ActivateEmail'
 import Step6PublishLive from '@/components/launchpad/Step6PublishLive'
 import Step7Liftoff from '@/components/launchpad/Step7Liftoff'
+import { AmbientSoundToggle } from '@/components/AmbientSoundToggle'
 import { Target, Users, DollarSign, TrendingUp, Plus, ArrowRight, CheckCircle, Sparkles, Zap, BarChart } from 'lucide-react'
 
 export const runtime = 'edge'
@@ -269,9 +270,12 @@ export default function LaunchpadPage() {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="max-w-7xl mx-auto px-4 py-12">
           <div className="mb-12">
-            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Welcome Back! 🚀
-            </h1>
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Welcome Back! 🚀
+              </h1>
+              <AmbientSoundToggle defaultEnabled={true} />
+            </div>
             <p className="text-xl text-gray-600">
               Your affiliate empire is growing. Here&apos;s what&apos;s happening.
             </p>

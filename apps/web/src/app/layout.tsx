@@ -6,6 +6,7 @@ import ConditionalSidebar from "@/components/ConditionalSidebar"
 import ConditionalWrapper from "@/components/ConditionalWrapper"
 import AIChatWidget from "@/components/AIChatWidget"
 import Footer from "@/components/Footer"
+import { LaunchpadAmbientSound } from "@/components/LaunchpadAmbientSound"
 
 export const metadata: Metadata = {
   title: "Launchpad4Success - Build High-Converting Affiliate Funnels",
@@ -71,6 +72,7 @@ export default function RootLayout({
               {children}
             </ConditionalWrapper>
             <AIChatWidget />
+            <LaunchpadAmbientSound />
             <Footer />
           </BrandModeProvider>
         </AuthProvider>
