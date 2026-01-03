@@ -175,19 +175,19 @@ export function usePersonalityMotion() {
   const { personality } = usePersonality();
   
   const motionConfig = useMemo(() => {
-    switch (personality.motionStyle) {
-      case 'minimal':
+    switch (personality.visuals.motionProfile) {
+      case 'calm':
         return {
           enabled: true,
-          duration: 0.2,
+          duration: 0.3,
           scale: 1.02
         };
       
-      case 'procedural':
+      case 'flat':
         return {
-          enabled: true,
-          duration: 0.6,
-          scale: 1.1
+          enabled: false,
+          duration: 0,
+          scale: 1
         };
       
       case 'unstable':

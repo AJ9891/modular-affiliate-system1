@@ -11,7 +11,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { usePersonalityExpression } from '@/lib/personality';
+import { usePersonalityExpression, usePersonality } from '@/lib/personality';
 
 /**
  * Card: Adapts depth and motion to personality + route context
@@ -120,9 +120,7 @@ interface PersonalityProgressProps {
 }
 
 export function PersonalityProgress({ value, className = '' }: PersonalityProgressProps) {
-  const { personality } = usePersonality();
-  const visual = resolveVisualTokens(personality);
-  const motion = resolveMotionTokens(personality);
+  const { visual, motion } = usePersonalityExpression();
   
   return (
     <div className={`h-2 bg-gray-200 overflow-hidden ${visual.borders.radius} ${className}`}>
@@ -159,9 +157,7 @@ export function PersonalityEmptyState({
   action,
   className = '' 
 }: PersonalityEmptyStateProps) {
-  const { personality } = usePersonality();
-  const visual = resolveVisualTokens(personality);
-  const motion = resolveMotionTokens(personality);
+  const { visual, motion } = usePersonalityExpression();
   
   return (
     <motion.div
@@ -197,9 +193,7 @@ export function PersonalitySuccess({
   onDismiss,
   className = '' 
 }: PersonalitySuccessProps) {
-  const { personality } = usePersonality();
-  const visual = resolveVisualTokens(personality);
-  const motion = resolveMotionTokens(personality);
+  const { visual, motion } = usePersonalityExpression();
   
   const glowEffect = visual.effects.glow ? 'ring-2 ring-green-500 ring-opacity-50' : '';
   
@@ -245,7 +239,7 @@ export function PersonalityLoading({
   className = '' 
 }: PersonalityLoadingProps) {
   const { personality } = usePersonality();
-  const motion = resolveMotionTokens(personality);
+  const { motion } = usePersonalityExpression();
   
   // Anti-Guru: Just text
   if (motion.timing.duration === 0) {
