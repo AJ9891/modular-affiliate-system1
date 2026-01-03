@@ -20,8 +20,9 @@ BrandBrain = PersonalityProfile
 1. **PersonalityProfile** - Core brand identity, values, voice, and language preferences
 2. **AI Prompt Rules** - System instructions, content generation rules, and accuracy requirements
 3. **UI Behavior Constraints** - Visual design, copy, interaction, and accessibility rules
-4. **Sound Policy** - Voice characteristics, word choice, messaging frameworks
-5. **Forbidden Claims** - Legal compliance, regulatory requirements, ethical guidelines
+4. **UI Expression Profile** - Hero variants, typography, surfaces, micro-interactions, and sound settings
+5. **Sound Policy** - Voice characteristics, word choice, messaging frameworks
+6. **Forbidden Claims** - Legal compliance, regulatory requirements, ethical guidelines
 
 ### Database Schema
 
@@ -46,6 +47,8 @@ brand_profiles
 │   ├── ui_copy
 │   ├── ui_interaction
 │   └── ui_accessibility
+├── UIExpressionProfile (JSONB)
+│   └── ui_expression_profile
 ├── SoundPolicy fields (JSONB)
 │   ├── sound_voice_characteristics
 │   ├── sound_word_choice
@@ -288,6 +291,60 @@ Features:
 - **Profile Editor Tab**: Comprehensive form for editing all brand settings
 
 ## Key Features
+
+### UIExpressionProfile
+
+The `UIExpressionProfile` controls how the brand personality expresses itself through UI elements:
+
+**Hero Section**
+- `variants`: Which hero styles are allowed (`meltdown`, `anti-guru`, `rocket`)
+- `motionIntensity`: How much animation (`none`, `low`, `medium`, `high`)
+- `visualNoise`: Level of visual complexity (`none`, `controlled`, `expressive`)
+
+**Typography**
+- `tone`: Overall text personality (`flat`, `confident`, `playful`, `fractured`)
+- `emphasisStyle`: How to emphasize text (`none`, `underline`, `highlight`, `strike`)
+
+**Surfaces**
+- `depth`: Card and surface styling (`flat`, `soft`, `layered`)
+- `borderStyle`: Border treatment (`sharp`, `rounded`, `mixed`)
+
+**Micro-interactions**
+- `hoverAllowed`: Enable hover effects
+- `glitchAllowed`: Allow glitch animations
+- `pulseAllowed`: Enable pulse animations
+
+**Sound**
+- `ambientProfiles`: Allowed sound profiles (`checklist`, `hum`, `glitch`)
+- `maxVolume`: Maximum sound volume (0-1)
+
+```typescript
+// Example UIExpressionProfile
+{
+  hero: {
+    variants: ['rocket'],
+    motionIntensity: 'medium',
+    visualNoise: 'controlled'
+  },
+  typography: {
+    tone: 'confident',
+    emphasisStyle: 'underline'
+  },
+  surfaces: {
+    depth: 'soft',
+    borderStyle: 'rounded'
+  },
+  microInteractions: {
+    hoverAllowed: true,
+    glitchAllowed: false,
+    pulseAllowed: true
+  },
+  sound: {
+    ambientProfiles: ['checklist'],
+    maxVolume: 0.3
+  }
+}
+```
 
 ### 1. Automatic Enforcement
 - Active brand profile is automatically applied to all AI generation

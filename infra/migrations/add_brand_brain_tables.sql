@@ -41,6 +41,9 @@ CREATE TABLE IF NOT EXISTS brand_profiles (
     ui_interaction JSONB DEFAULT '{}'::jsonb,
     ui_accessibility JSONB DEFAULT '{}'::jsonb,
     
+    -- UIExpressionProfile
+    ui_expression_profile JSONB DEFAULT '{}'::jsonb,
+    
     -- SoundPolicy
     sound_voice_characteristics JSONB DEFAULT '{}'::jsonb,
     sound_word_choice JSONB DEFAULT '{}'::jsonb,

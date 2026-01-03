@@ -109,6 +109,31 @@ export const defaultBrandBrain: Omit<BrandBrain, 'id' | 'createdAt' | 'updatedAt
     }
   },
   
+  uiExpressionProfile: {
+    hero: {
+      variants: ['rocket'],
+      motionIntensity: 'medium',
+      visualNoise: 'controlled'
+    },
+    typography: {
+      tone: 'confident',
+      emphasisStyle: 'underline'
+    },
+    surfaces: {
+      depth: 'soft',
+      borderStyle: 'rounded'
+    },
+    microInteractions: {
+      hoverAllowed: true,
+      glitchAllowed: false,
+      pulseAllowed: true
+    },
+    sound: {
+      ambientProfiles: ['checklist'],
+      maxVolume: 0.3
+    }
+  },
+  
   soundPolicy: {
     voiceCharacteristics: {
       shouldBe: [
