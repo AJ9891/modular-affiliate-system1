@@ -176,6 +176,7 @@ function MyComponent() {
   const {
     brandProfiles,      // All brand profiles
     activeProfile,      // Currently active profile
+    ui,                 // UIExpressionProfile from active profile
     loading,            // Loading state
     error,              // Error message
     fetchProfiles,      // Refresh profiles
@@ -186,7 +187,76 @@ function MyComponent() {
     getSystemPrompt     // Get AI system prompt
   } = useBrandBrain();
 
-  // Example: Validate content
+  // Access UI Expression Profile
+  const heroRules = ui.hero;
+  const canUseRocketHero = heroRules.variants.includes('rocket');
+  const motionIntensity = heroRules.motionIntensity;
+
+  // Example: Conditional rendering based on hero variants
+  if (canUseRocketHero) {
+    return <RocketHero intensity={motionIntensity} />;
+  }
+
+  // Example: Typography styling
+  const emphasisClass = {
+    none: '',
+    underline: 'underline',
+    highlight: 'bg-yellow-200',
+    strike: 'line-through'
+  }[ui.typography.emphasisStyle];
+
+  // Example: Surface depth
+  const depthClass = {
+    flat: '',
+    soft: 'shadow-md',
+    layered: 'shadow-xl'
+  }[ui.surfaces.depth];
+
+  // Example: Micro-interactions
+  const hoverAnimation = ui.microInteractions.hoverAllowed 
+    ? { scale: 1.05 } 
+    : undefined;
+
+  return (
+    <motion.div 
+      className={`${depthClass} ${emphasisClass}`}
+      whileHover={hoverAnimation}
+    >
+      <h1 className={ui.typography.tone === 'confident' ? 'font-bold' : 'font-normal'}>
+        Content
+      </h1>
+    </motion.div>
+  );
+}
+```
+
+### Quick Access Pattern
+
+```typescript
+// Access hero configuration
+const { ui } = useBrandBrain();
+const heroRules = ui.hero;
+
+// Check if specific hero variant is allowed
+if (heroRules.variants.includes('meltdown')) {
+  // Render meltdown hero
+}
+
+// Use motion intensity
+const animationDuration = {
+  none: 0,
+  low: 0.2,
+  medium: 0.3,
+  high: 0.5
+}[heroRules.motionIntensity];
+
+// Check micro-interaction permissions
+if (ui.microInteractions.glitchAllowed) {
+  // Add glitch effect
+}
+```
+
+### Example: Validate content
   const handleValidate = async () => {
     const result = await validateContent(
       "Your content here",

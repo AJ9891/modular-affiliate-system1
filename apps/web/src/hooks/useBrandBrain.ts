@@ -1,7 +1,33 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { BrandBrain } from '@/types/brand-brain';
+import { useState, useEffect, useMemo } from 'react';
+import { BrandBrain, UIExpressionProfile } from '@/types/brand-brain';
+
+// Default UI Expression Profile
+const defaultUIExpressionProfile: UIExpressionProfile = {
+  hero: {
+    variants: ['rocket'],
+    motionIntensity: 'medium',
+    visualNoise: 'controlled'
+  },
+  typography: {
+    tone: 'confident',
+    emphasisStyle: 'underline'
+  },
+  surfaces: {
+    depth: 'soft',
+    borderStyle: 'rounded'
+  },
+  microInteractions: {
+    hoverAllowed: true,
+    glitchAllowed: false,
+    pulseAllowed: true
+  },
+  sound: {
+    ambientProfiles: ['checklist'],
+    maxVolume: 0.3
+  }
+};
 
 export function useBrandBrain() {
   const [brandProfiles, setBrandProfiles] = useState<any[]>([]);
@@ -170,9 +196,41 @@ export function useBrandBrain() {
     fetchProfiles();
   }, []);
 
+  // Computed UI Expression Profile from active profile
+  const ui = useMemo(() => {
+    if (!activeProfile?.ui_expression_profile) {
+      return defaultUIExpressionProfile;
+    }
+    
+    // Merge with defaults to ensure all fields exist
+    return {
+      hero: {
+        ...defaultUIExpressionProfile.hero,
+        ...(activeProfile.ui_expression_profile.hero || {})
+      },
+      typography: {
+        ...defaultUIExpressionProfile.typography,
+        ...(activeProfile.ui_expression_profile.typography || {})
+      },
+      surfaces: {
+        ...defaultUIExpressionProfile.surfaces,
+        ...(activeProfile.ui_expression_profile.surfaces || {})
+      },
+      microInteractions: {
+        ...defaultUIExpressionProfile.microInteractions,
+        ...(activeProfile.ui_expression_profile.microInteractions || {})
+      },
+      sound: {
+        ...defaultUIExpressionProfile.sound,
+        ...(activeProfile.ui_expression_profile.sound || {})
+      }
+    } as UIExpressionProfile;
+  }, [activeProfile]);
+
   return {
     brandProfiles,
     activeProfile,
+    ui,
     loading,
     error,
     fetchProfiles,
