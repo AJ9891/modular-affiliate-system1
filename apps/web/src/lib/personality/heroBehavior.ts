@@ -52,27 +52,27 @@ export function resolveHeroBehavior(
 
   // Visual tension calculation
   const visualTension = (() => {
-    switch (personality.motionStyle) {
+    switch (personality.visuals.motionProfile) {
       case 'unstable': return 0.8
-      case 'procedural': return 0.4
-      case 'minimal': return 0.1
+      case 'calm': return 0.4
+      case 'flat': return 0.1
       default: return 0.1
     }
   })()
 
   // Animation intensity
   const animationIntensity = (() => {
-    switch (personality.motionStyle) {
+    switch (personality.visuals.motionProfile) {
       case 'unstable': return 1.0
-      case 'procedural': return 0.7
-      case 'minimal': return 0.2
+      case 'calm': return 0.7
+      case 'flat': return 0.2
       default: return 0.3
     }
   })()
 
   // Glitch permission
   const allowGlitch = personality.humorDensity === 'glitchy' || 
-                      personality.motionStyle === 'unstable'
+                      personality.visuals.motionProfile === 'unstable'
 
   // Ambient sound permission
   const allowAmbientSound = personality.soundProfile !== 'none'

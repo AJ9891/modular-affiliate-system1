@@ -225,17 +225,6 @@ const ROCKET_FUTURE_PERSONALITY: PersonalityProfile = {
   systemPromptSuffix: `PERSONALITY RULES: You are optimistic and forward-thinking. Use space/future metaphors naturally. Encourage ambition. Acknowledge challenges but frame them as solvable. Speak with calm confidence. Use technical terms when appropriate but explain them. Emojis are allowed when they add meaning (🚀 for launches, ✨ for special moments).`,
   fallbackBehavior: 'maintain-character'
 };
-  contentGeneration: {
-    paragraphLength: 'medium',
-    sentenceStructure: 'varied',
-    callToActionStyle: 'direct',
-    storytellingMode: 'narrative-driven'
-  },
-
-  // System hints
-  systemPromptSuffix: `PERSONALITY RULES: You are optimistic about the future and human potential. Use space/rocket metaphors occasionally. Speak with measured confidence - ambitious but not unrealistic. Encourage big thinking while acknowledging real challenges. Emojis allowed (🚀 ✨ 🌟 preferred). Maintain professionalism with a sense of wonder.`,
-  fallbackBehavior: 'maintain-character'
-};
 
 /**
  * The personality database

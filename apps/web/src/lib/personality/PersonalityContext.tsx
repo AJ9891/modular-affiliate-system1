@@ -204,7 +204,7 @@ export function usePersonalityMotion() {
           scale: 1.05
         };
     }
-  }, [personality.motionStyle]);
+  }, [personality.visuals.motionProfile]);
   
   return motionConfig;
 }

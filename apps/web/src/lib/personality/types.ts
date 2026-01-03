@@ -221,16 +221,3 @@ export type PersonalityContext = {
   soundAllowed: boolean;
   forceBrandMode?: BrandMode;
 };
-
-/**
- * Personality Context: Controls intensity of personality expression
- * 
- * Different parts of the app need different levels of personality.
- * Critical UI = minimal expression. Marketing pages = full expression.
- */
-export type PersonalityContext = {
-  visualWeight: 'none' | 'low' | 'medium' | 'high';
-  motionAllowed: boolean;
-  soundAllowed: boolean;
-  forceBrandMode?: BrandMode;
-};
