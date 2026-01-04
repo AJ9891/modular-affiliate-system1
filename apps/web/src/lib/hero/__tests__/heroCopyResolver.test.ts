@@ -4,6 +4,7 @@
  * Demonstrates how personality → behavior → contract → prompt works
  */
 
+import { describe, it, expect } from 'vitest'
 import { resolvePersonality } from '@/lib/personality'
 import { resolveHeroBehavior } from '@/lib/personality/heroBehavior'
 import { resolveHeroCopyContract } from '@/lib/hero'

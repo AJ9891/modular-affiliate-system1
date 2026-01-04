@@ -2,7 +2,7 @@
 
 ## The Complete Chain
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                      USER BRAND MODE                            │
 │                    (ai_meltdown, etc.)                          │
@@ -66,7 +66,7 @@
 
 ### AI Meltdown Flow
 
-```
+```text
 brand_mode: 'ai_meltdown'
     ↓
 PersonalityProfile {
@@ -95,7 +95,7 @@ HeroCopyContract {                │
 
 ### Anti-Guru Flow
 
-```
+```text
 brand_mode: 'anti_guru'
     ↓
 PersonalityProfile {
@@ -123,7 +123,7 @@ HeroCopyContract {                │
 
 ### Rocket Future Flow
 
-```
+```text
 brand_mode: 'rocket_future'
     ↓
 PersonalityProfile {
@@ -152,24 +152,30 @@ HeroCopyContract {                │
 ## Key Observations
 
 ### Universal Constraint
-```
+
+```typescript
 forbidPromises: true
 ```
+
 This appears in **every** contract, regardless of brand mode.
 It's a core brand value, not a behavior toggle.
 
 ### Derived Constraints
-```
+
+```typescript
 allowSarcasm: behavior.allowGlitch
 ```
+
 Sarcasm is derived from behavior, not from brand name.
 This ensures coherence across the system.
 
 ### Type Safety
+
 ```typescript
 // Every step is typed
 PersonalityProfile → HeroBehavior → HeroCopyContract → string
 ```
+
 No magic strings. No guessing. Complete type safety.
 
 ## Files
