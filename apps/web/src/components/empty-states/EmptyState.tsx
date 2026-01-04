@@ -9,7 +9,6 @@
 
 import React from 'react'
 import { EmptyStateContract, EmptyStateVisuals } from '@/lib/empty-states/types'
-import { cn } from '@/lib/utils'
 
 interface EmptyStateProps {
   contract: EmptyStateContract
@@ -25,25 +24,18 @@ export function EmptyState({ contract, visuals, icon }: EmptyStateProps) {
       {/* Icon */}
       {icon && (
         <div 
-          className={cn(
-            "mb-6",
-            visuals.iconStyle === 'animated' && visuals.motionIntensity === 'subtle' && "animate-pulse",
-            visuals.iconStyle === 'animated' && visuals.motionIntensity === 'medium' && "animate-bounce"
-          )}
+          className={`mb-6 ${
+            visuals.iconStyle === 'animated' && visuals.motionIntensity === 'subtle' ? 'animate-pulse' : ''
+          } ${
+            visuals.iconStyle === 'animated' && visuals.motionIntensity === 'medium' ? 'animate-bounce' : ''
+          }`}
         >
           {icon}
         </div>
       )}
       
       {/* Headline - this is where personality lives */}
-      <h3 
-        className={cn(
-          "text-xl font-semibold mb-3",
-          visuals.visualNoise === 'minimal' && "text-gray-900",
-          visuals.visualNoise === 'balanced' && "text-gray-900",
-          visuals.visualNoise === 'expressive' && visuals.allowGlitch && "text-gray-900 relative",
-        )}
-      >
+      <h3 className="text-xl font-semibold mb-3 text-gray-900">
         {headline}
       </h3>
       
@@ -59,10 +51,7 @@ export function EmptyState({ contract, visuals, icon }: EmptyStateProps) {
         {primaryAction && (
           <button
             onClick={primaryAction.onClick}
-            className={cn(
-              "px-6 py-2.5 rounded-lg font-medium transition-colors",
-              "bg-blue-600 text-white hover:bg-blue-700"
-            )}
+            className="px-6 py-2.5 rounded-lg font-medium transition-colors bg-blue-600 text-white hover:bg-blue-700"
           >
             {primaryAction.label}
           </button>

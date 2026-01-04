@@ -11,7 +11,6 @@
 import React from 'react'
 import { EmptyStateContract } from '@/lib/empty-states/types'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
 interface RecoverableErrorProps {
   contract: EmptyStateContract
