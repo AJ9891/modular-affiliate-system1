@@ -32,40 +32,47 @@ export async function POST(request: NextRequest) {
     // Get user from session
     const accessToken = request.cookies.get('sb-access-token')?.value
     
+    console.log('Access token present:', !!accessToken)
+    
     if (!accessToken) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    // Create an authenticated Supabase client with the user's token
-    const { createClient } = await import('@supabase/supabase-js')
-    const userSupabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
-        }
-      }
-    )
+    // Get user directly from the access token
+    const { data: { user }, error: authError } = await supabase!.auth.getUser(accessToken)
 
-    const { data: { user }, error: authError } = await userSupabase.auth.getUser(accessToken)
+    console.log('User from token:', user?.id, 'Auth error:', authError)
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
     }
 
+    // Create admin client for operations
+    const { createClient } = await import('@supabase/supabase-js')
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
     // Ensure user exists in public.users table
-    const { data: existingUser } = await userSupabase
+    const { data: existingUser } = await adminClient
       .from('users')
       .select('id')
       .eq('id', user.id)
       .single()
 
+    console.log('Existing user:', existingUser?.id)
+
     if (!existingUser) {
+      console.log('Creating user in public.users table')
       // Create user in public.users table
-      await userSupabase
+      const { error: userCreateError } = await adminClient
         .from('users')
         .insert({
           id: user.id,
@@ -73,29 +80,42 @@ export async function POST(request: NextRequest) {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
+      
+      if (userCreateError) {
+        console.error('Error creating user:', userCreateError)
+      }
     }
 
     const body = await request.json()
-    const { name, template, niche, blocks, slug } = body
+    const { name, template, niche, blocks, theme, slug } = body
+
+    console.log('Received funnel data:', { name, template, niche, blocks: blocks?.length, theme, slug })
 
     if (!name) {
       return NextResponse.json({ error: 'Funnel name is required' }, { status: 400 })
     }
 
-    // Store template and niche info in the blocks JSON since schema uses niche_id (UUID)
+    // Store all funnel configuration in blocks JSON
     const blocksData = {
       template: template || 'custom',
       niche: niche || 'general',
+      theme: theme || {
+        primaryColor: '#667eea',
+        secondaryColor: '#764ba2',
+        fontFamily: 'Inter'
+      },
       blocks: blocks || []
     }
 
-    const { data, error } = await userSupabase
+    console.log('Inserting funnel with blocks data:', JSON.stringify(blocksData).substring(0, 200))
+
+    const { data, error } = await adminClient
       .from('funnels')
       .insert({
         user_id: user.id,
         name,
-        slug,
-        blocks: JSON.stringify(blocksData),
+        slug: slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+        blocks: blocksData,  // Supabase will handle JSON automatically
         created_at: new Date().toISOString()
       })
       .select()
@@ -104,6 +124,8 @@ export async function POST(request: NextRequest) {
       console.error('Error creating funnel:', error)
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
+
+    console.log('Funnel created successfully:', data[0]?.funnel_id)
 
     return NextResponse.json({ 
       funnel: data[0],

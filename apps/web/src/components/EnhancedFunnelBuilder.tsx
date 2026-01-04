@@ -220,16 +220,32 @@ export default function EnhancedFunnelBuilder(props: EnhancedFunnelBuilderProps)
       // Generate slug from funnel name
       const slug = funnel.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'untitled-funnel'
       
+      const payload = {
+        name: funnel.name,
+        slug,
+        niche: funnel.niche || initialNiche,
+        blocks: funnel.blocks,
+        theme: funnel.theme
+      }
+
+      console.log('Saving funnel with payload:', payload)
+      
       const response = await fetch('/api/funnels', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...funnel,
-          slug,
-          niche: funnel.niche || initialNiche
-        })
+        body: JSON.stringify(payload)
       })
+
+      console.log('Response status:', response.status)
       const data = await response.json()
+      console.log('Response data:', data)
+      
+      if (!response.ok) {
+        console.error('Save failed:', data.error)
+        alert(`Failed to save funnel: ${data.error || 'Unknown error'}`)
+        return
+      }
+
       if (data.funnelId) {
         alert('Funnel saved successfully!')
         // Call onSave callback with funnel ID and slug
@@ -237,11 +253,12 @@ export default function EnhancedFunnelBuilder(props: EnhancedFunnelBuilderProps)
           props.onSave(data.funnelId, slug)
         }
       } else {
-        alert('Failed to save funnel')
+        console.error('No funnel ID in response:', data)
+        alert('Failed to save funnel: No funnel ID returned')
       }
     } catch (error) {
       console.error('Save error:', error)
-      alert('Failed to save funnel')
+      alert(`Failed to save funnel: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
