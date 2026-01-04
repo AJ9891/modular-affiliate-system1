@@ -1,0 +1,82 @@
+/**
+ * Empty State Component
+ * 
+ * For empty-but-expected and empty-but-unexpected states
+ * Personality bandwidth: full to reduced
+ */
+
+'use client'
+
+import React from 'react'
+import { EmptyStateContract, EmptyStateVisuals } from '@/lib/empty-states/types'
+import { cn } from '@/lib/utils'
+
+interface EmptyStateProps {
+  contract: EmptyStateContract
+  visuals: EmptyStateVisuals
+  icon?: React.ReactNode
+}
+
+export function EmptyState({ contract, visuals, icon }: EmptyStateProps) {
+  const { headline, body, primaryAction, secondaryAction } = contract
+  
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[400px] px-6 py-12 text-center">
+      {/* Icon */}
+      {icon && (
+        <div 
+          className={cn(
+            "mb-6",
+            visuals.iconStyle === 'animated' && visuals.motionIntensity === 'subtle' && "animate-pulse",
+            visuals.iconStyle === 'animated' && visuals.motionIntensity === 'medium' && "animate-bounce"
+          )}
+        >
+          {icon}
+        </div>
+      )}
+      
+      {/* Headline - this is where personality lives */}
+      <h3 
+        className={cn(
+          "text-xl font-semibold mb-3",
+          visuals.visualNoise === 'minimal' && "text-gray-900",
+          visuals.visualNoise === 'balanced' && "text-gray-900",
+          visuals.visualNoise === 'expressive' && visuals.allowGlitch && "text-gray-900 relative",
+        )}
+      >
+        {headline}
+      </h3>
+      
+      {/* Body - always neutral tone */}
+      {body && (
+        <p className="text-sm text-gray-600 max-w-md mb-8">
+          {body}
+        </p>
+      )}
+      
+      {/* Actions */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        {primaryAction && (
+          <button
+            onClick={primaryAction.onClick}
+            className={cn(
+              "px-6 py-2.5 rounded-lg font-medium transition-colors",
+              "bg-blue-600 text-white hover:bg-blue-700"
+            )}
+          >
+            {primaryAction.label}
+          </button>
+        )}
+        
+        {secondaryAction && (
+          <button
+            onClick={secondaryAction.onClick}
+            className="px-6 py-2.5 rounded-lg font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            {secondaryAction.label}
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
