@@ -1,13 +1,13 @@
 /**
  * Empty State Hook
  * 
- * Wire empty states to BrandBrain and personality context
+ * Wire empty states to personality system
  * Returns both contract and visuals for rendering
  */
 
 'use client'
 
-import { useUIExpression } from '@/contexts/UIExpressionContext'
+import { resolvePersonality } from '@/lib/personality'
 import { 
   EmptyStateContract, 
   EmptyStateCategory,
@@ -32,10 +32,12 @@ interface UseEmptyStateOptions {
     label: string
     onClick: () => void
   }
+  brandMode?: 'ai_meltdown' | 'anti_guru' | 'rocket_future'
 }
 
 export function useEmptyState(options: UseEmptyStateOptions) {
-  const { personality } = useUIExpression()
+  // Use provided brand mode or default to anti_guru (safest fallback)
+  const personality = resolvePersonality(options.brandMode || 'anti_guru')
   
   // Resolve tone from personality + category
   const tone = resolveEmptyStateTone(personality, options.category)
