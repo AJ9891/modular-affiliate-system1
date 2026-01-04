@@ -45,6 +45,8 @@ MIGRATIONS=(
   "add_downloads_tables.sql"
   "add_ai_chat_only.sql"
   "add_ai_support_chat.sql"
+  "add_brand_modes.sql"
+  "add_brand_brain_tables.sql"
   "optimize_rls_and_performance.sql"
   "add_funnel_rls_policies.sql"
 )

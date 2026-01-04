@@ -4,7 +4,7 @@
 
 ## Architecture
 
-```
+```text
 PersonalityProfile → Category → Bandwidth → Tone + Visuals → Contract
 ```
 
@@ -29,6 +29,7 @@ PersonalityProfile → Category → Bandwidth → Tone + Visuals → Contract
 ## Personality Rules by Brand Mode
 
 ### anti_guru (baseline safety)
+
 - No metaphors
 - No humor
 - No animation
@@ -36,12 +37,14 @@ PersonalityProfile → Category → Bandwidth → Tone + Visuals → Contract
 - One clear action
 
 ### rocket_future (default confidence)
+
 - Light metaphor allowed in expected states
 - Subtle motion allowed in expected states
 - Forward motion verbs
 - Never cute, never ironic
 
 ### ai_meltdown (expressive, but contained)
+
 - Personality **only in headline**
 - Body text must be **neutral**
 - Never sarcastic during errors
@@ -52,7 +55,7 @@ PersonalityProfile → Category → Bandwidth → Tone + Visuals → Contract
 
 **Motion reduces under stress, not increases.**
 
-```
+```text
 expected → unexpected → recoverable → hard
   ↓           ↓            ↓          ↓
 medium      none         none       none
@@ -142,12 +145,14 @@ function MyComponent() {
 ## Component Separation of Concerns
 
 ### BrandBrain Decides
+
 - Tone (neutral, encouraging, contained-chaos)
 - Animation allowance
 - Visual noise
 - Iconography style
 
 ### Product Logic Decides
+
 - Message truth
 - Recovery path
 - Action labels
@@ -169,6 +174,7 @@ This separation prevents personality from lying.
 ## Testing
 
 The test suite validates:
+
 - Personality bandwidth by category
 - Motion reduction under stress
 - Tone degradation for errors
@@ -176,6 +182,7 @@ The test suite validates:
 - Copy template fallbacks
 
 Run tests:
+
 ```bash
 npm test -- empty-states
 ```
@@ -183,6 +190,7 @@ npm test -- empty-states
 ## Examples
 
 See complete usage examples in:
+
 - `components/empty-states/examples/BuilderExamples.tsx`
 - `components/empty-states/examples/DashboardExamples.tsx`
 - `components/empty-states/examples/IntegrationsExamples.tsx`
