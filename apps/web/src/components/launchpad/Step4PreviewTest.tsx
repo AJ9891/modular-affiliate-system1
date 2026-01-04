@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { ArrowRight, Eye, ExternalLink } from 'lucide-react'
+import { ArrowRight, Eye, ExternalLink, AlertCircle } from 'lucide-react'
 
 interface Step4PreviewTestProps {
   funnelUrl?: string
@@ -11,6 +11,21 @@ interface Step4PreviewTestProps {
 
 export default function Step4PreviewTest({ funnelUrl, onTestComplete, onBack }: Step4PreviewTestProps) {
   const [hasTested, setHasTested] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
+
+  // Convert relative URL to absolute URL for iframe
+  const getAbsoluteUrl = (url: string | undefined) => {
+    if (!url) return ''
+    if (url.startsWith('http')) return url
+    // Use the current origin for relative URLs
+    if (typeof window !== 'undefined') {
+      return `${window.location.origin}${url.startsWith('/') ? url : `/${url}`}`
+    }
+    return url
+  }
+
+  const absoluteFunnelUrl = getAbsoluteUrl(funnelUrl)
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-12">
@@ -37,21 +52,70 @@ export default function Step4PreviewTest({ funnelUrl, onTestComplete, onBack }: 
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">Funnel Preview</h3>
-            <button className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm font-medium">
-              <ExternalLink className="w-4 h-4" />
-              Open in New Tab
-            </button>
+            {absoluteFunnelUrl && (
+              <a
+                href={absoluteFunnelUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Open in New Tab
+              </a>
+            )}
           </div>
         </div>
 
         <div className="p-6">
-          <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
-            <div className="text-center text-gray-500">
-              <Eye className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Funnel preview will appear here</p>
-              <p className="text-sm mt-1">This simulates the live experience</p>
+          {absoluteFunnelUrl ? (
+            <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden border border-gray-300 relative">
+              {isLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-10">
+                  <div className="text-center">
+                    <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                    <p className="text-sm text-gray-600">Loading preview...</p>
+                  </div>
+                </div>
+              )}
+              {loadError && (
+                <div className="absolute inset-0 flex items-center justify-center bg-yellow-50 z-10">
+                  <div className="text-center p-6">
+                    <AlertCircle className="w-12 h-12 mx-auto mb-4 text-yellow-600" />
+                    <p className="text-gray-900 font-medium mb-2">Preview couldn't load in the frame</p>
+                    <p className="text-sm text-gray-600 mb-4">Click "Open in New Tab" above to view your funnel</p>
+                    <a
+                      href={absoluteFunnelUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Open Funnel
+                    </a>
+                  </div>
+                </div>
+              )}
+              <iframe
+                src={absoluteFunnelUrl}
+                className="w-full h-full"
+                title="Funnel Preview"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+                onLoad={() => setIsLoading(false)}
+                onError={() => {
+                  setIsLoading(false)
+                  setLoadError(true)
+                }}
+              />
             </div>
-          </div>
+          ) : (
+            <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
+              <div className="text-center text-gray-500">
+                <Eye className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>No funnel URL provided</p>
+                <p className="text-sm mt-1">Please save your funnel first</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

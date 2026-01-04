@@ -13,13 +13,14 @@ interface Step3BuildFunnelProps {
 
 export default function Step3BuildFunnel({ onFunnelComplete, selectedObjective, onBack, funnelId }: Step3BuildFunnelProps) {
   const [isSaved, setIsSaved] = useState(false)
+  const [currentFunnelSlug, setCurrentFunnelSlug] = useState<string | null>(null)
 
-  const handleSave = () => {
+  const handleFunnelSave = (funnelId: string, slug: string) => {
+    setCurrentFunnelSlug(slug)
     setIsSaved(true)
-    // In a real implementation, this would save the funnel
-    setTimeout(() => {
-      onFunnelComplete('/f/example-funnel') // Mock funnel URL
-    }, 1000)
+    // Construct the actual funnel URL
+    const funnelUrl = `/f/${slug}`
+    onFunnelComplete(funnelUrl)
   }
 
   return (
@@ -41,7 +42,7 @@ export default function Step3BuildFunnel({ onFunnelComplete, selectedObjective, 
               Draft funnels are not public. Only you can see this.
             </p>
             <p className="text-sm text-blue-700">
-              Focus on getting something good enough. You can always improve it later.
+              Add blocks to your funnel, customize the content, then click the <strong>Save</strong> button in the builder below to continue.
             </p>
           </div>
         </div>
@@ -74,6 +75,7 @@ export default function Step3BuildFunnel({ onFunnelComplete, selectedObjective, 
           <EnhancedFunnelBuilder
             initialNiche="general"
             funnelId={funnelId}
+            onSave={handleFunnelSave}
           />
         </div>
       </div>
@@ -88,20 +90,15 @@ export default function Step3BuildFunnel({ onFunnelComplete, selectedObjective, 
             Back
           </button>
         )}
-        <button
-          onClick={handleSave}
-          disabled={isSaved}
-          className={`
-            inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors ml-auto
-            ${isSaved
-              ? 'bg-green-600 text-white cursor-not-allowed'
-              : 'bg-blue-600 text-white hover:bg-blue-700'
-            }
-          `}
-        >
-          {isSaved ? 'Saved!' : 'Save & Continue'}
-          {!isSaved && <ArrowRight className="w-5 h-5" />}
-        </button>
+        {isSaved && (
+          <button
+            onClick={() => {}}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold bg-green-600 text-white ml-auto cursor-default"
+          >
+            Funnel Saved! Continue to Preview
+            <ArrowRight className="w-5 h-5" />
+          </button>
+        )}
       </div>
     </div>
   )

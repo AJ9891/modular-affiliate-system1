@@ -25,6 +25,7 @@ interface FunnelConfig {
 interface EnhancedFunnelBuilderProps {
   initialNiche?: string
   funnelId?: string | null
+  onSave?: (funnelId: string, slug: string) => void
 }
 
 const nicheData: Record<string, { name: string; emoji: string; color: string }> = {
@@ -142,7 +143,8 @@ const blockTemplates: Record<string, Omit<BlockConfig, 'id'>> = {
   }
 }
 
-export default function EnhancedFunnelBuilder({ initialNiche = 'general', funnelId }: EnhancedFunnelBuilderProps = {}) {
+export default function EnhancedFunnelBuilder(props: EnhancedFunnelBuilderProps) {
+  const { initialNiche = 'general', funnelId, onSave } = props
   const [funnel, setFunnel] = useState<FunnelConfig>({
     name: 'New Funnel',
     niche: initialNiche,
@@ -215,14 +217,27 @@ export default function EnhancedFunnelBuilder({ initialNiche = 'general', funnel
 
   const saveFunnel = async () => {
     try {
+      // Generate slug from funnel name
+      const slug = funnel.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'untitled-funnel'
+      
       const response = await fetch('/api/funnels', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(funnel)
+        body: JSON.stringify({
+          ...funnel,
+          slug,
+          niche: funnel.niche || initialNiche
+        })
       })
       const data = await response.json()
-      if (data.success) {
+      if (data.funnelId) {
         alert('Funnel saved successfully!')
+        // Call onSave callback with funnel ID and slug
+        if (props.onSave) {
+          props.onSave(data.funnelId, slug)
+        }
+      } else {
+        alert('Failed to save funnel')
       }
     } catch (error) {
       console.error('Save error:', error)
