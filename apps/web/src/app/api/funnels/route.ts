@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 import { supabase } from '@/lib/supabase'
 import { checkSupabase } from '@/lib/check-supabase'
 
@@ -28,23 +30,16 @@ export async function POST(request: NextRequest) {
   const check = checkSupabase()
   if (check) return check
   
+  const supabaseClient = createRouteHandlerClient({ cookies })
+  
   try {
-    // Get user from session
-    const accessToken = request.cookies.get('sb-access-token')?.value
-    
-    console.log('Access token present:', !!accessToken)
-    
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
-    }
+    // Get user from session using Supabase auth-helpers
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
 
-    // Get user directly from the access token
-    const { data: { user }, error: authError } = await supabase!.auth.getUser(accessToken)
-
-    console.log('User from token:', user?.id, 'Auth error:', authError)
+    console.log('User from session:', user?.id, 'Auth error:', authError)
 
     if (authError || !user) {
-      return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
     // Create admin client for operations

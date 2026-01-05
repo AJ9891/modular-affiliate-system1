@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useUIExpression } from '@/lib/brand-brain/useUIExpression'
+import { extractActionFromResponse, isValidAction } from '@/lib/chat-utils'
 
 interface Message {
   id: string
@@ -163,9 +164,15 @@ export default function AIChatWidget({ mode = 'support' }: AIChatWidgetProps) {
           })
         })
 
-        if (!response.ok) throw new Error('Failed to send message')
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
 
-        const reader = response.body?.getReader()
+        if (!response.body) {
+          throw new Error('No response body received from server')
+        }
+
+        const reader = response.body.getReader()
         const decoder = new TextDecoder()
         let fullResponse = ''
         let detectedAction: ChatAction | null = null
@@ -180,7 +187,7 @@ export default function AIChatWidget({ mode = 'support' }: AIChatWidgetProps) {
           created_at: new Date().toISOString()
         }])
         
-        // Stream the response
+        // Stream the response with proper line-delimited JSON parsing
         if (reader) {
           while (true) {
             const { done, value } = await reader.read()
@@ -189,66 +196,53 @@ export default function AIChatWidget({ mode = 'support' }: AIChatWidgetProps) {
             const chunk = decoder.decode(value)
             buffer += chunk
             
-            // Try to extract complete JSON objects from buffer
-            let startIndex = 0
-            let braceCount = 0
-            let inString = false
-            let escape = false
+            // Process complete lines from buffer
+            const lines = buffer.split('\n')
+            // Keep the last incomplete line in buffer
+            buffer = lines[lines.length - 1] || ''
             
-            for (let i = 0; i < buffer.length; i++) {
-              const char = buffer[i]
+            // Process all complete lines
+            for (let i = 0; i < lines.length - 1; i++) {
+              const line = lines[i].trim()
+              if (!line) continue
               
-              if (escape) {
-                escape = false
-                continue
-              }
-              
-              if (char === '\\') {
-                escape = true
-                continue
-              }
-              
-              if (char === '"' && !escape) {
-                inString = !inString
-                continue
-              }
-              
-              if (!inString) {
-                if (char === '{') {
-                  if (braceCount === 0) startIndex = i
-                  braceCount++
-                } else if (char === '}') {
-                  braceCount--
-                  if (braceCount === 0) {
-                    // Complete JSON object found
-                    const jsonStr = buffer.substring(startIndex, i + 1)
-                    try {
-                      const data = JSON.parse(jsonStr)
-                      if (data.message) {
-                        fullResponse += data.message
-                        
-                        // Update message with streamed content
-                        setMessages(prev => prev.map(m => 
-                          m.id === assistantMsgId ? { ...m, content: fullResponse } : m
-                        ))
-                      }
-                      
-                      // Capture action when detected
-                      if (data.action && !detectedAction) {
-                        detectedAction = data.action
-                      }
-                    } catch (e) {
-                      console.warn('Failed to parse JSON:', jsonStr)
-                    }
-                    
-                    // Remove processed JSON from buffer
-                    buffer = buffer.substring(i + 1)
-                    i = -1 // Reset loop
-                  }
+              try {
+                const data = JSON.parse(line)
+                if (data.message) {
+                  fullResponse += data.message
+                  
+                  // Update message with streamed content
+                  setMessages(prev => prev.map(m => 
+                    m.id === assistantMsgId ? { ...m, content: fullResponse } : m
+                  ))
                 }
+                
+                // Capture action when detected (or at final message)
+                if (data.action && isValidAction(data.action) && !detectedAction) {
+                  detectedAction = data.action
+                }
+              } catch (e) {
+                // Silently ignore JSON parse errors for malformed lines
+                console.warn('Failed to parse JSON line:', line, e)
               }
             }
           }
+        }
+
+        // Extract action from final response if not already detected
+        if (!detectedAction && fullResponse) {
+          const { action } = extractActionFromResponse(fullResponse)
+          if (action && isValidAction(action)) {
+            detectedAction = action
+          }
+        }
+
+        // Clean up response content by removing action markup
+        if (fullResponse) {
+          const { content: cleanContent } = extractActionFromResponse(fullResponse)
+          setMessages(prev => prev.map(m => 
+            m.id === assistantMsgId ? { ...m, content: cleanContent || fullResponse } : m
+          ))
         }
 
         // Execute action if detected during streaming
@@ -266,7 +260,9 @@ export default function AIChatWidget({ mode = 'support' }: AIChatWidgetProps) {
           })
         })
 
-        if (!response.ok) throw new Error('Failed to send message')
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: Failed to send message`)
+        }
 
         const data = await response.json()
         
@@ -281,10 +277,11 @@ export default function AIChatWidget({ mode = 'support' }: AIChatWidgetProps) {
       }
     } catch (error) {
       console.error('Failed to send message:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
       setMessages(prev => [...prev, {
         id: `error-${Date.now()}`,
         role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
+        content: `Sorry, I encountered an error: ${errorMessage}\n\nPlease try again or contact support if the problem persists.`,
         created_at: new Date().toISOString()
       }])
     } finally {

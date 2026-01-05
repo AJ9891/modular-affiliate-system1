@@ -26,9 +26,7 @@ PersonalityProfile → Category → Bandwidth → Tone + Visuals → Contract
    - Personality bandwidth: **none**
    - Example: Session expired, server error, data corruption
 
-## Personality Rules by Brand Mode
-
-### anti_guru (baseline safety)
+## Personality Rules by Br
 
 - No metaphors
 - No humor

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { ArrowRight, Sparkles, FileText } from 'lucide-react'
+import { ArrowRight, Sparkles } from 'lucide-react'
 import EnhancedFunnelBuilder from '@/components/EnhancedFunnelBuilder'
 
 interface Step3BuildFunnelProps {
@@ -59,14 +59,13 @@ export default function Step3BuildFunnel({ onFunnelComplete, selectedObjective, 
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <button className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
-                <FileText className="w-4 h-4" />
-                Templates
-              </button>
-              <button className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
+              <a 
+                href="/ai-generator" 
+                className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+              >
                 <Sparkles className="w-4 h-4" />
                 AI Assist
-              </button>
+              </a>
             </div>
           </div>
         </div>

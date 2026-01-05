@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import OpenAI from 'openai'
 import { createClient } from '@supabase/supabase-js'
 import { BrandBrainManager } from '@/lib/brand-brain/manager'
+import { extractActionFromResponse, isValidAction, formatActionJson } from '@/lib/chat-utils'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
@@ -254,43 +255,66 @@ export async function POST(req: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         let fullResponse = ''
-        let actionPayload = null
+        let detectedAction = null
 
-        for await (const chunk of completion) {
-          const token = chunk.choices[0]?.delta?.content
-          if (token) {
-            fullResponse += token
+        try {
+          for await (const chunk of completion) {
+            const token = chunk.choices[0]?.delta?.content
+            if (token) {
+              fullResponse += token
 
-            // Check for action in the accumulated response
-            if (fullResponse.includes('"action"') && !actionPayload) {
-              try {
-                actionPayload = JSON.parse(
-                  fullResponse.match(/\{[\s\S]*\}/)?.[0] ?? ''
+              // Send newline-delimited JSON for easier parsing
+              controller.enqueue(
+                encoder.encode(
+                  formatActionJson(token, null) + '\n'
                 )
-              } catch {}
+              )
             }
+          }
 
+          // Extract action from complete response
+          const { content: cleanContent, action } = extractActionFromResponse(fullResponse)
+          
+          // Send final message with action (if any)
+          if (action && isValidAction(action)) {
             controller.enqueue(
               encoder.encode(
                 JSON.stringify({
-                  message: token,
-                  action: actionPayload,
-                })
+                  message: '',
+                  action: action,
+                  final: true,
+                }) + '\n'
               )
             )
+            detectedAction = action
           }
+
+          controller.close()
+
+          // Log conversation for analytics / training
+          try {
+            await supabase.from('chat_messages').insert({
+              session_id: sessionId,
+              user_id: userId ?? null,
+              role: 'assistant',
+              content: cleanContent || fullResponse,
+              type: 'sales',
+            })
+          } catch (logError) {
+            console.warn('Failed to log sales chat message:', logError)
+          }
+        } catch (streamError) {
+          console.error('Error in chat stream:', streamError)
+          controller.enqueue(
+            encoder.encode(
+              JSON.stringify({
+                message: '',
+                error: 'Stream processing error',
+              }) + '\n'
+            )
+          )
+          controller.close()
         }
-
-        controller.close()
-
-        // Optional: log conversation for analytics / training
-        await supabase.from('chat_messages').insert({
-          session_id: sessionId,
-          user_id: userId ?? null,
-          role: 'assistant',
-          content: fullResponse,
-          type: 'sales',
-        })
       },
     })
 
