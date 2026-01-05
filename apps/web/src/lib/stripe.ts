@@ -20,7 +20,7 @@ export const STRIPE_PLANS = {
   starter: {
     name: 'Starter',
     priceId: process.env.STRIPE_STARTER_PRICE_ID || '',
-    price: 29,
+    price: 30,
     features: [
       '1 Active Funnel',
       'Basic Templates',
@@ -31,7 +31,7 @@ export const STRIPE_PLANS = {
   pro: {
     name: 'Pro',
     priceId: process.env.STRIPE_PRO_PRICE_ID || '',
-    price: 79,
+    price: 45,
     features: [
       'Unlimited Funnels',
       'Premium Templates',
@@ -43,7 +43,7 @@ export const STRIPE_PLANS = {
   agency: {
     name: 'Agency',
     priceId: process.env.STRIPE_AGENCY_PRICE_ID || '',
-    price: 199,
+    price: 60,
     features: [
       'Everything in Pro',
       'White Label Options',

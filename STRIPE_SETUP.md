@@ -24,19 +24,19 @@ Navigate to **Products** in Stripe Dashboard and create these three products:
 
 #### Starter Plan
 - Name: `Starter`
-- Price: `$29.00` USD
+- Price: `$30.00` USD
 - Billing period: `Monthly`
 - After creation, copy the **Price ID** (starts with `price_...`)
 
 #### Pro Plan
 - Name: `Pro`
-- Price: `$79.00` USD
+- Price: `$45.00` USD
 - Billing period: `Monthly`
 - Copy the **Price ID**
 
 #### Agency Plan
 - Name: `Agency`
-- Price: `$199.00` USD
+- Price: `$60.00` USD
 - Billing period: `Monthly`
 - Copy the **Price ID**
 

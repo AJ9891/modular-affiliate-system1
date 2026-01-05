@@ -97,14 +97,14 @@ const blockTemplates: Record<string, Omit<BlockConfig, 'id'>> = {
       plans: [
         {
           name: 'Basic',
-          price: '$29',
+          price: '$30',
           period: '/month',
           features: ['Feature 1', 'Feature 2', 'Feature 3'],
           cta: 'Get Started'
         },
         {
           name: 'Pro',
-          price: '$79',
+          price: '$45',
           period: '/month',
           features: ['Everything in Basic', 'Feature 4', 'Feature 5'],
           cta: 'Get Started',

@@ -22,7 +22,7 @@ export default function CheckoutPage() {
   const plans = {
     starter: {
       name: 'Starter',
-      price: 29,
+      price: 30,
       features: [
         '1 Active Funnel',
         'Basic Templates',
@@ -33,7 +33,7 @@ export default function CheckoutPage() {
     },
     pro: {
       name: 'Pro',
-      price: 79,
+      price: 45,
       features: [
         'Unlimited Funnels',
         'Premium Templates',
@@ -45,7 +45,7 @@ export default function CheckoutPage() {
     },
     agency: {
       name: 'Agency',
-      price: 199,
+      price: 60,
       features: [
         'Everything in Pro',
         'White Label Options',
