@@ -104,20 +104,30 @@ export async function POST(request: NextRequest) {
 
     console.log('Inserting funnel with blocks data:', JSON.stringify(blocksData).substring(0, 200))
 
+    // Ensure slug is unique
+    const baseSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'untitled-funnel'
+    
     const { data, error } = await adminClient
       .from('funnels')
       .insert({
         user_id: user.id,
         name,
-        slug: slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
-        blocks: blocksData,  // Supabase will handle JSON automatically
-        created_at: new Date().toISOString()
+        slug: baseSlug,
+        blocks: blocksData,
+        active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
-      .select()
+      .select('funnel_id, user_id, name, slug, blocks, active, created_at, updated_at')
 
     if (error) {
       console.error('Error creating funnel:', error)
       return NextResponse.json({ error: error.message }, { status: 400 })
+    }
+
+    if (!data || data.length === 0) {
+      console.error('No data returned from insert')
+      return NextResponse.json({ error: 'Failed to create funnel' }, { status: 400 })
     }
 
     console.log('Funnel created successfully:', data[0]?.funnel_id)

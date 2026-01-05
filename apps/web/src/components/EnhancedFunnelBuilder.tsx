@@ -220,11 +220,14 @@ export default function EnhancedFunnelBuilder(props: EnhancedFunnelBuilderProps)
       // Generate slug from funnel name
       const slug = funnel.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'untitled-funnel'
       
+      // Remove client-side id fields from blocks before sending to server
+      const cleanedBlocks = funnel.blocks.map(({ id, ...block }) => block)
+      
       const payload = {
         name: funnel.name,
         slug,
         niche: funnel.niche || initialNiche,
-        blocks: funnel.blocks,
+        blocks: cleanedBlocks,
         theme: funnel.theme
       }
 
