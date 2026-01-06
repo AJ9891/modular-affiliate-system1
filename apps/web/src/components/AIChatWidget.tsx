@@ -270,10 +270,15 @@ export default function AIChatWidget({ mode = 'support' }: AIChatWidgetProps) {
           setConversationId(data.conversationId)
         }
 
-        setMessages(prev => [...prev.filter(m => m.id !== tempUserMsg.id), 
-          tempUserMsg, 
-          data.message
-        ])
+        // Convert API response to Message format
+        const assistantMessage: Message = {
+          id: data.message.id,
+          role: 'assistant',
+          content: data.message.content,
+          created_at: data.message.created_at
+        }
+
+        setMessages(prev => [...prev, assistantMessage])
       }
     } catch (error) {
       console.error('Failed to send message:', error)
