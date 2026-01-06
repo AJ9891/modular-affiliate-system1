@@ -156,7 +156,7 @@ export default function AIGeneratorPage() {
         
         // Default fallback
         return (
-          <div className={`bg-gradient-to-br ${gradient} rounded-lg p-12 ${layout} space-y-8`}>
+          <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg p-12 space-y-8">
             {/* Headline */}
             {parsed.headline && (
               <h1 className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-lg">
@@ -175,7 +175,7 @@ export default function AIGeneratorPage() {
             {parsed.benefits && Array.isArray(parsed.benefits) && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
                 {parsed.benefits.map((benefit: any, index: number) => (
-                  <div key={index} className={`${cardStyle} p-6`}>
+                  <div key={index} className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg p-6">
                     <h3 className="text-xl font-bold text-white mb-3">
                       {benefit.title}
                     </h3>
