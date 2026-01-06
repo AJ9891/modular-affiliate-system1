@@ -35,9 +35,9 @@ export async function POST(request: NextRequest) {
 
     // Calculate stats
     const views = clicks?.length || 0
-    const clickCount = clicks?.filter(c => c.funnel_id === funnelId).length || 0
-    const conversionCount = conversions?.filter(c => c.funnel_id === funnelId).length || 0
-    const revenue = conversions?.reduce((sum, c) => sum + (c.amount || 0), 0) || 0
+    const clickCount = clicks?.filter((c: any) => c.funnel_id === funnelId).length || 0
+    const conversionCount = conversions?.filter((c: any) => c.funnel_id === funnelId).length || 0
+    const revenue = conversions?.reduce((sum: number, c: any) => sum + (c.amount || 0), 0) || 0
 
     const stats = {
       views,

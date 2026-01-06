@@ -42,7 +42,7 @@ export async function GET() {
     if (bucketsError) {
       results.errors.push(`storage: ${bucketsError.message}`);
     } else {
-      const downloadsBucket = buckets?.find(b => b.name === 'downloads');
+      const downloadsBucket = buckets?.find((b: any) => b.name === 'downloads');
       if (downloadsBucket) {
         results.storage_bucket = true;
       } else {

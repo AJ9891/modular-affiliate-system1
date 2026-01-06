@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
         clicks: offerClicks,
         conversions: offerConversions,
       }
-    }).filter(item => item.clicks > 0) || []
+    }).filter((item: any) => item.clicks > 0) || []
 
     // Get recent clicks (last 20)
     const recentClicks = clicks

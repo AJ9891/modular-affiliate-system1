@@ -318,7 +318,7 @@ export async function PATCH(request: NextRequest) {
           .single()
 
         // Format conversation history as HTML
-        const conversationHTML = messages?.map(msg => `
+        const conversationHTML = messages?.map((msg: any) => `
           <div style="margin: 10px 0; padding: 10px; background: ${msg.role === 'user' ? '#f0f9ff' : '#f9fafb'}; border-radius: 8px;">
             <strong style="color: ${msg.role === 'user' ? '#0284c7' : '#059669'};">
               ${msg.role === 'user' ? '👤 User' : '🤖 AI Assistant'}
