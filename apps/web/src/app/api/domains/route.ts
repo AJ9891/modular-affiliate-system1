@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
 import { checkSupabase } from '@/lib/check-supabase'
-import { createClient } from '@supabase/supabase-js'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,26 +9,48 @@ const VERCEL_API_TOKEN = process.env.VERCEL_API_TOKEN
 const VERCEL_PROJECT_ID = process.env.VERCEL_PROJECT_ID
 const VERCEL_TEAM_ID = process.env.VERCEL_TEAM_ID
 
+// Validate critical env vars upfront
+function validateEnv() {
+  if (!VERCEL_API_TOKEN) {
+    throw new Error('[API/DOMAINS] VERCEL_API_TOKEN is required but not set')
+  }
+  if (!VERCEL_PROJECT_ID) {
+    throw new Error('[API/DOMAINS] VERCEL_PROJECT_ID is required but not set')
+  }
+  if (!VERCEL_TEAM_ID) {
+    throw new Error('[API/DOMAINS] VERCEL_TEAM_ID is required but not set')
+  }
+}
+
 // Get user's domains
 export async function GET(request: NextRequest) {
   const check = checkSupabase()
   if (check) return check
 
   try {
+    validateEnv()
+    const supabase = createRouteHandlerClient({ cookies })
     const accessToken = request.cookies.get('sb-access-token')?.value
     if (!accessToken) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    const { data: { user } } = await supabase!.auth.getUser(accessToken)
+    const { data: { user } } = await supabase.auth.getUser(accessToken)
     if (!user) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
     }
 
     // Get user's custom domains from database
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+    
+    if (!supabaseUrl) throw new Error('[API/DOMAINS] NEXT_PUBLIC_SUPABASE_URL is required')
+    if (!serviceRoleKey) throw new Error('[API/DOMAINS] SUPABASE_SERVICE_ROLE_KEY is required')
+
+    const { createClient } = await import('@supabase/supabase-js')
     const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      supabaseUrl,
+      serviceRoleKey,
       {
         auth: {
           autoRefreshToken: false,
@@ -64,12 +86,14 @@ export async function POST(request: NextRequest) {
   if (check) return check
 
   try {
+    validateEnv()
+    const supabase = createRouteHandlerClient({ cookies })
     const accessToken = request.cookies.get('sb-access-token')?.value
     if (!accessToken) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    const { data: { user } } = await supabase!.auth.getUser(accessToken)
+    const { data: { user } } = await supabase.auth.getUser(accessToken)
     if (!user) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
     }
@@ -77,9 +101,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { domain, type } = body // type: 'subdomain' or 'custom'
 
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+    
+    if (!supabaseUrl) throw new Error('[API/DOMAINS] NEXT_PUBLIC_SUPABASE_URL is required')
+    if (!serviceRoleKey) throw new Error('[API/DOMAINS] SUPABASE_SERVICE_ROLE_KEY is required')
+
+    const { createClient } = await import('@supabase/supabase-js')
     const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      supabaseUrl,
+      serviceRoleKey,
       {
         auth: {
           autoRefreshToken: false,

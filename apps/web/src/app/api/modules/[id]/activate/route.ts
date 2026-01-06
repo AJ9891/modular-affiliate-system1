@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 import { checkSupabase } from '@/lib/check-supabase'
 import { moduleLoader } from '@/lib/module-loader'
 
@@ -23,8 +24,11 @@ export async function POST(
       )
     }
 
+    // Create server-only Supabase client
+    const supabase = createRouteHandlerClient({ cookies })
+
     // Save activation to database
-    const { data, error } = await supabase!
+    const { data, error } = await supabase
       .from('niches')
       .upsert({ 
         module_id: module.module_id,
