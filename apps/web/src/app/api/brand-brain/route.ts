@@ -5,7 +5,14 @@ import { NextResponse } from 'next/server';
 export async function GET(request: Request) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
-    const { data: { user } } = await supabase.auth.getUser();
+    
+    // Check authentication first
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError) {
+      console.error('Authentication error:', authError);
+      return NextResponse.json({ error: 'Authentication failed' }, { status: 401 });
+    }
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -15,7 +22,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const activeOnly = searchParams.get('active') === 'true';
 
-    // Build query
+    // Build query with error checking
     let query = supabase
       .from('brand_profiles')
       .select('*')
@@ -30,6 +37,13 @@ export async function GET(request: Request) {
 
     if (error) {
       console.error('Error fetching brand profiles:', error);
+      
+      // Handle case where table doesn't exist
+      if (error.code === 'PGRST106' || error.message.includes('relation') || error.message.includes('does not exist')) {
+        console.warn('brand_profiles table does not exist, returning empty array');
+        return NextResponse.json({ profiles: [] });
+      }
+      
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
@@ -43,7 +57,14 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
-    const { data: { user } } = await supabase.auth.getUser();
+    
+    // Check authentication first
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError) {
+      console.error('Authentication error:', authError);
+      return NextResponse.json({ error: 'Authentication failed' }, { status: 401 });
+    }
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -132,6 +153,15 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error('Error creating brand profile:', error);
+      
+      // Handle case where table doesn't exist
+      if (error.code === 'PGRST106' || error.message.includes('relation') || error.message.includes('does not exist')) {
+        console.error('brand_profiles table does not exist. Please run database migrations.');
+        return NextResponse.json({ 
+          error: 'Database not properly configured. Please contact administrator.' 
+        }, { status: 503 });
+      }
+      
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 

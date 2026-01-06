@@ -13,14 +13,22 @@ export async function POST(request: NextRequest) {
     
     let brandBrain = null;
     if (user) {
-      const { data: profile } = await supabase
-        .from('brand_profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .single()
-      
-      brandBrain = profile;
+      try {
+        const { data: profile, error } = await supabase
+          .from('brand_profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .single()
+        
+        if (!error) {
+          brandBrain = profile;
+        } else {
+          console.log('BrandBrain profile not found or table does not exist:', error.message);
+        }
+      } catch (err) {
+        console.log('BrandBrain table not available, using default settings');
+      }
     }
     
     const params: GenerateContentParams = {

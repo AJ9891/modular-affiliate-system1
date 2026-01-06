@@ -22,25 +22,33 @@ export async function POST(request: Request) {
     // Get brand profile if specified
     let brandBrain = null;
     if (brandProfileId) {
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('brand_profiles')
         .select('*')
         .eq('id', brandProfileId)
         .eq('user_id', user.id)
         .single();
       
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Error fetching brand profile:', profileError);
+        return NextResponse.json({ error: profileError.message }, { status: 500 });
+      }
       if (profile) {
         brandBrain = profile;
       }
     } else {
       // Get active brand profile
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('brand_profiles')
         .select('*')
         .eq('user_id', user.id)
         .eq('is_active', true)
         .single();
       
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Error fetching active brand profile:', profileError);
+        return NextResponse.json({ error: profileError.message }, { status: 500 });
+      }
       if (profile) {
         brandBrain = profile;
       }
@@ -53,32 +61,39 @@ export async function POST(request: Request) {
       brandBrain?.id || 'default'
     );
 
-    // Store validation result
-    const { data: validationRecord, error: validationError } = await supabase
-      .from('content_validations')
-      .insert({
-        brand_profile_id: brandBrain?.id || null,
-        user_id: user.id,
-        content_type: contentType,
-        content_text: content,
-        content_length: content.split(/\s+/).length,
-        violations: validation.violations,
-        score: validation.score,
-        approved: validation.approved,
-        funnel_id: funnelId || null,
-        page_id: pageId || null
-      })
-      .select()
-      .single();
+    // Try to store validation result (table might not exist in all environments)
+    let validationId = null;
+    try {
+      const { data: validationRecord, error: validationError } = await supabase
+        .from('content_validations')
+        .insert({
+          brand_profile_id: brandBrain?.id || null,
+          user_id: user.id,
+          content_type: contentType,
+          content_text: content,
+          content_length: content.split(/\s+/).length,
+          violations: validation.violations,
+          score: validation.score,
+          approved: validation.approved,
+          funnel_id: funnelId || null,
+          page_id: pageId || null
+        })
+        .select()
+        .single();
 
-    if (validationError) {
-      console.error('Error storing validation:', validationError);
+      if (validationError) {
+        console.warn('Could not store validation record:', validationError.message);
+      } else if (validationRecord) {
+        validationId = validationRecord.id;
+      }
+    } catch (err) {
+      console.warn('Error storing validation (table may not exist):', err);
     }
 
     return NextResponse.json({
       validation: {
         ...validation,
-        validationId: validationRecord?.id
+        validationId: validationId
       }
     });
   } catch (error) {

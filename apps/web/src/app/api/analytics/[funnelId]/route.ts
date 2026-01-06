@@ -23,7 +23,7 @@ export async function GET(
     }
 
     // Get conversions for this funnel's clicks
-    const clickIds = clicks.map(c => c.click_id)
+    const clickIds = clicks.map((c: any) => c.click_id)
     const { data: conversions, error: conversionsError } = await supabase!
       .from('conversions')
       .select('*')
@@ -40,7 +40,7 @@ export async function GET(
       conversion_rate: clicks.length > 0 
         ? ((conversions.length / clicks.length) * 100).toFixed(2)
         : 0,
-      total_revenue: conversions.reduce((sum, c) => sum + (c.amount || 0), 0),
+      total_revenue: conversions.reduce((sum: number, c: any) => sum + (c.amount || 0), 0),
       clicks_by_day: groupByDay(clicks),
       conversions_by_day: groupByDay(conversions),
     }

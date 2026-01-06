@@ -18,23 +18,31 @@ export async function POST(request: Request) {
     // Get brand profile
     let brandBrain = null;
     if (brandProfileId) {
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('brand_profiles')
         .select('*')
         .eq('id', brandProfileId)
         .eq('user_id', user.id)
         .single();
       
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Error fetching brand profile:', profileError);
+        return NextResponse.json({ error: profileError.message }, { status: 500 });
+      }
       brandBrain = profile;
     } else {
       // Get active brand profile
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('brand_profiles')
         .select('*')
         .eq('user_id', user.id)
         .eq('is_active', true)
         .single();
       
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Error fetching active brand profile:', profileError);
+        return NextResponse.json({ error: profileError.message }, { status: 500 });
+      }
       brandBrain = profile;
     }
 

@@ -188,6 +188,7 @@ export default function EnhancedFunnelBuilder(props: EnhancedFunnelBuilderProps)
   }
 
   const updateBlock = (id: string, updates: Partial<BlockConfig>) => {
+    console.log('Updating block:', id, 'with updates:', updates)
     setFunnel(prev => ({
       ...prev,
       blocks: prev.blocks.map(b => b.id === id ? { ...b, ...updates } : b)
@@ -221,7 +222,10 @@ export default function EnhancedFunnelBuilder(props: EnhancedFunnelBuilderProps)
       const slug = funnel.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'untitled-funnel'
       
       // Remove client-side id fields from blocks before sending to server
-      const cleanedBlocks = funnel.blocks.map(({ id, ...block }) => block)
+      const cleanedBlocks = funnel.blocks.map(block => {
+        const { id, ...blockWithoutId } = block
+        return blockWithoutId
+      })
       
       const payload = {
         name: funnel.name,
@@ -275,7 +279,10 @@ export default function EnhancedFunnelBuilder(props: EnhancedFunnelBuilderProps)
         onDragStart={() => handleDragStart(funnel.blocks.indexOf(block))}
         onDragOver={(e) => handleDragOver(e, funnel.blocks.indexOf(block))}
         onDragEnd={handleDragEnd}
-        onClick={() => setSelectedBlock(block.id)}
+        onClick={() => {
+          console.log('Selecting block:', block.id, 'type:', block.type)
+          setSelectedBlock(block.id)
+        }}
         className={`
           relative p-4 mb-4 border-2 rounded-lg cursor-move transition-all
           ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}
