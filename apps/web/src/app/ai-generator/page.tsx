@@ -189,7 +189,7 @@ export default function AIGeneratorPage() {
             
             {/* Bullet Points */}
             {parsed.bulletPoints && Array.isArray(parsed.bulletPoints) && (
-              <ul className={`${layout === 'text-left' ? 'text-left' : 'text-left'} max-w-2xl ${layout === 'text-center' ? 'mx-auto' : ''} space-y-3 text-white text-lg`}>
+              <ul className="max-w-2xl space-y-3 text-white text-lg">
                 {parsed.bulletPoints.map((point: string, index: number) => (
                   <li key={index} className="flex items-start gap-3">
                     <span className="text-yellow-400 text-xl">✓</span>
@@ -201,7 +201,7 @@ export default function AIGeneratorPage() {
             
             {/* CTA */}
             {parsed.cta && (
-              <button className={`mt-8 px-10 py-4 ${buttonColor} text-xl font-bold rounded-lg transition-all transform hover:scale-105 shadow-2xl`}>
+              <button className="mt-8 px-10 py-4 bg-yellow-400 hover:bg-yellow-300 text-xl font-bold rounded-lg transition-all transform hover:scale-105 shadow-2xl text-gray-900">
                 {parsed.cta}
               </button>
             )}
