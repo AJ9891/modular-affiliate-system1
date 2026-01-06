@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { BrandModeKey, useBrandMode } from '@/contexts/BrandModeContext'
+import { PersonalitySelector } from './PersonalitySelector'
 import { designTokens } from '@/config/designTokens'
 import { COMPONENT_CONTRACTS } from '@/types/component'
 
@@ -127,43 +128,12 @@ export default function DragDropBuilder({ initialBlocks = [], onSave }: DragDrop
     <div className="h-screen flex flex-col bg-gray-50">
       {/* Top Toolbar */}
       <div className="bg-white border-b px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div>
-            <h1 className="text-xl font-bold">Visual Funnel Builder</h1>
-            <p className="text-sm text-gray-500">Choose a funnel style. We'll handle the taste.</p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setMode('rocket')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                mode === 'rocket' 
-                  ? 'bg-[#FF6A00] text-white' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              🚀 Rocket
-            </button>
-            <button
-              onClick={() => setMode('meltdown')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                mode === 'meltdown' 
-                  ? 'bg-[#00E5FF] text-black' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              🤖 Meltdown
-            </button>
-            <button
-              onClick={() => setMode('antiguru')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                mode === 'antiguru' 
-                  ? 'bg-[#FACC15] text-black' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              ⚡ AntiGuru
-            </button>
-          </div>
+        <div className="flex-1">
+          <h1 className="text-xl font-bold">Visual Funnel Builder</h1>
+          <p className="text-sm text-gray-500">Choose your voice. The AI will match it.</p>
+        </div>
+        <div className="flex gap-3">
+          <PersonalitySelector compact={true} />
         </div>
         <div className="flex gap-3">
           <button className="px-4 py-2 border rounded-lg hover:bg-gray-50">
