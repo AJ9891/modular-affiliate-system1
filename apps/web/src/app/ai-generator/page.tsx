@@ -103,44 +103,6 @@ export default function AIGeneratorPage() {
   })
 
   function renderPreview() {
-    // Design variants for visual variety
-    const gradients = [
-      'from-blue-600 via-purple-600 to-green-500',
-      'from-pink-500 via-red-500 to-yellow-500',
-      'from-indigo-600 via-purple-600 to-pink-600',
-      'from-green-500 via-teal-500 to-blue-600',
-      'from-orange-500 via-red-600 to-pink-600',
-    ]
-    
-    const buttonColors = [
-      'bg-yellow-400 hover:bg-yellow-300 text-gray-900',
-      'bg-green-500 hover:bg-green-400 text-white',
-      'bg-pink-500 hover:bg-pink-400 text-white',
-      'bg-orange-500 hover:bg-orange-400 text-white',
-      'bg-blue-500 hover:bg-blue-400 text-white',
-    ]
-    
-    const layouts = [
-      'text-center',
-      'text-left',
-      'text-center',
-      'text-left',
-      'text-center',
-    ]
-    
-    const cardStyles = [
-      'bg-white/10 backdrop-blur-lg rounded-xl border border-white/20',
-      'bg-white/20 backdrop-blur-md rounded-2xl border-2 border-white/30 shadow-xl',
-      'bg-gradient-to-br from-white/10 to-white/5 rounded-lg border border-white/30',
-      'bg-black/20 backdrop-blur-sm rounded-xl border border-white/10',
-      'bg-white/15 backdrop-blur-lg rounded-2xl border border-white/40 shadow-2xl',
-    ]
-    
-    const gradient = gradients[designVariant % gradients.length]
-    const buttonColor = buttonColors[designVariant % buttonColors.length]
-    const layout = layouts[designVariant % layouts.length]
-    const cardStyle = cardStyles[designVariant % cardStyles.length]
-    
     try {
       // Try to parse as JSON first
       const parsed = JSON.parse(generatedContent)
