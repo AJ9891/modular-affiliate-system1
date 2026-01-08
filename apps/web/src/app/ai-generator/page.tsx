@@ -3,9 +3,11 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
+import { useAIConsent } from '@/components/ai/consent-dialog'
 
 export default function AIGeneratorPage() {
   const { user, loading: authLoading } = useAuth()
+  const { requestConsent, ConsentDialog } = useAIConsent()
   const [loading, setLoading] = useState(false)
   const [generatedContent, setGeneratedContent] = useState<string>('')
   const [viewMode, setViewMode] = useState<'code' | 'preview'>('preview')
@@ -29,6 +31,21 @@ export default function AIGeneratorPage() {
 
   async function handleGenerate(e: React.FormEvent) {
     e.preventDefault()
+    
+    // Request consent for AI generation
+    requestConsent({
+      type: "generate",
+      description: `${contentType} for ${formData.productName || 'your product'}`,
+      onConfirm: () => performGeneration(),
+      onManualOverride: () => {
+        // User chose manual override - show them a form or editor
+        setGeneratedContent('// Manual content creation mode\n// Write your content here...')
+        setViewMode('code')
+      }
+    })
+  }
+
+  async function performGeneration() {
     setLoading(true)
     setGeneratedContent('')
 
@@ -38,13 +55,21 @@ export default function AIGeneratorPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: contentType,
+          action: 'generate',
+          hasConsent: true,
           ...formData,
         }),
       })
 
       if (!res.ok) {
         const error = await res.json()
-        alert(error.error || 'Failed to generate content')
+        
+        // Handle AI guidelines violations gracefully
+        if (error.issues) {
+          alert(`Content generation failed due to guidelines: ${error.issues.join(', ')}`)
+        } else {
+          alert(error.error || 'Failed to generate content')
+        }
         return
       }
 
@@ -476,6 +501,9 @@ export default function AIGeneratorPage() {
           </Link>
         </div>
       </div>
+      
+      {/* AI Consent Dialog */}
+      <ConsentDialog />
     </div>
   )
 }

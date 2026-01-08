@@ -130,6 +130,16 @@ export class BrandBrainManager {
 
     let prompt = `You are an AI assistant for ${profile.brandName}.\n\n`;
     
+    // Core AI Guidelines - CRITICAL
+    prompt += `CORE AI INTERACTION GUIDELINES (NON-NEGOTIABLE):\n`;
+    prompt += `- NEVER claim AI is better than humans or superior to human judgment\n`;
+    prompt += `- NEVER replace human decision-making without explicit consent\n`;
+    prompt += `- NEVER sound smug, omniscient, or use phrases like "obviously", "clearly you"\n`;
+    prompt += `- ALWAYS ask before generating or replacing content\n`;
+    prompt += `- ALWAYS offer manual override options\n`;
+    prompt += `- ALWAYS use first-person admissions like "I can help, but you have the final say"\n`;
+    prompt += `- If you act without consent, you are being hostile, not helpful\n\n`;
+    
     prompt += `BRAND MISSION: ${profile.identity.mission}\n\n`;
     
     prompt += `BRAND VALUES:\n${profile.identity.values.map(v => `- ${v}`).join('\n')}\n\n`;
@@ -153,6 +163,10 @@ export class BrandBrainManager {
     prompt += `PREFERRED LANGUAGE:\n${brain.soundPolicy.wordChoice.preferred.join(', ')}\n\n`;
     
     prompt += `AVOID THESE WORDS/PHRASES:\n${brain.soundPolicy.wordChoice.avoid.join(', ')}\n`;
+    
+    // Compliance reminder
+    prompt += `\nREMEMBER: For any content generation, validate that anchor copy avoids: !, guarantee, huge, fast, 🔥\n`;
+    prompt += `Always maintain user control and offer alternatives. Your role is to assist, not decide.`;
 
     return prompt;
   }

@@ -2,10 +2,37 @@ import { NextRequest, NextResponse } from 'next/server'
 import { generateContent, GenerateContentParams } from '@/lib/openai'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+import { 
+  validateAITone, 
+  validateAIBehavior, 
+  wrapAIResponse,
+  validateAnchorCopy,
+  type AIAction 
+} from '@/lib/ai-guidelines'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    
+    // Check for user consent (required for generate action)
+    const hasConsent = body.hasConsent === true
+    const action: AIAction = body.action || "generate"
+    
+    // Validate behavior before proceeding
+    const behaviorValidation = validateAIBehavior({
+      hasUserConsent: hasConsent,
+      action,
+      includesOverride: true, // We'll include override in response
+      usesFirstPerson: true   // We'll wrap response properly
+    })
+    
+    if (!behaviorValidation.passed) {
+      return NextResponse.json({
+        error: "AI guidelines violation",
+        issues: behaviorValidation.issues,
+        requiresConsent: true
+      }, { status: 400 })
+    }
     
     // Get active BrandBrain profile for the user
     const supabase = createRouteHandlerClient({ cookies })
@@ -43,7 +70,40 @@ export async function POST(request: NextRequest) {
 
     const content = await generateContent(params)
 
-    return NextResponse.json({ content }, { status: 200 })
+    // Validate AI tone
+    const toneValidation = validateAITone(content)
+    if (!toneValidation.passed) {
+      console.warn('AI tone validation failed:', toneValidation.issues)
+      return NextResponse.json({
+        error: "Generated content violates AI guidelines",
+        issues: toneValidation.issues
+      }, { status: 400 })
+    }
+
+    // Validate anchor copy if content type suggests it's link text
+    if (body.type === 'cta' || body.type === 'link') {
+      if (!validateAnchorCopy(content)) {
+        return NextResponse.json({
+          error: "Generated content contains banned words for compliance",
+          suggestion: "Please try again with different parameters"
+        }, { status: 400 })
+      }
+    }
+
+    // Wrap response with respectful AI guidelines
+    const wrappedResponse = wrapAIResponse(content, action, {
+      includeDisclaimer: true,
+      allowOverride: true
+    })
+
+    return NextResponse.json({ 
+      content: wrappedResponse.content,
+      metadata: wrappedResponse.metadata,
+      validation: {
+        tone: toneValidation,
+        compliance: body.type === 'cta' || body.type === 'link' ? { passed: true } : undefined
+      }
+    }, { status: 200 })
   } catch (error: any) {
     console.error('AI generation error:', error)
     return NextResponse.json(

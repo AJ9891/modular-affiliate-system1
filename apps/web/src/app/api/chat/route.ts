@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { generateAIResponse } from '@/lib/openai'
+import { 
+  validateAITone, 
+  validateAIBehavior, 
+  wrapAIResponse 
+} from '@/lib/ai-guidelines'
 
 // GET /api/chat?conversationId=xxx - Get conversation history
 export async function GET(request: NextRequest) {
@@ -239,13 +244,48 @@ Always maintain a helpful, professional tone. Users are building their business 
       userMessage: message
     })
 
+    // Validate AI response tone
+    const toneValidation = validateAITone(aiResponse)
+    if (!toneValidation.passed) {
+      console.warn('Chat AI tone validation failed:', toneValidation.issues)
+      // For chat, we'll log but continue with a fallback response
+      const fallbackResponse = "I can help with that, but let me rephrase to be more helpful. What specific aspect would you like me to focus on?"
+      
+      // Save fallback response instead
+      const { data: assistantMsg, error: aiMsgError } = await supabase
+        .from('chat_messages')
+        .insert({
+          conversation_id: activeConversationId,
+          role: 'assistant',
+          content: fallbackResponse
+        })
+        .select()
+        .single()
+
+      if (aiMsgError) {
+        return NextResponse.json({ error: aiMsgError.message }, { status: 500 })
+      }
+
+      return NextResponse.json({
+        conversationId: activeConversationId,
+        message: assistantMsg,
+        validation: { tone: toneValidation }
+      })
+    }
+
+    // For chat, wrap with lighter guidelines (suggestions don't need heavy consent)
+    const wrappedResponse = wrapAIResponse(aiResponse, "suggest", {
+      includeDisclaimer: false,
+      allowOverride: false
+    })
+
     // Save AI response
     const { data: assistantMsg, error: aiMsgError } = await supabase
       .from('chat_messages')
       .insert({
         conversation_id: activeConversationId,
         role: 'assistant',
-        content: aiResponse
+        content: wrappedResponse.content
       })
       .select()
       .single()
