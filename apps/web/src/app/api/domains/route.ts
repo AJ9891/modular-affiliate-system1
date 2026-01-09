@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         subdomain: domain,
-        url: `https://${domain}.launchpad4success.com`
+        url: `https://${domain}.launchpad4success.pro`
       })
     }
 

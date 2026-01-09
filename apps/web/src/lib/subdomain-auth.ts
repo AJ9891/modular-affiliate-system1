@@ -11,8 +11,8 @@ interface SubdomainInfo {
 export function parseSubdomain(request: NextRequest): SubdomainInfo {
   const host = request.headers.get('host') || ''
   
-  // Check if this is a subdomain of launchpad4success.com
-  const subdomainMatch = host.match(/^([^.]+)\.launchpad4success\.com$/)
+  // Check if this is a subdomain of launchpad4success.pro
+  const subdomainMatch = host.match(/^([^.]+)\.launchpad4success\.pro$/)
   
   if (subdomainMatch && subdomainMatch[1] !== 'www') {
     return {
@@ -36,7 +36,7 @@ export function createSubdomainMiddlewareClient(req: NextRequest, res: NextRespo
     req, 
     res,
     cookieOptions: {
-      domain: isSubdomain ? '.launchpad4success.com' : undefined,
+      domain: isSubdomain ? '.launchpad4success.pro' : undefined,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       httpOnly: true,
@@ -51,7 +51,7 @@ export function createSubdomainRouteHandlerClient(req: NextRequest) {
   return createRouteHandlerClient({ 
     cookies,
     cookieOptions: {
-      domain: isSubdomain ? '.launchpad4success.com' : undefined,
+      domain: isSubdomain ? '.launchpad4success.pro' : undefined,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       httpOnly: true,
@@ -104,7 +104,7 @@ export function getSubdomainRedirectUrl(request: NextRequest, path: string): str
   const { isSubdomain, subdomain } = parseSubdomain(request)
   
   if (isSubdomain && subdomain) {
-    return `https://${subdomain}.launchpad4success.com${path}`
+    return `https://${subdomain}.launchpad4success.pro${path}`
   }
   
   return `${request.nextUrl.origin}${path}`

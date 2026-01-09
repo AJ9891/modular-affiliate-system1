@@ -90,7 +90,7 @@ export default function SubdomainPage() {
             {data.owner.name}'s site is launching soon
           </p>
           <p className="text-lg text-gray-500">
-            {subdomain}.launchpad4success.com
+            {subdomain}.launchpad4success.pro
           </p>
         </div>
       </div>

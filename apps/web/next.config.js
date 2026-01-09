@@ -10,7 +10,7 @@ const nextConfig = {
       allowedOrigins: [
         "localhost:3000", 
         "launchpad4success.pro", 
-        "*.launchpad4success.com",
+        "*.launchpad4success.pro",
         "*.vercel.app"
       ]
     }
@@ -23,7 +23,7 @@ const nextConfig = {
         has: [
           {
             type: 'host',
-            value: '(?<subdomain>.*)\.launchpad4success\.com',
+            value: '(?<subdomain>.*)\.launchpad4success\.pro',
           },
         ],
         destination: '/subdomain/:subdomain/:path*',

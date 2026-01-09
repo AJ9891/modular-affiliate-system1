@@ -39,7 +39,7 @@ The subdomain authentication was not working properly due to:
 ### Cookie Configuration
 ```typescript
 cookieOptions: {
-  domain: isSubdomain ? '.launchpad4success.com' : undefined,
+  domain: isSubdomain ? '.launchpad4success.pro' : undefined,
   secure: process.env.NODE_ENV === 'production',
   sameSite: 'lax',
   httpOnly: true,
@@ -49,7 +49,7 @@ cookieOptions: {
 
 ### Subdomain Detection
 ```typescript
-const subdomainMatch = host.match(/^([^.]+)\.launchpad4success\.com$/)
+const subdomainMatch = host.match(/^([^.]+)\.launchpad4success\.pro$/)
 if (subdomainMatch && subdomainMatch[1] !== 'www') {
   // Handle subdomain
 }
@@ -62,7 +62,7 @@ if (subdomainMatch && subdomainMatch[1] !== 'www') {
   has: [
     {
       type: 'host',
-      value: '(?<subdomain>.*)\\.launchpad4success\\.com',
+      value: '(?<subdomain>.*)\\.launchpad4success\\.pro',
     },
   ],
   destination: '/subdomain/:subdomain/:path*',
@@ -74,8 +74,8 @@ if (subdomainMatch && subdomainMatch[1] !== 'www') {
 ### 1. Local Development
 Add to your `/etc/hosts` file:
 ```
-127.0.0.1 test.launchpad4success.com
-127.0.0.1 demo.launchpad4success.com
+127.0.0.1 test.launchpad4success.pro
+127.0.0.1 demo.launchpad4success.pro
 ```
 
 ### 2. Run Test Script
@@ -85,7 +85,7 @@ Add to your `/etc/hosts` file:
 
 ### 3. Manual Testing
 1. **Main Domain**: Visit `http://localhost:3000`
-2. **Subdomain**: Visit `http://test.launchpad4success.com:3000`
+2. **Subdomain**: Visit `http://test.launchpad4success.pro:3000`
 3. **Authentication**: Login on main domain, verify session works on subdomain
 
 ## Production Deployment
@@ -93,12 +93,12 @@ Add to your `/etc/hosts` file:
 ### 1. DNS Configuration
 Ensure wildcard subdomain is configured:
 ```
-*.launchpad4success.com → cname.vercel-dns.com
+*.launchpad4success.pro → cname.vercel-dns.com
 ```
 
 ### 2. Vercel Configuration
 ```bash
-vercel domains add *.launchpad4success.com
+vercel domains add *.launchpad4success.pro
 ```
 
 ### 3. Environment Variables

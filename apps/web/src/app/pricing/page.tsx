@@ -45,7 +45,7 @@ export default function Pricing() {
               </li>
               <li className="flex items-start">
                 <span className="text-brand-cyan mr-2">✓</span>
-                <span className="text-brand-purple">Subdomain: yourname.launchpad4success.com</span>
+                <span className="text-brand-purple">Subdomain: yourname.launchpad4success.pro</span>
               </li>
               <li className="flex items-start">
                 <span className="text-orange-600 mr-2 text-xl">🦈</span>
@@ -92,7 +92,7 @@ export default function Pricing() {
               </li>
               <li className="flex items-start">
                 <span className="text-brand-cyan mr-2">✓</span>
-                <span>Subdomain: yourname.launchpad4success.com</span>
+                <span>Subdomain: yourname.launchpad4success.pro</span>
               </li>
               <li className="flex items-start">
                 <span className="text-brand-orange mr-2 text-xl">🦈</span>

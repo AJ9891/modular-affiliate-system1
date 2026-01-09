@@ -170,7 +170,7 @@ export default function DomainsPage() {
                 className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-600 focus:outline-none"
               />
               <span className="flex items-center px-4 py-3 bg-gray-100 rounded-lg text-gray-700 font-mono">
-                .launchpad4success.com
+                .launchpad4success.pro
               </span>
             </div>
             <p className="text-sm text-gray-500 mt-2">
@@ -191,12 +191,12 @@ export default function DomainsPage() {
               <p className="text-sm text-blue-800">
                 ✅ Your site is live at:{' '}
                 <a
-                  href={`https://${domains.subdomain}.launchpad4success.com`}
+                  href={`https://${domains.subdomain}.launchpad4success.pro`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-bold underline"
                 >
-                  {domains.subdomain}.launchpad4success.com
+                  {domains.subdomain}.launchpad4success.pro
                 </a>
               </p>
             </div>

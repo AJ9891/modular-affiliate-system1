@@ -37,8 +37,8 @@ if [ $? -eq 0 ]; then
     echo "Test URLs:"
     echo "  - Main domain: http://localhost:3000"
     echo "  - Subdomain simulation: Add to /etc/hosts:"
-    echo "    127.0.0.1 test.launchpad4success.com"
-    echo "    127.0.0.1 demo.launchpad4success.com"
+    echo "    127.0.0.1 test.launchpad4success.pro"
+    echo "    127.0.0.1 demo.launchpad4success.pro"
     echo ""
     
     npm run dev
