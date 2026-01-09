@@ -2,7 +2,7 @@
  * Personality System - Public API
  * 
  * Clean barrel export for the personality system.
- * Import everything you need from here.
+ * Updated to use canonical personality definitions.
  */
 
 // Types
@@ -24,6 +24,34 @@ export type {
   PersonalityProfile,
   PersonalityContext
 } from './types';
+
+// Canonical Personality System
+export {
+  CANONICAL_PERSONALITIES,
+  GLITCH_PERSONALITY,
+  ANCHOR_PERSONALITY,
+  BOOST_PERSONALITY,
+  getPersonalityByTrait,
+  validatePersonalityContract,
+  type PersonalityId
+} from './canonical-definitions';
+
+// Canonical AI System
+export {
+  buildCanonicalAIProfile,
+  resolveCanonicalAIProfile,
+  buildAIPrompt,
+  validateAIPromptAlignment,
+  type CanonicalAIProfile
+} from './canonical-ai-resolver';
+
+// Brand Brain System
+export {
+  validateBrandBrainAlignment,
+  validateAllPersonalityProfiles,
+  checkPersonalityAlignment,
+  generateValidationReport
+} from '../brand-brain/validation';
 
 export { 
   isBrandMode, 

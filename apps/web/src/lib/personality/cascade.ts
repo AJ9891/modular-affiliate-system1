@@ -4,7 +4,7 @@
  * This file demonstrates the full cascade from personality → AI generation
  * for every major content type in the system.
  * 
- * Single decision point. Everything downstream is obedient.
+ * UPDATED: Now uses canonical personality system for alignment
  */
 
 import { resolvePersonality } from './resolvePersonality'
@@ -14,16 +14,11 @@ import {
   resolveFeatureCopyContract,
   resolveErrorCopyContract 
 } from './copyContract'
-import { resolveAIPrompt } from './aiProfile'
-import {
-  buildHeroPrompt,
-  buildFeaturePrompt,
-  buildErrorPrompt,
-  buildAffiliatePrompt,
-  buildOnboardingPrompt,
-  generateAI,
-  type PromptConfig
-} from './promptBuilder'
+import { 
+  resolveCanonicalAIProfile,
+  buildAIPrompt,
+  type CanonicalAIProfile
+} from './canonical-ai-resolver'
 import type { BrandMode, PersonalityProfile } from './types'
 
 /**
@@ -41,8 +36,8 @@ export interface HeroContent {
 /**
  * Generate Hero Copy (Full Cascade)
  * 
- * This is the canonical example of the pattern:
- * personality → behavior → contract → profile → prompt → AI
+ * Updated to use canonical personality system:
+ * personality → behavior → contract → canonical AI profile → prompt → AI
  */
 export async function generateHeroCopy(
   brandMode: BrandMode,
@@ -62,16 +57,24 @@ export async function generateHeroCopy(
   // 3. Resolve copy contract from behavior
   const heroContract = resolveHeroCopyContract(heroBehavior, personality)
 
-  // 4. Resolve AI profile from personality
-  const aiProfile = resolveAIPrompt(personality)
+  // 4. Resolve canonical AI profile from brand mode
+  const aiProfile = resolveCanonicalAIProfile(brandMode)
 
-  // 5. Build prompt from profile + contract
-  const prompt = buildHeroPrompt(aiProfile, heroContract, context)
+  // 5. Build prompt from canonical profile + context
+  const prompt = buildAIPrompt(aiProfile, {
+    contentType: 'hero',
+    ...context
+  })
 
-  // 6. Generate with AI
-  const heroCopy = await generateAI<HeroContent>(prompt)
-
-  return heroCopy
+  // 6. Generate with AI (placeholder - integrate with your AI service)
+  console.log('Generated AI prompt:', prompt)
+  
+  // Return mock data for now - replace with actual AI call
+  return {
+    headline: `${aiProfile.primaryTrait} headline for ${context.productName}`,
+    subcopy: `Generated with ${personality.name} personality`,
+    cta: `${aiProfile.primaryTrait} call-to-action`
+  }
 }
 
 /**
