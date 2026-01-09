@@ -29,7 +29,7 @@ export interface PersonalityProfile {
   /** Tone and voice guidelines */
   voice: {
     /** Overall tone (e.g., "professional", "casual", "authoritative") */
-    tone: "professional" | "casual" | "friendly" | "authoritative" | "playful" | "empathetic" | "inspirational";
+    tone: "professional" | "casual" | "friendly" | "authoritative" | "playful" | "empathetic" | "inspirational" | "sarcastic" | "brutally_honest" | "encouraging";
     /** Personality traits (e.g., ["confident", "helpful", "innovative"]) */
     traits: string[];
     /** Formality level (1-5, where 1 is very casual, 5 is very formal) */
@@ -37,19 +37,19 @@ export interface PersonalityProfile {
     /** Use of humor (none, subtle, moderate, heavy) */
     humorLevel: "none" | "subtle" | "moderate" | "heavy";
     /** Emoji usage policy */
-    emojiUsage: "never" | "rare" | "moderate" | "frequent";
+    emojiUsage: "never" | "rare" | "moderate" | "frequent" | "strategic";
   };
   
   /** Language and style preferences */
   language: {
     /** Preferred vocabulary complexity */
-    complexity: "simple" | "moderate" | "advanced";
+    complexity: "simple" | "moderate" | "advanced" | "clear";
     /** Sentence structure preference */
-    sentenceStructure: "short" | "varied" | "complex";
+    sentenceStructure: "short" | "varied" | "complex" | "conversational" | "direct";
     /** Active vs passive voice preference */
     voicePreference: "active" | "mixed" | "passive";
     /** Jargon policy */
-    jargonPolicy: "avoid" | "minimal" | "moderate" | "technical-ok";
+    jargonPolicy: "avoid" | "minimal" | "moderate" | "technical-ok" | "mocked" | "eliminated";
   };
 }
 
@@ -73,9 +73,9 @@ export interface AIPromptRules {
     /** Required content sections */
     requiredSections?: string[];
     /** Preferred content format */
-    preferredFormat: "paragraphs" | "bullet-points" | "mixed" | "storytelling";
+    preferredFormat: "paragraphs" | "bullet-points" | "mixed" | "storytelling" | "conversational" | "direct" | "structured";
     /** Call-to-action style */
-    ctaStyle: "direct" | "soft" | "question-based" | "benefit-focused";
+    ctaStyle: "direct" | "soft" | "question-based" | "benefit-focused" | "reverse-psychology" | "brutally-honest" | "momentum-focused";
   };
   
   /** Fact-checking and accuracy */
@@ -111,15 +111,15 @@ export interface UIBehaviorConstraints {
     /** Font family */
     fontFamily: string;
     /** Border radius style */
-    borderRadius: "sharp" | "subtle" | "rounded" | "pill";
+    borderRadius: "sharp" | "subtle" | "rounded" | "pill" | "minimal" | "friendly";
     /** Animation preference */
-    animations: "none" | "subtle" | "moderate" | "dynamic";
+    animations: "none" | "subtle" | "moderate" | "dynamic" | "glitchy" | "smooth";
   };
   
   /** Copy constraints */
   copy: {
     /** Headline style */
-    headlineStyle: "benefit-driven" | "question-based" | "statement" | "how-to";
+    headlineStyle: "benefit-driven" | "question-based" | "statement" | "how-to" | "benefit-focused";
     /** Button text style */
     buttonTextStyle: "action-verb" | "benefit" | "directive" | "question";
     /** Maximum headline length (characters) */
