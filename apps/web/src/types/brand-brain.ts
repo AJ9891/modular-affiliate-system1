@@ -35,9 +35,9 @@ export interface PersonalityProfile {
     /** Formality level (1-5, where 1 is very casual, 5 is very formal) */
     formalityLevel: 1 | 2 | 3 | 4 | 5;
     /** Use of humor (none, subtle, moderate, heavy) */
-    humorLevel: "none" | "subtle" | "moderate" | "heavy";
+    humorLevel: "none" | "subtle" | "moderate" | "heavy" | "dry";
     /** Emoji usage policy */
-    emojiUsage: "never" | "rare" | "moderate" | "frequent" | "strategic";
+    emojiUsage: "never" | "rare" | "moderate" | "frequent" | "strategic" | "none";
   };
   
   /** Language and style preferences */
@@ -119,9 +119,9 @@ export interface UIBehaviorConstraints {
   /** Copy constraints */
   copy: {
     /** Headline style */
-    headlineStyle: "benefit-driven" | "question-based" | "statement" | "how-to" | "benefit-focused";
+    headlineStyle: "benefit-driven" | "question-based" | "statement" | "how-to" | "benefit-focused" | "sarcastic-question" | "direct-statement";
     /** Button text style */
-    buttonTextStyle: "action-verb" | "benefit" | "directive" | "question";
+    buttonTextStyle: "action-verb" | "benefit" | "directive" | "question" | "skeptical-action";
     /** Maximum headline length (characters) */
     maxHeadlineLength: number;
     /** Maximum button text length (characters) */
@@ -134,6 +134,8 @@ export interface UIBehaviorConstraints {
     requireConfirmation: string[];
     /** Auto-save behavior */
     autoSave: boolean;
+    /** Keyboard shortcuts */
+    keyboardShortcuts?: string[];
     /** Loading state style */
     loadingStyle: "spinner" | "skeleton" | "progress-bar" | "dots";
     /** Error message style */

@@ -81,8 +81,8 @@ describe('Personality Resolution System', () => {
     
     expect(personality.name).toBe('AI Meltdown');
     expect(personality.authorityTone).toBe('sarcastic');
-    expect(personality.vocabulary.preferredPhrases).toContain('*eye roll*');
-    expect(personality.vocabulary.forbiddenPhrases).toContain('brutal truth');
+    expect(personality.vocabulary?.preferredPhrases).toContain('*eye roll*');
+    expect(personality.vocabulary?.forbiddenPhrases).toContain('brutal truth');
   });
 
   test('Anti-Guru personality resolver is brutally honest', () => {
@@ -90,8 +90,8 @@ describe('Personality Resolution System', () => {
     
     expect(personality.name).toBe('Anti-Guru');
     expect(personality.authorityTone).toBe('brutally_honest');
-    expect(personality.vocabulary.preferredPhrases).toContain('Here\'s the brutal truth');
-    expect(personality.vocabulary.forbiddenPhrases).toContain('allegedly');
+    expect(personality.vocabulary?.preferredPhrases).toContain('Here\'s the brutal truth');
+    expect(personality.vocabulary?.forbiddenPhrases).toContain('allegedly');
   });
 
   test('Rocket Future personality resolver is encouraging', () => {
@@ -99,8 +99,8 @@ describe('Personality Resolution System', () => {
     
     expect(personality.name).toBe('Rocket Future');
     expect(personality.authorityTone).toBe('encouraging');
-    expect(personality.vocabulary.preferredPhrases).toContain('You\'ve got this!');
-    expect(personality.vocabulary.forbiddenPhrases).toContain('brutal truth');
+    expect(personality.vocabulary?.preferredPhrases).toContain('You\'ve got this!');
+    expect(personality.vocabulary?.forbiddenPhrases).toContain('brutal truth');
   });
 
 });
@@ -176,16 +176,16 @@ describe('Cross-Personality Boundary Enforcement', () => {
   test('Each personality forbids other personalities signature phrases', () => {
     // AI Meltdown should forbid Anti-Guru phrases
     const glitchPersonality = resolvePersonality('ai_meltdown');
-    expect(glitchPersonality.vocabulary.forbiddenPhrases).toContain('brutal truth');
+    expect(glitchPersonality.vocabulary?.forbiddenPhrases).toContain('brutal truth');
     
     // Anti-Guru should forbid AI Meltdown phrases  
     const anchorPersonality = resolvePersonality('anti_guru');
-    expect(anchorPersonality.vocabulary.forbiddenPhrases).toContain('allegedly');
+    expect(anchorPersonality.vocabulary?.forbiddenPhrases).toContain('allegedly');
     
     // Rocket should forbid both others' phrases
     const boostPersonality = resolvePersonality('rocket_future');
-    expect(boostPersonality.vocabulary.forbiddenPhrases).toContain('brutal truth');
-    expect(boostPersonality.vocabulary.forbiddenPhrases).toContain('allegedly');
+    expect(boostPersonality.vocabulary?.forbiddenPhrases).toContain('brutal truth');
+    expect(boostPersonality.vocabulary?.forbiddenPhrases).toContain('allegedly');
   });
 
   test('System prompts explicitly state correct primary trait', () => {
@@ -193,9 +193,9 @@ describe('Cross-Personality Boundary Enforcement', () => {
     const anchorPersonality = resolvePersonality('anti_guru');
     const boostPersonality = resolvePersonality('rocket_future');
     
-    expect(glitchPersonality.systemPromptSuffix.toLowerCase()).toContain('sarcastic');
-    expect(anchorPersonality.systemPromptSuffix.toLowerCase()).toContain('brutally honest');
-    expect(boostPersonality.systemPromptSuffix.toLowerCase()).toContain('encouraging');
+    expect(glitchPersonality.systemPromptSuffix?.toLowerCase()).toContain('sarcastic');
+    expect(anchorPersonality.systemPromptSuffix?.toLowerCase()).toContain('brutally honest');
+    expect(boostPersonality.systemPromptSuffix?.toLowerCase()).toContain('encouraging');
   });
 
 });
@@ -223,7 +223,7 @@ describe('Historical Regression Prevention', () => {
     
     expect(personality.authorityTone).toBe('encouraging');
     expect(personality.authorityTone).not.toBe('calm'); // Was too passive
-    expect(personality.vocabulary.preferredPhrases).toContain('You\'ve got this!');
+    expect(personality.vocabulary?.preferredPhrases).toContain('You\'ve got this!');
   });
 
 });
