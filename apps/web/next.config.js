@@ -7,8 +7,28 @@ const nextConfig = {
   },
   experimental: {
     serverActions: {
-      allowedOrigins: ["localhost:3000", "launchpad4success.pro", "*.vercel.app"]
+      allowedOrigins: [
+        "localhost:3000", 
+        "launchpad4success.pro", 
+        "*.launchpad4success.com",
+        "*.vercel.app"
+      ]
     }
+  },
+  async rewrites() {
+    return [
+      // Handle subdomain routing
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: '(?<subdomain>.*)\.launchpad4success\.com',
+          },
+        ],
+        destination: '/subdomain/:subdomain/:path*',
+      },
+    ]
   },
   env: {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,

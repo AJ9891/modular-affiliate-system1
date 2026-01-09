@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
 import { checkSupabase } from '@/lib/check-supabase'
 import { createClient } from '@supabase/supabase-js'
+import { createSubdomainRouteHandlerClient } from '@/lib/subdomain-auth'
 
 export async function POST(request: NextRequest) {
   const check = checkSupabase()
   if (check) return check
   
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabase = createSubdomainRouteHandlerClient(request)
   
   try {
     const { email, password } = await request.json()

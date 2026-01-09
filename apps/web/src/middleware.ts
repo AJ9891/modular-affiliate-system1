@@ -1,6 +1,10 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { 
+  parseSubdomain, 
+  createSubdomainMiddlewareClient,
+  getSubdomainRedirectUrl 
+} from './lib/subdomain-auth'
 
 export async function middleware(req: NextRequest) {
   // ✅ Allow public funnel pages - bypass auth completely
@@ -9,7 +13,21 @@ export async function middleware(req: NextRequest) {
   }
 
   const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req, res })
+  const { isSubdomain, subdomain } = parseSubdomain(req)
+  
+  // Handle subdomain routing
+  if (isSubdomain && subdomain) {
+    // Check if this is a subdomain-specific route
+    if (!req.nextUrl.pathname.startsWith('/subdomain/')) {
+      // Rewrite to subdomain route
+      const url = req.nextUrl.clone()
+      url.pathname = `/subdomain/${subdomain}${req.nextUrl.pathname}`
+      return NextResponse.rewrite(url)
+    }
+  }
+  
+  // Configure Supabase client with proper cookie domain handling for subdomains
+  const supabase = createSubdomainMiddlewareClient(req, res)
 
   // Refresh session if expired - required for Server Components
   const {
@@ -17,17 +35,20 @@ export async function middleware(req: NextRequest) {
   } = await supabase.auth.getSession()
 
   // Protect authenticated routes
-  const protectedPaths = ['/launchpad', '/dashboard', '/admin', '/builder']
+  const protectedPaths = ['/launchpad', '/dashboard', '/admin', '/builder', '/domains']
   const isProtectedPath = protectedPaths.some(path => req.nextUrl.pathname.startsWith(path))
 
   if (isProtectedPath && !session) {
-    const redirectUrl = new URL('/login', req.url)
-    redirectUrl.searchParams.set('redirect', req.nextUrl.pathname)
-    return NextResponse.redirect(redirectUrl)
+    const redirectUrl = getSubdomainRedirectUrl(req, '/login')
+    const loginUrl = new URL(redirectUrl)
+    loginUrl.searchParams.set('redirect', req.nextUrl.pathname)
+    return NextResponse.redirect(loginUrl)
   }
 
-  // Don't redirect authenticated users away from auth pages for now
-  // This might interfere with login flow
+  // For subdomain requests, allow unauthenticated access to public content
+  if (isSubdomain) {
+    return res
+  }
 
   return res
 }
