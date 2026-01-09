@@ -1,14 +1,85 @@
 "use client";
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+  Button
+} from '@/components/ai/consent-dialog-fixed';
+
+export interface ConsentDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConsent: () => void;
+}
+
+export default function ConsentDialog({ 
+  isOpen, 
+  onClose, 
+  onConsent 
+}: ConsentDialogProps) {
+  const [hasConsented, setHasConsented] = useState(false);
+
+  const handleConsent = () => {
+    setHasConsented(true);
+    onConsent();
+    onClose();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>AI Generation Consent</DialogTitle>
+          <DialogDescription>
+            Before we generate content for you, please review and accept our AI generation guidelines:
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <h4 className="font-medium text-text-primary">What we'll generate:</h4>
+            <ul className="text-sm text-text-secondary space-y-1">
+              <li>• Marketing copy tailored to your selected personality</li>
+              <li>• Content suggestions based on your inputs</li>
+              <li>• Funnel templates and variations</li>
+            </ul>
+          </div>
+          
+          <div className="space-y-2">
+            <h4 className="font-medium text-text-primary">Your data:</h4>
+            <ul className="text-sm text-text-secondary space-y-1">
+              <li>• We'll process your inputs to generate relevant content</li>
+              <li>• No personal data is stored permanently</li>
+              <li>• Generated content belongs to you</li>
+            </ul>
+          </div>
+          
+          <div className="space-y-2">
+            <h4 className="font-medium text-text-primary">AI Guidelines:</h4>
+            <ul className="text-sm text-text-secondary space-y-1">
+              <li>• Content follows platform personality rules</li>
+              <li>• No harmful, illegal, or misleading content</li>
+              <li>• Review all generated content before use</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="flex justify-end space-x-2 mt-6">
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleConsent}>
+            Accept & Generate
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 // Simple Button component (inline for now)
 const Button = ({ 
