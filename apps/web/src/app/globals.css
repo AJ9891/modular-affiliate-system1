@@ -4,20 +4,42 @@
 
 @layer base {
   :root {
-    /* Launchpad 4 Success Brand Colors */
+    /* Core Brand */
+    --bg-primary: #0b0f19;
+    --bg-secondary: #121826;
+    --bg-surface: #161d2e;
+
+    --text-primary: #e6e9f0;
+    --text-secondary: #a5acc5;
+    --text-muted: #6b7280;
+
+    --border-subtle: rgba(255, 255, 255, 0.06);
+
+    /* Shared UI */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+
+    --transition-fast: 120ms ease-out;
+    --transition-normal: 220ms ease-out;
+
+    /* Personality accents (defaults = neutral Anchor) */
+    --accent: #7c8cff;
+    --accent-soft: rgba(124, 140, 255, 0.15);
+
+    /* Legacy shadcn/ui variables (keeping for compatibility) */
     --background: 0 0% 100%;
     --foreground: 217 91% 10%;
     --card: 0 0% 100%;
     --card-foreground: 217 91% 10%;
     --popover: 0 0% 100%;
     --popover-foreground: 217 91% 10%;
-    --primary: 14 100% 57%; /* Vibrant Orange */
+    --primary: 14 100% 57%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 263 51% 51%; /* Royal Purple */
+    --secondary: 263 51% 51%;
     --secondary-foreground: 0 0% 100%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 190 100% 50%; /* Cyan */
     --accent-foreground: 217 91% 10%;
     --destructive: 4 90% 58%; /* Bright Red */
     --destructive-foreground: 0 0% 100%;

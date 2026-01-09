@@ -9,6 +9,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // New personality-aware design system
+        bg: {
+          primary: "var(--bg-primary)",
+          secondary: "var(--bg-secondary)", 
+          surface: "var(--bg-surface)",
+        },
+        text: {
+          primary: "var(--text-primary)",
+          secondary: "var(--text-secondary)",
+          muted: "var(--text-muted)",
+        },
+        accent: "var(--accent)",
+        
+        // Legacy shadcn/ui colors (keeping for compatibility)
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -30,10 +44,6 @@ const config: Config = {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
         },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
@@ -53,9 +63,15 @@ const config: Config = {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        sm: "var(--radius-sm)",
+        md: "var(--radius-md)", 
+        lg: "var(--radius-lg)",
+        // Legacy compatibility
+        DEFAULT: "var(--radius)",
+      },
+      transitionDuration: {
+        fast: "var(--transition-fast)",
+        normal: "var(--transition-normal)",
       },
       animation: {
         'gradient-shift': 'gradient-shift 3s ease infinite',

@@ -2,6 +2,8 @@ import type { Metadata } from "next"
 import "./globals.css"
 import { AuthProvider } from "@/contexts/AuthContext"
 import { BrandModeProvider } from "@/contexts/BrandModeContext"
+import { PersonalityThemeProvider } from "@/components/PersonalityThemeProvider"
+import { getPersonalityContext } from "@/lib/brand/getPersonalityContext"
 import ConditionalSidebar from "@/components/ConditionalSidebar"
 import ConditionalWrapper from "@/components/ConditionalWrapper"
 import AIChatWidget from "@/components/AIChatWidget"
@@ -18,6 +20,9 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  // Get personality based on current context
+  const personality = getPersonalityContext()
+
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -65,17 +70,19 @@ export default function RootLayout({
         />
       </head>
       <body className="flex flex-col min-h-screen">
-        <AuthProvider>
-          <BrandModeProvider>
-            <ConditionalSidebar />
-            <ConditionalWrapper>
-              {children}
-            </ConditionalWrapper>
-            <AIChatWidget />
-            <LaunchpadAmbientSound />
-            <Footer />
-          </BrandModeProvider>
-        </AuthProvider>
+        <PersonalityThemeProvider personality={personality}>
+          <AuthProvider>
+            <BrandModeProvider>
+              <ConditionalSidebar />
+              <ConditionalWrapper>
+                {children}
+              </ConditionalWrapper>
+              <AIChatWidget />
+              <LaunchpadAmbientSound />
+              <Footer />
+            </BrandModeProvider>
+          </AuthProvider>
+        </PersonalityThemeProvider>
       </body>
     </html>
   )
