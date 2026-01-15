@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe, dollarsToCredits } from '@/lib/stripe'
-import { supabase } from '@/lib/supabase'
 import { sendshark } from '@/lib/sendshark'
 import { headers } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
@@ -88,7 +87,7 @@ async function handleCreditTopup(session: Stripe.Checkout.Session) {
   const targetUserId = session.metadata?.target_user_id
   const amountUsd = parseFloat(session.metadata?.amount_usd || '0')
 
-  if (!targetUserId || !supabase) return
+  if (!targetUserId) return
 
   try {
     // Use service role client to bypass RLS
@@ -188,7 +187,7 @@ async function handleCheckoutSessionCompleted(session: any) {
   const subscriptionId = session.subscription
   const customerEmail = session.customer_details?.email
 
-  if (!userId || !supabase) return
+  if (!userId) return
 
   try {
     // Use service role client to bypass RLS
@@ -321,10 +320,21 @@ async function handleSubscriptionUpdated(subscription: any) {
   const customerId = subscription.customer
   const status = subscription.status
 
-  if (!supabase) return
+  if (!customerId) return
 
   try {
-    const { error } = await supabase
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
+    const { error } = await adminClient
       .from('users')
       .update({
         subscription_status: status,
@@ -343,10 +353,21 @@ async function handleSubscriptionUpdated(subscription: any) {
 async function handleSubscriptionDeleted(subscription: any) {
   const customerId = subscription.customer
 
-  if (!supabase) return
+  if (!customerId) return
 
   try {
-    const { error } = await supabase
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
+    const { error } = await adminClient
       .from('users')
       .update({
         subscription_status: 'canceled',
@@ -366,7 +387,7 @@ async function handleInvoicePaymentSucceeded(invoice: any) {
   const customerId = invoice.customer
   const customerEmail = invoice.customer_email
   
-  if (!supabase) return
+  if (!customerId) return
 
   try {
     // Use service role client to bypass RLS
@@ -414,10 +435,21 @@ async function handleInvoicePaymentSucceeded(invoice: any) {
 async function handleInvoicePaymentFailed(invoice: any) {
   const customerId = invoice.customer
   
-  if (!supabase) return
+  if (!customerId) return
 
   try {
-    const { error } = await supabase
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
+    const { error } = await adminClient
       .from('users')
       .update({
         subscription_status: 'past_due',

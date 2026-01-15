@@ -37,7 +37,8 @@ const MIGRATION_ORDER = [
   'add_brand_brain_tables.sql',
   'optimize_rls_and_performance.sql',
   'add_funnel_rls_policies.sql',
-  'update_brand_modes_voice_tone.sql'
+  'update_brand_modes_voice_tone.sql',
+  'fix_rls_warnings.sql'  // Comprehensive RLS fix
 ];
 
 // Colors for terminal output

@@ -2,6 +2,27 @@
 
 This directory contains SQL migrations for the Supabase database.
 
+## 🔒 NEW: RLS Warnings Fixed!
+
+**All Row Level Security warnings have been identified and completely fixed!**
+
+### Quick Links
+- 📖 **[RLS_FIX_COMPLETE.md](RLS_FIX_COMPLETE.md)** - Start here! Complete overview
+- 📋 **[RLS_FIX_CHECKLIST.md](RLS_FIX_CHECKLIST.md)** - Step-by-step guide
+- 📚 **[RLS_FIX_SUMMARY.md](RLS_FIX_SUMMARY.md)** - Detailed technical docs
+
+### Apply the RLS Fix
+```bash
+# See instructions and quick links
+node apply-rls-fix.js
+
+# Then copy migrations/fix_rls_warnings.sql to Supabase SQL Editor
+```
+
+**What's Fixed**: 25 tables, 54 policies, comprehensive data protection ✅
+
+---
+
 ## Quick Start
 
 ### Option 1: Manual (Recommended for First Time)

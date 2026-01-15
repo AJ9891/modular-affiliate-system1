@@ -30,34 +30,11 @@ export function parseSubdomain(request: NextRequest): SubdomainInfo {
 }
 
 export function createSubdomainMiddlewareClient(req: NextRequest, res: NextResponse) {
-  const { isSubdomain } = parseSubdomain(req)
-  
-  return createMiddlewareClient({ 
-    req, 
-    res,
-    cookieOptions: {
-      domain: isSubdomain ? '.launchpad4success.pro' : undefined,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      httpOnly: true,
-      maxAge: 60 * 60 * 24 * 7 // 7 days
-    }
-  })
+  return createMiddlewareClient({ req, res })
 }
 
 export function createSubdomainRouteHandlerClient(req: NextRequest) {
-  const { isSubdomain } = parseSubdomain(req)
-  
-  return createRouteHandlerClient({ 
-    cookies,
-    cookieOptions: {
-      domain: isSubdomain ? '.launchpad4success.pro' : undefined,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      httpOnly: true,
-      maxAge: 60 * 60 * 24 * 7 // 7 days
-    }
-  })
+  return createRouteHandlerClient({ cookies })
 }
 
 export async function validateSubdomainAccess(

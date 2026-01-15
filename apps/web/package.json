@@ -36,6 +36,7 @@
     "@types/react-dom": "^18",
     "@vitest/ui": "^4.0.16",
     "autoprefixer": "^10.4.19",
+    "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
     "postcss": "^8.4.38",

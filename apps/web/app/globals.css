@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Core Brand - Neutral Base */
+  --bg-primary: #0b0f19;
+  --bg-secondary: #121826;
+  --bg-surface: #161d2e;
+
+  --text-primary: #e6e9f0;
+  --text-secondary: #a5acc5;
+  --text-muted: #6b7280;
+
+  --border-subtle: rgba(255, 255, 255, 0.06);
+
+  /* Shared UI */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  --transition-fast: 120ms ease-out;
+  --transition-normal: 220ms ease-out;
+
+  /* Personality accents (defaults = neutral Anchor) */
+  --accent: #7c8cff;
+  --accent-soft: rgba(124, 140, 255, 0.15);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.6;
+}
+
+/* Smooth personality transitions */
+:root {
+  transition: --accent var(--transition-normal), --accent-soft var(--transition-normal);
+}
