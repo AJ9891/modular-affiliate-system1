@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 import { checkSupabase } from '@/lib/check-supabase'
 
 export async function GET(
@@ -8,6 +9,8 @@ export async function GET(
 ) {
   const check = checkSupabase()
   if (check) return check
+  
+  const supabase = createRouteHandlerClient({ cookies })
   
   try {
     const funnelId = params.funnelId

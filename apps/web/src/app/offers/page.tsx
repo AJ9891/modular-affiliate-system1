@@ -59,8 +59,6 @@ export default function OffersPage() {
     e.preventDefault()
     
     try {
-      console.log('Submitting offer:', newOffer)
-      
       const res = await fetch('/api/offers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -68,7 +66,6 @@ export default function OffersPage() {
       })
 
       const data = await res.json()
-      console.log('Response:', data)
 
       if (res.ok) {
         setShowAddForm(false)

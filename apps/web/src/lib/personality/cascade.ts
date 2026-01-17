@@ -14,11 +14,15 @@ import {
   resolveFeatureCopyContract,
   resolveErrorCopyContract 
 } from './copyContract'
-import { 
-  resolveCanonicalAIProfile,
-  buildAIPrompt,
-  type CanonicalAIProfile
-} from './canonical-ai-resolver'
+import { resolveAIPrompt } from './aiProfile'
+import {
+  buildHeroPrompt,
+  buildFeaturePrompt,
+  buildErrorPrompt,
+  buildAffiliatePrompt,
+  buildOnboardingPrompt,
+  generateAI
+} from './promptBuilder'
 import type { BrandMode, PersonalityProfile } from './types'
 
 /**
@@ -37,7 +41,7 @@ export interface HeroContent {
  * Generate Hero Copy (Full Cascade)
  * 
  * Updated to use canonical personality system:
- * personality → behavior → contract → canonical AI profile → prompt → AI
+ * personality → behavior → contract → AI profile → prompt → AI
  */
 export async function generateHeroCopy(
   brandMode: BrandMode,
@@ -57,24 +61,14 @@ export async function generateHeroCopy(
   // 3. Resolve copy contract from behavior
   const heroContract = resolveHeroCopyContract(heroBehavior, personality)
 
-  // 4. Resolve canonical AI profile from brand mode
-  const aiProfile = resolveCanonicalAIProfile(brandMode)
+  // 4. Resolve AI profile from personality
+  const aiProfile = resolveAIPrompt(personality)
 
-  // 5. Build prompt from canonical profile + context
-  const prompt = buildAIPrompt(aiProfile, {
-    contentType: 'hero',
-    ...context
-  })
+  // 5. Build prompt from AI profile + context
+  const prompt = buildHeroPrompt(aiProfile, heroContract, context)
 
-  // 6. Generate with AI (placeholder - integrate with your AI service)
-  console.log('Generated AI prompt:', prompt)
-  
-  // Return mock data for now - replace with actual AI call
-  return {
-    headline: `${aiProfile.primaryTrait} headline for ${context.productName}`,
-    subcopy: `Generated with ${personality.name} personality`,
-    cta: `${aiProfile.primaryTrait} call-to-action`
-  }
+  // 6. Generate with AI (actual OpenAI integration)
+  return await generateAI<HeroContent>(prompt)
 }
 
 /**
@@ -372,10 +366,9 @@ export function getCascadeSummary(brandMode: BrandMode) {
       requiredVoice: contract.requiredVoice
     },
     aiProfile: {
-      perspective: aiProfile.perspective,
-      relationshipToUser: aiProfile.relationshipToUser,
-      knowledgePosture: aiProfile.knowledgePosture,
-      coreValues: aiProfile.coreValues
+      system: aiProfile.system.slice(0, 100) + '...',
+      principles: aiProfile.principles,
+      forbidden: aiProfile.forbidden
     }
   }
 }

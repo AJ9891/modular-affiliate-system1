@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
-import { supabase } from '@/lib/supabase'
 import { checkSupabase } from '@/lib/check-supabase'
 
 export async function GET(request: NextRequest) {

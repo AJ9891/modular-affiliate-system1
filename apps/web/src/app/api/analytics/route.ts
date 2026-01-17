@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 import { checkSupabase } from '@/lib/check-supabase'
 
 export const dynamic = 'force-dynamic'
@@ -9,6 +10,8 @@ export async function GET(request: NextRequest) {
   if (check) return check
 
   try {
+    const supabase = createRouteHandlerClient({ cookies })
+    
     const searchParams = request.nextUrl.searchParams
     const range = searchParams.get('range') || '7d'
     const funnelId = searchParams.get('funnelId')

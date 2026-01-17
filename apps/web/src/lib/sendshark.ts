@@ -183,7 +183,6 @@ class SendsharkService {
         
         if (existingList) {
           finalListId = existingList.id
-          console.log(`Found existing list "${params.listName}" with ID: ${finalListId}`)
         } else {
           // Create new list with this name
           const newList = await this.request('/lists', {
@@ -191,10 +190,12 @@ class SendsharkService {
             body: JSON.stringify({ name: params.listName }),
           })
           finalListId = newList?.data?.id
-          console.log(`Created new list "${params.listName}" with ID: ${finalListId}`)
         }
       } catch (error) {
-        console.error('Error finding/creating list:', error)
+        // Log error only in development
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error finding/creating list:', error)
+        }
         // Continue without list if it fails
       }
     }

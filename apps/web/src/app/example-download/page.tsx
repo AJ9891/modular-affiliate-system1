@@ -44,7 +44,7 @@ export default function ExampleDownloadPage() {
 
         {/* Download Gate Component */}
         <DownloadGate
-          downloadId="YOUR_DOWNLOAD_ID_HERE"
+          downloadId="example-seo-checklist"
           title="Get Your Free SEO Checklist"
           description="Enter your email to receive instant access to the checklist"
           buttonText="Download Free Checklist"

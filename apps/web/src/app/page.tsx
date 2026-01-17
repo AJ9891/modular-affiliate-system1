@@ -36,8 +36,6 @@ export default function Home() {
 
       {/* BrandBrain-aware Hero Section */}
       <HeroSection />
-      {/* BrandBrain-aware Hero Section */}
-      <HeroSection />
 
       {/* CTA Section */}
       <section className="py-20 px-8 bg-launch-gradient text-white text-center relative overflow-hidden">
