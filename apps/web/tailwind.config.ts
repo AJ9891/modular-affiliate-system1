@@ -54,6 +54,15 @@ const config: Config = {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
         },
+        // Brand colors
+        brand: {
+          navy: "hsl(var(--navy))",
+          purple: "hsl(var(--purple))",
+          cyan: "hsl(var(--cyan))",
+          orange: "hsl(var(--orange))",
+          red: "hsl(var(--red))",
+          yellow: "hsl(var(--yellow))",
+        },
       },
       borderRadius: {
         sm: "var(--radius-sm)",

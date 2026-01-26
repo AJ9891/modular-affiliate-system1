@@ -49,7 +49,7 @@ export default function Home() {
           </p>
           <Link
             href="/signup"
-            className="inline-block px-12 py-5 bg-white text-brand-navy text-lg font-bold rounded-lg hover:bg-gray-100 transition-all transform hover:scale-110 shadow-2xl glow-orange"
+            className="inline-block px-12 py-5 bg-gradient-to-r from-orange-500 via-red-500 to-yellow-500 text-white text-lg font-bold rounded-lg hover:from-orange-600 hover:via-red-600 hover:to-yellow-600 transition-all transform hover:scale-110 shadow-2xl glow-orange"
           >
             3...2...1... LAUNCH! 🚀
           </Link>

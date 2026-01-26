@@ -140,7 +140,10 @@ function BuilderContent() {
         {/* Personality Selector Panel */}
         {showPersonalityPanel && (
           <div className="bg-gray-50 border-t p-6">
-            <PersonalitySelector compact={false} />
+            <PersonalitySelector 
+              compact={false} 
+              onSelectionComplete={() => setShowPersonalityPanel(false)}
+            />
           </div>
         )}
       </header>

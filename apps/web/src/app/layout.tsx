@@ -83,6 +83,38 @@ export default function RootLayout({
             </BrandModeProvider>
           </AuthProvider>
         </PersonalityThemeProvider>
+        
+        {/* Development Error Debugging Script */}
+        {process.env.NODE_ENV === 'development' && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                console.log('🔧 Development Error Debugging Active');
+                console.log('Environment: ${process.env.NODE_ENV}');
+                
+                // Override console.error to catch React #310 errors
+                const originalError = console.error;
+                console.error = function(...args) {
+                  const message = args.join(' ');
+                  if (message.includes('Minified React error #310')) {
+                    console.group('🚨 REACT ERROR #310 DETECTED - HOOKS RULE VIOLATION!');
+                    console.error('Visit https://react.dev/errors/310 for details');
+                    console.error('Common causes:');
+                    console.error('1. Conditional hooks (useState inside if statements)');
+                    console.error('2. Hooks in loops or after early returns');
+                    console.error('3. Hooks called in event handlers');
+                    console.error('4. Different hook count on re-renders');
+                    console.error('Stack trace:', new Error().stack);
+                    console.groupEnd();
+                  }
+                  return originalError.apply(this, args);
+                };
+                
+                console.log('✅ React error debugging is now active');
+              `
+            }}
+          />
+        )}
       </body>
     </html>
   )

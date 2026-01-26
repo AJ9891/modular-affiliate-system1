@@ -3,14 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "NODE_ENV=development next dev",
+    "dev:debug": "NODE_ENV=development DEBUG=* next dev",
+    "dev:turbo": "NODE_ENV=development next dev --turbo",
+    "dev:verbose": "NODE_ENV=development next dev --experimental-debug",
     "build": "next build",
+    "build:debug": "NEXT_DEBUG=1 next build",
     "start": "next start",
     "lint": "next lint",
+    "lint:fix": "next lint --fix",
     "deploy": "vercel --prod",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "analyze": "ANALYZE=true npm run build",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

@@ -45,9 +45,27 @@ const BrandModeContext = createContext<{
 }>({ mode: "rocket", setMode: () => {} });
 
 export const BrandModeProvider = ({ children }: { children: React.ReactNode }) => {
-  const [mode, setMode] = useState<BrandModeKey>("rocket");
+  const [mode, setMode] = useState<BrandModeKey>(() => {
+    // Load from localStorage on initialization
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('brandMode');
+      if (saved && ['rocket', 'antiguru', 'meltdown'].includes(saved)) {
+        return saved as BrandModeKey;
+      }
+    }
+    return 'rocket';
+  });
+
+  const handleSetMode = (newMode: BrandModeKey) => {
+    setMode(newMode);
+    // Save to localStorage whenever mode changes
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('brandMode', newMode);
+    }
+  };
+
   return (
-    <BrandModeContext.Provider value={{ mode, setMode }}>
+    <BrandModeContext.Provider value={{ mode, setMode: handleSetMode }}>
       {children}
     </BrandModeContext.Provider>
   );

@@ -4,10 +4,19 @@ import { BrandModeKey, BRAND_MODES, useBrandMode } from '@/contexts/BrandModeCon
 
 interface PersonalitySelectorProps {
   compact?: boolean
+  onSelectionComplete?: () => void
 }
 
-export function PersonalitySelector({ compact = false }: PersonalitySelectorProps) {
+export function PersonalitySelector({ compact = false, onSelectionComplete }: PersonalitySelectorProps) {
   const { mode, setMode } = useBrandMode()
+
+  const handleModeChange = (newMode: BrandModeKey) => {
+    setMode(newMode);
+    // Call callback after a short delay to show the selection
+    if (onSelectionComplete) {
+      setTimeout(() => onSelectionComplete(), 150);
+    }
+  };
 
   const personalities = [
     {
@@ -70,7 +79,7 @@ export function PersonalitySelector({ compact = false }: PersonalitySelectorProp
         {personalities.map((p) => (
           <button
             key={p.key}
-            onClick={() => setMode(p.key)}
+            onClick={() => handleModeChange(p.key)}
             className={`p-4 rounded-lg border-2 transition-all text-left ${
               mode === p.key
                 ? `border-blue-500 bg-blue-50`
@@ -93,6 +102,17 @@ export function PersonalitySelector({ compact = false }: PersonalitySelectorProp
           </button>
         ))}
       </div>
+      
+      {onSelectionComplete && (
+        <div className="mt-6 pt-4 border-t flex justify-end gap-3">
+          <button
+            onClick={onSelectionComplete}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+          >
+            Save & Close
+          </button>
+        </div>
+      )}
     </div>
   )
 }

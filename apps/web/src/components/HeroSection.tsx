@@ -112,7 +112,7 @@ export function HeroSection() {
 
         {/* Tagline with Emphasis Style */}
         <motion.p 
-          className={`text-xl md:text-3xl text-brand-cyan font-bold mb-8 drop-shadow-lg ${getEmphasisClasses()}`}
+          className={`text-xl md:text-3xl text-white font-bold mb-8 drop-shadow-lg ${getEmphasisClasses()}`}
           {...(ui.hero.motionIntensity !== 'none' ? {
             initial: { opacity: 0, y: 20 },
             animate: { opacity: 1, y: 0 },

@@ -26,6 +26,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const isDevelopment = process.env.NODE_ENV === 'development'
+  
+  if (isDevelopment) {
+    console.log('[FUNNELS API] POST request initiated')
+  }
+  
   const check = checkSupabase()
   if (check) return check
   
@@ -35,16 +41,88 @@ export async function POST(request: NextRequest) {
     // Get user from session using Supabase auth-helpers
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
 
-    console.log('User from session:', user?.id, 'Auth error:', authError)
+    if (isDevelopment) {
+      console.log('[FUNNELS API] User from session:', user?.id, 'Auth error:', authError)
+    }
 
     if (authError || !user) {
+      if (isDevelopment) {
+        console.error('[FUNNELS API] Authentication failed:', authError)
+      }
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
     // Validate user ID format
     if (!user.id || typeof user.id !== 'string' || user.id === 'new') {
-      console.error('Invalid user ID:', user.id)
+      console.error('[FUNNELS API] Invalid user ID:', user.id)
       return NextResponse.json({ error: 'Invalid user session' }, { status: 401 })
+    }
+
+    // Parse and validate request body
+    let body
+    try {
+      body = await request.json()
+    } catch (parseError) {
+      console.error('[FUNNELS API] JSON parse error:', parseError)
+      return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 })
+    }
+
+    const { name, template, niche, blocks, theme, slug } = body
+
+    if (isDevelopment) {
+      console.log('[FUNNELS API] Received funnel data:', { 
+        name, 
+        template, 
+        niche, 
+        blocks: Array.isArray(blocks) ? blocks.length : 'not array', 
+        theme: !!theme, 
+        slug,
+        bodyKeys: Object.keys(body)
+      })
+    }
+
+    // Validate required fields
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+      return NextResponse.json({ error: 'Funnel name is required and must be a non-empty string' }, { status: 400 })
+    }
+
+    if (!Array.isArray(blocks)) {
+      return NextResponse.json({ error: 'Blocks must be an array' }, { status: 400 })
+    }
+
+    // Comprehensive data sanitization to prevent 'new' keyword issues
+    const sanitizeData = (obj: any): any => {
+      if (typeof obj === 'string') {
+        return obj === 'new' ? 'custom' : obj
+      } else if (Array.isArray(obj)) {
+        return obj.map(sanitizeData)
+      } else if (obj && typeof obj === 'object') {
+        const sanitized: any = {}
+        for (const [key, value] of Object.entries(obj)) {
+          // Skip any keys that are 'new' or 'id' for blocks
+          if (key === 'new' || (key === 'id' && typeof value === 'string' && (value === 'new' || value.includes('block-')))) {
+            continue
+          }
+          sanitized[key] = sanitizeData(value)
+        }
+        return sanitized
+      }
+      return obj
+    }
+
+    const sanitizedBlocks = sanitizeData(blocks)
+    const sanitizedTheme = sanitizeData(theme) || {
+      primaryColor: '#667eea',
+      secondaryColor: '#764ba2',
+      fontFamily: 'Inter'
+    }
+
+    if (isDevelopment) {
+      console.log('[FUNNELS API] Data after sanitization:', {
+        originalBlocksCount: blocks.length,
+        sanitizedBlocksCount: sanitizedBlocks.length,
+        hasTheme: !!sanitizedTheme
+      })
     }
 
     // Create admin client for operations
@@ -67,10 +145,14 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    console.log('Existing user:', existingUser?.id)
+    if (isDevelopment) {
+      console.log('[FUNNELS API] Existing user check:', existingUser?.id)
+    }
 
     if (!existingUser) {
-      console.log('Creating user in public.users table')
+      if (isDevelopment) {
+        console.log('[FUNNELS API] Creating user in public.users table')
+      }
       // Create user in public.users table
       const { error: userCreateError } = await adminClient
         .from('users')
@@ -82,88 +164,97 @@ export async function POST(request: NextRequest) {
         })
       
       if (userCreateError) {
-        console.error('Error creating user:', userCreateError)
+        console.error('[FUNNELS API] Error creating user:', userCreateError)
+        // Continue anyway - user might already exist from a different process
       }
     }
-
-    const body = await request.json()
-    const { name, template, niche, blocks, theme, slug } = body
-
-    console.log('Received funnel data:', { 
-      name, 
-      template, 
-      niche, 
-      blocks: blocks?.length, 
-      theme, 
-      slug,
-      rawBody: JSON.stringify(body).substring(0, 300)
-    })
-
-    if (!name) {
-      return NextResponse.json({ error: 'Funnel name is required' }, { status: 400 })
-    }
-
-    // Check for any "new" values in the data
-    const checkForNew = (obj: any, path = ''): void => {
-      if (typeof obj === 'string' && obj === 'new') {
-        console.error(`Found "new" value at path: ${path}`)
-      } else if (typeof obj === 'object' && obj !== null) {
-        Object.keys(obj).forEach(key => {
-          checkForNew(obj[key], `${path}.${key}`)
-        })
-      }
-    }
-    checkForNew(body, 'body')
 
     // Store all funnel configuration in blocks JSON
     const blocksData = {
-      template: template || 'custom',
-      niche: niche || 'general',
-      theme: theme || {
-        primaryColor: '#667eea',
-        secondaryColor: '#764ba2',
-        fontFamily: 'Inter'
-      },
-      blocks: blocks || []
+      template: sanitizeData(template) || 'custom',
+      niche: sanitizeData(niche) || 'general',
+      theme: sanitizedTheme,
+      blocks: sanitizedBlocks
     }
 
-    console.log('Inserting funnel with blocks data:', JSON.stringify(blocksData).substring(0, 200))
+    if (isDevelopment) {
+      console.log('[FUNNELS API] Preparing blocks data:', {
+        template: blocksData.template,
+        niche: blocksData.niche,
+        blocksCount: blocksData.blocks.length,
+        hasTheme: !!blocksData.theme
+      })
+    }
 
-    // Ensure slug is unique and avoid "new" keyword issues
-    let baseSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'untitled-funnel'
+    // Generate unique slug - handle duplicates
+    let baseSlug = sanitizeData(slug) || sanitizeData(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || `funnel-${Date.now()}`
     
-    // If slug contains "new", replace it to avoid PostgreSQL keyword conflicts
+    // Extra safety - replace any remaining 'new' occurrences
     if (baseSlug.includes('new')) {
-      console.log('Slug contains "new", replacing with "custom":', baseSlug);
-      baseSlug = baseSlug.replace(/new/g, 'custom');
+      console.log('[FUNNELS API] Slug contains "new", replacing with "custom":', baseSlug)
+      baseSlug = baseSlug.replace(/new/g, 'custom')
     }
-    
+
+    // Check for existing slugs and make unique
+    let uniqueSlug = baseSlug
+    let counter = 1
+    let slugExists = true
+
+    while (slugExists) {
+      const { data: existingFunnel } = await adminClient
+        .from('funnels')
+        .select('slug')
+        .eq('user_id', user.id)
+        .eq('slug', uniqueSlug)
+        .single()
+
+      if (!existingFunnel) {
+        slugExists = false
+      } else {
+        uniqueSlug = `${baseSlug}-${counter}`
+        counter++
+        
+        if (isDevelopment) {
+          console.log('[FUNNELS API] Slug exists, trying:', uniqueSlug)
+        }
+      }
+    }
+
+    if (isDevelopment) {
+      console.log('[FUNNELS API] Final unique slug:', uniqueSlug)
+    }
+
     const insertData = {
       user_id: user.id,
-      name,
-      slug: baseSlug,
+      name: sanitizeData(name).trim(),
+      slug: uniqueSlug,
       blocks: blocksData,
       active: true,
       niche_id: null, // Set niche_id to null for now since we don't have niche management
-      status: 'draft', // Add status field that might be required
-      team_id: null, // Add team_id field that might be required
-      brand_mode: null, // Add brand_mode field that might be required
+      status: 'draft',
+      team_id: null,
+      brand_mode: null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }
 
-    console.log('About to insert funnel:', {
-      user_id: insertData.user_id,
-      name: insertData.name,
-      slug: insertData.slug,
-      blocksLength: Array.isArray(blocksData.blocks) ? blocksData.blocks.length : 'not array',
-      active: insertData.active,
-      status: insertData.status,
-      team_id: insertData.team_id,
-      brand_mode: insertData.brand_mode,
-      niche_id: insertData.niche_id,
-      fullInsertData: JSON.stringify(insertData, null, 2)
-    })
+    // Final validation - ensure no 'new' values in the insert data
+    const insertDataStr = JSON.stringify(insertData)
+    if (insertDataStr.includes('"new"')) {
+      console.error('[FUNNELS API] Insert data still contains "new" values:', insertDataStr.substring(0, 500))
+      return NextResponse.json({ error: 'Data validation failed: Invalid values detected' }, { status: 400 })
+    }
+
+    if (isDevelopment) {
+      console.log('[FUNNELS API] About to insert funnel:', {
+        user_id: insertData.user_id,
+        name: insertData.name,
+        slug: insertData.slug,
+        blocksDataSize: JSON.stringify(insertData.blocks).length,
+        active: insertData.active,
+        status: insertData.status
+      })
+    }
     
     const { data, error } = await adminClient
       .from('funnels')
@@ -171,21 +262,42 @@ export async function POST(request: NextRequest) {
       .select('funnel_id, user_id, name, slug, blocks, active, created_at, updated_at')
 
     if (error) {
-      console.error('Error creating funnel:', error)
-      console.error('Error details - code:', error.code, 'message:', error.message, 'hint:', error.hint)
-      return NextResponse.json({ error: error.message }, { status: 400 })
+      console.error('[FUNNELS API] Database insertion error:', {
+        code: error.code,
+        message: error.message,
+        hint: error.hint,
+        details: error.details
+      })
+      
+      // Provide user-friendly error messages
+      let userMessage = 'Failed to save funnel'
+      if (error.message.includes('duplicate')) {
+        userMessage = 'A funnel with this name already exists'
+      } else if (error.message.includes('constraint')) {
+        userMessage = 'Invalid funnel data - please check all fields'
+      } else if (error.message.includes('permission')) {
+        userMessage = 'Permission denied - please try logging out and back in'
+      }
+      
+      return NextResponse.json({ 
+        error: userMessage,
+        ...(isDevelopment && { debug: { originalError: error } })
+      }, { status: 400 })
     }
 
     if (!data || data.length === 0) {
-      console.error('No data returned from insert')
-      return NextResponse.json({ error: 'Failed to create funnel' }, { status: 400 })
+      console.error('[FUNNELS API] No data returned from insert')
+      return NextResponse.json({ error: 'Failed to create funnel - no data returned' }, { status: 400 })
     }
 
-    console.log('Funnel created successfully:', data[0]?.funnel_id)
+    if (isDevelopment) {
+      console.log('[FUNNELS API] Funnel created successfully:', data[0]?.funnel_id)
+    }
 
     return NextResponse.json({ 
       funnel: data[0],
-      funnelId: data[0].funnel_id 
+      funnelId: data[0].funnel_id,
+      success: true
     }, { status: 201 })
   } catch (error: any) {
     console.error('Funnel creation error:', error)

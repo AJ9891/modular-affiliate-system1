@@ -145,8 +145,17 @@ const blockTemplates: Record<string, Omit<BlockConfig, 'id'>> = {
 
 export default function EnhancedFunnelBuilder(props: EnhancedFunnelBuilderProps) {
   const { initialNiche = 'general', funnelId, onSave } = props
+  
+  // Debug the funnelId prop
+  console.log('[EnhancedFunnelBuilder] Received props:', { 
+    initialNiche, 
+    funnelId, 
+    funnelIdType: typeof funnelId,
+    isNew: funnelId === 'new' || funnelId === null || funnelId === undefined
+  })
+  
   const [funnel, setFunnel] = useState<FunnelConfig>({
-    name: 'New Funnel',
+    name: `My Funnel ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
     niche: initialNiche,
     blocks: [],
     theme: {
@@ -167,15 +176,25 @@ export default function EnhancedFunnelBuilder(props: EnhancedFunnelBuilderProps)
 
   const addBlock = (type: keyof typeof blockTemplates) => {
     const template = blockTemplates[type]
+    const blockId = `block-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    
+    console.log('[addBlock] Creating new block:', { type, blockId })
+    
     const newBlock: BlockConfig = {
-      id: `block-${Date.now()}`,
+      id: blockId,
       type: template.type,
-      content: template.content,
-      style: template.style
+      content: { ...template.content },
+      style: { ...template.style }
     }
+    
+    // Ensure no 'new' values in the block data
+    const sanitizedBlock = JSON.parse(JSON.stringify(newBlock).replace(/"new"/g, '"custom"'))
+    
+    console.log('[addBlock] Adding sanitized block:', sanitizedBlock)
+    
     setFunnel(prev => ({
       ...prev,
-      blocks: [...prev.blocks, newBlock]
+      blocks: [...prev.blocks, sanitizedBlock]
     }))
   }
 
@@ -218,24 +237,68 @@ export default function EnhancedFunnelBuilder(props: EnhancedFunnelBuilderProps)
 
   const saveFunnel = async () => {
     try {
-      // Generate slug from funnel name
-      const slug = funnel.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'untitled-funnel'
+      console.log('[saveFunnel] Starting save process')
+      console.log('[saveFunnel] Current funnel state:', {
+        name: funnel.name,
+        niche: funnel.niche,
+        blocksCount: funnel.blocks.length,
+        funnelId: funnelId,
+        theme: funnel.theme
+      })
       
-      // Remove client-side id fields from blocks before sending to server
-      const cleanedBlocks = funnel.blocks.map(block => {
-        const { id, ...blockWithoutId } = block
-        return blockWithoutId
+      // Validate funnel name
+      if (!funnel.name || funnel.name.trim() === '') {
+        alert('Please enter a funnel name')
+        return
+      }
+      
+      // Generate slug from funnel name, avoid 'new' keyword
+      let slug = funnel.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'untitled-funnel'
+      if (slug.includes('new')) {
+        slug = slug.replace(/new/g, 'custom')
+        console.log('[saveFunnel] Replaced "new" in slug:', slug)
+      }
+      
+      // Deep clean blocks - remove all client-side IDs and sanitize content
+      const cleanedBlocks = funnel.blocks.map((block, index) => {
+        const cleanedBlock = {
+          type: block.type,
+          content: { ...block.content },
+          style: { ...block.style }
+        }
+        
+        // Remove any 'new' values in the block data
+        let blockStr = JSON.stringify(cleanedBlock)
+        if (blockStr.includes('"new"')) {
+          console.log(`[saveFunnel] Block ${index} contains "new" values, sanitizing:`, blockStr.substring(0, 100))
+          blockStr = blockStr.replace(/"new"/g, '"custom"')
+          return JSON.parse(blockStr)
+        }
+        
+        return cleanedBlock
       })
       
       const payload = {
-        name: funnel.name,
+        name: funnel.name.trim(),
         slug,
-        niche: funnel.niche || initialNiche,
+        niche: funnel.niche || initialNiche || 'general',
         blocks: cleanedBlocks,
         theme: funnel.theme
       }
+      
+      // Final validation - ensure no 'new' values in payload
+      const payloadStr = JSON.stringify(payload)
+      if (payloadStr.includes('"new"')) {
+        console.error('[saveFunnel] Payload still contains "new" values:', payloadStr)
+        alert('Data validation failed: Found invalid values in funnel data')
+        return
+      }
 
-      console.log('Saving funnel with payload:', payload)
+      console.log('[saveFunnel] Sending sanitized payload:', {
+        ...payload,
+        blocks: `${payload.blocks.length} blocks`,
+        payloadSize: payloadStr.length
+      })
       
       const response = await fetch('/api/funnels', {
         method: 'POST',
@@ -243,28 +306,29 @@ export default function EnhancedFunnelBuilder(props: EnhancedFunnelBuilderProps)
         body: JSON.stringify(payload)
       })
 
-      console.log('Response status:', response.status)
+      console.log('[saveFunnel] Response status:', response.status)
       const data = await response.json()
-      console.log('Response data:', data)
+      console.log('[saveFunnel] Response data:', data)
       
       if (!response.ok) {
-        console.error('Save failed:', data.error)
+        console.error('[saveFunnel] Save failed:', data.error)
         alert(`Failed to save funnel: ${data.error || 'Unknown error'}`)
         return
       }
 
       if (data.funnelId) {
         alert('Funnel saved successfully!')
+        console.log('[saveFunnel] Funnel saved with ID:', data.funnelId)
         // Call onSave callback with funnel ID and slug
         if (props.onSave) {
           props.onSave(data.funnelId, slug)
         }
       } else {
-        console.error('No funnel ID in response:', data)
+        console.error('[saveFunnel] No funnel ID in response:', data)
         alert('Failed to save funnel: No funnel ID returned')
       }
     } catch (error) {
-      console.error('Save error:', error)
+      console.error('[saveFunnel] Save error:', error)
       alert(`Failed to save funnel: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
