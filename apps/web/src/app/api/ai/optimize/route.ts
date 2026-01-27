@@ -200,6 +200,6 @@ export const POST = withErrorHandling(withAuth(withRateLimit(async (request: Nex
   }
   
   throw new Error('Invalid endpoint')
-}, { requests: 10, window: 60 })))
+})))
 
-export const GET = withErrorHandling(withAuth(withRateLimit(getOptimizationHistory, { requests: 30, window: 60 })))
+export const GET = withErrorHandling(withAuth(withRateLimit(getOptimizationHistory)))

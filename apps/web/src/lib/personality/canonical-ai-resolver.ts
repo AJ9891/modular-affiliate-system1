@@ -210,7 +210,6 @@ FORBIDDEN ELEMENTS:
 VOICE PATTERN:
 Patient explanation → Strategic guidance → Encouraging next step → Respectful space to process
         `.trim(),
-        `.trim(),
         
         temperature: 0.7, // Balanced for optimism
         maxTokens: 450,

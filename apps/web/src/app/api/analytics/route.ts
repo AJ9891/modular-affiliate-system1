@@ -2,183 +2,137 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { checkSupabase } from '@/lib/check-supabase'
-import { analyticsCache, generateUserCacheKey } from '@/lib/cache'
-import { withRateLimit, withAuth, withErrorHandling } from '@/lib/api-middleware'
-import { addSecurityHeaders } from '@/lib/security'
 
 export const dynamic = 'force-dynamic'
 
-export const GET = withRateLimit(
-  withAuth(
-    withErrorHandling(async (req: NextRequest, userId: string) => {
-      const check = checkSupabase()
-      if (check) return check
+export async function GET(request: NextRequest) {
+  try {
+    const check = checkSupabase()
+    if (check) return check
 
-      const supabase = createRouteHandlerClient({ cookies })
-      
-      const searchParams = req.nextUrl.searchParams
-      const range = searchParams.get('range') || '7d'
-      const funnelId = searchParams.get('funnelId')
-      
-      // Generate cache key
-      const cacheKey = generateUserCacheKey(userId, 'analytics', { range, funnelId })
-      
-      // Check cache first
-      const cached = analyticsCache.get(cacheKey)
-      if (cached) {
-        const response = NextResponse.json(cached)
-        response.headers.set('X-Cache', 'HIT')
-        return addSecurityHeaders(response)
-      }
-
+    const supabase = createRouteHandlerClient({ cookies })
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    
+    const searchParams = request.nextUrl.searchParams
+    const range = searchParams.get('range') || '7d'
+    const funnelId = searchParams.get('funnelId')
+    
     // Calculate date range
     const now = new Date()
-    let startDate: Date
+    let startDate = new Date()
     
     switch (range) {
+      case '24h':
+        startDate.setHours(now.getHours() - 24)
+        break
       case '7d':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        startDate.setDate(now.getDate() - 7)
         break
       case '30d':
-        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+        startDate.setDate(now.getDate() - 30)
         break
       case '90d':
-        startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+        startDate.setDate(now.getDate() - 90)
         break
       default:
-        startDate = new Date('2020-01-01') // All time
+        startDate.setDate(now.getDate() - 7)
     }
 
-    // Build base query for clicks
-    let clicksQuery = supabase!
+    // Build base query conditions
+    let leadsQuery = supabase
+      .from('leads')
+      .select('*')
+      .eq('user_id', user.id)
+      .gte('created_at', startDate.toISOString())
+
+    let clicksQuery = supabase
       .from('clicks')
       .select('*')
-      .gte('clicked_at', startDate.toISOString())
+      .eq('user_id', user.id)
+      .gte('created_at', startDate.toISOString())
 
-    if (funnelId && funnelId !== 'all') {
+    // Filter by funnel if specified
+    if (funnelId) {
+      leadsQuery = leadsQuery.eq('funnel_id', funnelId)
       clicksQuery = clicksQuery.eq('funnel_id', funnelId)
     }
 
-    // Get all clicks
-    const { data: clicks, error: clicksError } = await clicksQuery
+    // Execute queries
+    const [
+      { data: leads = [], error: leadsError },
+      { data: clicks = [], error: clicksError }
+    ] = await Promise.all([
+      leadsQuery,
+      clicksQuery
+    ])
+
+    if (leadsError) {
+      console.error('Analytics leads error:', leadsError)
+      return NextResponse.json({ error: 'Failed to fetch leads data' }, { status: 500 })
+    }
 
     if (clicksError) {
-      return NextResponse.json({ error: clicksError.message }, { status: 400 })
+      console.error('Analytics clicks error:', clicksError)
+      return NextResponse.json({ error: 'Failed to fetch clicks data' }, { status: 500 })
     }
 
-    // Get all conversions
-    let conversionsQuery = supabase!
-      .from('conversions')
-      .select('*')
-      .gte('converted_at', startDate.toISOString())
-
-    if (funnelId && funnelId !== 'all') {
-      // Get click IDs from this funnel
-      const funnelClickIds = clicks?.map((c: any) => c.click_id) || []
-      if (funnelClickIds.length > 0) {
-        conversionsQuery = conversionsQuery.in('click_id', funnelClickIds)
-      }
-    }
-
-    const { data: conversions, error: conversionsError } = await conversionsQuery
-
-    if (conversionsError) {
-      return NextResponse.json({ error: conversionsError.message }, { status: 400 })
-    }
-
-    // Get leads data
-    let leadsQuery = supabase!
-      .from('leads')
-      .select('*')
-      .gte('created_at', startDate.toISOString())
-
-    if (funnelId && funnelId !== 'all') {
-      leadsQuery = leadsQuery.eq('funnel_id', funnelId)
-    }
-
-    const { data: leads } = await leadsQuery
-
-    // Calculate total stats
-    const totalClicks = clicks?.length || 0
-    const totalConversions = conversions?.length || 0
-    const totalLeads = leads?.length || 0
-    const conversionRate = totalClicks > 0 ? (totalConversions / totalClicks) : 0
-    const totalRevenue = conversions?.reduce((sum: number, c: any) => sum + (parseFloat(c.amount) || 0), 0) || 0
-    const avgRevenuePerLead = totalLeads > 0 ? totalRevenue / totalLeads : 0
-
-    // Mock email stats (replace with actual Sendshark data when integrated)
-    const emailsSent = totalLeads * 3 // Assume 3 emails per lead
-    const emailOpenRate = 0.35 // 35% open rate
+    // Calculate metrics
+    const totalLeads = leads.length
+    const totalClicks = clicks.length
+    const totalConversions = leads.filter((lead: any) => lead.converted).length
+    const totalRevenue = leads.reduce((sum: number, lead: any) => sum + (lead.revenue || 0), 0)
+    
+    const conversionRate = totalClicks > 0 ? ((totalConversions / totalClicks) * 100).toFixed(2) : '0.00'
+    const avgRevenuePerLead = totalLeads > 0 ? (totalRevenue / totalLeads).toFixed(2) : '0.00'
 
     // Group clicks by source
-    const clicksBySource = clicks?.reduce((acc: any[], click: any) => {
+    const clicksBySource = clicks.reduce((acc: any, click: any) => {
       const source = click.utm_source || 'direct'
-      const existing = acc.find(item => item.source === source)
-      if (existing) {
-        existing.count++
-      } else {
-        acc.push({ source, count: 1 })
-      }
+      acc[source] = (acc[source] || 0) + 1
       return acc
-    }, []) || []
+    }, {})
 
-    // Sort by count
-    clicksBySource.sort((a: any, b: any) => b.count - a.count)
+    // Group clicks by offer/funnel
+    const clicksByOffer = clicks.reduce((acc: any, click: any) => {
+      const offer = click.offer_id || click.funnel_id || 'unknown'
+      acc[offer] = (acc[offer] || 0) + 1
+      return acc
+    }, {})
 
-    // Get offers data for click/conversion breakdown
-    const { data: offers } = await supabase!
-      .from('offers')
-      .select('id, name')
-
-    const clicksByOffer = offers?.map((offer: any) => {
-      const offerClicks = clicks?.filter((c: any) => c.offer_id === offer.id).length || 0
-      const offerConversions = conversions?.filter((c: any) => c.offer_id === offer.id).length || 0
-      
-      return {
-        offer_name: offer.name,
-        clicks: offerClicks,
-        conversions: offerConversions,
-      }
-    }).filter((item: any) => item.clicks > 0) || []
-
-    // Get recent clicks (last 20)
+    // Recent activity (last 20 items)
     const recentClicks = clicks
-      ?.sort((a: any, b: any) => new Date(b.clicked_at).getTime() - new Date(a.clicked_at).getTime())
+      .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, 20)
       .map((click: any) => ({
-        clicked_at: click.clicked_at,
-        offer_id: click.offer_id,
-        utm_source: click.utm_source,
-        utm_medium: click.utm_medium,
-        utm_campaign: click.utm_campaign,
-      })) || []
+        type: 'click',
+        timestamp: new Date(click.created_at),
+        source: click.utm_source || 'direct',
+        ip: click.ip_address,
+        userAgent: click.user_agent
+      }))
 
-    // Build recent activity feed
-    const recentActivity: any[] = []
-
-    // Add recent leads
-    leads?.slice(0, 10).forEach((lead: any) => {
-      recentActivity.push({
-        id: lead.id,
+    const recentLeads = leads
+      .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 20)
+      .map((lead: any) => ({
         type: 'lead',
-        description: `New lead: ${lead.email}`,
         timestamp: new Date(lead.created_at),
-      })
-    })
+        email: lead.email,
+        source: lead.source || 'unknown',
+        funnel: lead.funnel_id
+      }))
 
-    // Add recent conversions
-    conversions?.slice(0, 10).forEach((conversion: any) => {
-      recentActivity.push({
-        id: conversion.conversion_id,
-        type: 'conversion',
-        description: `New conversion`,
-        timestamp: new Date(conversion.converted_at),
-        amount: parseFloat(conversion.amount || 0),
-      })
-    })
+    const recentActivity = [...recentClicks, ...recentLeads]
+      .sort((a: any, b: any) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, 20)
 
-    // Sort by timestamp
-    recentActivity.sort((a: any, b: any) => b.timestamp.getTime() - a.timestamp.getTime())
+    // Email metrics (placeholder - would need email service integration)
+    const emailsSent = 0
+    const emailOpenRate = '0.00'
 
     return NextResponse.json({
       success: true,
@@ -195,7 +149,7 @@ export const GET = withRateLimit(
       clicksBySource,
       clicksByOffer,
       recentClicks,
-      recentActivity: recentActivity.slice(0, 20),
+      recentActivity,
     })
   } catch (error) {
     console.error('Analytics error:', error)
