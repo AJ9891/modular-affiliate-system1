@@ -54,7 +54,13 @@ const config: Config = {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
         },
-        // Brand colors
+        // Premium surface colors
+        surface: {
+          DEFAULT: "var(--bg-surface)",
+          elevated: "var(--bg-surface-elevated)",
+          subtle: "var(--bg-surface-subtle)",
+        },
+        // Premium brand colors
         brand: {
           navy: "hsl(var(--navy))",
           purple: "hsl(var(--purple))",
@@ -62,6 +68,14 @@ const config: Config = {
           orange: "hsl(var(--orange))",
           red: "hsl(var(--red))",
           yellow: "hsl(var(--yellow))",
+        },
+        // Enhanced shadows
+        'shadow-premium': {
+          sm: "var(--shadow-sm)",
+          md: "var(--shadow-md)", 
+          lg: "var(--shadow-lg)",
+          xl: "var(--shadow-xl)",
+          '2xl': "var(--shadow-2xl)",
         },
       },
       borderRadius: {

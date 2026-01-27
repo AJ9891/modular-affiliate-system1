@@ -12,7 +12,7 @@ import Step5ActivateEmail from '@/components/launchpad/Step5ActivateEmail'
 import Step6PublishLive from '@/components/launchpad/Step6PublishLive'
 import Step7Liftoff from '@/components/launchpad/Step7Liftoff'
 import { AmbientSoundToggle } from '@/components/AmbientSoundToggle'
-import { Target, Users, DollarSign, TrendingUp, Plus, ArrowRight, CheckCircle, Sparkles, Zap, BarChart } from 'lucide-react'
+import { Target, Users, DollarSign, TrendingUp, Plus, ArrowRight, CheckCircle, Sparkles, Zap, BarChart, Brain } from 'lucide-react'
 
 export const runtime = 'edge'
 
@@ -223,6 +223,13 @@ export default function LaunchpadPage() {
       icon: BarChart,
       color: 'from-green-500 to-green-600',
       href: '/dashboard'
+    },
+    {
+      title: 'AI Optimizer',
+      description: 'Auto-optimize funnels with AI suggestions',
+      icon: Brain,
+      color: 'from-gradient-purple to-gradient-pink',
+      href: '/ai-optimizer'
     },
     {
       title: 'Manage Offers',

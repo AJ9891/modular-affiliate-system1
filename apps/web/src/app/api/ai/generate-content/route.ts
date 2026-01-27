@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { generateContent, GenerateContentParams } from '@/lib/openai'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+import { withRateLimit, withValidation, withErrorHandling, withAuth } from '@/lib/api-middleware'
+import { aiGenerationSchema } from '@/lib/security'
 import { 
   validateAITone, 
   validateAIBehavior, 
@@ -10,13 +12,11 @@ import {
   type AIAction 
 } from '@/lib/ai-guidelines'
 
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
-    
-    // Check for user consent (required for generate action)
-    const hasConsent = body.hasConsent === true
-    const action: AIAction = body.action || "generate"
+export const POST = withRateLimit(
+  withAuth(
+    withValidation(
+      withErrorHandling(async (req: NextRequest, userId: string, validatedData: any) => {
+        const { prompt, brand_mode, content_type } = validatedData
     
     // Validate behavior before proceeding
     const behaviorValidation = validateAIBehavior({

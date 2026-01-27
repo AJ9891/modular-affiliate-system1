@@ -4,28 +4,50 @@
 
 @layer base {
   :root {
-    /* Core Brand */
-    --bg-primary: #0b0f19;
-    --bg-secondary: #121826;
-    --bg-surface: #161d2e;
+    /* Core Brand - Enhanced Premium Colors */
+    --bg-primary: #0a0d16;
+    --bg-secondary: #0f1319;
+    --bg-surface: #141821;
+    --bg-surface-elevated: #1a1f2b;
+    --bg-surface-subtle: #1e2430;
 
-    --text-primary: #e6e9f0;
-    --text-secondary: #a5acc5;
-    --text-muted: #6b7280;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #64748b;
+    --text-accent: #e2e8f0;
 
-    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-subtle: rgba(148, 163, 184, 0.08);
+    --border-elevated: rgba(148, 163, 184, 0.12);
+    --border-focus: rgba(59, 130, 246, 0.4);
 
-    /* Shared UI */
-    --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 14px;
+    /* Enhanced UI Variables */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
 
-    --transition-fast: 120ms ease-out;
-    --transition-normal: 220ms ease-out;
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Enhanced Shadow System */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+    /* Premium Gradient System */
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --gradient-launch: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    --gradient-surface: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
 
     /* Personality accents (defaults = neutral Anchor) */
-    --accent: 0 0% 96.1%;
-    --accent-soft: rgba(124, 140, 255, 0.15);
+    --accent: 59 130 246;
+    --accent-soft: rgba(59, 130, 246, 0.1);
+    --accent-hover: rgba(59, 130, 246, 0.2);
 
     /* Legacy shadcn/ui variables (keeping for compatibility) */
     --background: 0 0% 100%;
@@ -48,13 +70,13 @@
     --ring: 0 0% 3.9%;
     --radius: 0.5rem;
     
-    /* Custom brand colors */
-    --navy: 217 91% 10%;
-    --purple: 263 51% 51%;
-    --cyan: 190 100% 50%;
-    --orange: 14 100% 57%;
-    --red: 4 90% 58%;
-    --yellow: 45 100% 51%;
+    /* Custom brand colors - Enhanced */
+    --navy: 15 23 42;
+    --purple: 139 92 246;
+    --cyan: 6 182 212;
+    --orange: 251 146 60;
+    --red: 239 68 68;
+    --yellow: 245 158 11;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -100,42 +122,56 @@
   }
 }
 
-/* Launchpad 4 Success Custom Styles */
+/* Launchpad 4 Success Premium Design System */
 @layer components {
-  /* Gradient backgrounds */
+  /* Enhanced gradient backgrounds */
   .bg-brand-gradient {
-    background: linear-gradient(135deg, hsl(var(--navy)) 0%, hsl(var(--purple)) 50%, hsl(217 71% 20%) 100%);
+    background: linear-gradient(135deg, hsl(var(--navy)) 0%, hsl(var(--purple)) 50%, hsl(15 23 52) 100%);
   }
   
   .bg-launch-gradient {
-    background: linear-gradient(135deg, hsl(var(--orange)) 0%, hsl(var(--red)) 50%, hsl(var(--yellow)) 100%);
+    background: var(--gradient-launch);
   }
   
   .bg-space-gradient {
-    background: linear-gradient(180deg, hsl(var(--navy)) 0%, hsl(217 71% 20%) 100%);
+    background: linear-gradient(180deg, hsl(var(--navy)) 0%, hsl(15 23 52) 100%);
   }
   
-  /* Glowing effects - reduced intensity */
-  .glow-orange {
-    box-shadow: 0 0 15px hsl(var(--orange) / 0.3), 0 0 30px hsl(var(--orange) / 0.15);
+  .bg-surface-elevated {
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-elevated);
+  }
+  
+  /* Premium glowing effects */
+  .glow-premium {
+    box-shadow: 
+      0 0 20px rgba(139, 92, 246, 0.15),
+      0 0 40px rgba(139, 92, 246, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  
+  .glow-launch {
+    box-shadow: 
+      0 0 25px rgba(251, 146, 60, 0.2),
+      0 0 50px rgba(251, 146, 60, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
   
   .glow-cyan {
-    box-shadow: 0 0 15px hsl(var(--cyan) / 0.3), 0 0 30px hsl(var(--cyan) / 0.15);
+    box-shadow: 
+      0 0 20px rgba(6, 182, 212, 0.15),
+      0 0 40px rgba(6, 182, 212, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
   
-  .glow-purple {
-    box-shadow: 0 0 15px hsl(var(--purple) / 0.3), 0 0 30px hsl(var(--purple) / 0.15);
-  }
-  
-  /* Animated gradient text */
+  /* Enhanced animated gradient text */
   .text-brand-gradient {
-    background: linear-gradient(90deg, hsl(var(--orange)), hsl(var(--red)), hsl(var(--yellow)));
+    background: var(--gradient-launch);
     background-size: 200% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    animation: gradient-shift 3s ease infinite;
+    animation: gradient-shift 4s ease-in-out infinite;
   }
   
   @keyframes gradient-shift {
@@ -143,49 +179,137 @@
     50% { background-position: 100% 50%; }
   }
   
-  /* Launch pad background - subtle rocket trail effect */
-  .launch-pad {
+  /* Premium launch pad background */
+  .launch-pad-premium {
     background-image: 
-      linear-gradient(to top, transparent 0%, hsl(var(--orange) / 0.05) 50%, transparent 100%),
-      radial-gradient(circle at 50% 100%, hsl(var(--orange) / 0.1) 0%, transparent 40%),
-      radial-gradient(1px 1px at 20px 30px, white, transparent),
-      radial-gradient(1px 1px at 60px 70px, white, transparent),
-      radial-gradient(1px 1px at 130px 80px, white, transparent);
-    background-size: 100% 100%, 100% 100%, 300px 300px, 300px 300px, 300px 300px;
-    background-color: hsl(var(--navy));
+      radial-gradient(circle at 25% 25%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
+      linear-gradient(135deg, transparent 0%, rgba(251, 146, 60, 0.05) 50%, transparent 100%),
+      radial-gradient(1px 1px at 20px 30px, rgba(255,255,255,0.3), transparent),
+      radial-gradient(1px 1px at 60px 70px, rgba(255,255,255,0.3), transparent),
+      radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.3), transparent);
+    background-size: 
+      800px 800px, 800px 800px, 100% 100%, 
+      400px 400px, 400px 400px, 400px 400px;
+    background-color: var(--bg-primary);
   }
   
-  /* Button styles */
-  .btn-launch {
-    @apply bg-gradient-to-r from-orange-500 via-red-500 to-yellow-500;
-    @apply text-white font-bold px-6 py-3 rounded-lg;
-    @apply transition-all duration-300 transform hover:scale-105;
-    @apply shadow-lg hover:shadow-2xl;
-    position: relative;
-    overflow: hidden;
+  /* Premium button styles */
+  .btn-launch-premium {
+    @apply relative overflow-hidden;
+    background: var(--gradient-launch);
+    @apply text-white font-semibold px-8 py-4 rounded-xl;
+    @apply transition-all duration-300 transform;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
   
-  .btn-launch::before {
+  .btn-launch-premium:hover {
+    @apply scale-105;
+    box-shadow: var(--shadow-2xl);
+  }
+  
+  .btn-launch-premium::before {
     content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-    transition: left 0.5s;
+    @apply absolute inset-0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
-  .btn-launch:hover::before {
-    left: 100%;
+  .btn-launch-premium:hover::before {
+    transform: translateX(100%);
   }
   
-  /* Card hover effects */
+  .btn-secondary-premium {
+    @apply bg-surface-elevated border text-text-primary font-medium px-6 py-3 rounded-lg;
+    @apply transition-all duration-200 hover:bg-surface-subtle;
+    border-color: var(--border-elevated);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .btn-secondary-premium:hover {
+    @apply scale-[1.02];
+    box-shadow: var(--shadow-md);
+    border-color: var(--border-focus);
+  }
+  
+  /* Premium card styles */
+  .card-premium {
+    @apply rounded-xl p-6;
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-elevated);
+    box-shadow: var(--shadow-lg);
+    @apply transition-all duration-300;
+    backdrop-filter: blur(12px);
+  }
+  
+  .card-premium:hover {
+    @apply scale-[1.02];
+    box-shadow: var(--shadow-xl);
+    border-color: var(--border-focus);
+  }
+  
   .card-launch {
-    @apply bg-card border border-purple-500/20 rounded-xl p-6;
-    @apply transition-all duration-300 hover:border-cyan-500/50;
-    @apply hover:shadow-lg hover:shadow-cyan-500/20;
-    @apply backdrop-blur-sm;
+    @apply card-premium;
+    position: relative;
+  }
+  
+  .card-launch::before {
+    content: '';
+    @apply absolute inset-0 rounded-xl;
+    background: var(--gradient-surface);
+    opacity: 0;
+    @apply transition-opacity duration-300;
+  }
+  
+  .card-launch:hover::before {
+    opacity: 1;
+  }
+  
+  /* Enhanced form styles */
+  .input-premium {
+    @apply w-full px-4 py-3 rounded-lg;
+    background: var(--bg-surface-subtle);
+    border: 1px solid var(--border-elevated);
+    color: var(--text-primary);
+    @apply transition-all duration-200;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .input-premium:focus {
+    outline: none;
+    border-color: var(--border-focus);
+    box-shadow: var(--shadow-md), 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  
+  /* Typography enhancements */
+  .heading-premium {
+    @apply font-bold text-text-primary;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+  }
+  
+  .body-premium {
+    @apply text-text-secondary leading-relaxed;
+  }
+  
+  /* Enhanced loading states */
+  .loading-premium {
+    @apply animate-pulse;
+    background: linear-gradient(
+      90deg,
+      var(--bg-surface) 25%,
+      var(--bg-surface-elevated) 50%,
+      var(--bg-surface) 75%
+    );
+    background-size: 200% 100%;
+    animation: loading-shimmer 1.5s ease-in-out infinite;
+  }
+  
+  @keyframes loading-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
   }
   
   /* Glitch text effect for Meltdown brand */

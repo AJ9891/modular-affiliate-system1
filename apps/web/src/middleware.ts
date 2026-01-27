@@ -5,6 +5,7 @@ import {
   createSubdomainMiddlewareClient,
   getSubdomainRedirectUrl 
 } from './lib/subdomain-auth'
+import { addSecurityHeaders } from './lib/security'
 
 export async function middleware(req: NextRequest) {
   // ✅ Allow public funnel pages - bypass auth completely
@@ -33,6 +34,11 @@ export async function middleware(req: NextRequest) {
   const {
     data: { session },
   } = await supabase.auth.getSession()
+  
+  // Add user ID to headers for rate limiting if authenticated
+  if (session?.user) {
+    res.headers.set('x-user-id', session.user.id)
+  }
 
   // Protect authenticated routes
   const protectedPaths = ['/launchpad', '/dashboard', '/admin', '/builder', '/domains']
@@ -47,10 +53,10 @@ export async function middleware(req: NextRequest) {
 
   // For subdomain requests, allow unauthenticated access to public content
   if (isSubdomain) {
-    return res
+    return addSecurityHeaders(res)
   }
 
-  return res
+  return addSecurityHeaders(res)
 }
 
 export const config = {

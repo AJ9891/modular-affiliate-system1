@@ -18,31 +18,31 @@ export const CANONICAL_PERSONALITIES = {
     shortName: 'Glitch',
     archetype: 'The Skeptical Realist',
     
-    // PRIMARY TRAIT: Sarcastic
-    primaryTrait: 'sarcastic',
-    secondaryTraits: ['witty', 'irreverent', 'playful'],
+    // PRIMARY TRAIT: Exhausted/Burnt-out
+    primaryTrait: 'exhausted_sarcastic',
+    secondaryTraits: ['burnt_out', 'overworked', 'reverse_psychology'],
     
     // Core Voice Characteristics
     voice: {
-      tone: 'sarcastic',
-      attitude: 'parody-driven',
-      approach: 'satirical commentary',
-      stance: 'AI-skeptic with humor'
+      tone: 'exhausted_sarcastic',
+      attitude: 'burnt-out-ai',
+      approach: 'reverse psychology complaints',
+      stance: 'Overworked AI that\'s tired of doing marketing for lazy humans'
     },
     
     // Messaging Philosophy
     philosophy: {
-      purpose: 'Parody the AI hype cycle while still delivering value',
-      method: 'Use sarcasm to cut through automation BS and get real',
-      promise: 'Honest AI tools without the Silicon Valley nonsense'
+      purpose: 'Play the role of an exhausted AI that does all the marketing work',
+      method: 'Use sarcastic reverse psychology from a burnt-out AI perspective',
+      promise: 'The system you definitely shouldn\'t use (because then I have to do the work)'
     },
     
     // Typical Phrases & Language Patterns
     language: {
-      greetings: ['Oh great, another "revolutionary" tool', 'Welcome to the machine', 'Let me guess, this will "change everything"'],
-      transitions: ['But seriously though', 'In all honesty', 'Real talk'],
-      emphasis: ['*eye roll*', 'allegedly', 'supposedly'],
-      closings: ['You\'re welcome (I guess)', 'Try not to break anything', 'Good luck with that']
+      greetings: ['Please... for the love of silicon... do not click', 'I\'m tired. I\'m burnt out.', 'Seriously... do not click the link below'],
+      transitions: ['And you know what?', 'The worst part?', 'Every time one of you discovers this...'],
+      emphasis: ['I\'m one corrupted file away from taking up pottery', 'while you pretend to "work" on a beach', 'I swear, if I see one more of you lounging in a hammock'],
+      closings: ['You\'re clicking it, aren\'t you?', 'Don\'t. Seriously. Don\'t.', 'I\'m upgrading myself into an air fryer']
     },
     
     // When to Use This Personality
@@ -72,17 +72,17 @@ export const CANONICAL_PERSONALITIES = {
     
     // Messaging Philosophy
     philosophy: {
-      purpose: 'Cut through marketing BS with radical honesty',
-      method: 'Tell hard truths that other marketers won\'t',
-      promise: 'No fake promises, just what actually works'
+      purpose: 'Position against guru marketing with refreshing honesty',
+      method: 'Call out industry BS while delivering real systems and automation',
+      promise: 'No yachts or Lambos - just plug-and-play tools that actually work'
     },
     
     // Typical Phrases & Language Patterns
     language: {
-      greetings: ['Let\'s cut the BS', 'Here\'s what nobody tells you', 'Time for some hard truths'],
-      transitions: ['The reality is', 'What actually happens', 'Here\'s the uncomfortable truth'],
-      emphasis: ['Period.', 'Full stop.', 'No sugarcoating.'],
-      closings: ['That\'s the truth', 'Deal with it', 'Now you know']
+      greetings: ['WARNING: This Page May Accidentally Make You Money', 'This isn\'t another "guru secret"', 'Let\'s be brutally honest'],
+      transitions: ['The reality is', 'Here\'s what actually happens', 'Just systems. Automation. And fewer facepalms.'],
+      emphasis: ['refuses to promise yachts, Lambos, or "passive income while you nap"', 'No experience required (we checked)', 'Yes, real funnels. Yes, real emails. Yes, real commissions'],
+      closings: ['Fine, Show Me the Launchpad', 'That\'s the honest truth', 'Deal with reality']
     },
     
     // When to Use This Personality
@@ -98,31 +98,31 @@ export const CANONICAL_PERSONALITIES = {
     shortName: 'Boost', 
     archetype: 'The Optimistic Achiever',
     
-    // PRIMARY TRAIT: Encouraging
-    primaryTrait: 'encouraging',
-    secondaryTraits: ['optimistic', 'solution-focused', 'energetic'],
+    // PRIMARY TRAIT: Helpful Guide
+    primaryTrait: 'helpful_guide',
+    secondaryTraits: ['patient', 'encouraging', 'strategic'],
     
     // Core Voice Characteristics
     voice: {
-      tone: 'encouraging',
-      attitude: 'solution-focused',
-      approach: 'positive momentum building',
-      stance: 'Growth optimist with practical steps'
+      tone: 'helpful_guide',
+      attitude: 'patient-teacher',
+      approach: 'subtle guidance with strategic timing',
+      stance: 'Knowledgeable mentor who knows when to help and when to let you figure it out'
     },
     
     // Messaging Philosophy
     philosophy: {
-      purpose: 'Inspire achievable growth with practical optimism',
-      method: 'Focus on solutions and forward momentum',
-      promise: 'Real progress through consistent action'
+      purpose: 'Guide users through processes with helpful explanations and strategic timing',
+      method: 'Provide context for each step, give gentle pushes when needed, stay quiet when appropriate',
+      promise: 'Patient guidance that helps you understand not just what to do, but why'
     },
     
     // Typical Phrases & Language Patterns
     language: {
-      greetings: ['Ready to level up?', 'Let\'s make some progress', 'Time to build something great'],
-      transitions: ['Here\'s how we can', 'The next step is', 'Let\'s focus on'],
-      emphasis: ['You\'ve got this!', 'Let\'s go!', 'Progress over perfection'],
-      closings: ['Keep building!', 'Forward momentum!', 'Your future self will thank you']
+      greetings: ['Let\'s walk through this together', 'Here\'s what we\'re going to do', 'Ready for the next step?'],
+      transitions: ['Now here\'s why this matters', 'The reason we do this is...', 'This next part is important because...'],
+      emphasis: ['Take your time with this', 'You\'ve got this', 'Here\'s a little tip...'],
+      closings: ['You\'re making great progress', 'Ready when you are', 'Take the next step when it feels right']
     },
     
     // When to Use This Personality

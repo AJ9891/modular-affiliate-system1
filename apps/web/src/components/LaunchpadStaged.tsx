@@ -23,8 +23,11 @@ export default function LaunchpadStaged() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF5714]"></div>
+      <div className="flex items-center justify-center min-h-screen bg-brand-navy launch-pad-premium">
+        <div className="card-premium p-8 text-center">
+          <div className="loading-premium h-12 w-12 rounded-full mx-auto mb-4"></div>
+          <p className="body-premium">Preparing launch sequence...</p>
+        </div>
       </div>
     )
   }
@@ -42,16 +45,17 @@ export default function LaunchpadStaged() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-4xl">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-[#011936] mb-4">
-          <Rocket className="inline-block mr-3" size={40} />
-          Affiliate Launchpad
-        </h1>
-        <p className="text-gray-600">Your guided path to affiliate success</p>
-      </div>
+    <div className="min-h-screen bg-brand-navy launch-pad-premium">
+      <div className="container mx-auto px-4 py-12 max-w-4xl">
+        <div className="text-center mb-16">
+          <h1 className="text-5xl md:text-6xl heading-premium text-white mb-6">
+            <Rocket className="inline-block mr-4 text-brand-orange glow-launch" size={48} />
+            Affiliate Launchpad
+          </h1>
+          <p className="body-premium text-xl text-slate-300">Your guided path to affiliate success</p>
+        </div>
 
-      <div className="space-y-6">
+        <div className="space-y-8">
         {/* Stage 1: Ground Control */}
         {profile.launchpad_stage >= 1 && (
           <StageCard
@@ -103,6 +107,7 @@ export default function LaunchpadStaged() {
           />
         )}
       </div>
+      </div>
     </div>
   )
 }
@@ -133,33 +138,34 @@ function StageCard({
   return (
     <section
       className={`
-        border-2 rounded-lg p-6 transition-all
-        ${isActive ? 'border-[#FF5714] bg-orange-50 shadow-lg' : ''}
-        ${isComplete ? 'border-green-500 bg-green-50' : ''}
-        ${isPending ? 'border-gray-300 bg-gray-50 opacity-60' : ''}
+        card-premium transition-all duration-300 relative overflow-hidden
+        ${isActive ? 'glow-launch border-brand-orange/50 bg-gradient-to-r from-brand-orange/5 to-transparent' : ''}
+        ${isComplete ? 'border-green-500/50 bg-gradient-to-r from-green-500/5 to-transparent' : ''}
+        ${isPending ? 'opacity-60' : ''}
       `}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
-            {isComplete && <Check className="text-green-600" size={24} />}
-            {isActive && <Rocket className="text-[#FF5714]" size={24} />}
-            <h2 className="text-2xl font-semibold text-[#011936]">{title}</h2>
+          <div className="flex items-center gap-4 mb-4">
+            {isComplete && <Check className="text-green-400 glow-cyan" size={28} />}
+            {isActive && <Rocket className="text-brand-orange glow-launch" size={28} />}
+            {isPending && <Lock className="text-slate-500" size={28} />}
+            <h2 className="heading-premium text-3xl text-white">{title}</h2>
           </div>
-          <p className="text-gray-700 mb-4">{description}</p>
+          <p className="body-premium text-lg mb-6 text-slate-300">{description}</p>
           
           {isActive && !final && onAdvance && (
             <button
               onClick={onAdvance}
-              className="bg-[#FF5714] hover:bg-[#e04d10] text-white font-semibold py-2 px-6 rounded-lg transition-colors"
+              className="btn-launch-premium"
             >
               {buttonText || 'Continue'}
             </button>
           )}
 
           {final && (
-            <div className="bg-green-100 border border-green-400 rounded-lg p-4 mt-4">
-              <p className="text-green-800 font-medium">
+            <div className="card-premium bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-green-500/30 glow-cyan">
+              <p className="text-green-300 font-semibold text-lg flex items-center gap-3">
                 🎉 Launch Sequence Complete! Your affiliate system is ready.
               </p>
             </div>
@@ -167,10 +173,10 @@ function StageCard({
         </div>
 
         <div className={`
-          text-sm font-bold px-3 py-1 rounded-full
-          ${isComplete ? 'bg-green-600 text-white' : ''}
-          ${isActive ? 'bg-[#FF5714] text-white' : ''}
-          ${isPending ? 'bg-gray-400 text-white' : ''}
+          text-sm font-bold px-4 py-2 rounded-full backdrop-blur-sm
+          ${isComplete ? 'bg-green-500/20 text-green-300 border border-green-500/30' : ''}
+          ${isActive ? 'bg-brand-orange/20 text-brand-orange border border-brand-orange/30 glow-launch' : ''}
+          ${isPending ? 'bg-slate-500/20 text-slate-400 border border-slate-500/30' : ''}
         `}>
           Stage {stage}
         </div>
@@ -181,15 +187,17 @@ function StageCard({
 
 function UpgradeLock() {
   return (
-    <section className="border-2 border-[#FF5714] rounded-lg p-8 bg-gradient-to-r from-orange-50 to-purple-50 shadow-lg">
+    <section className="card-premium bg-gradient-to-r from-brand-orange/5 to-brand-purple/5 border-brand-orange/30 glow-premium">
       <div className="text-center">
-        <Lock className="mx-auto mb-4 text-[#FF5714]" size={48} />
-        <h2 className="text-2xl font-semibold text-[#011936] mb-3">Ignition Locked</h2>
-        <p className="text-gray-700 mb-6">
+        <div className="w-20 h-20 mx-auto mb-6 bg-brand-gradient rounded-full flex items-center justify-center glow-launch">
+          <Lock className="text-white" size={32} />
+        </div>
+        <h2 className="heading-premium text-3xl text-white mb-4">Ignition Locked</h2>
+        <p className="body-premium text-lg text-slate-300 mb-8">
           Starter authorization required to build and launch your funnels.
         </p>
         <a href="/pricing">
-          <button className="bg-[#FF5714] hover:bg-[#e04d10] text-white font-semibold py-3 px-8 rounded-lg transition-colors inline-flex items-center gap-2">
+          <button className="btn-launch-premium inline-flex items-center gap-3">
             <Rocket size={20} />
             Authorize Launch
           </button>

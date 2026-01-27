@@ -2,19 +2,34 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { checkSupabase } from '@/lib/check-supabase'
+import { analyticsCache, generateUserCacheKey } from '@/lib/cache'
+import { withRateLimit, withAuth, withErrorHandling } from '@/lib/api-middleware'
+import { addSecurityHeaders } from '@/lib/security'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: NextRequest) {
-  const check = checkSupabase()
-  if (check) return check
+export const GET = withRateLimit(
+  withAuth(
+    withErrorHandling(async (req: NextRequest, userId: string) => {
+      const check = checkSupabase()
+      if (check) return check
 
-  try {
-    const supabase = createRouteHandlerClient({ cookies })
-    
-    const searchParams = request.nextUrl.searchParams
-    const range = searchParams.get('range') || '7d'
-    const funnelId = searchParams.get('funnelId')
+      const supabase = createRouteHandlerClient({ cookies })
+      
+      const searchParams = req.nextUrl.searchParams
+      const range = searchParams.get('range') || '7d'
+      const funnelId = searchParams.get('funnelId')
+      
+      // Generate cache key
+      const cacheKey = generateUserCacheKey(userId, 'analytics', { range, funnelId })
+      
+      // Check cache first
+      const cached = analyticsCache.get(cacheKey)
+      if (cached) {
+        const response = NextResponse.json(cached)
+        response.headers.set('X-Cache', 'HIT')
+        return addSecurityHeaders(response)
+      }
 
     // Calculate date range
     const now = new Date()
