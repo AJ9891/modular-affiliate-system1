@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setUser(null)
         // Only redirect to login if on a protected page
-        const publicPages = ['/', '/login', '/signup', '/pricing', '/features', '/get-started', '/niches']
+        const publicPages = ['/', '/login', '/signup', '/pricing', '/features', '/get-started', '/niches', '/do_not_click']
         if (!publicPages.includes(pathname)) {
           router.push('/login')
         }

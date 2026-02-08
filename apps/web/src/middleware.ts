@@ -10,7 +10,8 @@ import { addSecurityHeaders } from './lib/security'
 export async function middleware(req: NextRequest) {
   // ✅ Allow public pages - bypass auth completely
   if (req.nextUrl.pathname.startsWith('/f/') || req.nextUrl.pathname.startsWith('/do_not_click')) {
-    return NextResponse.next()
+    const res = NextResponse.next()
+    return addSecurityHeaders(res)
   }
 
   const res = NextResponse.next()
