@@ -26,13 +26,6 @@ export default function AIChatWidget({ mode = 'support' }: AIChatWidgetProps) {
   const router = useRouter()
   const pathname = usePathname()
   const ui = useUIExpression()
-
-  // Don't show chat widget on certain pages
-  const hideWidgetOn = ['/do_not_click']
-  if (hideWidgetOn.includes(pathname)) {
-    return null
-  }
-
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -417,6 +410,12 @@ export default function AIChatWidget({ mode = 'support' }: AIChatWidgetProps) {
   }
 
   const ChatWindow = ui.hero.motionIntensity === 'none' ? 'div' : motion.div
+
+  // Don't show chat widget on certain pages
+  const hideWidgetOn = ['/do_not_click']
+  if (hideWidgetOn.includes(pathname)) {
+    return null
+  }
 
   return (
     <>
