@@ -34,8 +34,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setUser(null)
         // Only redirect to login if on a protected page
-        const publicPages = ['/', '/login', '/signup', '/pricing', '/features', '/get-started', '/niches', '/do_not_click']
-        if (!publicPages.includes(pathname)) {
+        const publicPaths = ['/', '/login', '/signup', '/pricing', '/features', '/get-started', '/niches', '/do_not_click', '/f']
+        const isPublicPath = publicPaths.some(path => {
+          if (path === '/') return pathname === '/'
+          return pathname === path || pathname.startsWith(path + '/')
+        })
+        if (!isPublicPath) {
           router.push('/login')
         }
       }
