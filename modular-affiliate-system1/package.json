@@ -1,0 +1,13 @@
+{
+  "name": "modular-affiliate-system1",
+  "version": "1.0.0",
+  "description": "A modular affiliate system",
+  "main": "index.js",
+  "scripts": {
+    "lint": "markdownlint '**/*.md'"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "markdownlint": "^0.29.0"
+  }
+}

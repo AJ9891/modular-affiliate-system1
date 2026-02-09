@@ -3,11 +3,13 @@
 ## Status: Ready to Apply
 
 ### Files Created
+
 - ✅ `/infra/migrations/fix_rls_warnings.sql` - Complete RLS fix migration
 - ✅ `/infra/RLS_FIX_SUMMARY.md` - Detailed documentation
 - ✅ `/infra/apply-rls-fix.js` - Helper script with instructions
 
 ### What Was Fixed
+
 This migration addresses ALL RLS (Row Level Security) warnings in your Supabase database by:
 
 1. ✅ Enabling RLS on **25 tables**
@@ -21,6 +23,7 @@ This migration addresses ALL RLS (Row Level Security) warnings in your Supabase 
 ### Tables with RLS Policies
 
 #### Core Tables (9)
+
 - ✅ users
 - ✅ niches
 - ✅ offers
@@ -32,26 +35,31 @@ This migration addresses ALL RLS (Row Level Security) warnings in your Supabase 
 - ✅ theme_presets
 
 #### Email & Lead Tables (4)
+
 - ✅ leads
 - ✅ automations
 - ✅ email_campaigns
 - ✅ brand_modes
 
 #### Team Collaboration (2)
+
 - ✅ team_members
 - ✅ team_activity_log
 
 #### Downloads & Tracking (4)
+
 - ✅ downloads
 - ✅ download_logs
 - ✅ affiliate_clicks
 - ✅ affiliate_payouts
 
 #### Chat & Support (2)
+
 - ✅ chat_conversations
 - ✅ chat_messages
 
 #### Brand Brain (3)
+
 - ✅ brand_profiles
 - ✅ content_validations
 - ✅ brand_ai_generations
@@ -63,16 +71,19 @@ This migration addresses ALL RLS (Row Level Security) warnings in your Supabase 
 ### Method 1: Supabase Dashboard (Easiest) ⭐
 
 1. Open your Supabase dashboard:
+
    ```
    https://supabase.com/dashboard/project/urwrbjejcozbzgknbuhn
    ```
 
 2. Navigate to **SQL Editor**:
+
    ```
    https://supabase.com/dashboard/project/urwrbjejcozbzgknbuhn/sql/new
    ```
 
 3. Open the migration file:
+
    ```bash
    cat /workspaces/modular-affiliate-system1/infra/migrations/fix_rls_warnings.sql
    ```
@@ -119,18 +130,21 @@ supabase db push
 After applying the migration:
 
 ### 1. Check Dashboard
+
 - Go to **Database → Tables**
 - Click on each table
 - Verify **"Row Level Security"** is enabled
 - Check **"Policies"** tab shows the new policies
 
 ### 2. No More Warnings
+
 - Look for the RLS warning badges
 - Should see ✅ instead of ⚠️ on all tables
 
 ### 3. Test Policies
 
-#### Test as Authenticated User:
+#### Test as Authenticated User
+
 ```sql
 -- Should only see your own data
 SELECT * FROM funnels;
@@ -138,7 +152,8 @@ SELECT * FROM downloads;
 SELECT * FROM chat_conversations;
 ```
 
-#### Test as Anonymous User:
+#### Test as Anonymous User
+
 ```sql
 -- Should see published content
 SELECT * FROM funnels WHERE status = 'published';
@@ -148,7 +163,8 @@ SELECT * FROM offers WHERE active = true;
 INSERT INTO clicks (offer_id, funnel_id) VALUES ('...', '...');
 ```
 
-#### Test Team Access:
+#### Test Team Access
+
 ```sql
 -- Team members should see team funnels
 SELECT * FROM funnels WHERE team_id = 'your-team-id';
@@ -159,6 +175,7 @@ SELECT * FROM funnels WHERE team_id = 'your-team-id';
 ## 📊 Expected Results
 
 ### Before Fix
+
 ```
 ⚠️ users - RLS disabled
 ⚠️ funnels - RLS disabled
@@ -167,6 +184,7 @@ SELECT * FROM funnels WHERE team_id = 'your-team-id';
 ```
 
 ### After Fix
+
 ```
 ✅ users - RLS enabled with 2 policies
 ✅ funnels - RLS enabled with 5 policies
@@ -179,15 +197,19 @@ SELECT * FROM funnels WHERE team_id = 'your-team-id';
 ## 🔍 Troubleshooting
 
 ### Issue: "permission denied for table X"
+
 **Solution**: Make sure you're using the service role key or have proper admin access
 
 ### Issue: "relation does not exist"
+
 **Solution**: Some tables might not exist yet. The migration handles this gracefully with conditional checks.
 
 ### Issue: "policy already exists"
+
 **Solution**: The migration drops existing policies before creating them, so this shouldn't happen. If it does, run the migration again.
 
 ### Issue: "syntax error near..."
+
 **Solution**: Make sure you copied the entire SQL file without truncation
 
 ---
@@ -196,7 +218,7 @@ SELECT * FROM funnels WHERE team_id = 'your-team-id';
 
 - **Full Documentation**: `/infra/RLS_FIX_SUMMARY.md`
 - **Migration File**: `/infra/migrations/fix_rls_warnings.sql`
-- **Supabase RLS Docs**: https://supabase.com/docs/guides/auth/row-level-security
+- **Supabase RLS Docs**: <https://supabase.com/docs/guides/auth/row-level-security>
 
 ---
 

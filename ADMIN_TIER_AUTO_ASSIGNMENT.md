@@ -1,11 +1,13 @@
 # Admin to Agency Tier Auto-Assignment
 
 ## Overview
+
 This feature ensures that all admin users are automatically assigned the **Agency tier** when they are marked as admins (`is_admin = true`).
 
 ## Implementation
 
 ### Database Trigger
+
 A PostgreSQL trigger has been created in the migration file [`infra/migrations/auto_agency_for_admins.sql`](infra/migrations/auto_agency_for_admins.sql) that:
 
 1. **Automatically sets `plan = 'agency'`** whenever:
@@ -17,11 +19,13 @@ A PostgreSQL trigger has been created in the migration file [`infra/migrations/a
 ### How It Works
 
 **Trigger Function**: `public.set_admin_to_agency()`
+
 - Checks if `is_admin` is being set to `true` for the first time
 - If so, automatically sets `plan = 'agency'`
 - Executes before INSERT or UPDATE operations
 
 **Trigger**: `admin_to_agency_trigger`
+
 - Fires on INSERT or UPDATE of the `users` table
 - Ensures every admin automatically gets Agency tier
 
@@ -35,6 +39,7 @@ A PostgreSQL trigger has been created in the migration file [`infra/migrations/a
 ### Application Logic
 
 The trigger handles all admin creation paths:
+
 - Direct admin user creation via database
 - Admin promotions in future admin management UI
 - API endpoints that set `is_admin = true`

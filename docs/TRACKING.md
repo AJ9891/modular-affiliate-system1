@@ -1,23 +1,27 @@
 # Affiliate Link Tracking System
 
 ## Overview
+
 Complete affiliate link tracking and analytics system with click tracking, conversion attribution, and UTM parameter support.
 
 ## Features
 
 ### 1. Click Tracking
+
 - Automatic click logging with metadata
 - UTM parameter capture (source, medium, campaign, content, term)
 - 30-day attribution cookies
 - Unique click IDs for precise tracking
 
 ### 2. Conversion Attribution
+
 - Cookie-based attribution (30-day window)
 - Revenue tracking per conversion
 - Order ID tracking for deduplication
 - Automatic attribution to original click
 
 ### 3. Analytics Dashboard
+
 - Real-time click and conversion metrics
 - Conversion rate calculation
 - Total revenue tracking
@@ -27,6 +31,7 @@ Complete affiliate link tracking and analytics system with click tracking, conve
 - Time range filters (7d, 30d, all time)
 
 ### 4. Redirect System
+
 - Tracked affiliate link redirects
 - Preserves UTM parameters
 - Sets attribution cookies automatically
@@ -35,6 +40,7 @@ Complete affiliate link tracking and analytics system with click tracking, conve
 ## How It Works
 
 ### Basic Flow
+
 1. User clicks affiliate link on your funnel page
 2. Click is tracked in database with all UTM parameters
 3. Attribution cookie is set (30-day expiry)
@@ -45,11 +51,13 @@ Complete affiliate link tracking and analytics system with click tracking, conve
 ### URL Structure
 
 #### Tracking Links
+
 ```
 https://yourdomain.com/api/redirect/[offer-id]?utm_source=facebook&utm_medium=cpc&utm_campaign=summer-sale
 ```
 
 #### Direct API Tracking
+
 ```
 POST /api/track/click
 {
@@ -62,6 +70,7 @@ POST /api/track/click
 ```
 
 #### Conversion Tracking
+
 ```
 POST /api/track/conversion
 {
@@ -74,6 +83,7 @@ POST /api/track/conversion
 ## Implementation Guide
 
 ### Step 1: Add an Offer
+
 1. Navigate to `/offers`
 2. Click "Add Offer"
 3. Fill in offer details:
@@ -84,11 +94,13 @@ POST /api/track/conversion
 4. Save offer
 
 ### Step 2: Get Tracking Link
+
 1. Copy the tracking link from the offer page
 2. Format: `/api/redirect/[offer-id]`
 3. Add UTM parameters as needed
 
 ### Step 3: Use in Your Funnel
+
 ```tsx
 import { trackClick, extractUTMParams } from '@/lib/tracking'
 
@@ -106,7 +118,9 @@ async function handleClick(offerId: string) {
 ```
 
 ### Step 4: Track Conversions
+
 Server-side (on your thank-you page):
+
 ```tsx
 await fetch('/api/track/conversion', {
   method: 'POST',
@@ -120,6 +134,7 @@ await fetch('/api/track/conversion', {
 ```
 
 Or use conversion pixel (embedded on merchant's thank-you page):
+
 ```html
 <img src="https://yourdomain.com/api/track/conversion?offer_id=uuid&amount=99.99&order_id=123" width="1" height="1" style="display:none" />
 ```
@@ -127,7 +142,9 @@ Or use conversion pixel (embedded on merchant's thank-you page):
 ## Utility Functions
 
 ### trackClick(params)
+
 Tracks an affiliate link click
+
 ```tsx
 trackClick({
   offerId: string,
@@ -139,7 +156,9 @@ trackClick({
 ```
 
 ### trackConversion(params)
+
 Tracks a conversion event
+
 ```tsx
 trackConversion({
   offerId: string,
@@ -149,13 +168,17 @@ trackConversion({
 ```
 
 ### extractUTMParams()
+
 Extracts UTM parameters from current URL
+
 ```tsx
 const { utmSource, utmMedium, utmCampaign } = extractUTMParams()
 ```
 
 ### buildAffiliateLink(baseUrl, offerId, options)
+
 Builds tracking-enabled affiliate link
+
 ```tsx
 const link = buildAffiliateLink(
   'https://example.com/product',
@@ -171,6 +194,7 @@ const link = buildAffiliateLink(
 ## Database Schema
 
 ### clicks table
+
 ```sql
 - click_id: uuid (primary key)
 - offer_id: uuid (foreign key)
@@ -182,6 +206,7 @@ const link = buildAffiliateLink(
 ```
 
 ### conversions table
+
 ```sql
 - conversion_id: uuid (primary key)
 - click_id: uuid (foreign key, links to original click)
@@ -194,38 +219,49 @@ const link = buildAffiliateLink(
 ## API Routes
 
 ### GET /api/redirect/[id]
+
 Redirects to affiliate link and tracks click
 
 ### POST /api/track/click
+
 Manually track a click event
 
 ### POST /api/track/conversion
+
 Track a conversion event
 
 ### GET /api/analytics?range=7d&funnelId=uuid
+
 Get analytics data with optional filters
 
 ### GET /api/offers
+
 List all offers
 
 ### POST /api/offers
+
 Create new offer
 
 ### PUT /api/offers/[id]
+
 Update offer
 
 ### DELETE /api/offers/[id]
+
 Delete offer
 
 ## Pages
 
 ### /offers
+
 Manage affiliate offers, copy tracking links
 
 ### /analytics
+
 View click and conversion analytics
 
 ### /example-funnel
+
 Demo page showing tracking implementation
 
 ## Best Practices
@@ -240,16 +276,19 @@ Demo page showing tracking implementation
 ## Example Use Cases
 
 ### Case 1: Facebook Ad Campaign
+
 ```
 Link: /api/redirect/offer-123?utm_source=facebook&utm_medium=cpc&utm_campaign=summer-sale
 ```
 
 ### Case 2: Email Newsletter
+
 ```
 Link: /api/redirect/offer-123?utm_source=newsletter&utm_medium=email&utm_campaign=weekly-digest
 ```
 
 ### Case 3: YouTube Video
+
 ```
 Link: /api/redirect/offer-123?utm_source=youtube&utm_medium=video&utm_campaign=review-video
 ```
@@ -267,16 +306,19 @@ Link: /api/redirect/offer-123?utm_source=youtube&utm_medium=video&utm_campaign=r
 ## Troubleshooting
 
 **Clicks not tracking?**
+
 - Check Supabase connection
 - Verify offer exists and is active
 - Check browser console for errors
 
 **Conversions not attributing?**
+
 - Verify attribution cookie exists
 - Check 30-day window hasn't expired
 - Ensure conversion endpoint receives cookie
 
 **Analytics not showing data?**
+
 - Check date range filter
 - Verify funnel_id filter if used
 - Check database for records directly

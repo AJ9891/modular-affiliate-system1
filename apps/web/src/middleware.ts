@@ -70,6 +70,6 @@ export const config = {
      * - public folder
      * - api routes (important for auth callbacks)
      */
-    '/((?!_next/static|_next/image|favicon.ico|public|api).*)',
+    '/((?!api/|_next/static|_next/image|favicon.ico|.*\\..*|public/).*)',
   ],
 }

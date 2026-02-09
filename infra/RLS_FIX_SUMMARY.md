@@ -1,10 +1,13 @@
 # RLS Warning Fixes - Summary
 
 ## Overview
+
 This document summarizes the Row Level Security (RLS) fixes applied to all Supabase tables to eliminate RLS warnings.
 
 ## What Was Fixed
+
 All tables in the database now have:
+
 1. ✅ Row Level Security (RLS) enabled
 2. ✅ Comprehensive policies for SELECT, INSERT, UPDATE, and DELETE operations
 3. ✅ Team collaboration support where applicable
@@ -14,6 +17,7 @@ All tables in the database now have:
 ## Tables with RLS Enabled
 
 ### Core Tables
+
 - ✅ `users` - User profiles and authentication
 - ✅ `niches` - Niche module definitions
 - ✅ `offers` - Affiliate offers and links
@@ -27,26 +31,32 @@ All tables in the database now have:
 - ✅ `leads` - Captured leads from funnels
 
 ### Email & Automation Tables
+
 - ✅ `automations` - Email automation configurations
 - ✅ `email_campaigns` - Email campaign management
 
 ### Team Collaboration Tables
+
 - ✅ `team_members` - Team member invites and roles
 - ✅ `team_activity_log` - Team activity tracking
 
 ### Downloads & Digital Products
+
 - ✅ `downloads` - Lead magnets and digital products
 - ✅ `download_logs` - Download tracking
 
 ### Chat & Support Tables
+
 - ✅ `chat_conversations` - AI chat conversations
 - ✅ `chat_messages` - Chat message history
 
 ### Affiliate & Payments Tables
+
 - ✅ `affiliate_clicks` - Partner referral tracking
 - ✅ `affiliate_payouts` - Commission payout tracking
 
 ### Brand Brain Tables
+
 - ✅ `brand_profiles` - Brand personality profiles
 - ✅ `content_validations` - AI content compliance tracking
 - ✅ `brand_ai_generations` - AI generation history
@@ -54,7 +64,9 @@ All tables in the database now have:
 ## Policy Types Applied
 
 ### 1. User Isolation Policies
+
 Tables with user data use strict user isolation:
+
 ```sql
 -- Example: Users can only see their own data
 create policy "Users can view their own data"
@@ -63,6 +75,7 @@ create policy "Users can view their own data"
 ```
 
 Applied to:
+
 - users
 - email_campaigns
 - downloads
@@ -74,7 +87,9 @@ Applied to:
 - brand_ai_generations
 
 ### 2. Team Collaboration Policies
+
 Tables supporting team features allow team members to access shared resources:
+
 ```sql
 -- Example: Team members can view team funnels
 create policy "Users can view their own and team funnels"
@@ -89,6 +104,7 @@ create policy "Users can view their own and team funnels"
 ```
 
 Applied to:
+
 - funnels
 - offers
 - pages/funnel_pages
@@ -96,7 +112,9 @@ Applied to:
 - team_activity_log
 
 ### 3. Public Read Policies
+
 Content that should be publicly accessible (e.g., published funnels):
+
 ```sql
 -- Example: Public can view published funnels
 create policy "Public can read published funnels"
@@ -105,6 +123,7 @@ create policy "Public can read published funnels"
 ```
 
 Applied to:
+
 - funnels (published status)
 - pages/funnel_pages (published funnels)
 - niches (active)
@@ -114,7 +133,9 @@ Applied to:
 - brand_modes (all)
 
 ### 4. Tracking & Analytics Policies
+
 Tables for tracking allow anonymous inserts but restrict reads:
+
 ```sql
 -- Example: Anyone can log clicks, but only owners can read them
 create policy "Anyone can insert clicks"
@@ -127,6 +148,7 @@ create policy "Users can view clicks for their funnels"
 ```
 
 Applied to:
+
 - clicks
 - conversions
 - leads
@@ -134,7 +156,9 @@ Applied to:
 - affiliate_clicks
 
 ### 5. Service Role Policies
+
 System/admin tables allow service role full access:
+
 ```sql
 -- Example: Service role can manage templates
 create policy "Service role can manage templates"
@@ -143,6 +167,7 @@ create policy "Service role can manage templates"
 ```
 
 Applied to:
+
 - niches
 - templates
 - theme_presets
@@ -151,7 +176,9 @@ Applied to:
 - affiliate_payouts
 
 ## Migration File
+
 The complete RLS fix is in:
+
 ```
 /infra/migrations/fix_rls_warnings.sql
 ```
@@ -159,18 +186,21 @@ The complete RLS fix is in:
 ## How to Apply
 
 ### Option 1: Using the apply-migrations script
+
 ```bash
 cd /workspaces/modular-affiliate-system1/infra
 ./apply-migrations.sh
 ```
 
 ### Option 2: Manual application
+
 ```bash
 # Apply directly to your Supabase database
 psql -h your-db-host -U postgres -d postgres -f migrations/fix_rls_warnings.sql
 ```
 
 ### Option 3: Using Supabase CLI
+
 ```bash
 supabase db push
 ```
@@ -178,24 +208,28 @@ supabase db push
 ## Testing RLS Policies
 
 ### Test 1: User can only see their own data
+
 ```sql
 -- As authenticated user, should only see own funnels
 select * from funnels;
 ```
 
 ### Test 2: Public can see published content
+
 ```sql
 -- As anonymous user, should see published funnels
 select * from funnels where status = 'published';
 ```
 
 ### Test 3: Team members can access team resources
+
 ```sql
 -- As team member, should see team funnels
 select * from funnels where team_id = 'team-owner-id';
 ```
 
 ### Test 4: Tracking works for anonymous users
+
 ```sql
 -- As anonymous user, should be able to insert clicks
 insert into clicks (offer_id, funnel_id) values ('...', '...');
@@ -213,6 +247,7 @@ insert into clicks (offer_id, funnel_id) values ('...', '...');
 ## Performance Considerations
 
 The migration also includes proper indexes for RLS policy lookups:
+
 - Team member lookups: `idx_team_members_user_status`
 - Funnel ownership: `idx_funnels_user_active`
 - User email lookups: `idx_users_email`
@@ -238,15 +273,19 @@ After applying the migration, verify there are no RLS warnings:
 ## Troubleshooting
 
 ### Issue: "permission denied for table X"
+
 **Solution**: Check if RLS is enabled and user has proper authentication
 
 ### Issue: "No policy found for SELECT on table X"
+
 **Solution**: Verify the fix_rls_warnings.sql migration was applied
 
 ### Issue: "Public can't access published funnels"
+
 **Solution**: Ensure the `status` column exists and is set to 'published'
 
 ### Issue: "Team members can't access team resources"
+
 **Solution**: Verify team_members table has active status and proper team_id
 
 ## Next Steps
@@ -259,6 +298,7 @@ After applying the migration, verify there are no RLS warnings:
 ## Support
 
 If you encounter any issues with RLS policies:
+
 1. Check the Supabase logs for policy violations
 2. Review the policy definitions in `fix_rls_warnings.sql`
 3. Test with different user contexts (authenticated, anonymous, service_role)

@@ -3,6 +3,7 @@
 ## Files Modified
 
 ### 1. `/apps/web/src/lib/supabase.ts` ✅
+
 **Changed from:** Eager module load (throws immediately)
 **Changed to:** Lazy loading via Proxy (throws on use)
 
@@ -37,14 +38,17 @@
 ```
 
 ### 2. `/apps/web/src/lib/supabase-client.ts` ✨ (NEW)
+
 **Purpose:** Explicit client-only Supabase client for 'use client' components
 **Import in client components instead of the main supabase.ts**
 
 ### 3. `/apps/web/src/app/api/modules/[id]/activate/route.ts` ✅
+
 **Changed from:** `import { supabase } from '@/lib/supabase'` (client import in server route)
 **Changed to:** `createRouteHandlerClient({ cookies })` (server-only pattern)
 
 ### 4. `/apps/web/src/app/api/domains/route.ts` ✅
+
 **Added:** Environment variable validation function
 **Changed:** Client supabase import to server-only pattern
 **Improved:** Error messages to clearly indicate what's missing
@@ -58,6 +62,7 @@
 ## Impact
 
 ### Before (BROKEN)
+
 ```
 Client requests page
 → Next.js bundles modules
@@ -69,6 +74,7 @@ Client requests page
 ```
 
 ### After (FIXED)
+
 ```
 Client requests page
 → Next.js bundles modules
@@ -103,6 +109,7 @@ npm run dev
 ## Next Steps
 
 For each remaining API route that uses `@/lib/supabase`:
+
 1. Replace with `createRouteHandlerClient({ cookies })`
 2. Add env var validation at top of handler
 3. Verify no server secrets leak to client

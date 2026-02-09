@@ -98,6 +98,7 @@ const { visual, motion, sound, context } = usePersonalityExpression();
 ```
 
 Returns:
+
 - `visual` - Context-aware visual tokens (spacing, borders, depth, effects)
 - `motion` - Context-aware motion tokens (timing, enter, hover, budget)
 - `sound` - Context-aware sound config (enabled, profile, volume)
@@ -112,6 +113,7 @@ const { personality, brandMode, isRouteOverride, context } = usePersonality();
 ```
 
 Returns:
+
 - `personality` - Full PersonalityProfile object
 - `brandMode` - Current brand mode (rocket_future | anti_guru | ai_meltdown)
 - `isRouteOverride` - Whether route forced a different mode
@@ -252,6 +254,7 @@ export function AdaptiveContainer({ children }) {
 ### Components Ask "How?" Not "Why?"
 
 **DON'T:**
+
 ```tsx
 // ❌ Component knows WHY it's different
 if (brandMode === 'rocket_future') {
@@ -260,6 +263,7 @@ if (brandMode === 'rocket_future') {
 ```
 
 **DO:**
+
 ```tsx
 // ✓ Component asks HOW to behave
 const { visual } = usePersonalityExpression();
@@ -273,6 +277,7 @@ return (
 ### Personality is Felt, Not Noticed
 
 Visual expression should be:
+
 - **Peripheral** - In the edges, not the center
 - **Tasteful** - Refined, not loud
 - **Consistent** - Predictable within context
@@ -342,6 +347,7 @@ const { visual, motion, sound } = usePersonalityExpression();
 ```
 
 The new hook:
+
 - ✓ Respects route context automatically
 - ✓ Cleaner, less imports
 - ✓ Better TypeScript inference

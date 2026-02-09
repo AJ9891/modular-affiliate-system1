@@ -13,16 +13,19 @@ SENDSHARK_API_URL=https://api.sendshark.com/v1
 ## Features
 
 ### Email Campaigns
+
 - Create and send email campaigns
 - Schedule emails for future delivery
 - Track opens, clicks, and conversions
 
 ### Automation Sequences
+
 - Welcome email series for new leads
 - Abandoned cart recovery
 - Custom trigger-based automations
 
 ### Analytics & Reporting
+
 - Automated weekly performance reports
 - Campaign statistics and metrics
 - Email engagement tracking
@@ -30,6 +33,7 @@ SENDSHARK_API_URL=https://api.sendshark.com/v1
 ## API Endpoints
 
 ### Send Email
+
 ```typescript
 POST /api/email/send
 {
@@ -42,6 +46,7 @@ POST /api/email/send
 ```
 
 ### Create Campaign
+
 ```typescript
 POST /api/email/send
 {
@@ -55,6 +60,7 @@ POST /api/email/send
 ```
 
 ### Trigger Automation
+
 ```typescript
 POST /api/email/automation
 {
@@ -68,6 +74,7 @@ POST /api/email/automation
 ```
 
 ### Send Weekly Report
+
 ```typescript
 POST /api/email/reports
 {
@@ -83,12 +90,14 @@ POST /api/email/reports
 ## Lead Capture Integration
 
 When a lead is captured through a funnel, the system automatically:
+
 1. Saves the lead to the database
 2. Adds them to Sendshark subscriber list
 3. Triggers welcome automation sequence
 4. Tags them with funnel and source information
 
 Example:
+
 ```typescript
 POST /api/leads/capture
 {
@@ -116,6 +125,7 @@ The system includes pre-configured automation sequences:
    - 24 hours: Last chance offer
 
 Setup default automations:
+
 ```typescript
 PUT /api/email/automation
 ```
@@ -131,21 +141,24 @@ PUT /api/email/automation
 ## Troubleshooting
 
 ### Email Not Sending
+
 - Verify SENDSHARK_API_KEY is set correctly
 - Check API quota limits
 - Review email content for spam triggers
 
 ### Low Open Rates
+
 - Improve subject lines
 - Clean subscriber list
 - Send at optimal times
 
 ### Automation Not Triggering
+
 - Verify automation is active
 - Check trigger conditions
 - Review automation configuration
 
 ## Support
 
-For Sendshark-specific issues, contact support@sendshark.com
+For Sendshark-specific issues, contact <support@sendshark.com>
 For integration issues, check the application logs or contact your development team.

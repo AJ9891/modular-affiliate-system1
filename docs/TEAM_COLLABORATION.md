@@ -1,11 +1,13 @@
 # Team Collaboration Feature
 
 ## Overview
+
 The team collaboration feature allows Agency plan users to invite team members and collaborate on funnels and offers.
 
 ## Features Implemented
 
 ### 1. Database Schema
+
 - **team_members** table with roles (owner, admin, editor, viewer)
 - **team_activity_log** for tracking changes
 - Team support added to funnels and offers tables
@@ -14,40 +16,53 @@ The team collaboration feature allows Agency plan users to invite team members a
 ### 2. API Endpoints
 
 #### GET /api/team
+
 Lists team members for the authenticated user
+
 - Returns owned team members
 - Returns teams user is a member of
 
 #### POST /api/team
+
 Invites a new team member
+
 - Requires Agency plan
 - Sends email invitation
 - Generates unique invite token
 
 #### PATCH /api/team/[memberId]
+
 Updates team member role
+
 - Owner/Admin only
 - Changes between viewer, editor, admin
 
 #### DELETE /api/team?memberId=xxx
+
 Removes team member
+
 - Owner only
 - Cascades to remove access
 
 #### GET/POST /api/team/accept
+
 Accepts team invitation
+
 - Validates invite token
 - Verifies email match
 - Activates membership
 
 #### GET /api/team/activity
+
 Retrieves team activity log
+
 - Shows recent changes
 - Includes user actions on funnels/offers
 
 ### 3. User Interface
 
 #### /team - Team Management Page
+
 - Invite team members with email and role
 - View pending and active members
 - Update member roles
@@ -56,11 +71,13 @@ Retrieves team activity log
 - View teams you're part of
 
 #### /team/accept - Accept Invitation Page
+
 - Processes invite tokens
 - Handles login redirect if needed
 - Shows success/error states
 
 #### Dashboard Integration
+
 - Shows team member count
 - Quick link to team management
 - Displays team context
@@ -93,6 +110,7 @@ Retrieves team activity log
 ### 5. Email Notifications
 
 Automated email sent on team invitation:
+
 - Beautiful HTML template
 - Role description
 - One-click accept link
@@ -116,6 +134,7 @@ Automated email sent on team invitation:
 ```
 
 This creates:
+
 - team_members table
 - team_activity_log table
 - Adds team_id columns to funnels/offers
@@ -125,6 +144,7 @@ This creates:
 ### 2. Environment Variables
 
 Ensure these are set:
+
 ```env
 NEXT_PUBLIC_APP_URL=https://yourdomain.com  # For invite links
 ```
@@ -162,6 +182,7 @@ NEXT_PUBLIC_APP_URL=https://yourdomain.com  # For invite links
 ### Checking Team Access
 
 The database RLS policies automatically enforce permissions:
+
 - Viewers can SELECT
 - Editors can INSERT/UPDATE
 - Admins can DELETE
@@ -169,7 +190,8 @@ The database RLS policies automatically enforce permissions:
 
 ## Future Enhancements
 
-### Potential Features:
+### Potential Features
+
 1. **Sendshark Integration** - Actual email delivery
 2. **Team Analytics** - Per-member performance
 3. **Granular Permissions** - Funnel-level access control
@@ -191,6 +213,7 @@ LIMIT 50;
 ```
 
 Logs include:
+
 - Who performed the action
 - What was changed (INSERT/UPDATE/DELETE)
 - When it happened
@@ -199,17 +222,20 @@ Logs include:
 ## Troubleshooting
 
 ### Invite not working?
+
 - Check user has Agency plan
 - Verify email is valid
 - Check invite token hasn't expired
 - Ensure user is logged in when accepting
 
 ### Permission denied?
+
 - Verify RLS policies are enabled
 - Check user role in team_members table
 - Ensure team_id is set on resources
 
 ### Email not sending?
+
 - Currently emails use /api/email/send endpoint
 - Check email service configuration
 - Invite link still shown in UI as fallback
@@ -217,6 +243,7 @@ Logs include:
 ## API Response Examples
 
 ### Successful Invite
+
 ```json
 {
   "success": true,
@@ -231,6 +258,7 @@ Logs include:
 ```
 
 ### Team List
+
 ```json
 {
   "ownedTeam": [
@@ -250,6 +278,7 @@ Logs include:
 ## Navigation
 
 Team management is accessible from:
+
 - Sidebar: 👥 Team link
 - Dashboard: Team info banner (when active)
 - Direct URL: `/team`

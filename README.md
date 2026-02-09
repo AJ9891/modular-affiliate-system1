@@ -5,6 +5,7 @@ A complete, production-ready affiliate marketing platform combining powerful fun
 ## 🚀 Features
 
 ### Funnel Building
+
 - **Visual Drag-and-Drop Builder** - Intuitive interface with pre-built blocks
 - **Code-Based Builder** - Full programmatic control with JSON configuration
 - **7 Block Types** - Hero, Features, CTA, Testimonials, Pricing, FAQ, Email Capture
@@ -13,6 +14,7 @@ A complete, production-ready affiliate marketing platform combining powerful fun
 - **Lead Magnets** - Upload ebooks, PDFs, and digital downloads with email capture
 
 ### Email Marketing (Sendshark Integration)
+
 - **Automated Sequences** - Welcome series, abandoned cart recovery
 - **Campaign Management** - One-off broadcasts and scheduled campaigns
 - **Subscriber Management** - Tagging, segmentation, custom fields
@@ -20,6 +22,7 @@ A complete, production-ready affiliate marketing platform combining powerful fun
 - **Weekly Reports** - Automated performance summaries via email
 
 ### Analytics & Tracking
+
 - **Real-time Dashboard** - Leads, clicks, conversions, revenue
 - **Traffic Attribution** - UTM parameter tracking
 - **Conversion Funnels** - Step-by-step performance analysis
@@ -27,6 +30,7 @@ A complete, production-ready affiliate marketing platform combining powerful fun
 - **Export Reports** - Email yourself detailed analytics
 
 ### Enterprise Features
+
 - **Multi-niche Support** - Health, Finance, Tech, and more
 - **Stripe Integration** - Subscriptions and one-time payments
 - **Supabase Backend** - Auth, database, and storage
@@ -45,17 +49,21 @@ A complete, production-ready affiliate marketing platform combining powerful fun
 ## 🏃 Getting Started
 
 ### 1. Installation
+
 ```bash
 npm install
 ```
 
 ### 2. Environment Setup
+
 Copy the example environment file:
+
 ```bash
 cp apps/web/.env.example apps/web/.env.local
 ```
 
 Configure your credentials:
+
 ```env
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
@@ -73,22 +81,26 @@ SENDSHARK_API_KEY=your_sendshark_api_key
 ```
 
 ### 3. Database Setup
+
 Run the SQL schema in your Supabase SQL Editor:
+
 ```bash
 cat infra/supabase-schema.sql
 ```
 
 ### 4. Start Development
+
 ```bash
 npm run dev
 ```
 
 Visit:
-- **Main App**: http://localhost:3000
-- **Visual Builder**: http://localhost:3000/visual-builder
-- **Dashboard**: http://localhost:3000/dashboard
-- **AI Generator**: http://localhost:3000/ai-generator
-- **Downloads**: http://localhost:3000/downloads
+
+- **Main App**: <http://localhost:3000>
+- **Visual Builder**: <http://localhost:3000/visual-builder>
+- **Dashboard**: <http://localhost:3000/dashboard>
+- **AI Generator**: <http://localhost:3000/ai-generator>
+- **Downloads**: <http://localhost:3000/downloads>
 
 ## 🎯 Key Pages
 
@@ -106,20 +118,24 @@ Visit:
 ## 🔧 API Endpoints
 
 ### Email Marketing
+
 - `POST /api/email/send` - Send emails or campaigns
 - `GET /api/email/templates` - List email templates
 - `POST /api/email/automation` - Create automation sequences
 - `POST /api/email/reports` - Send analytics reports
 
 ### Lead Management
+
 - `POST /api/leads/capture` - Capture new leads
 - `GET /api/leads/capture?funnelId=X` - Get leads by funnel
 
 ### Analytics
+
 - `GET /api/analytics?range=7d` - Get performance stats
 - `GET /api/analytics?funnelId=X` - Funnel-specific analytics
 
 ### Funnels
+
 - `GET /api/funnels` - List all funnels
 - `POST /api/funnels` - Create new funnel
 - `PUT /api/funnels/:id` - Update funnel
@@ -157,6 +173,7 @@ Visit:
 ## 🚢 Deployment
 
 ### Vercel (Recommended)
+
 ```bash
 npm run deploy
 ```
@@ -164,6 +181,7 @@ npm run deploy
 Set environment variables in Vercel dashboard before deploying.
 
 ### Manual Deploy
+
 ```bash
 npm run build
 npm run start

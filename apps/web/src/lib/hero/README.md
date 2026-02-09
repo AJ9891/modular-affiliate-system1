@@ -25,6 +25,7 @@ We don't store copy strings. We store rules that govern how copy should be writt
 ## Files
 
 ### `/lib/hero/types.ts`
+
 Defines `HeroCopyContract` - the constraints for AI copy generation.
 
 ```typescript
@@ -37,6 +38,7 @@ export type HeroCopyContract = {
 ```
 
 ### `/lib/hero/heroCopyResolver.ts`
+
 Converts `HeroBehavior` → `HeroCopyContract`.
 
 ```typescript
@@ -46,12 +48,14 @@ export function resolveHeroCopyContract(
 ```
 
 **Key decisions:**
+
 - Sarcasm comes from `behavior.allowGlitch`, not from brand name
 - Promises are forbidden universally (core brand value)
 - Headline length mapped from headline style
 - Subcopy density mapped from subcopy style
 
 ### `/lib/ai-generator/generateHeroCopy.ts`
+
 Assembles complete AI prompt from profile + contract.
 
 ```typescript
@@ -106,18 +110,22 @@ console.log(result.copy.subcopy)
 ## Resolution Logic
 
 ### Headline Length
+
 - `fractured` headline style → `short`
 - All other styles → `medium`
 
 ### Subcopy Density
+
 - `explanatory` subcopy style → `explained`
 - All other styles → `minimal`
 
 ### Sarcasm
+
 - Enabled when `behavior.allowGlitch` is true
 - Tied to glitch behavior, not brand identity
 
 ### Promises
+
 - **Always forbidden**
 - Universal constraint across all brand modes
 - Core brand integrity rule
@@ -125,6 +133,7 @@ console.log(result.copy.subcopy)
 ## Brand Mode Examples
 
 ### AI Meltdown
+
 ```typescript
 {
   headlineLength: 'short',     // fractured style
@@ -135,6 +144,7 @@ console.log(result.copy.subcopy)
 ```
 
 ### Anti-Guru
+
 ```typescript
 {
   headlineLength: 'medium',    // flat style
@@ -145,6 +155,7 @@ console.log(result.copy.subcopy)
 ```
 
 ### Rocket Future
+
 ```typescript
 {
   headlineLength: 'medium',    // confident style
@@ -157,6 +168,7 @@ console.log(result.copy.subcopy)
 ## Why This Matters
 
 ### Before (magic strings)
+
 ```typescript
 if (brandMode === 'ai_meltdown') {
   prompt = "Write a short, sarcastic headline..."
@@ -166,6 +178,7 @@ if (brandMode === 'ai_meltdown') {
 ```
 
 ### After (resolved behavior)
+
 ```typescript
 const contract = resolveHeroCopyContract(behavior)
 const prompt = buildHeroPrompt(aiProfile, contract)
@@ -212,11 +225,13 @@ describe('Hero Copy Contract Resolution', () => {
 ## Anti-Patterns
 
 ❌ **Don't check brand_mode directly**
+
 ```typescript
 if (user.brand_mode === 'ai_meltdown') { /* ... */ }
 ```
 
 ✅ **Do resolve from personality**
+
 ```typescript
 const personality = resolvePersonality(user.brand_mode)
 const behavior = resolveHeroBehavior(personality)
@@ -224,11 +239,13 @@ const contract = resolveHeroCopyContract(behavior)
 ```
 
 ❌ **Don't store copy strings in contracts**
+
 ```typescript
 { headline: "Get Results Fast" } // Wrong - this is content
 ```
 
 ✅ **Do store rules and constraints**
+
 ```typescript
 { headlineLength: 'short', allowSarcasm: true } // Right - these are guardrails
 ```
@@ -236,4 +253,3 @@ const contract = resolveHeroCopyContract(behavior)
 ---
 
 **Remember:** No part is guessing. Every rule is resolved.
-

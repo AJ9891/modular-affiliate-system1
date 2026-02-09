@@ -1,6 +1,7 @@
 # Domain Management Setup Checklist
 
 ## ✅ Completed
+
 - [x] Domain management API created (`/api/domains`)
 - [x] Domain settings UI page created (`/domains`)
 - [x] Database schema updated with domain fields
@@ -13,9 +14,10 @@
 ## 🔲 Required Next Steps
 
 ### 1. Run Database Migration
+
 **Priority: HIGH**
 
-Execute in Supabase SQL Editor (https://supabase.com/dashboard/project/urwrbjejcozbzgknbuhn/sql/new):
+Execute in Supabase SQL Editor (<https://supabase.com/dashboard/project/urwrbjejcozbzgknbuhn/sql/new>):
 
 ```sql
 -- Add domain and subscription fields to users table
@@ -32,60 +34,72 @@ CREATE INDEX IF NOT EXISTS idx_users_plan ON public.users(plan);
 ```
 
 ### 2. Add Vercel Environment Variables
+
 **Priority: HIGH (Required for custom domains)**
 
-#### Get VERCEL_API_TOKEN:
-1. Visit: https://vercel.com/account/tokens
+#### Get VERCEL_API_TOKEN
+
+1. Visit: <https://vercel.com/account/tokens>
 2. Click "Create Token"
 3. Name: "Launchpad4Success Domain Management"
 4. Copy the token
 5. Add to Vercel: `vercel env add VERCEL_API_TOKEN`
 
-#### Get VERCEL_PROJECT_ID:
-1. Go to: https://vercel.com/aj9891s-projects/modular-affiliate-system1/settings
+#### Get VERCEL_PROJECT_ID
+
+1. Go to: <https://vercel.com/aj9891s-projects/modular-affiliate-system1/settings>
 2. Copy Project ID from General tab
 3. Add to Vercel: `vercel env add VERCEL_PROJECT_ID`
 
-#### Get VERCEL_TEAM_ID (if using team):
+#### Get VERCEL_TEAM_ID (if using team)
+
 1. Go to team settings
 2. Copy Team ID
 3. Add to Vercel: `vercel env add VERCEL_TEAM_ID`
 
 **Or add via Vercel Dashboard:**
-1. Go to: https://vercel.com/aj9891s-projects/modular-affiliate-system1/settings/environment-variables
+
+1. Go to: <https://vercel.com/aj9891s-projects/modular-affiliate-system1/settings/environment-variables>
 2. Add each variable (Production, Preview, Development)
 
 ### 3. Configure Wildcard Subdomain DNS
+
 **Priority: MEDIUM (Required for subdomains to work)**
 
 In your DNS provider for `launchpad4success.com`:
 
 Add CNAME record:
+
 - **Type:** CNAME
 - **Name:** * (wildcard)
 - **Value:** cname.vercel-dns.com
 - **TTL:** 3600 (or automatic)
 
 Then in Vercel, add the domain:
+
 ```bash
 vercel domains add *.launchpad4success.com
 ```
 
 Or via dashboard:
-1. Go to: https://vercel.com/aj9891s-projects/modular-affiliate-system1/settings/domains
+
+1. Go to: <https://vercel.com/aj9891s-projects/modular-affiliate-system1/settings/domains>
 2. Click "Add Domain"
 3. Enter: `*.launchpad4success.com`
 
 ### 4. Deploy to Production
+
 **Priority: MEDIUM**
 
 After completing steps 1-3:
+
 ```bash
 npm run build
 npx vercel --prod --yes
 ```
 
 ### 5. Test the System
+
 **Priority: LOW**
 
 1. Visit: https://[your-production-url]/domains
@@ -106,17 +120,20 @@ npx vercel --prod --yes
 
 ## 🎯 Features Summary
 
-### What Users Get by Plan:
+### What Users Get by Plan
 
 **Starter ($29/mo):**
+
 - Free subdomain: `username.launchpad4success.com`
 - Instant setup, no DNS configuration needed
 
 **Pro ($79/mo):**
+
 - Free subdomain: `username.launchpad4success.com`
 - All Pro features
 
 **Agency ($199/mo):**
+
 - Free subdomain: `username.launchpad4success.com`
 - Custom domain setup: `yourdomain.com`
 - Automatic SSL certificates
@@ -125,9 +142,9 @@ npx vercel --prod --yes
 
 ## 🔗 Important Links
 
-- **Production Site:** https://modular-affiliate-system1-7itb5fj9f-aj9891s-projects.vercel.app
-- **Vercel Dashboard:** https://vercel.com/aj9891s-projects/modular-affiliate-system1
-- **Supabase Dashboard:** https://supabase.com/dashboard/project/urwrbjejcozbzgknbuhn
+- **Production Site:** <https://modular-affiliate-system1-7itb5fj9f-aj9891s-projects.vercel.app>
+- **Vercel Dashboard:** <https://vercel.com/aj9891s-projects/modular-affiliate-system1>
+- **Supabase Dashboard:** <https://supabase.com/dashboard/project/urwrbjejcozbzgknbuhn>
 - **Domain Settings Page:** /domains
 - **Documentation:** docs/DOMAINS.md
 - **Migration File:** infra/migrations/add_domain_fields.sql

@@ -5,12 +5,14 @@
 Route-based personality overrides are an **exception to the cascade pattern**, not the rule.
 
 **Default behavior (preferred):**
+
 ```typescript
 // Personality comes from user preference
 const personality = resolvePersonality(user.brand_mode)
 ```
 
 **Route override (exception):**
+
 ```typescript
 // Personality forced by route
 if (pathname === '/onboarding') {
@@ -21,12 +23,14 @@ if (pathname === '/onboarding') {
 ## When to Use Route Overrides
 
 ### ✅ Valid Use Cases
+
 1. **Onboarding flows** - Always optimistic (`rocket_future`)
 2. **Admin tools** - Always direct (`anti_guru`)
 3. **Marketing campaigns** - Specific campaign personality
 4. **Public landing pages** - Brand-specific experience
 
 ### ❌ Invalid Use Cases
+
 1. User dashboard (should respect user preference)
 2. Content creation (should respect user preference)
 3. Settings pages (should respect user preference)
@@ -200,6 +204,7 @@ describe('Route Personality Overrides', () => {
 ## Performance
 
 Route overrides are:
+
 - ✅ Memoized in PersonalityProvider
 - ✅ Only checked once per route change
 - ✅ No re-renders if route hasn't changed
@@ -231,6 +236,7 @@ function DebugPanel() {
 ## Best Practices
 
 ### ✅ Do This
+
 ```typescript
 // Define overrides in central config
 const ROUTE_PERSONALITY_MAP = {
@@ -242,6 +248,7 @@ const ROUTE_PERSONALITY_MAP = {
 ```
 
 ### ❌ Don't Do This
+
 ```typescript
 // DON'T check routes in components
 if (pathname.startsWith('/onboarding')) {
@@ -256,6 +263,7 @@ if (isAdmin) personality = 'anti_guru'
 ## Migration from if/else
 
 ### Before (Anti-Pattern)
+
 ```typescript
 let personality = user.brand_mode
 
@@ -267,6 +275,7 @@ if (route.startsWith('/onboarding')) {
 ```
 
 ### After (Cascade Pattern)
+
 ```typescript
 // 1. Define overrides once
 const ROUTE_PERSONALITY_MAP = {
@@ -286,6 +295,7 @@ const { personality } = usePersonality()
 ## When to Disable Overrides
 
 Disable route overrides when:
+
 - Building multi-tenant apps
 - Respecting user agency is critical
 - Every page should reflect user preference
@@ -303,6 +313,7 @@ Disable route overrides when:
 ## Summary
 
 Route overrides are:
+
 - ⚠️ **Exception**, not the rule
 - ✅ **Governed** through central config
 - ✅ **Memoized** for performance

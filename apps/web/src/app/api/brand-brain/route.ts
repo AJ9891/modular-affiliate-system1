@@ -62,6 +62,15 @@ export async function GET(request: Request) {
     const { data, error } = await query;
 
     if (error) {
+      // Handle case where table doesn't exist (PGRST205, PGRST106)
+      if (error.code === 'PGRST205' || error.code === 'PGRST106' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
+        return NextResponse.json({ 
+          profiles: [],
+          ...(isDevelopment && { debug: { note: 'brand_profiles table does not exist' } })
+        });
+      }
+      
+      // Log other actual errors
       const errorDetails = {
         message: 'Database query error',
         error: error,
@@ -72,15 +81,6 @@ export async function GET(request: Request) {
         timestamp: new Date().toISOString(),
       };
       console.error('[BRAND-BRAIN API] Database error:', errorDetails);
-      
-      // Handle case where table doesn't exist
-      if (error.code === 'PGRST106' || error.message.includes('relation') || error.message.includes('does not exist')) {
-        console.warn('[BRAND-BRAIN API] brand_profiles table does not exist, returning empty array');
-        return NextResponse.json({ 
-          profiles: [],
-          ...(isDevelopment && { debug: { ...errorDetails, note: 'Table does not exist' } })
-        });
-      }
       
       return NextResponse.json({ 
         error: error.message,
@@ -209,16 +209,14 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
-      console.error('Error creating brand profile:', error);
-      
-      // Handle case where table doesn't exist
-      if (error.code === 'PGRST106' || error.message.includes('relation') || error.message.includes('does not exist')) {
-        console.error('brand_profiles table does not exist. Please run database migrations.');
+      // Handle case where table doesn't exist (PGRST205, PGRST106)
+      if (error.code === 'PGRST205' || error.code === 'PGRST106' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
         return NextResponse.json({ 
-          error: 'Database not properly configured. Please contact administrator.' 
+          error: 'Brand profiles feature not available. Please run database migrations.' 
         }, { status: 503 });
       }
       
+      console.error('Error creating brand profile:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 

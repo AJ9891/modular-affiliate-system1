@@ -3,6 +3,7 @@
 ## Common Commands
 
 ### Development
+
 ```bash
 # Start dev server
 npm run dev
@@ -18,6 +19,7 @@ npm run deploy
 ```
 
 ### Database Operations
+
 ```bash
 # Connect to Supabase
 # Use the Supabase dashboard SQL editor
@@ -29,6 +31,7 @@ npm run deploy
 ## API Quick Reference
 
 ### Lead Capture
+
 ```javascript
 // Capture a new lead
 fetch('/api/leads/capture', {
@@ -43,6 +46,7 @@ fetch('/api/leads/capture', {
 ```
 
 ### Send Email
+
 ```javascript
 // Send single email
 fetch('/api/email/send', {
@@ -71,6 +75,7 @@ fetch('/api/email/send', {
 ```
 
 ### Get Analytics
+
 ```javascript
 // Get 7-day stats
 fetch('/api/analytics?range=7d')
@@ -82,6 +87,7 @@ fetch('/api/analytics?funnelId=funnel-123&range=30d')
 ```
 
 ### Create Funnel
+
 ```javascript
 fetch('/api/funnels', {
   method: 'POST',
@@ -101,6 +107,7 @@ fetch('/api/funnels', {
 ```
 
 ### Trigger Automation
+
 ```javascript
 fetch('/api/email/automation', {
   method: 'POST',
@@ -116,6 +123,7 @@ fetch('/api/email/automation', {
 ```
 
 ### Send Weekly Report
+
 ```javascript
 fetch('/api/email/reports', {
   method: 'POST',
@@ -133,6 +141,7 @@ fetch('/api/email/reports', {
 ## Environment Variables
 
 ### Required
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
@@ -141,6 +150,7 @@ OPENAI_API_KEY=
 ```
 
 ### Payments (Optional)
+
 ```env
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
 STRIPE_SECRET_KEY=
@@ -148,6 +158,7 @@ STRIPE_WEBHOOK_SECRET=
 ```
 
 ### Email (Recommended)
+
 ```env
 SENDSHARK_API_KEY=
 SENDSHARK_API_URL=https://api.sendshark.com/v1
@@ -232,21 +243,25 @@ import { openai } from '@/lib/openai'
 ## Common Debugging
 
 ### Email not sending?
+
 - Check `SENDSHARK_API_KEY`
 - Verify API quota
 - Check Sendshark logs
 
 ### Database errors?
+
 - Verify Supabase connection
 - Check RLS policies
 - Review table permissions
 
 ### Analytics not loading?
+
 - Ensure data exists
 - Check date range
 - Verify funnel ID
 
 ### Build errors?
+
 - Run `npm install`
 - Check TypeScript errors
 - Verify env variables

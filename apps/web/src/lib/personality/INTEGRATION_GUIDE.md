@@ -1,7 +1,8 @@
 /**
- * Integration Guide: Wiring Personality into Your App
- * 
- * Step-by-step guide to integrate the personality system
+
+* Integration Guide: Wiring Personality into Your App
+*
+* Step-by-step guide to integrate the personality system
  */
 
 ## Step 1: Update Layout (Root Level)
@@ -153,18 +154,21 @@ async function saveGeneratedContent(content: string, brandMode: string) {
 ## Step 5: Migration from Old BrandModeContext
 
 The existing `BrandModeContext` uses these keys:
-- `rocket` → should map to `rocket_future`
-- `antiguru` → should map to `anti_guru`  
-- `meltdown` → should map to `ai_meltdown`
+
+* `rocket` → should map to `rocket_future`
+* `antiguru` → should map to `anti_guru`  
+* `meltdown` → should map to `ai_meltdown`
 
 You have two options:
 
 ### Option A: Keep Both (Recommended for gradual migration)
+
 1. Keep `BrandModeContext` for existing components
 2. Add `PersonalityProvider` for new features
 3. Gradually migrate components to use `usePersonality()`
 
 ### Option B: Full Replacement
+
 1. Update all references from `BrandModeContext` to `PersonalityProvider`
 2. Update database column `brand_mode` to use new keys
 3. Run migration script to update user data

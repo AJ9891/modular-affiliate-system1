@@ -22,6 +22,14 @@ export async function GET(
       .single();
 
     if (error) {
+      // Handle table not found (PGRST205, PGRST106)
+      if (error.code === 'PGRST205' || error.code === 'PGRST106') {
+        return NextResponse.json({ error: 'Brand profiles feature not available' }, { status: 404 });
+      }
+      // Handle no rows found
+      if (error.code === 'PGRST116') {
+        return NextResponse.json({ error: 'Brand profile not found' }, { status: 404 });
+      }
       console.error('Error fetching brand profile:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
@@ -63,6 +71,10 @@ export async function PUT(
       .single();
 
     if (error) {
+      // Handle table not found (PGRST205, PGRST106)
+      if (error.code === 'PGRST205' || error.code === 'PGRST106') {
+        return NextResponse.json({ error: 'Brand profiles feature not available' }, { status: 503 });
+      }
       console.error('Error updating brand profile:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
@@ -97,6 +109,10 @@ export async function DELETE(
       .eq('user_id', user.id);
 
     if (error) {
+      // Handle table not found (PGRST205, PGRST106)
+      if (error.code === 'PGRST205' || error.code === 'PGRST106') {
+        return NextResponse.json({ error: 'Brand profiles feature not available' }, { status: 503 });
+      }
       console.error('Error deleting brand profile:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }

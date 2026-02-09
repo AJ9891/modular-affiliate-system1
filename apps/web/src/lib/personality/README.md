@@ -11,6 +11,7 @@ A cascade pattern that transforms `brand_mode` into governed AI generation. No d
 Most platforms glue AI onto copy. This embeds AI into governance.
 
 **Without this:**
+
 - AI generates off-brand content
 - Copy feels inconsistent
 - Changing personality requires rewriting prompts
@@ -18,6 +19,7 @@ Most platforms glue AI onto copy. This embeds AI into governance.
 - Hand-editing breaks the system
 
 **With this:**
+
 - AI physically cannot betray brand personality
 - One decision cascades perfectly
 - Change personality → everything regenerates correctly
@@ -85,6 +87,7 @@ lib/personality/
 ## Available Generators
 
 ### Content Generation
+
 - `generateHeroCopy()` - Hero sections
 - `generateFeatureCopy()` - Feature descriptions
 - `generateErrorCopy()` - Error messages
@@ -94,26 +97,31 @@ lib/personality/
 - `generateCompleteFunnel()` - Complete funnels
 
 ### Debug Tools
+
 - `previewCascade()` - Preview without AI call
 - `getCascadeSummary()` - Get cascade breakdown
 
 ### Validation
+
 - `validateCopy()` - Validate copy structure
 - `validateAIOutput()` - Validate AI ethics
 
 ## Brand Modes
 
 ### `anti_guru`
+
 - **Tone**: Blunt, direct, no BS
 - **Trust**: Peer-to-peer
 - **Copy**: Short, matter-of-fact, no hype
 
 ### `ai_meltdown`
+
 - **Tone**: Chaotic, overwhelming, glitchy
 - **Trust**: Co-conspirator
 - **Copy**: Intense, fragmented, urgent
 
 ### `rocket_future`
+
 - **Tone**: Confident, optimistic, forward-looking
 - **Trust**: Mentor
 - **Copy**: Clear, inspiring, action-oriented
@@ -121,26 +129,33 @@ lib/personality/
 ## Why This Pattern is Powerful
 
 ### 1. Single Source of Truth
+
 Change `brand_mode` and regenerate everything. No cascading edits.
 
 ### 2. Governance Before Generation
+
 AI receives constraints, not freedom. It fills shapes, not makes decisions.
 
 ### 3. Reusable Everywhere
+
 Same pattern works for: hero, features, errors, onboarding, affiliates, emails.
 
 ### 4. Fully Testable
+
 Each layer validated independently.
 
 ### 5. Hand-Edit Safe
+
 Always know what constraints were intended.
 
 ### 6. Model Agnostic
+
 Swap AI models without changing structure.
 
 ## Examples
 
 ### Hero Section
+
 ```typescript
 const heroCopy = await generateHeroCopy('anti_guru', {
   productName: 'TaskFlow',
@@ -149,6 +164,7 @@ const heroCopy = await generateHeroCopy('anti_guru', {
 ```
 
 ### Feature Grid
+
 ```typescript
 const features = await Promise.all([
   generateFeatureCopy(brandMode, { featureName: 'Smart Lists' }),
@@ -157,6 +173,7 @@ const features = await Promise.all([
 ```
 
 ### Error Message
+
 ```typescript
 const errorCopy = await generateErrorCopy('anti_guru', {
   errorType: 'payment_failed',
@@ -165,6 +182,7 @@ const errorCopy = await generateErrorCopy('anti_guru', {
 ```
 
 ### Complete Funnel
+
 ```typescript
 const funnel = await generateCompleteFunnel('rocket_future', {
   productName: 'TaskFlow',
@@ -189,6 +207,7 @@ const funnel = await generateCompleteFunnel('rocket_future', {
 ## Anti-Patterns
 
 ### ❌ Don't branch on brand_mode
+
 ```typescript
 // BAD
 if (brandMode === 'anti_guru') {
@@ -201,6 +220,7 @@ return <Hero copy={copy} />
 ```
 
 ### ❌ Don't call OpenAI directly
+
 ```typescript
 // BAD
 const response = await openai.createCompletion({ prompt })
@@ -210,6 +230,7 @@ const heroCopy = await generateHeroCopy(brandMode, context)
 ```
 
 ### ❌ Don't mix behavior with style
+
 ```typescript
 // BAD
 const personality = { tone: 'professional', color: 'blue' }
@@ -242,6 +263,7 @@ describe('Cascade Pattern', () => {
 ## Performance
 
 ### Parallel Generation
+
 ```typescript
 const [hero, feature1, feature2] = await Promise.all([
   generateHeroCopy(brandMode, heroContext),
@@ -251,6 +273,7 @@ const [hero, feature1, feature2] = await Promise.all([
 ```
 
 ### Caching
+
 ```typescript
 import { cache } from 'react'
 
@@ -260,6 +283,7 @@ export const getCachedPersonality = cache((brandMode: BrandMode) => {
 ```
 
 ### Server Components
+
 ```typescript
 async function HeroSection({ brandMode }: { brandMode: BrandMode }) {
   // Generate on server, send HTML to client
@@ -271,6 +295,7 @@ async function HeroSection({ brandMode }: { brandMode: BrandMode }) {
 ## Integration
 
 ### React Component
+
 ```typescript
 import { generateHeroCopy } from '@/lib/personality'
 
@@ -287,6 +312,7 @@ function HeroGenerator() {
 ```
 
 ### API Route
+
 ```typescript
 import { generateHeroCopy } from '@/lib/personality'
 

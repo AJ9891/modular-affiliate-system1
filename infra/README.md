@@ -2,16 +2,18 @@
 
 This directory contains SQL migrations for the Supabase database.
 
-## 🔒 NEW: RLS Warnings Fixed!
+## 🔒 NEW: RLS Warnings Fixed
 
 **All Row Level Security warnings have been identified and completely fixed!**
 
 ### Quick Links
+
 - 📖 **[RLS_FIX_COMPLETE.md](RLS_FIX_COMPLETE.md)** - Start here! Complete overview
 - 📋 **[RLS_FIX_CHECKLIST.md](RLS_FIX_CHECKLIST.md)** - Step-by-step guide
 - 📚 **[RLS_FIX_SUMMARY.md](RLS_FIX_SUMMARY.md)** - Detailed technical docs
 
 ### Apply the RLS Fix
+
 ```bash
 # See instructions and quick links
 node apply-rls-fix.js
@@ -48,6 +50,7 @@ chmod +x apply-migrations.sh
 ```
 
 Get your `DATABASE_URL` from:
+
 - Supabase Dashboard → Settings → Database → Connection String (URI)
 
 ### Option 3: Node.js Script (Simulation Mode)
@@ -79,9 +82,11 @@ Migrations must be applied in this exact order:
 ## What Each Migration Does
 
 ### Core Schema
+
 - `supabase-schema.sql` - Base schema (run first if starting fresh)
 
 ### Feature Additions
+
 - **Admin Flag**: Adds `is_admin` boolean for admin users
 - **Domain Fields**: Subdomain/custom domain support + Stripe customer tracking
 - **Onboarding**: Tracks user onboarding progress and selected niche
@@ -94,6 +99,7 @@ Migrations must be applied in this exact order:
 - **AI Chat**: Support chat with AI assistant
 
 ### Optimization
+
 - **RLS & Performance**: Comprehensive security and performance tuning
   - Adds missing RLS policies
   - Creates strategic indexes
@@ -103,17 +109,21 @@ Migrations must be applied in this exact order:
 ## Troubleshooting
 
 ### "relation already exists"
+
 This is normal - migrations use `IF NOT EXISTS` to be idempotent. Safe to continue.
 
 ### "permission denied"
+
 Use your `SERVICE_ROLE_KEY` (not anon key) or database password.
 
 ### "could not connect to server"
+
 1. Check your connection string
 2. Verify your IP is allowed (Supabase → Settings → Database → Connection Pooling)
 3. Try connecting through the Supabase dashboard first
 
 ### RLS Blocking Access
+
 After running migrations, your app should have proper RLS policies. If you're getting permission errors:
 
 ```sql
@@ -129,6 +139,7 @@ ALTER TABLE your_table DISABLE ROW LEVEL SECURITY;
 After running all migrations:
 
 1. **Refresh Analytics**: The optimization migration creates a materialized view
+
    ```sql
    SELECT refresh_funnel_analytics();
    ```
@@ -138,6 +149,7 @@ After running all migrations:
    - Run `SELECT refresh_funnel_analytics();` daily
 
 3. **Monitor Indexes**: Check index usage after a few days
+
    ```sql
    SELECT * FROM pg_stat_user_indexes WHERE schemaname = 'public';
    ```

@@ -29,7 +29,8 @@ export async function POST(request: Request) {
         .eq('user_id', user.id)
         .single();
       
-      if (profileError && profileError.code !== 'PGRST116') {
+      // Ignore no rows (PGRST116) and table not found (PGRST205, PGRST106)
+      if (profileError && profileError.code !== 'PGRST116' && profileError.code !== 'PGRST205' && profileError.code !== 'PGRST106') {
         console.error('Error fetching brand profile:', profileError);
         return NextResponse.json({ error: profileError.message }, { status: 500 });
       }
@@ -45,7 +46,8 @@ export async function POST(request: Request) {
         .eq('is_active', true)
         .single();
       
-      if (profileError && profileError.code !== 'PGRST116') {
+      // Ignore no rows (PGRST116) and table not found (PGRST205, PGRST106)
+      if (profileError && profileError.code !== 'PGRST116' && profileError.code !== 'PGRST205' && profileError.code !== 'PGRST106') {
         console.error('Error fetching active brand profile:', profileError);
         return NextResponse.json({ error: profileError.message }, { status: 500 });
       }

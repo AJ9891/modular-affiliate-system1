@@ -1,7 +1,9 @@
 # Stripe Connect Setup for Affiliate Payouts
 
 ## Overview
+
 Stripe Connect allows affiliates to receive payments directly to their bank accounts. This setup enables:
+
 - Secure bank account connections
 - Automatic payouts for commissions
 - Compliance with payment regulations
@@ -65,6 +67,7 @@ create index if not exists idx_affiliate_payouts_status on public.affiliate_payo
 ## Testing
 
 For development, use Stripe test mode with these test bank details:
+
 - Routing number: `110000000`
 - Account number: `000123456789`
 - Account holder name: Any name

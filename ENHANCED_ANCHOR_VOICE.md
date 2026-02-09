@@ -9,6 +9,7 @@ Your professional anti-guru copy example has been integrated into the BrandBrain
 ## 🧠 Enhanced Anchor Personality
 
 ### Updated Language Patterns
+
 ```typescript
 language: {
   greetings: [
@@ -35,7 +36,9 @@ language: {
 ```
 
 ### Updated AI Profile System Prompt
+
 The AI now generates copy that:
+
 - **Leads with warnings** or honest disclaimers
 - **Positions against guru promises** (no yachts, Lambos, passive income myths)
 - **Focuses on systems and automation** instead of lifestyle fantasies
@@ -48,6 +51,7 @@ The AI now generates copy that:
 ## 🚀 AI Optimizer Enhancements
 
 ### Enhanced Headline Generation
+
 ```typescript
 // Now generates headlines like:
 "WARNING: This Funnel May Accidentally Make You Money"
@@ -56,6 +60,7 @@ The AI now generates copy that:
 ```
 
 ### Enhanced CTA Generation
+
 ```typescript
 // Now generates CTAs like:
 "Fine, Show Me the Tools"
@@ -68,21 +73,25 @@ The AI now generates copy that:
 ## 🎯 Key Voice Characteristics Captured
 
 ### ✅ Anti-Guru Positioning
+
 - Explicitly positions against guru marketing promises
 - Calls out unrealistic income/lifestyle promises
 - Focuses on practical systems and automation
 
 ### ✅ Professional Casual Tone
+
 - Conversational but not overly casual
 - Slightly reluctant but still action-oriented
 - Authentic without being preachy
 
 ### ✅ Honest Benefit Communication
+
 - Lists what you get: "Yes, real funnels. Yes, real emails."
 - Addresses actual problems: "duct-taping tools together at 3 AM"
 - No hype, just practical value propositions
 
 ### ✅ Smart Hook Patterns
+
 - WARNING headlines that grab attention honestly
 - "This isn't another [guru thing]" positioning
 - Focus on systems/automation over lifestyle dreams
@@ -92,16 +101,19 @@ The AI now generates copy that:
 ## 📊 Where This Voice Now Appears
 
 ### ✅ AI Optimizer Suggestions
+
 - All headline optimizations use anti-guru patterns
 - CTA suggestions feel casual and reluctant
 - Content suggestions focus on systems over dreams
 
 ### ✅ Content Generation
+
 - Hero section copy matches your example
 - Email sequences use honest positioning
 - Funnel blocks avoid guru-style hype
 
 ### ✅ A/B Testing Variations
+
 - All variations maintain anti-guru consistency
 - Test different approaches within the same voice
 - Statistical testing with personality preservation
@@ -117,6 +129,7 @@ node test-anchor-personality.js
 ```
 
 This will generate:
+
 - Hero section copy in your style
 - CTA variations with reluctant tone
 - Benefit bullets with honest positioning

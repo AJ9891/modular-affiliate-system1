@@ -7,6 +7,7 @@ The **Affiliate Launchpad** is now fully integrated with the modular affiliate s
 ### Best Features Combined
 
 #### From Original Launchpad ✅
+
 - ✨ Simple, intuitive onboarding flow
 - 🎨 Visual drag-and-drop funnel builder
 - 📝 Pre-built funnel templates
@@ -14,6 +15,7 @@ The **Affiliate Launchpad** is now fully integrated with the modular affiliate s
 - 💡 User-friendly interface
 
 #### From Modular System ✅
+
 - 🏗️ Enterprise-grade architecture
 - 🔐 Supabase authentication & database
 - 💳 Stripe payment integration
@@ -67,11 +69,12 @@ STRIPE_WEBHOOK_SECRET=your_webhook_secret
 npm run dev
 ```
 
-Visit: http://localhost:3000/launchpad
+Visit: <http://localhost:3000/launchpad>
 
 ## 📁 Key Files & Components
 
 ### Main Launchpad Component
+
 - **Location**: `/AffiliateLaunchpad.jsx` (root)
 - **Next.js Page**: `/apps/web/src/app/launchpad/page.tsx`
 - **Features**:
@@ -82,6 +85,7 @@ Visit: http://localhost:3000/launchpad
   - Quick action buttons
 
 ### Visual Funnel Builder
+
 - **Component**: `/apps/web/src/components/EnhancedFunnelBuilder.tsx`
 - **Page**: `/apps/web/src/app/visual-builder/page.tsx`
 - **Features**:
@@ -92,6 +96,7 @@ Visit: http://localhost:3000/launchpad
   - Export to JSON
 
 ### Unified Dashboard
+
 - **Component**: `/apps/web/src/components/UnifiedDashboard.tsx`
 - **Page**: `/apps/web/src/app/dashboard/page.tsx`
 - **Features**:
@@ -104,24 +109,28 @@ Visit: http://localhost:3000/launchpad
 ## 🎨 Funnel Templates
 
 ### 1. Lead Magnet Funnel
+
 - **Purpose**: Capture emails with free downloads
 - **Blocks**: Hero, Email Capture, Features
 - **Avg Conversion**: 18-25%
 - **Best For**: List building, eBooks, checklists
 
 ### 2. Product Review Funnel
+
 - **Purpose**: Review and recommend affiliate products
 - **Blocks**: Hero, Features, Testimonial, CTA, FAQ
 - **Avg Conversion**: 8-15%
 - **Best For**: Product reviews, comparisons, recommendations
 
 ### 3. Video Sales Letter (VSL)
+
 - **Purpose**: Video-first landing page
 - **Blocks**: Hero (video), Features, CTA, Testimonial
 - **Avg Conversion**: 12-20%
 - **Best For**: Course launches, high-ticket products
 
 ### 4. Webinar Registration
+
 - **Purpose**: Collect registrations for live training
 - **Blocks**: Hero, Features, Email Capture, FAQ
 - **Avg Conversion**: 25-35%
@@ -287,6 +296,7 @@ await fetch('/api/email/reports', {
 ## 🎯 User Flows
 
 ### New User Flow
+
 1. Visit `/launchpad`
 2. See onboarding wizard
 3. Progress through 6 steps:
@@ -299,6 +309,7 @@ await fetch('/api/email/reports', {
 4. Redirected to dashboard
 
 ### Returning User Flow
+
 1. Visit `/launchpad`
 2. See dashboard with stats
 3. Quick actions for:
@@ -335,6 +346,7 @@ npm run deploy:preview
 ```
 
 ### Environment Setup
+
 1. Add all environment variables in Vercel dashboard
 2. Configure custom domain
 3. Set up Stripe webhooks
@@ -343,6 +355,7 @@ npm run deploy:preview
 ## 📈 Performance Optimization
 
 ### Implemented Optimizations
+
 - ✅ Server-side rendering (SSR)
 - ✅ API route caching
 - ✅ Image optimization
@@ -351,6 +364,7 @@ npm run deploy:preview
 - ✅ Edge functions ready
 
 ### Monitoring
+
 - Track Core Web Vitals
 - Monitor API response times
 - Set up error logging
@@ -359,18 +373,21 @@ npm run deploy:preview
 ## 🐛 Troubleshooting
 
 ### Launchpad Not Loading?
+
 1. Check if user is authenticated
 2. Verify API endpoints are accessible
 3. Check browser console for errors
 4. Verify environment variables
 
 ### Stats Not Showing?
+
 1. Ensure database has data
 2. Check date range filter
 3. Verify funnel IDs are correct
 4. Check API response in Network tab
 
 ### Templates Not Creating Funnels?
+
 1. Check `/api/funnels` endpoint
 2. Verify database permissions
 3. Check Supabase RLS policies
@@ -387,6 +404,7 @@ npm run deploy:preview
 ## 🎉 What's Next?
 
 ### Recommended Next Steps
+
 1. ✅ Complete database setup
 2. ✅ Configure all integrations
 3. 🔲 Create your first funnel
@@ -396,6 +414,7 @@ npm run deploy:preview
 7. 🔲 Monitor and optimize
 
 ### Future Enhancements
+
 - A/B testing dashboard
 - Advanced email segmentation
 - Custom domain mapping
@@ -408,6 +427,7 @@ npm run deploy:preview
 ## 💬 Support
 
 Need help? Reach out:
+
 - Check documentation first
 - Review code comments
 - Check GitHub issues

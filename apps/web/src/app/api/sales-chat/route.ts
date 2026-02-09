@@ -224,20 +224,25 @@ export async function POST(req: NextRequest) {
     try {
       if (userId) {
         // Get active brand profile from database
-        const { data: brandProfile } = await supabase
+        const { data: brandProfile, error: profileError } = await supabase
           .from('brand_profiles')
           .select('*')
           .eq('user_id', userId)
           .eq('is_active', true)
           .single()
         
-        if (brandProfile) {
-          const brandBrainManager = new BrandBrainManager(brandProfile)
-          systemPrompt = brandBrainManager.generateAISystemPrompt()
+        // Silently handle table not found (PGRST205, PGRST106) or no rows (PGRST116)
+        if (!profileError || profileError.code === 'PGRST116' || profileError.code === 'PGRST205' || profileError.code === 'PGRST106') {
+          if (brandProfile) {
+            const brandBrainManager = new BrandBrainManager(brandProfile)
+            systemPrompt = brandBrainManager.generateAISystemPrompt()
+          }
+        } else {
+          console.warn('Failed to load BrandBrain profile, using fallback:', profileError)
         }
       }
     } catch (error) {
-      console.warn('Failed to load BrandBrain profile, using fallback:', error)
+      // Fail silently, use fallback
     }
 
     const completion = await openai.chat.completions.create({

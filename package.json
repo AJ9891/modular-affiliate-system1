@@ -27,12 +27,14 @@
     "renderer": "npm run dev --workspace=apps/renderer"
   },
   "devDependencies": {
+    "markdownlint-cli2": "^0.20.0",
+    "markdownlint-cli2-formatter-pretty": "^0.0.9",
     "turbo": "^2.0.0"
   },
   "engines": {
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "vercel": "^50.1.6"
+    "vercel": "^50.13.2"
   }
 }

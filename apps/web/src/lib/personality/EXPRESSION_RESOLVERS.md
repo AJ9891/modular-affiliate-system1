@@ -253,6 +253,7 @@ function MyList({ items }) {
 ## Personality Comparison
 
 ### AI Meltdown
+
 ```
 visuals: {
   noise: 'chaotic',           // Max visual chaos
@@ -267,6 +268,7 @@ Result: Overwhelming, glitchy, maximum stimulation
 ```
 
 ### Anti-Guru
+
 ```
 visuals: {
   noise: 'clean',             // Minimal chaos
@@ -281,6 +283,7 @@ Result: Direct, no-nonsense, easy to scan
 ```
 
 ### Rocket Future
+
 ```
 visuals: {
   noise: 'ambient',           // Subtle textures
@@ -305,6 +308,7 @@ Result: Optimistic, polished, forward-thinking
 ## Anti-Patterns to Avoid
 
 ❌ Component makes its own decisions:
+
 ```tsx
 // DON'T DO THIS
 function BadCard() {
@@ -320,6 +324,7 @@ function BadCard() {
 ```
 
 ✅ Component asks for behavior:
+
 ```tsx
 // DO THIS
 function GoodCard() {

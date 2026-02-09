@@ -1,6 +1,7 @@
 # Stripe Configuration Guide
 
 ## ✅ Current Status
+
 - Stripe package installed (`stripe` v20.0.0, `@stripe/stripe-js` v8.5.2)
 - API endpoints configured:
   - `/api/stripe/create-checkout-session` - Create subscription checkout
@@ -24,6 +25,7 @@
 Create three subscription products in Stripe Dashboard:
 
 #### Starter Plan ($29/month)
+
 1. Go to **Products** → **Add Product**
 2. Product name: `Starter`
 3. Description: `1 Active Funnel, Basic Templates, Analytics Dashboard, Email Support`
@@ -32,6 +34,7 @@ Create three subscription products in Stripe Dashboard:
 6. **Copy the Price ID** (starts with `price_...`)
 
 #### Pro Plan ($79/month)
+
 1. **Add Product**
 2. Product name: `Pro`
 3. Description: `Unlimited Funnels, Premium Templates, AI Content Generation, Advanced Analytics`
@@ -39,6 +42,7 @@ Create three subscription products in Stripe Dashboard:
 5. **Copy the Price ID**
 
 #### Agency Plan ($199/month)
+
 1. **Add Product**
 2. Product name: `Agency`
 3. Description: `Everything in Pro, White Label Options, Team Collaboration, Dedicated Account Manager`
@@ -47,7 +51,8 @@ Create three subscription products in Stripe Dashboard:
 
 ### 3. Configure Webhooks
 
-#### For Local Development:
+#### For Local Development
+
 ```bash
 # Install Stripe CLI (if not already installed)
 # macOS
@@ -64,7 +69,8 @@ stripe listen --forward-to localhost:3001/api/stripe/webhook
 
 The CLI will output a webhook signing secret (starts with `whsec_...`). Copy this.
 
-#### For Production:
+#### For Production
+
 1. Go to **Developers** → **Webhooks** in Stripe Dashboard
 2. Click **Add endpoint**
 3. Endpoint URL: `https://yourdomain.com/api/stripe/webhook`
@@ -121,6 +127,7 @@ npm run dev
 ## 📝 What Happens After Subscription
 
 When a user subscribes:
+
 1. Stripe Checkout session completes
 2. Webhook fires `checkout.session.completed` event
 3. User record updated in Supabase with:
@@ -134,14 +141,17 @@ When a user subscribes:
 ## 🚨 Common Issues
 
 ### "Stripe not configured" error
+
 - Make sure `STRIPE_SECRET_KEY` is set in `.env.local`
 - Restart your dev server after adding environment variables
 
 ### "Plan not configured" error
+
 - Ensure all three `STRIPE_*_PRICE_ID` variables are set
 - Verify the Price IDs match those in your Stripe Dashboard
 
 ### Webhook signature verification failed
+
 - Check that `STRIPE_WEBHOOK_SECRET` matches the one from Stripe CLI or Dashboard
 - Ensure the endpoint URL is correct
 - For local testing, make sure Stripe CLI is running
@@ -149,6 +159,7 @@ When a user subscribes:
 ## 📚 Next Steps
 
 After Stripe is configured:
+
 1. Test a full subscription flow
 2. Verify webhook events in Stripe Dashboard
 3. Check user subscription data in Supabase

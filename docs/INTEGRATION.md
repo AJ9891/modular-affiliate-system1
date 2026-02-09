@@ -3,6 +3,7 @@
 ## Overview
 
 This system combines the best features from:
+
 1. **Original Affiliate Launchpad** - Simple, effective funnel building with localStorage
 2. **Modular Affiliate System** - Enterprise-grade architecture with Supabase, Stripe, and AI
 3. **Sendshark Integration** - Professional email marketing and automation
@@ -10,6 +11,7 @@ This system combines the best features from:
 ## 🎯 Key Features
 
 ### 1. Enhanced Funnel Builder
+
 - **Visual Drag-and-Drop Editor** (`/visual-builder`)
   - Real-time block manipulation
   - Live preview mode
@@ -24,23 +26,27 @@ This system combines the best features from:
 ### 2. Email Marketing with Sendshark
 
 #### Automated Sequences
+
 - **Welcome Series**: 3-email onboarding sequence
 - **Abandoned Cart Recovery**: 2-email re-engagement campaign
 - **Custom Triggers**: Build your own automation workflows
 
 #### Campaign Management
+
 - One-off email broadcasts
 - Scheduled campaigns
 - A/B testing capabilities
 - Subscriber segmentation with tags
 
 #### Analytics & Reporting
+
 - Email open rates
 - Click-through rates
 - Conversion tracking
 - Automated weekly performance reports
 
 ### 3. Lead Capture & Management
+
 - Integrated email capture forms
 - Automatic list segmentation
 - Custom field tracking
@@ -48,6 +54,7 @@ This system combines the best features from:
 - Automated welcome email triggers
 
 ### 4. Comprehensive Analytics Dashboard
+
 - **Real-time Metrics**
   - Total leads captured
   - Click-through rates
@@ -62,12 +69,14 @@ This system combines the best features from:
   - Date range filtering (7d, 30d, 90d)
 
 ### 5. Modular Architecture
+
 - **Swappable Niches**: Health, Finance, Tech, etc.
 - **Swappable Offers**: Easy affiliate link management
 - **Swappable Themes**: Pre-configured color schemes
 - **Swappable Funnels**: Import/export templates
 
 ### 6. AI-Powered Content Generation
+
 - Headline creation
 - Product descriptions
 - Email copy
@@ -75,6 +84,7 @@ This system combines the best features from:
 - Bullet points and CTAs
 
 ### 7. Stripe Integration
+
 - Subscription management
 - One-time payments
 - Customer portal
@@ -119,11 +129,13 @@ docs/
 ## 🚀 Getting Started
 
 ### 1. Install Dependencies
+
 ```bash
 npm install
 ```
 
 ### 2. Environment Setup
+
 Copy `.env.example` to `.env.local` and configure:
 
 ```env
@@ -146,30 +158,36 @@ SENDSHARK_API_URL=https://api.sendshark.com/v1
 ```
 
 ### 3. Database Setup
+
 Run the SQL schema:
+
 ```bash
 # In Supabase SQL Editor
 cat infra/supabase-schema.sql
 ```
 
 ### 4. Start Development Server
+
 ```bash
 npm run dev
 ```
 
 Visit:
-- Main app: http://localhost:3000
-- Visual Builder: http://localhost:3000/visual-builder
-- Dashboard: http://localhost:3000/dashboard
+
+- Main app: <http://localhost:3000>
+- Visual Builder: <http://localhost:3000/visual-builder>
+- Dashboard: <http://localhost:3000/dashboard>
 
 ## 📊 Database Schema
 
 ### New Tables Added
+
 - `leads` - Email captures from funnels
 - `automations` - Email automation configurations
 - `email_campaigns` - Campaign tracking and stats
 
 ### Enhanced Tables
+
 - `clicks` - Now includes lead attribution
 - `conversions` - Enhanced with funnel tracking
 - `funnels` - Extended with email capture config
@@ -177,6 +195,7 @@ Visit:
 ## 🔄 Workflow Examples
 
 ### Lead Capture Flow
+
 1. User submits email on funnel page
 2. Lead saved to `leads` table
 3. Added to Sendshark subscriber list
@@ -184,6 +203,7 @@ Visit:
 5. Tagged with funnel ID and source
 
 ### Email Campaign Flow
+
 1. Create campaign via `/api/email/send`
 2. Upload recipient list
 3. Schedule or send immediately
@@ -191,6 +211,7 @@ Visit:
 5. View stats in dashboard
 
 ### Weekly Report Flow
+
 1. Cron job triggers `/api/email/reports`
 2. System fetches analytics for date range
 3. Generates HTML report email
@@ -200,12 +221,14 @@ Visit:
 ## 🎨 UI Components
 
 ### EnhancedFunnelBuilder
+
 - Left sidebar: Block library
 - Center canvas: Drag-drop workspace
 - Right sidebar: Block editor
 - Top bar: Theme settings and save
 
 ### UnifiedDashboard
+
 - Stat cards: Key metrics at a glance
 - Performance grid: Detailed breakdowns
 - Recent activity: Real-time feed
@@ -214,6 +237,7 @@ Visit:
 ## 📈 Best Practices
 
 ### Email Marketing
+
 1. Segment subscribers by funnel/source
 2. Test subject lines with A/B tests
 3. Monitor deliverability rates
@@ -221,6 +245,7 @@ Visit:
 5. Respect unsubscribe requests
 
 ### Funnel Optimization
+
 1. Use AI to generate multiple variants
 2. A/B test headlines and CTAs
 3. Track conversion at each step
@@ -228,6 +253,7 @@ Visit:
 5. Keep load times fast
 
 ### Analytics
+
 1. Set up UTM parameters
 2. Track all traffic sources
 3. Monitor conversion funnels
@@ -237,6 +263,7 @@ Visit:
 ## 🔧 API Reference
 
 ### Email Endpoints
+
 - `POST /api/email/send` - Send email or campaign
 - `GET /api/email/templates` - List templates
 - `POST /api/email/templates` - Create template
@@ -244,24 +271,29 @@ Visit:
 - `POST /api/email/reports` - Send analytics report
 
 ### Lead Endpoints
+
 - `POST /api/leads/capture` - Capture new lead
 - `GET /api/leads/capture?funnelId=X` - Get leads
 
 ### Analytics Endpoints
+
 - `GET /api/analytics?range=7d` - Get stats
 - `GET /api/analytics?funnelId=X` - Funnel-specific stats
 
 ## 🚢 Deployment
 
 ### Vercel Deployment
+
 ```bash
 npm run deploy
 ```
 
 ### Environment Variables
+
 Set all required env vars in Vercel dashboard before deploying.
 
 ### Post-Deployment
+
 1. Set up Stripe webhooks
 2. Configure Sendshark automations
 3. Test email deliverability
@@ -270,16 +302,19 @@ Set all required env vars in Vercel dashboard before deploying.
 ## 🆘 Troubleshooting
 
 ### Email Not Sending
+
 - Check `SENDSHARK_API_KEY` is valid
 - Verify API quota limits
 - Review Sendshark dashboard logs
 
 ### Funnel Not Saving
+
 - Check Supabase connection
 - Verify user authentication
 - Review browser console errors
 
 ### Analytics Not Loading
+
 - Confirm database has data
 - Check date range parameters
 - Verify RLS policies
@@ -294,6 +329,7 @@ Set all required env vars in Vercel dashboard before deploying.
 ## 🤝 Contributing
 
 When adding features:
+
 1. Follow existing code patterns
 2. Update documentation
 3. Add API tests

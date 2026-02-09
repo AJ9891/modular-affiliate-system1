@@ -13,26 +13,34 @@
 ## Key Changes
 
 ### New Utility Module
+
 **File**: `apps/web/src/lib/chat-utils.ts`
+
 - `extractActionFromResponse(text)` - Extracts actions from AI responses
 - `isValidAction(action)` - Validates action structure
 - `formatActionJson(message, action)` - Formats for streaming
 
 ### Updated Components
+
 **File**: `apps/web/src/components/AIChatWidget.tsx`
+
 - Simplified streaming JSON parser (line-delimited)
 - Better error messages with context
 - Uses new chat-utils for action handling
 
 ### Updated API
+
 **File**: `apps/web/src/app/api/sales-chat/route.ts`
+
 - Outputs proper newline-delimited JSON
 - Uses chat-utils for action extraction
 - Better error handling in stream processing
 - Safe database logging with error catching
 
 ### Database Migration
+
 **File**: `infra/migrations/add_sales_chat_support.sql`
+
 - Adds `session_id` column for unauth sales chat
 - Adds `user_id` column for optional auth linking
 - Adds `type` column to distinguish support vs sales
@@ -42,6 +50,7 @@
 ## How to Apply
 
 ### Step 1: Run Migration
+
 ```bash
 # Option A: Using Supabase CLI
 supabase migration up
@@ -52,6 +61,7 @@ supabase migration up
 ```
 
 ### Step 2: Deploy Code
+
 ```bash
 # Build and deploy
 npm run build
@@ -59,6 +69,7 @@ npm run deploy
 ```
 
 ### Step 3: Verify
+
 - Open home page in browser
 - Click chat widget
 - Try sending a message in sales mode
@@ -68,14 +79,18 @@ npm run deploy
 ## Technical Details
 
 ### Streaming Protocol (NDJSON Format)
+
 Each line is a complete JSON object:
+
 ```
 {"message": "Hello", "action": null}
 {"message": " there", "action": null}
 ```
 
 ### Action Format
+
 Actions at end of response with `ACTION:` prefix:
+
 ```
 "Great! Let's get started. 🚀
 
@@ -83,25 +98,32 @@ ACTION: {"action": "CREATE_CHECKOUT", "plan": "starter"}"
 ```
 
 ### Error Messages
+
 Users now see:
+
 - ❌ "HTTP 500: Failed to send message" (was silent)
 - ❌ "No response body received from server" (was silent)
 - ✅ Full error context for debugging
 
 ## Performance Impact
+
 ✅ **Zero performance regression**
+
 - Simpler parsing = faster client-side processing
 - Better error handling = fewer hung requests
 - Database indexes improve chat history queries
 
 ## Backwards Compatibility
+
 ✅ **Fully backwards compatible**
+
 - Support chat mode unchanged
 - Existing conversations still work
 - No breaking API changes
 - Migration is idempotent
 
 ## Testing Checklist
+
 - [ ] Sales chat widget opens
 - [ ] Messages stream in real-time
 - [ ] Actions are detected and executed
@@ -111,12 +133,15 @@ Users now see:
 - [ ] No console errors
 
 ## Support
+
 For issues:
+
 1. Check browser console for error messages (now more descriptive)
 2. Verify database migration applied: `SELECT * FROM chat_messages LIMIT 1;` should show new columns
 3. Check API route is running: visit `/api/sales-chat` POST should respond
 
 ## Next Steps
+
 - Add tests for streaming JSON parsing
 - Monitor error rates in production
 - Consider adding chat persistence layer

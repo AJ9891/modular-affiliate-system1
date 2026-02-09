@@ -13,27 +13,33 @@ You now have a complete file upload and lead magnet system that allows you to:
 ## 📁 Files Created
 
 ### API Endpoints
+
 - `/apps/web/src/app/api/uploads/route.ts` - Upload, list, delete files
 - `/apps/web/src/app/api/downloads/[id]/route.ts` - Track and serve downloads
 
 ### Pages
+
 - `/apps/web/src/app/downloads/page.tsx` - Downloads management dashboard
 - `/apps/web/src/app/example-download/page.tsx` - Example funnel with download gate
 
 ### Components
+
 - `/apps/web/src/components/UploadManager.tsx` - Drag-drop file upload UI
 - `/apps/web/src/components/DownloadGate.tsx` - Email capture widget
 
 ### Database
+
 - `/infra/migrations/add_downloads_tables.sql` - Database migration
 - Updated `/infra/supabase-schema.sql` with downloads tables
 
 ### Documentation
+
 - `/docs/DOWNLOADS.md` - Complete feature documentation
 - `/DOWNLOADS_SETUP.md` - Quick setup guide
 - Updated `/README.md` with downloads feature
 
 ### Navigation
+
 - Updated `/apps/web/src/components/Sidebar.tsx` - Added Downloads link
 
 ## 🚀 How to Use
@@ -50,7 +56,7 @@ You need to run the migration in your Supabase dashboard:
 
 ### 2. Upload Your First Lead Magnet
 
-1. Visit http://localhost:3000/downloads
+1. Visit <http://localhost:3000/downloads>
 2. Drag-drop a PDF, ebook, or document
 3. Enter a title (e.g., "Free SEO Guide")
 4. Add description (optional)
@@ -59,6 +65,7 @@ You need to run the migration in your Supabase dashboard:
 ### 3. Get Download Link
 
 After uploading:
+
 1. Find your file in the list
 2. Click the **Copy** button
 3. The link will look like: `/api/downloads/{uuid}`
@@ -93,6 +100,7 @@ export default function MyFunnelPage() {
 ## 🎯 Key Features
 
 ### File Upload
+
 - ✅ Drag-and-drop interface
 - ✅ Or click to browse
 - ✅ Progress indicator
@@ -100,6 +108,7 @@ export default function MyFunnelPage() {
 - ✅ Max 50MB per file
 
 ### Supported File Types
+
 - PDF documents
 - EPUB ebooks
 - Word documents (.doc, .docx)
@@ -108,6 +117,7 @@ export default function MyFunnelPage() {
 - MOBI ebooks
 
 ### Email Capture
+
 - ✅ Required before download
 - ✅ Email validation
 - ✅ Auto-capture to leads table
@@ -115,6 +125,7 @@ export default function MyFunnelPage() {
 - ✅ Privacy compliance text
 
 ### Download Tracking
+
 - ✅ Count total downloads
 - ✅ Log email addresses
 - ✅ IP address tracking
@@ -122,7 +133,9 @@ export default function MyFunnelPage() {
 - ✅ Funnel attribution
 
 ### Analytics
+
 View on `/downloads` page:
+
 - Total download count per file
 - File size and type
 - Upload date
@@ -134,25 +147,30 @@ View on `/downloads` page:
 ### Database Tables
 
 **downloads**
+
 - Stores file metadata
 - Links to user who uploaded
 - Tracks download count
 - Stores Supabase Storage URL
 
 **download_logs**
+
 - One row per download
 - Links to download and email
 - Tracks when downloaded
 - Optional funnel attribution
 
 ### Storage
+
 Files stored in Supabase Storage bucket:
+
 - Bucket name: `downloads`
 - Public access: Yes (for downloads)
 - Upload access: Authenticated users only
 - Path structure: `{user_id}/{timestamp}_{filename}`
 
 ### Security
+
 - ✅ Row Level Security (RLS) enabled
 - ✅ Users can only manage their own files
 - ✅ File type validation server-side
@@ -163,21 +181,25 @@ Files stored in Supabase Storage bucket:
 ## 📊 Example Use Cases
 
 ### 1. Ebook Lead Magnet
+
 ```
 Landing Page → DownloadGate → Capture Email → Download PDF → Thank You
 ```
 
 ### 2. Free Resource Library
+
 ```
 Member Login → Downloads Page → Browse Files → Click to Download
 ```
 
 ### 3. Course Bonus Materials
+
 ```
 Purchase Course → Email with Link → DownloadGate → Get Bonus PDFs
 ```
 
 ### 4. Multi-Step Funnel
+
 ```
 Ad → Landing → Email Capture → Download → Email Sequence → Upsell
 ```
@@ -185,13 +207,17 @@ Ad → Landing → Email Capture → Download → Email Sequence → Upsell
 ## 🎨 Customization
 
 ### Change File Size Limit
+
 Edit `/apps/web/src/app/api/uploads/route.ts`:
+
 ```typescript
 const maxSize = 100 * 1024 * 1024; // Change to 100MB
 ```
 
 ### Add More File Types
+
 Edit allowedTypes array in same file:
+
 ```typescript
 const allowedTypes = [
   'application/pdf',
@@ -201,6 +227,7 @@ const allowedTypes = [
 ```
 
 ### Customize Download Gate Design
+
 The `DownloadGate` component uses Tailwind classes.
 Edit `/apps/web/src/components/DownloadGate.tsx` to change colors, layout, etc.
 
@@ -215,18 +242,21 @@ Edit `/apps/web/src/components/DownloadGate.tsx` to change colors, layout, etc.
 ## 🐛 Troubleshooting
 
 ### "Upload failed"
+
 - Check file size < 50MB
 - Verify file type is allowed
 - Make sure you're logged in
 - Check Supabase storage bucket exists
 
 ### "Download not found"
+
 - Verify download ID is correct
 - Check download is set to active
 - Ensure storage bucket is public
 - Run the migration if not done
 
 ### Email not capturing
+
 - Check `require_email: true` in database
 - Verify leads table exists
 - Check browser console for errors

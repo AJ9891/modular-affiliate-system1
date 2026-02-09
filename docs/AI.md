@@ -1,9 +1,11 @@
 # AI Content Generation Integration
 
 ## Overview
+
 Complete OpenAI integration for generating high-converting affiliate marketing copy using GPT models.
 
 ## Features
+
 - AI-powered content generation for headlines, CTAs, body copy, and more
 - Full landing page copy generation
 - Email copy creation
@@ -40,9 +42,11 @@ For production, add the environment variable in Vercel:
 ## Content Types
 
 ### 1. Headline
+
 Generates attention-grabbing headlines for landing pages.
 
 **Example Request:**
+
 ```typescript
 {
   type: 'headline',
@@ -54,30 +58,37 @@ Generates attention-grabbing headlines for landing pages.
 ```
 
 **Example Output:**
+
 ```
 "Lose 15 Pounds in 30 Days - Even With a Busy Schedule!"
 ```
 
 ### 2. Subheadline
+
 Creates supporting subheadlines that build desire.
 
 **Example Output:**
+
 ```
 "Join 10,000+ moms who transformed their bodies with just 15 minutes a day"
 ```
 
 ### 3. Call-to-Action (CTA)
+
 Generates compelling button text.
 
 **Example Output:**
+
 ```
 "Start My Transformation"
 ```
 
 ### 4. Bullet Points
+
 Creates benefit-focused bullet points.
 
 **Example Output:**
+
 ```
 - Burn fat in just 15 minutes per day
 - No gym or equipment needed
@@ -87,9 +98,11 @@ Creates benefit-focused bullet points.
 ```
 
 ### 5. Full Landing Page
+
 Generates complete landing page copy including headline, subheadline, benefits, and CTA.
 
 **Example Output (JSON):**
+
 ```json
 {
   "headline": "Transform Your Body in 30 Days",
@@ -113,9 +126,11 @@ Generates complete landing page copy including headline, subheadline, benefits, 
 ```
 
 ### 6. Email Copy
+
 Creates complete email campaigns.
 
 **Example Output (JSON):**
+
 ```json
 {
   "subject": "Ready to lose those stubborn pounds?",
@@ -128,9 +143,11 @@ Creates complete email campaigns.
 ## API Endpoints
 
 ### POST /api/ai/generate-content
+
 Generates specific types of content.
 
 **Request:**
+
 ```json
 {
   "type": "headline" | "subheadline" | "cta" | "bullet-points" | "full-page" | "email",
@@ -143,6 +160,7 @@ Generates specific types of content.
 ```
 
 **Response:**
+
 ```json
 {
   "content": "Generated content string or JSON"
@@ -150,9 +168,11 @@ Generates specific types of content.
 ```
 
 ### POST /api/ai/generate-funnel
+
 Generates complete funnel structure with AI content.
 
 **Request:**
+
 ```json
 {
   "niche": "Weight Loss",
@@ -162,6 +182,7 @@ Generates complete funnel structure with AI content.
 ```
 
 **Response:**
+
 ```json
 {
   "funnel": {
@@ -208,24 +229,28 @@ const content = await generateContent({
 ## Tone Options
 
 ### Professional
+
 - Formal language
 - Expert positioning
 - Credibility-focused
 - Best for: B2B, high-ticket offers
 
 ### Casual
+
 - Conversational tone
 - Approachable language
 - Friend-to-friend feel
 - Best for: Lifestyle products, courses
 
 ### Urgent
+
 - Time-sensitive language
 - Scarcity messaging
 - Action-focused
 - Best for: Limited offers, flash sales
 
 ### Friendly
+
 - Warm and welcoming
 - Empathetic language
 - Supportive tone
@@ -234,30 +259,37 @@ const content = await generateContent({
 ## Best Practices
 
 ### 1. Be Specific
+
 Provide detailed information about:
+
 - Exact niche and sub-niche
 - Target audience demographics
 - Key product benefits
 - Unique selling propositions
 
 ### 2. Use Context Field
+
 Add specific angles or requirements:
+
 - "Focus on time savings"
 - "Emphasize scientific backing"
 - "Highlight money-back guarantee"
 
 ### 3. Generate Multiple Versions
+
 - Create 3-5 versions of each piece
 - A/B test different headlines
 - Mix and match the best elements
 
 ### 4. Edit and Refine
+
 - AI provides a strong foundation
 - Add your brand voice
 - Verify claims and promises
 - Ensure compliance
 
 ### 5. Optimize for Conversion
+
 - Test different CTAs
 - Vary benefit order
 - Adjust tone based on audience response
@@ -265,16 +297,19 @@ Add specific angles or requirements:
 ## Cost Management
 
 ### Token Usage
+
 - Headline: ~50-100 tokens
 - Subheadline: ~100-150 tokens
 - Full Page: ~500-1000 tokens
 - Email: ~400-800 tokens
 
 ### Model Selection
+
 - **GPT-3.5 Turbo**: Fast, cost-effective (default)
 - **GPT-4**: Higher quality, more expensive (optional upgrade)
 
 Edit `/apps/web/src/lib/openai.ts` to change model:
+
 ```typescript
 model: AI_MODELS.GPT4  // Use GPT-4 for premium content
 ```
@@ -382,6 +417,7 @@ const page = await generateContent({
 ## Monitoring
 
 Track AI usage:
+
 1. Log API calls and costs
 2. Monitor token usage per user
 3. Track conversion rates of AI-generated vs. manual copy
@@ -390,16 +426,19 @@ Track AI usage:
 ## Troubleshooting
 
 **"OpenAI API not configured" error:**
+
 - Verify `OPENAI_API_KEY` is set in environment
 - Check .env.local file exists
 - Restart development server after adding key
 
 **Rate limit errors:**
+
 - Implement request queuing
 - Add user-level rate limiting
 - Upgrade OpenAI plan if needed
 
 **Poor quality output:**
+
 - Provide more specific context
 - Try different tone settings
 - Generate multiple versions

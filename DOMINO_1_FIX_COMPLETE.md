@@ -21,6 +21,7 @@
 ## Root Cause Analysis
 
 ### The Problem
+
 `@/lib/supabase.ts` was throwing at **module load time**:
 
 ```typescript
@@ -34,6 +35,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 ```
 
 ### Why This Breaks Everything
+
 1. **API routes imported this**: `import { supabase } from '@/lib/supabase'`
 2. **Next.js tried to bundle it**
 3. **Module threw before async handling**
@@ -41,6 +43,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 5. **Result**: "Cannot use import statement outside a module"
 
 The browser couldn't distinguish between:
+
 - A real module error
 - A misconfigured import
 - Missing environment variables
@@ -52,6 +55,7 @@ It just saw broken JS.
 ## The Fix: Lazy Loading via Proxy
 
 ### New Pattern
+
 ```typescript
 // NEW (FIXED)
 let cachedClient: any = null
@@ -76,6 +80,7 @@ export const supabase = new Proxy({}, {
 ```
 
 ### Why This Works
+
 - ✅ **Import succeeds**: No error at module load
 - ✅ **Error caught later**: When `.from()` is called, error is caught by Next.js middleware
 - ✅ **Proper error page**: Next.js renders a 500 with stack trace
@@ -113,21 +118,25 @@ export const supabase = new Proxy({}, {
 ## What Changed
 
 ### 1. `/src/lib/supabase.ts`
+
 - ✅ Now uses lazy-loading Proxy
 - ✅ Errors only throw when used
 - ✅ Safe to import everywhere
 
 ### 2. `/src/lib/supabase-client.ts` (NEW)
+
 - ✅ Explicit client-only version
 - ✅ Has early error checking
 - ✅ For 'use client' components
 
 ### 3. `/src/app/api/modules/[id]/activate/route.ts`
-- ✅ Removed `import { supabase }` 
+
+- ✅ Removed `import { supabase }`
 - ✅ Now uses `createRouteHandlerClient({ cookies })`
 - ✅ Server-only pattern
 
 ### 4. `/src/app/api/domains/route.ts`
+
 - ✅ Added `validateEnv()` function
 - ✅ Fails loudly if Vercel env vars missing
 - ✅ Uses lazy import for Supabase admin client
@@ -137,6 +146,7 @@ export const supabase = new Proxy({}, {
 ## For API Routes: Use This Pattern
 
 ### ❌ WRONG
+
 ```typescript
 // API route
 import { supabase } from '@/lib/supabase'
@@ -147,6 +157,7 @@ export async function GET() {
 ```
 
 ### ✅ RIGHT
+
 ```typescript
 // API route
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
@@ -163,6 +174,7 @@ export async function GET() {
 ## For Client Components: Use This Pattern
 
 ### ❌ WRONG (before fix)
+
 ```typescript
 'use client'
 import { supabase } from '@/lib/supabase'  // Would throw at load
@@ -176,6 +188,7 @@ export function MyComponent() {
 ```
 
 ### ✅ RIGHT (after fix)
+
 ```typescript
 'use client'
 import { supabase } from '@/lib/supabase'  // Now safe - lazy loads
@@ -200,6 +213,7 @@ export function MyComponent() {
 ## Environment Variables: Checklist
 
 ### Required (.env.local)
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://xyz.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
@@ -208,6 +222,7 @@ OPENAI_API_KEY=sk-...              # Server-only!
 ```
 
 ### Optional (Production)
+
 ```env
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 STRIPE_SECRET_KEY=sk_test_...
@@ -215,6 +230,7 @@ VERCEL_API_TOKEN=...
 ```
 
 ### Verification
+
 ```bash
 # Check if env vars are being loaded
 npm run dev
@@ -232,6 +248,7 @@ npm run dev
 ## How to Verify the Fix Is Working
 
 ### Test 1: Check imports succeed
+
 ```bash
 cd apps/web
 node -e "const m = require('./src/lib/supabase.ts'); console.log('Import OK')"
@@ -239,6 +256,7 @@ node -e "const m = require('./src/lib/supabase.ts'); console.log('Import OK')"
 ```
 
 ### Test 2: Check error handling
+
 ```bash
 # Temporarily unset NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_URL= npm run dev
@@ -250,11 +268,14 @@ NEXT_PUBLIC_SUPABASE_URL= npm run dev
 ```
 
 ### Test 3: Check error messages are clear
+
 Look for error messages like:
+
 - `[CLIENT ERROR] NEXT_PUBLIC_SUPABASE_URL is not set`
 - `[API/DOMAINS] VERCEL_API_TOKEN is required`
 
 Instead of:
+
 - `Cannot use import statement outside a module`
 - `Unexpected token 'export'`
 
@@ -266,6 +287,7 @@ When adding new API routes:
 
 1. **Do NOT** import from `@/lib/supabase` directly
 2. **Instead** use:
+
    ```typescript
    import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
    import { cookies } from 'next/headers'
@@ -274,6 +296,7 @@ When adding new API routes:
    ```
 
 3. **If needing service role** operations, use lazy import:
+
    ```typescript
    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
      throw new Error('[API/YOUR-ROUTE] SUPABASE_SERVICE_ROLE_KEY required')
@@ -287,6 +310,7 @@ When adding new API routes:
    ```
 
 4. **Always validate env vars early**:
+
    ```typescript
    function validateEnv() {
      if (!process.env.MY_REQUIRED_VAR) {

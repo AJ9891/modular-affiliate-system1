@@ -5,6 +5,7 @@
 BrandBrain is a centralized brand personality and compliance management system that ensures consistent voice, tone, and messaging across all AI-generated content and user interfaces.
 
 **Formula:**
+
 ```
 BrandBrain = PersonalityProfile 
            + AI Prompt Rules 
@@ -74,17 +75,20 @@ content_validations
 ### Brand Profiles
 
 #### List All Brand Profiles
+
 ```http
 GET /api/brand-brain
 GET /api/brand-brain?active=true
 ```
 
 #### Get Single Profile
+
 ```http
 GET /api/brand-brain/:id
 ```
 
 #### Create Brand Profile
+
 ```http
 POST /api/brand-brain
 Content-Type: application/json
@@ -100,6 +104,7 @@ Content-Type: application/json
 ```
 
 #### Update Brand Profile
+
 ```http
 PUT /api/brand-brain/:id
 Content-Type: application/json
@@ -111,6 +116,7 @@ Content-Type: application/json
 ```
 
 #### Delete Brand Profile
+
 ```http
 DELETE /api/brand-brain/:id
 ```
@@ -118,6 +124,7 @@ DELETE /api/brand-brain/:id
 ### Content Validation
 
 #### Validate Content Against Brand Rules
+
 ```http
 POST /api/brand-brain/validate
 Content-Type: application/json
@@ -150,6 +157,7 @@ Response:
 ### AI System Prompt
 
 #### Get AI System Prompt from BrandBrain
+
 ```http
 POST /api/brand-brain/system-prompt
 Content-Type: application/json
@@ -257,6 +265,7 @@ if (ui.microInteractions.glitchAllowed) {
 ```
 
 ### Example: Validate content
+
   const handleValidate = async () => {
     const result = await validateContent(
       "Your content here",
@@ -281,6 +290,7 @@ if (ui.microInteractions.glitchAllowed) {
 
   return <div>...</div>;
 }
+
 ```
 
 ## BrandBrain Manager
@@ -351,11 +361,13 @@ const content = await generateContent({
 ## Admin UI
 
 Access the BrandBrain admin interface at:
+
 ```
 /admin/brand-brain
 ```
 
 Features:
+
 - **Brand Profiles Tab**: View, create, edit, and delete brand profiles
 - **Content Validator Tab**: Test content against brand guidelines in real-time
 - **Profile Editor Tab**: Comprehensive form for editing all brand settings
@@ -367,24 +379,29 @@ Features:
 The `UIExpressionProfile` controls how the brand personality expresses itself through UI elements:
 
 **Hero Section**
+
 - `variants`: Which hero styles are allowed (`meltdown`, `anti-guru`, `rocket`)
 - `motionIntensity`: How much animation (`none`, `low`, `medium`, `high`)
 - `visualNoise`: Level of visual complexity (`none`, `controlled`, `expressive`)
 
 **Typography**
+
 - `tone`: Overall text personality (`flat`, `confident`, `playful`, `fractured`)
 - `emphasisStyle`: How to emphasize text (`none`, `underline`, `highlight`, `strike`)
 
 **Surfaces**
+
 - `depth`: Card and surface styling (`flat`, `soft`, `layered`)
 - `borderStyle`: Border treatment (`sharp`, `rounded`, `mixed`)
 
 **Micro-interactions**
+
 - `hoverAllowed`: Enable hover effects
 - `glitchAllowed`: Allow glitch animations
 - `pulseAllowed`: Enable pulse animations
 
 **Sound**
+
 - `ambientProfiles`: Allowed sound profiles (`checklist`, `hum`, `glitch`)
 - `maxVolume`: Maximum sound volume (0-1)
 
@@ -417,27 +434,32 @@ The `UIExpressionProfile` controls how the brand personality expresses itself th
 ```
 
 ### 1. Automatic Enforcement
+
 - Active brand profile is automatically applied to all AI generation
 - Content is validated in real-time
 - Violations are logged with suggestions
 
 ### 2. Multi-Brand Support
+
 - Create multiple brand profiles
 - Switch between brands easily
 - Only one profile can be active at a time per user
 
 ### 3. Comprehensive Validation
+
 - Checks for forbidden claims (financial guarantees, health claims, etc.)
 - Validates tone and voice alignment
 - Ensures word choice compliance
 - Tracks content length constraints
 
 ### 4. Scoring System
+
 - Content receives a 0-100 brand alignment score
 - Violations reduce score based on severity
 - Threshold for approval can be configured
 
 ### 5. Audit Trail
+
 - All content validations are stored
 - Track which content violated guidelines
 - Monitor brand consistency over time
@@ -445,6 +467,7 @@ The `UIExpressionProfile` controls how the brand personality expresses itself th
 ## Default Configuration
 
 A default brand profile is included with sensible defaults:
+
 - Professional, helpful tone
 - Moderate formality (3/5)
 - Subtle humor
@@ -475,18 +498,21 @@ supabase db push
 ## Compliance Features
 
 ### Legal Protection
+
 - Prevents forbidden financial guarantees
 - Blocks problematic health claims
 - Enforces FTC disclosure requirements
 - Ensures GDPR compliance reminders
 
 ### Ethical Marketing
+
 - Prevents exploitative tactics
 - Limits fear-based messaging
 - Requires transparency
 - Promotes inclusive language
 
 ### Regulatory Compliance
+
 - CAN-SPAM compliance for email
 - Platform advertising policy adherence
 - Industry-specific regulations support
@@ -504,16 +530,19 @@ supabase db push
 ## Troubleshooting
 
 ### Content Keeps Failing Validation
+
 - Review your forbidden claims list - it may be too restrictive
 - Check if humor level matches your content style
 - Adjust formality level if tone seems off
 
 ### AI Not Following Brand Guidelines
+
 - Verify active profile is set correctly
 - Check system prompt generation
 - Ensure brand rules are specific and clear
 
 ### Multiple Active Profiles
+
 - Database trigger ensures only one active profile per user
 - If issues persist, check trigger function is working
 
@@ -624,6 +653,7 @@ function ManualExample() {
 **Components ask "How should I behave?" not "Which color am I?"**
 
 This distinction keeps the system:
+
 - **Elegant** - No branching logic in components
 - **Scalable** - Add new routes without changing components
 - **Tasteful** - Personality is felt, not noticed
@@ -637,4 +667,3 @@ The context-aware system integrates with:
 2. **PersonalityProvider**: Automatically fetches context based on current route
 3. **Expression Resolvers**: All visual/motion/sound resolvers accept context parameters
 4. **Component Library**: All personality-aware components use `usePersonalityExpression`
-

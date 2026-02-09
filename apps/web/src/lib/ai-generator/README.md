@@ -42,16 +42,19 @@ User's brand_mode → PersonalityProfile → AIPromptProfile → AI Generation
 ## The Three Personalities
 
 ### AI Meltdown (`unraveling`)
+
 - **System:** Competent but exhausted
 - **Principles:** Clear explanations, acknowledges complexity, honest about tradeoffs
 - **Forbidden:** Overconfidence, hype, false reassurance
 
 ### Anti-Guru (`blunt`)
+
 - **System:** Rejects hype, speaks plainly, respects intelligence
 - **Principles:** Concise, direct, states limitations
 - **Forbidden:** Get rich quick, false urgency, buzzwords, income claims
 
 ### Rocket Future (`calm`)
+
 - **System:** Optimistic but grounded, progress over miracles
 - **Principles:** Forward motion, systems not hacks, compounding effects
 - **Forbidden:** Guarantees, absolute claims, timeline promises
@@ -59,6 +62,7 @@ User's brand_mode → PersonalityProfile → AIPromptProfile → AI Generation
 ## Integration Patterns
 
 ### Pattern 1: Basic Generation
+
 ```typescript
 const personality = resolvePersonality(brandMode)
 const promptProfile = resolveAIPrompt(personality)
@@ -72,6 +76,7 @@ const content = await generateAI({
 ```
 
 ### Pattern 2: With Validation
+
 ```typescript
 // Generate
 const content = await generateContent(brandMode, prompt)
@@ -85,6 +90,7 @@ if (violations.length > 0) {
 ```
 
 ### Pattern 3: In API Routes
+
 ```typescript
 // app/api/generate/route.ts
 export async function POST(req: Request) {
@@ -146,11 +152,13 @@ The AI cannot violate these rules because they're baked into the system prompt.
 ## Migration from Legacy API
 
 **Old:**
+
 ```typescript
 const prompt = resolvePrompt(brandMode, context)
 ```
 
 **New:**
+
 ```typescript
 const personality = resolvePersonality(brandMode)
 const promptProfile = resolveAIPrompt(personality)

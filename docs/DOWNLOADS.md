@@ -28,6 +28,7 @@ cat infra/migrations/add_downloads_tables.sql
 ```
 
 This creates:
+
 - `downloads` table - Store file metadata
 - `download_logs` table - Track download activity
 - `downloads` storage bucket - Store actual files
@@ -37,6 +38,7 @@ This creates:
 ### 2. Verify Storage Bucket
 
 Go to your Supabase dashboard:
+
 1. Navigate to **Storage**
 2. Verify `downloads` bucket exists
 3. Check that it's set to **Public** access
@@ -99,6 +101,7 @@ export default function MyFunnelPage() {
 ### Get Download ID
 
 After uploading a file:
+
 1. Go to `/downloads` page
 2. Find your file
 3. Click the **Copy** button
@@ -254,6 +257,7 @@ const allowedTypes = [
 ### View Download Stats
 
 On the `/downloads` page, you can see:
+
 - Total downloads per file
 - File size and type
 - Upload date
@@ -337,6 +341,7 @@ GROUP BY d.id, d.title;
 ### Visual Builder Integration
 
 When building funnels, you can:
+
 1. Upload lead magnet to `/downloads`
 2. Copy the download link
 3. Add `DownloadGate` component to funnel
@@ -359,6 +364,7 @@ Email Sequence (Sendshark)
 ## 📧 Email Integration
 
 Downloads automatically:
+
 - Add leads to `leads` table
 - Can trigger email automations
 - Include download info in metadata

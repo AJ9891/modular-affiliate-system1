@@ -18,6 +18,7 @@ const heroCopy = await generateAI({ system: prompt })
 ## 🚀 Usage (Copy & Paste)
 
 ### Hero Section
+
 ```typescript
 import { generateHeroCopy } from '@/lib/personality'
 
@@ -30,6 +31,7 @@ const heroCopy = await generateHeroCopy('anti_guru', {
 ```
 
 ### Feature Section
+
 ```typescript
 import { generateFeatureCopy } from '@/lib/personality'
 
@@ -42,6 +44,7 @@ const featureCopy = await generateFeatureCopy('rocket_future', {
 ```
 
 ### Error Message
+
 ```typescript
 import { generateErrorCopy } from '@/lib/personality'
 
@@ -54,6 +57,7 @@ const errorCopy = await generateErrorCopy('anti_guru', {
 ```
 
 ### Affiliate Page
+
 ```typescript
 import { generateAffiliateCopy } from '@/lib/personality'
 
@@ -66,6 +70,7 @@ const affiliateCopy = await generateAffiliateCopy('rocket_future', {
 ```
 
 ### Onboarding Step
+
 ```typescript
 import { generateOnboardingCopy } from '@/lib/personality'
 
@@ -78,6 +83,7 @@ const onboardingCopy = await generateOnboardingCopy('anti_guru', {
 ```
 
 ### Complete Funnel
+
 ```typescript
 import { generateCompleteFunnel } from '@/lib/personality'
 
@@ -99,6 +105,7 @@ const funnel = await generateCompleteFunnel('rocket_future', {
 ## 🔧 Debug Tools
 
 ### Preview Cascade (No AI call)
+
 ```typescript
 import { previewCascade } from '@/lib/personality'
 
@@ -111,6 +118,7 @@ console.log(preview.prompt)       // PromptConfig
 ```
 
 ### Get Summary
+
 ```typescript
 import { getCascadeSummary } from '@/lib/personality'
 
@@ -127,6 +135,7 @@ const summary = getCascadeSummary('anti_guru')
 ```
 
 ### Validate Copy
+
 ```typescript
 import { validateCopy, resolveHeroCopyContract } from '@/lib/personality'
 
@@ -232,6 +241,7 @@ export async function POST(request: NextRequest) {
 ## ⚡ Performance Tips
 
 ### 1. Generate in Parallel
+
 ```typescript
 const [hero, feature1, feature2] = await Promise.all([
   generateHeroCopy(brandMode, heroContext),
@@ -241,6 +251,7 @@ const [hero, feature1, feature2] = await Promise.all([
 ```
 
 ### 2. Use Server Components
+
 ```typescript
 async function HeroSection({ brandMode }: { brandMode: BrandMode }) {
   // Generate on server, send HTML to client
@@ -253,6 +264,7 @@ async function HeroSection({ brandMode }: { brandMode: BrandMode }) {
 ```
 
 ### 3. Cache Results
+
 ```typescript
 import { cache } from 'react'
 
@@ -266,6 +278,7 @@ export const getCachedHero = cache(async (brandMode: BrandMode) => {
 ## 🚨 Common Mistakes
 
 ### ❌ Don't branch on brand_mode
+
 ```typescript
 // BAD
 if (brandMode === 'anti_guru') {
@@ -279,6 +292,7 @@ const copy = await generateHeroCopy(brandMode, { productName })
 ```
 
 ### ❌ Don't call OpenAI directly
+
 ```typescript
 // BAD
 const response = await openai.createCompletion({
@@ -290,6 +304,7 @@ const heroCopy = await generateHeroCopy(brandMode, { productName })
 ```
 
 ### ❌ Don't mix behavior with style
+
 ```typescript
 // BAD
 const personality = {

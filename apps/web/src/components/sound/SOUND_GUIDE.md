@@ -15,23 +15,27 @@ AmbientSoundController → plays sound
 ## Sound Profiles
 
 ### `none`
+
 - **Who**: Anti-Guru
 - **Behavior**: Silent, no audio at all
 - **Philosophy**: Focus, no distractions
 
 ### `ambient_checklist`
+
 - **Who**: Anti-Guru (when enabled)
 - **Behavior**: Subtle completion sounds
 - **Volume**: 0.15 (quiet)
 - **Triggers**: `step_complete`, `success`
 
 ### `glitch_comm`
+
 - **Who**: AI Meltdown
 - **Behavior**: Digital glitch/interference
 - **Volume**: 0.2 (medium)
 - **Triggers**: All events (chaotic)
 
 ### `procedural_hum`
+
 - **Who**: Rocket Future
 - **Behavior**: Algorithmic ambient hum
 - **Volume**: 0.12 (very quiet)
@@ -118,7 +122,9 @@ type SoundTrigger =
 ## Key Design Decisions
 
 ### ✅ Silent Failure
+
 Sounds fail silently if:
+
 - Browser blocks autoplay
 - Audio file not found
 - Personality disables sound
@@ -126,16 +132,19 @@ Sounds fail silently if:
 **Why**: User trust. No error messages, no console spam.
 
 ### ✅ No Looping
+
 Sounds play once per trigger, then stop.
 
 **Why**: Prevents audio fatigue, respects attention.
 
 ### ✅ No Persistence
+
 Sounds don't persist across page loads.
 
 **Why**: Fresh start each session, no stale audio.
 
 ### ✅ Governed by Personality
+
 Can't override personality rules.
 
 **Why**: Consistency. The brand controls audio policy.
@@ -152,6 +161,7 @@ Place sound files in `/public/sounds/`:
 ```
 
 Recommended specs:
+
 - Format: MP3
 - Length: < 2 seconds
 - Size: < 50KB

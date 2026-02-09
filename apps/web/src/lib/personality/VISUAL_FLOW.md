@@ -56,6 +56,7 @@
 ## Layer Responsibilities
 
 ### Layer 1: Personality Resolution
+
 ```
 INPUT:  brand_mode (string)
 OUTPUT: PersonalityProfile (object)
@@ -63,6 +64,7 @@ ROLE:   Single source of truth for behavioral rules
 ```
 
 ### Layer 2a: Behavior Resolution
+
 ```
 INPUT:  PersonalityProfile
 OUTPUT: HeroBehavior (or FeatureBehavior, etc.)
@@ -70,6 +72,7 @@ ROLE:   Defines HOW the UI physically behaves
 ```
 
 ### Layer 2b: AI Profile Resolution
+
 ```
 INPUT:  PersonalityProfile
 OUTPUT: AIProfile
@@ -77,6 +80,7 @@ ROLE:   Defines worldview, ethics, forbidden patterns
 ```
 
 ### Layer 3: Copy Contract Resolution
+
 ```
 INPUT:  Behavior + Personality
 OUTPUT: CopyContract
@@ -84,6 +88,7 @@ ROLE:   Translates posture → language constraints
 ```
 
 ### Layer 4: Prompt Building
+
 ```
 INPUT:  AIProfile + CopyContract + Context
 OUTPUT: PromptConfig
@@ -91,6 +96,7 @@ ROLE:   Combines all constraints into final prompt
 ```
 
 ### Layer 5: AI Generation
+
 ```
 INPUT:  PromptConfig
 OUTPUT: Generated Copy
@@ -143,18 +149,23 @@ CopyContract:
 ## Cascade Properties
 
 ### 1. Deterministic
+
 Same `brand_mode` → Same constraints → Consistent output
 
 ### 2. Traceable
+
 Every piece of copy knows its governance chain
 
 ### 3. Testable
+
 Each layer can be validated independently
 
 ### 4. Composable
+
 New content types reuse existing layers
 
 ### 5. Immutable
+
 Change personality → Everything regenerates correctly
 
 ## Validation Flow
@@ -199,6 +210,7 @@ Everything else stays identical.
 ## Why This Works
 
 ### Traditional Approach (Broken)
+
 ```
 brand_mode → [MAGIC BLACK BOX] → copy
               ↑
@@ -206,6 +218,7 @@ brand_mode → [MAGIC BLACK BOX] → copy
 ```
 
 ### Cascade Approach (Governed)
+
 ```
 brand_mode → personality → behavior → contract → profile → prompt → copy
               ↓              ↓          ↓          ↓         ↓

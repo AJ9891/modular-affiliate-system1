@@ -7,6 +7,7 @@ A production-ready affiliate marketing platform with visual funnel building, ema
 **Key Architecture**: Multi-tenant with subdomain routing, shared UI components, BrandBrain AI system, team collaboration, and pluggable niche modules.
 
 ## Current Implementation Status
+
 ✅ **Production Ready**: Visual builder, dashboard, email integration, subdomain routing, Stripe payments
 ✅ **Email Marketing**: Full Sendshark integration with automated sequences and campaigns  
 ✅ **Analytics**: Real-time tracking, UTM attribution, conversion funnels, automated reports
@@ -19,12 +20,14 @@ A production-ready affiliate marketing platform with visual funnel building, ema
 ## Critical Architecture Patterns
 
 ### 1. **Subdomain Routing** (`/src/middleware.ts`)
+
 - Users get personal subdomains: `user.app.com`
 - Middleware rewrites: `/page` → `/subdomain/user/page`
 - Funnel pages (`/f/*`) bypass auth entirely
 - Cookie domains handled automatically for auth
 
 ### 2. **Supabase Client Boundaries** (Critical Import Patterns)
+
 ```typescript
 // ❌ NEVER in API routes - causes hydration errors
 import { supabase } from '@/lib/supabase'
@@ -47,6 +50,7 @@ const admin = createClient(url, serviceRoleKey)
 ```
 
 ### 3. **Database Schema** (`/infra/supabase-schema.sql`)
+
 ```sql
 -- Multi-tenant with user subdomains
 users (subdomain, custom_domain, stripe_*, plan, is_admin)
@@ -57,6 +61,7 @@ affiliate_clicks (user_id, partner) -- Referral tracking
 ```
 
 ### 4. **Monorepo Structure**
+
 - **apps/web/**: Main Next.js app with all routes and API endpoints
 - **packages/ui/**: Shared shadcn/ui components (`@modular-affiliate/ui`)
 - **packages/sdk/**: Shared utilities (`@modular-affiliate/sdk`)
@@ -64,6 +69,7 @@ affiliate_clicks (user_id, partner) -- Referral tracking
 - **infra/**: Database schema and deployment scripts
 
 ### 5. **BrandBrain AI System** (`/src/lib/brand-brain/`, `/src/lib/personality/`)
+
 - **Cascade Governance**: Single `brand_mode` decision drives all AI generation
 - **Personality Profiles**: 4 modes (anchor, glitch, boost, rocket) with behavioral constraints
 - **AI Profile Resolution**: Transforms personality → prompts → generated content
@@ -80,6 +86,7 @@ const heroCopy = await generateAI({ system: prompt })
 ```
 
 ### 6. **Team Collaboration** (Agency Plan)
+
 - **Multi-user Workspaces**: Account owners invite team members
 - **Role-based Access**: Owner, Admin, Editor, Viewer permissions
 - **Resource Sharing**: Funnels and offers can be team-accessible
@@ -95,6 +102,7 @@ team_activity_log (team_id, user_id, action, resource_type)
 ## Key Development Workflows
 
 ### Environment Setup
+
 ```bash
 cp apps/web/.env.example apps/web/.env.local
 # Configure: SUPABASE_*, STRIPE_*, OPENAI_API_KEY, SENDSHARK_API_KEY
@@ -102,6 +110,7 @@ npm run dev  # Turbo handles all packages
 ```
 
 ### Database Migrations
+
 ```bash
 cat infra/supabase-schema.sql  # Copy to Supabase SQL Editor
 node infra/apply-migrations.js  # Apply individual migrations
@@ -109,6 +118,7 @@ node infra/apply-migrations.js  # Apply individual migrations
 ```
 
 ### AI Content Generation Patterns
+
 ```typescript
 // BrandBrain-aware generation (recommended)
 import { generateHeroCopy } from '@/lib/ai-generator'
@@ -120,11 +130,13 @@ const content = await generateAIContent(prompt, { personality: user.brand_mode }
 ```
 
 ### Funnel Builder Architecture
+
 - **Visual Builder**: `/visual-builder` - Drag-and-drop with 7 block types
 - **Code Builder**: `/builder` - Direct JSON editing  
 - **Renderer**: `/f/[...slug]` - Public funnel pages (no auth)
 
 ### Funnel JSON Schema Structure
+
 ```typescript
 // funnels.blocks column stores this JSON structure:
 {
@@ -147,6 +159,7 @@ const content = await generateAIContent(prompt, { personality: user.brand_mode }
 ```
 
 ### Email Integration Patterns
+
 ```typescript
 // Always capture leads first, then trigger email
 await fetch('/api/leads/capture', { email, funnel_id, source })
@@ -156,12 +169,14 @@ await fetch('/api/leads/capture', { email, funnel_id, source })
 ## Critical API Patterns
 
 ### Lead Capture Flow
+
 ```typescript
 POST /api/leads/capture → saves to database → triggers Sendshark automation
 GET /api/analytics → real-time dashboard stats with date ranges
 ```
 
 ### Authentication Patterns
+
 ```typescript
 // API routes - check auth first
 const { data: { user }, error } = await supabase.auth.getUser()
@@ -186,6 +201,7 @@ if (isProtectedPath && !session) {
 ## Essential URLs & Pages
 
 ### User-facing
+
 - `/` - Homepage with features
 - `/f/[...slug]` - Public funnel pages (no auth required)
 - `/launchpad` - User dashboard with analytics
@@ -194,6 +210,7 @@ if (isProtectedPath && !session) {
 - `/downloads` - Lead magnets and file uploads
 
 ### Admin
+
 - `/admin` - Admin dashboard (requires `is_admin = true`)
 - `/admin/users` - User management
 - `/domains` - Custom domain management
@@ -201,6 +218,7 @@ if (isProtectedPath && !session) {
 ## Key API Endpoints
 
 ### Core Features
+
 - `POST /api/leads/capture` - Lead capture with Sendshark integration
 - `GET /api/analytics` - Dashboard stats (leads, clicks, conversions)
 - `POST /api/email/send` - Campaign management via Sendshark
@@ -208,27 +226,32 @@ if (isProtectedPath && !session) {
 - `POST /api/ai/chat` - Interactive AI chat with action extraction
 
 ### Team & Collaboration
+
 - `GET /api/team/members` - Team member management (Agency plan)
 - `POST /api/team/invite` - Invite team members with role-based access
 - `GET /api/team/activity` - Activity logging and audit trails
 
 ### Downloads & Lead Magnets
+
 - `POST /api/downloads/upload` - File upload for lead magnets
 - `GET /api/downloads/[id]` - Email-gated content delivery
 - `POST /api/leads/capture-download` - Combined lead capture + file access
 
 ### Tracking
+
 - `POST /api/track/click` - Affiliate link tracking
 - `GET /api/analytics/[funnelId]` - Funnel-specific analytics
 
 ## Deployment & Environment
 
 ### Vercel Configuration
+
 - **Build**: `cd apps/web && npm run build` (monorepo-aware)
 - **Environment**: All vars in `apps/web/.env.local`
 - **Domains**: Supports custom domains + subdomain routing
 
 ### Required Environment Variables
+
 ```bash
 # Supabase (database + auth) - REQUIRED
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
@@ -252,6 +275,7 @@ SENDSHARK_API_URL=https://api.sendshark.com/v1
 ## Common Development Patterns
 
 ### Error Handling Patterns
+
 ```typescript
 // Environment validation in API routes
 function validateEnv() {
@@ -274,12 +298,14 @@ const { data } = await supabase
 ```
 
 ## Testing & Development
+
 - `npm run test` - Vitest with global setup and node environment
 - `npm run dev` - Turbo dev across all packages  
 - Debug via `/debug` routes and admin dashboard
 - Test with: `apps/web/vitest.config.ts` (aliases configured for `@/` imports)
 
 ## File Organization Patterns
+
 ```
 apps/web/src/
 ├── app/                    # Next.js 14 App Router
@@ -296,6 +322,7 @@ apps/web/src/
 ```
 
 ## Database Query Patterns
+
 ```typescript
 // Multi-tenant queries - always filter by user
 const { data: funnels } = await supabase

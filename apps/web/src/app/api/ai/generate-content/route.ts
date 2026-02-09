@@ -50,11 +50,12 @@ export async function POST(request: NextRequest) {
         .eq('is_active', true)
         .single()
       
-      if (!error) {
+      // Silently handle table not found (PGRST205, PGRST106) or no rows (PGRST116)
+      if (!error || error.code === 'PGRST116') {
         brandBrain = profile
       }
     } catch (err) {
-      console.log('BrandBrain table not available, using default settings')
+      // Table doesn't exist, use default settings silently
     }
     
     const params: GenerateContentParams = {

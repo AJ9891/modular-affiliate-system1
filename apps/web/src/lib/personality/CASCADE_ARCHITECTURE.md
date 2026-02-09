@@ -5,6 +5,7 @@
 Most platforms glue AI onto copy. This embeds AI into governance.
 
 Without this pattern:
+
 - ❌ AI generates off-brand content
 - ❌ Copy feels inconsistent across pages
 - ❌ Changing personality requires rewriting prompts
@@ -12,6 +13,7 @@ Without this pattern:
 - ❌ Hand-editing breaks the system
 
 With this pattern:
+
 - ✅ AI physically cannot betray brand personality
 - ✅ One decision cascades perfectly
 - ✅ Change personality → everything regenerates correctly
@@ -44,18 +46,22 @@ const heroCopy = await generateAI({ system: prompt })
 ## Why This is Unusually Strong
 
 ### 1. Single Source of Truth
+
 Change `brand_mode` and regenerate everything. No cascading edits. No missed spots.
 
 ### 2. Governance Before Generation
+
 AI receives constraints, not freedom. It fills shapes, not makes decisions.
 
 ### 3. Behavior ≠ Copy ≠ Style
+
 - **Personality**: How the system thinks
 - **Behavior**: How the UI moves
 - **Contract**: How language is constrained
 - **Style**: How it looks (separate, not here)
 
 ### 4. Validation at Every Layer
+
 ```typescript
 // Validate copy structure
 const { valid, violations } = validateCopy(headline, contract, 'headline')
@@ -65,14 +71,17 @@ const { valid, violations } = validateAIOutput(output, aiProfile)
 ```
 
 ### 5. Hand-Edit Safe
+
 Every piece of copy knows its governance chain. Edit manually and still track intent.
 
 ### 6. Model Agnostic
+
 Swap OpenAI for Claude for Gemini. Prompt structure stays the same.
 
 ## Pattern Reuse
 
 This exact flow works for:
+
 - ✅ Hero sections
 - ✅ Feature sections
 - ✅ Onboarding copy
@@ -83,6 +92,7 @@ This exact flow works for:
 - ✅ About pages
 
 Just swap the behavior resolver:
+
 ```typescript
 resolveHeroBehavior → resolveFeatureBehavior
 resolveHeroCopyContract → resolveFeatureCopyContract
@@ -108,6 +118,7 @@ lib/personality/
 ## Implementation Examples
 
 ### Hero Section
+
 ```typescript
 const heroCopy = await generateHeroCopy('anti_guru', {
   productName: 'FunnelForge',
@@ -123,6 +134,7 @@ const heroCopy = await generateHeroCopy('anti_guru', {
 ```
 
 ### Feature Section
+
 ```typescript
 const featureCopy = await generateFeatureCopy('rocket_future', {
   featureName: 'AI Copy Generation',
@@ -137,6 +149,7 @@ const featureCopy = await generateFeatureCopy('rocket_future', {
 ```
 
 ### Error Message
+
 ```typescript
 const errorCopy = await generateErrorCopy('anti_guru', {
   errorType: 'payment_failed',
@@ -154,6 +167,7 @@ const errorCopy = await generateErrorCopy('anti_guru', {
 ## Debug Tools
 
 ### Preview Cascade
+
 ```typescript
 const preview = previewCascade('ai_meltdown', 'hero')
 
@@ -165,6 +179,7 @@ console.log(preview.prompt)       // PromptConfig
 ```
 
 ### Get Summary
+
 ```typescript
 const summary = getCascadeSummary('anti_guru')
 
@@ -181,6 +196,7 @@ const summary = getCascadeSummary('anti_guru')
 ## Integration Points
 
 ### React Components
+
 ```typescript
 import { generateHeroCopy } from '@/lib/personality'
 
@@ -199,6 +215,7 @@ function HeroGenerator() {
 ```
 
 ### API Routes
+
 ```typescript
 import { generateHeroCopy } from '@/lib/personality'
 
@@ -212,6 +229,7 @@ export async function POST(request: NextRequest) {
 ```
 
 ### Server Components
+
 ```typescript
 import { generateHeroCopy } from '@/lib/personality'
 
@@ -235,20 +253,23 @@ async function HeroSection({ brandMode }: { brandMode: BrandMode }) {
 ### Add New Content Type
 
 1. Create behavior resolver (if needed):
+
 ```typescript
 export function resolveFooterBehavior(personality: PersonalityProfile) {
   // Define footer-specific behavior
 }
 ```
 
-2. Create copy contract:
+1. Create copy contract:
+
 ```typescript
 export function resolveFooterCopyContract(personality: PersonalityProfile) {
   // Define footer language constraints
 }
 ```
 
-3. Create prompt builder:
+1. Create prompt builder:
+
 ```typescript
 export function buildFooterPrompt(
   aiProfile: AIProfile,
@@ -259,7 +280,8 @@ export function buildFooterPrompt(
 }
 ```
 
-4. Create generator:
+1. Create generator:
+
 ```typescript
 export async function generateFooterCopy(
   brandMode: BrandMode,
@@ -279,6 +301,7 @@ Done. Same pattern, new content type.
 ## Anti-Patterns
 
 ### ❌ Don't Call OpenAI Directly
+
 ```typescript
 // BAD
 const response = await openai.createCompletion({
@@ -292,6 +315,7 @@ const heroCopy = await generateHeroCopy(brandMode, { productName })
 ```
 
 ### ❌ Don't Branch on Brand Mode
+
 ```typescript
 // BAD
 if (brandMode === 'anti_guru') {
@@ -307,6 +331,7 @@ const copy = await generateHeroCopy(brandMode, { productName })
 ```
 
 ### ❌ Don't Mix Style with Behavior
+
 ```typescript
 // BAD
 const personality = {
@@ -334,6 +359,7 @@ const theme = {
 ## Testing Strategy
 
 ### Unit Tests
+
 ```typescript
 describe('Cascade Pattern', () => {
   it('resolves personality from brand_mode', () => {
@@ -361,6 +387,7 @@ describe('Cascade Pattern', () => {
 ```
 
 ### Integration Tests
+
 ```typescript
 describe('Generation Flow', () => {
   it('generates hero copy for anti_guru', async () => {
@@ -391,6 +418,7 @@ describe('Generation Flow', () => {
 ## Performance Considerations
 
 ### Caching
+
 ```typescript
 import { cache } from 'react'
 
@@ -400,6 +428,7 @@ export const cachedResolvePersonality = cache((brandMode: BrandMode) => {
 ```
 
 ### Batch Generation
+
 ```typescript
 // Generate multiple content types in parallel
 const [hero, feature1, feature2] = await Promise.all([
@@ -410,6 +439,7 @@ const [hero, feature1, feature2] = await Promise.all([
 ```
 
 ### Memoization
+
 ```typescript
 import { useMemo } from 'react'
 
@@ -430,12 +460,14 @@ function useCascade(brandMode: BrandMode) {
 If you have existing AI generation code:
 
 ### Before
+
 ```typescript
 const prompt = `You are a ${brandMode} brand. Write a hero headline for ${productName}.`
 const response = await openai.createCompletion({ prompt })
 ```
 
 ### After
+
 ```typescript
 const heroCopy = await generateHeroCopy(brandMode, { productName })
 ```
@@ -445,6 +477,7 @@ That's it. The cascade handles everything else.
 ## Future Extensions
 
 This pattern enables:
+
 - 🔮 Multi-language generation (same constraints, different languages)
 - 🔮 A/B test variants (same personality, different emphasis)
 - 🔮 Accessibility text generation (same intent, WCAG compliance)

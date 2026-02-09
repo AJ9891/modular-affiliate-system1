@@ -70,6 +70,7 @@ In your **Supabase Dashboard**:
 Go to **Storage** → **downloads** bucket → **Policies** tab, then paste these:
 
 ### Policy 1: Users can upload their own files
+
 ```sql
 create policy "Users can upload their own files"
 on storage.objects for insert
@@ -78,6 +79,7 @@ with check (bucket_id = 'downloads' and (storage.foldername(name))[1] = auth.uid
 ```
 
 ### Policy 2: Users can view their own files
+
 ```sql
 create policy "Users can view their own files"
 on storage.objects for select
@@ -86,6 +88,7 @@ using (bucket_id = 'downloads' and (storage.foldername(name))[1] = auth.uid()::t
 ```
 
 ### Policy 3: Users can delete their own files
+
 ```sql
 create policy "Users can delete their own files"
 on storage.objects for delete
@@ -94,6 +97,7 @@ using (bucket_id = 'downloads' and (storage.foldername(name))[1] = auth.uid()::t
 ```
 
 ### Policy 4: Public access to files
+
 ```sql
 create policy "Public access to files"
 on storage.objects for select
@@ -104,7 +108,7 @@ using (bucket_id = 'downloads');
 ## Step 4: Test the System
 
 1. Restart your dev server (if running)
-2. Navigate to **http://localhost:3000/downloads**
+2. Navigate to **<http://localhost:3000/downloads>**
 3. Upload a test PDF or document
 4. Copy the download link
 5. Test the download in an incognito window
@@ -124,9 +128,10 @@ import DownloadGate from '@/components/DownloadGate';
 />
 ```
 
-## ✅ Done!
+## ✅ Done
 
 You now have:
+
 - ✅ File upload system
 - ✅ Email capture before download
 - ✅ Download tracking

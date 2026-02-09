@@ -29,8 +29,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const res = await fetch('/api/auth/me')
       if (res.ok) {
-        const data = await res.json()
-        setUser(data.user)
+        const contentType = res.headers.get('content-type')
+        if (contentType && contentType.includes('application/json')) {
+          const data = await res.json()
+          setUser(data.user)
+        } else {
+          console.error('AuthContext: Expected JSON but received:', contentType)
+          setUser(null)
+        }
       } else {
         setUser(null)
         // Only redirect to login if on a protected page
@@ -44,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch (error) {
+      console.error('AuthContext: Error checking auth:', error)
       setUser(null)
     } finally {
       setLoading(false)
@@ -62,8 +69,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     if (!res.ok) {
-      const error = await res.json()
-      throw new Error(error.error || 'Login failed')
+      try {
+        const error = await res.json()
+        throw new Error(error.error || 'Login failed')
+      } catch (parseError) {
+        throw new Error('Login failed - server error')
+      }
     }
 
     await checkAuth()
