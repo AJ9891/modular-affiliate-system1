@@ -3,7 +3,7 @@ import { getBrandPersonality } from '@/lib/ai-generator';
 import { BrandModeId } from '@/lib/ai-generator';
 
 export async function getFunnelWithPersonality(funnelId: string) {
-  const supabase = createServerClient();
+  const supabase = await createServerClient();
 
   const { data: funnel, error } = await supabase
     .from('funnels')

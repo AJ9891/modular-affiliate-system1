@@ -5,9 +5,10 @@ import { cookies } from 'next/headers'
 // PATCH /api/team/[memberId] - Update team member role
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { memberId: string } }
+  context: { params: Promise<{ memberId: string }> }
 ) {
   try {
+    const supabase = createRouteHandlerClient({ cookies })
     const accessToken = request.cookies.get('sb-access-token')?.value
     
     if (!accessToken) {
@@ -28,10 +29,11 @@ export async function PATCH(
     }
 
     // Update team member role (must be owner or admin)
+    const { memberId } = await context.params
     const { data, error } = await supabase
       .from('team_members')
       .update({ role, updated_at: new Date().toISOString() })
-      .eq('id', params.memberId)
+      .eq('id', memberId)
       .eq('account_owner_id', user.id)
       .select()
       .single()

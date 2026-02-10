@@ -9,8 +9,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Server-side function to create authenticated Supabase client
-export function createServerClient() {
-  const cookieStore = cookies()
+export async function createServerClient() {
+  const cookieStore = await cookies()
 
   return createClient(supabaseUrl!, supabaseAnonKey!, {
     auth: {

@@ -7,16 +7,15 @@ const supabase = createClient(
 )
 
 interface FunnelPageProps {
-  params: {
-    slug: string
-  }
+  params: Promise<{ slug: string }>
 }
 
 export default async function FunnelPage({ params }: FunnelPageProps) {
+  const { slug } = await params
   const { data: funnel } = await supabase
     .from('funnels')
     .select('*')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .eq('active', true)
     .single()
 

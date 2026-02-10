@@ -2,13 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit, getRateLimitKey, RATE_LIMIT_CONFIGS } from './rate-limit'
 import { addSecurityHeaders } from './security'
 
+type RateLimitArg = keyof typeof RATE_LIMIT_CONFIGS | { requests: number; window: number }
+
 export function withRateLimit(
   handler: (req: NextRequest) => Promise<NextResponse>,
-  limitType: keyof typeof RATE_LIMIT_CONFIGS = 'api'
+  limitType: RateLimitArg = 'api'
 ) {
   return async (req: NextRequest): Promise<NextResponse> => {
-    const identifier = getRateLimitKey(req, limitType)
-    const config = RATE_LIMIT_CONFIGS[limitType]
+    const config = typeof limitType === 'string'
+      ? RATE_LIMIT_CONFIGS[limitType]
+      : { interval: limitType.window * 1000, limit: limitType.requests }
+
+    const identifier = getRateLimitKey(req, typeof limitType === 'string' ? limitType : 'custom')
     
     const { success, remaining, resetTime } = rateLimit(identifier, config)
     

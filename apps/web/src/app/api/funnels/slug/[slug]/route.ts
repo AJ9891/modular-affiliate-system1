@@ -5,7 +5,7 @@ import { checkSupabase } from '@/lib/check-supabase'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  context: { params: Promise<{ slug: string }> }
 ) {
   const check = checkSupabase()
   if (check) return check
@@ -37,10 +37,11 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
     }
 
+    const { slug } = await context.params
     const { data: funnel, error } = await userSupabase
       .from('funnels')
       .select('*')
-      .eq('slug', params.slug)
+      .eq('slug', slug)
       .eq('user_id', user.id)
       .single()
 

@@ -173,8 +173,10 @@ export function resolveVisualTokens(
   const spacing = {
     generous: { section: 'space-y-16', content: 'space-y-8', inline: 'gap-6' },
     standard: { section: 'space-y-12', content: 'space-y-6', inline: 'gap-4' },
-    compressed: { section: 'space-y-8', content: 'space-y-4', inline: 'gap-2' }
-  }[spatialRhythm];
+    compressed: { section: 'space-y-8', content: 'space-y-4', inline: 'gap-2' },
+    edgy: { section: 'space-y-10', content: 'space-y-5', inline: 'gap-3' },
+    flowing: { section: 'space-y-14', content: 'space-y-7', inline: 'gap-5' }
+  }[spatialRhythm] ?? { section: 'space-y-12', content: 'space-y-6', inline: 'gap-4' };
   
   // Borders: From contrast + ornament, scaled by visualWeight
   const borders = (() => {
@@ -202,8 +204,10 @@ export function resolveVisualTokens(
     const baseDepth = {
       none: { card: 'shadow-none', hover: 'hover:shadow-sm', focus: 'focus:ring-2 focus:ring-gray-900' },
       light: { card: 'shadow-sm', hover: 'hover:shadow-md', focus: 'focus:ring-2 focus:ring-blue-500' },
-      expressive: { card: 'shadow-md', hover: 'hover:shadow-lg', focus: 'focus:ring-2 focus:ring-purple-500' }
-    }[ornamentLevel];
+      expressive: { card: 'shadow-md', hover: 'hover:shadow-lg', focus: 'focus:ring-2 focus:ring-purple-500' },
+      satirical: { card: 'shadow-md', hover: 'hover:shadow-lg', focus: 'focus:ring-2 focus:ring-purple-500' },
+      uplifting: { card: 'shadow-sm', hover: 'hover:shadow-md', focus: 'focus:ring-2 focus:ring-green-500' }
+    }[ornamentLevel] ?? { card: 'shadow-sm', hover: 'hover:shadow-md', focus: 'focus:ring-2 focus:ring-blue-500' };
     
     // High visualWeight = allow full depth
     if (visualWeight === 'high') return baseDepth;
@@ -217,11 +221,13 @@ export function resolveVisualTokens(
   })();
   
   // Effects: Only at medium/high weight
-  const effects = visualWeight === 'high' ? {
+  const effects = visualWeight === 'high' ? ({
     none: { backdrop: 'backdrop-blur-none', gradient: false, glow: false },
     light: { backdrop: 'backdrop-blur-sm', gradient: true, glow: true },
-    expressive: { backdrop: 'backdrop-blur-md', gradient: false, glow: false }
-  }[ornamentLevel] : {
+    expressive: { backdrop: 'backdrop-blur-md', gradient: false, glow: false },
+    satirical: { backdrop: 'backdrop-blur-md', gradient: true, glow: true },
+    uplifting: { backdrop: 'backdrop-blur-sm', gradient: true, glow: true }
+  }[ornamentLevel] ?? { backdrop: 'backdrop-blur-none', gradient: false, glow: false }) : {
     backdrop: 'backdrop-blur-none',
     gradient: false,
     glow: false
@@ -463,6 +469,51 @@ export function resolveToneProfile(personality: PersonalityProfile) {
       uppercase: true,
       italic: false,
       letterSpacing: 'tracking-wider'
+    },
+    sarcastic: {
+      headingSizes: {
+        h1: 'text-4xl md:text-5xl',
+        h2: 'text-3xl md:text-4xl',
+        h3: 'text-2xl md:text-3xl',
+        h4: 'text-xl md:text-2xl'
+      },
+      headingWeight: 'font-semibold',
+      bodyWeight: 'font-normal',
+      headingLeading: 'leading-tight',
+      bodyLeading: 'leading-relaxed',
+      uppercase: false,
+      italic: false,
+      letterSpacing: 'tracking-normal'
+    },
+    brutally_honest: {
+      headingSizes: {
+        h1: 'text-4xl md:text-5xl',
+        h2: 'text-3xl md:text-4xl',
+        h3: 'text-2xl md:text-3xl',
+        h4: 'text-xl md:text-2xl'
+      },
+      headingWeight: 'font-bold',
+      bodyWeight: 'font-medium',
+      headingLeading: 'leading-tight',
+      bodyLeading: 'leading-normal',
+      uppercase: false,
+      italic: false,
+      letterSpacing: 'tracking-tight'
+    },
+    encouraging: {
+      headingSizes: {
+        h1: 'text-4xl md:text-5xl',
+        h2: 'text-3xl md:text-4xl',
+        h3: 'text-2xl md:text-3xl',
+        h4: 'text-xl md:text-2xl'
+      },
+      headingWeight: 'font-semibold',
+      bodyWeight: 'font-normal',
+      headingLeading: 'leading-snug',
+      bodyLeading: 'leading-relaxed',
+      uppercase: false,
+      italic: false,
+      letterSpacing: 'tracking-normal'
     }
   };
   

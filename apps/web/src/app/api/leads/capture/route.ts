@@ -10,8 +10,8 @@ import { sendshark } from '@/lib/sendshark'
  * POST /api/leads/capture - Capture a new lead and trigger automations
  */
 export const POST = withRateLimit(
-  withValidation(
-    withErrorHandling(async (req: NextRequest, validatedData: any) => {
+  withErrorHandling(
+    withValidation(async (req: NextRequest, validatedData: any) => {
       const supabase = createRouteHandlerClient({ cookies })
       
       const { 
@@ -91,8 +91,7 @@ export const POST = withRateLimit(
         lead,
         message: 'Lead captured successfully'
       }, { status: 201 })
-    }),
-    leadCaptureSchema
+    }, leadCaptureSchema)
   ),
   'api'
 )

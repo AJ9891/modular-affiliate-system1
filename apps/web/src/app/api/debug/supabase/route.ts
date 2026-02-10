@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 
 export async function GET() {
   try {
+    const supabase = createRouteHandlerClient({ cookies })
     // Test environment variables
     const envCheck = {
       NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Missing',

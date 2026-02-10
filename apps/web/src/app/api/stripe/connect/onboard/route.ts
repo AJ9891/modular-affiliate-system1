@@ -5,7 +5,7 @@ import Stripe from 'stripe'
 import { checkSupabase } from '@/lib/check-supabase'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20.acacia',
+  apiVersion: '2025-12-15.clover',
 })
 
 // Force dynamic rendering for this API route

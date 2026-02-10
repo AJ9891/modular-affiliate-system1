@@ -4,12 +4,12 @@ import { cookies } from 'next/headers'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const supabase = createRouteHandlerClient({ cookies })
   
   try {
-    const { id } = params;
+    const { id } = await context.params;
 
     // Get download record
     const { data: download, error: fetchError } = await supabase

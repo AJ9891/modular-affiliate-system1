@@ -5,15 +5,17 @@ import { checkSupabase } from '@/lib/check-supabase'
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const check = checkSupabase()
   if (check) return check
   
   try {
+    const supabase = createRouteHandlerClient({ cookies })
     const body = await request.json()
     const { name, blocks, slug } = body
 
+    const { id } = await context.params
     const { data, error } = await supabase!
       .from('funnels')
       .update({
@@ -22,7 +24,7 @@ export async function PUT(
         blocks: JSON.stringify(blocks),
         updated_at: new Date().toISOString(),
       })
-      .eq('funnel_id', params.id)
+      .eq('funnel_id', id)
       .select()
 
     if (error) {
@@ -40,16 +42,18 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const check = checkSupabase()
   if (check) return check
   
   try {
+    const supabase = createRouteHandlerClient({ cookies })
+    const { id } = await context.params
     const { error } = await supabase!
       .from('funnels')
       .delete()
-      .eq('funnel_id', params.id)
+      .eq('funnel_id', id)
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 })

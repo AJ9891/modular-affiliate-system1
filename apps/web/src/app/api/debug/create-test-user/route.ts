@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 
 export async function POST() {
   try {
+    const supabase = createRouteHandlerClient({ cookies })
     const testEmail = `test-${Date.now()}@example.com`
     const testPassword = 'TestPassword123!'
 

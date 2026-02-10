@@ -2,16 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
 // Common validation schemas
-export const emailSchema = z.string().email('Invalid email address')
-export const uuidSchema = z.string().uuid('Invalid UUID format')
-export const urlSchema = z.string().url('Invalid URL format')
+export const emailSchema = z.string().email()
+export const uuidSchema = z.string().uuid()
+export const urlSchema = z.string().url()
 
 // Funnel validation schemas
 export const funnelBlockSchema = z.object({
   id: z.string().min(1),
   type: z.enum(['hero', 'features', 'cta', 'testimonial', 'pricing', 'faq', 'email-capture']),
-  content: z.record(z.unknown()),
-  style: z.record(z.unknown()).optional(),
+  content: z.record(z.string(), z.unknown()),
+  style: z.record(z.string(), z.unknown()).optional(),
 })
 
 export const funnelSchema = z.object({
@@ -63,7 +63,7 @@ export function validateInput<T>(
     return { success: true, data: result }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const errors = error.errors.map(err => `${err.path.join('.')}: ${err.message}`)
+      const errors = error.issues.map(err => `${err.path.join('.')}: ${err.message}`)
       return { success: false, errors }
     }
     return { success: false, errors: ['Invalid input format'] }

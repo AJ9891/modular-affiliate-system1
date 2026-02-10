@@ -9,6 +9,7 @@ export async function GET() {
   if (check) return check
 
   try {
+    const supabase = createRouteHandlerClient({ cookies })
     const { data, error } = await supabase!
       .from('offers')
       .select('*')

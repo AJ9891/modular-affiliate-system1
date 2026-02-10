@@ -5,7 +5,7 @@ import { checkSupabase } from '@/lib/check-supabase'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { funnelId: string } }
+  context: { params: Promise<{ funnelId: string }> }
 ) {
   const check = checkSupabase()
   if (check) return check
@@ -13,7 +13,7 @@ export async function GET(
   const supabase = createRouteHandlerClient({ cookies })
   
   try {
-    const funnelId = params.funnelId
+    const { funnelId } = await context.params
 
     // Get clicks
     const { data: clicks, error: clicksError } = await supabase!

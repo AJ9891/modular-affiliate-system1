@@ -5,19 +5,21 @@ import { checkSupabase } from '@/lib/check-supabase'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  context: { params: Promise<{ slug: string }> }
 ) {
   const check = checkSupabase()
   if (check) return check
 
   try {
+    const supabase = createRouteHandlerClient({ cookies })
+    const { slug } = await context.params
     const { data: page, error } = await supabase!
       .from('pages')
       .select(`
         *,
         funnels!inner(active)
       `)
-      .eq('slug', params.slug)
+      .eq('slug', slug)
       .eq('funnels.active', true)
       .single()
 

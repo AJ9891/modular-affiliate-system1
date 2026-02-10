@@ -6,13 +6,13 @@ import { moduleLoader } from '@/lib/module-loader'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const check = checkSupabase()
   if (check) return check
   
   try {
-    const moduleId = params.id
+    const { id: moduleId } = await context.params
 
     // Load the module
     const module = await moduleLoader.loadModule(moduleId)

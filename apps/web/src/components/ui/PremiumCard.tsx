@@ -35,6 +35,8 @@ export function PremiumCard({
   className = '',
   ...props
 }: PremiumCardProps) {
+  const { onAnimationStart, ...rest } = props
+
   const baseClasses = cn(
     cardVariants[variant],
     glow && glowVariants[variant],
@@ -61,7 +63,7 @@ export function PremiumCard({
       <motion.div
         className={baseClasses}
         {...motionProps}
-        {...props}
+        {...(rest as any)}
       >
         {children}
       </motion.div>
@@ -69,7 +71,7 @@ export function PremiumCard({
   }
 
   return (
-    <div className={baseClasses} {...props}>
+    <div className={baseClasses} onAnimationStart={onAnimationStart} {...rest}>
       {children}
     </div>
   )

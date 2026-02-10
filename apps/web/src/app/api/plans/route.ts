@@ -200,7 +200,9 @@ async function getUpgradeSuggestions(request: NextRequest) {
       .eq('account_owner_id', user!.id)
       .eq('status', 'active')
 
-    if (teamCount > 0) {
+    const safeTeamCount = teamCount ?? 0
+
+    if (safeTeamCount > 0) {
       suggestions.push({
         reason: 'Managing a team?',
         suggestedTier: 'agency',

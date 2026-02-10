@@ -1,7 +1,7 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
-import { generateAIContent } from '@/lib/ai'
-import { resolvePersonality, resolveAIPrompt } from '@/lib/personality'
+import { generateContent } from '@/lib/ai'
+import { resolvePersonality, resolveAIPrompt, isBrandMode } from '@/lib/personality'
 
 export interface OptimizationMetrics {
   conversionRate: number
@@ -110,7 +110,7 @@ export class AIOptimizer {
 
         variations.push({
           id: `variation-${i + 1}`,
-          name: `${personality.traits.communication_style} Variation ${i + 1}`,
+          name: `${personality.name} Variation ${i + 1}`,
           blocks: modifiedBlocks,
           traffic_percentage: 50 / headlineVariations.length,
           status: 'draft'
@@ -134,7 +134,7 @@ export class AIOptimizer {
 
         variations.push({
           id: `cta-variation-${i + 1}`,
-          name: `${personality.traits.urgency_level} CTA ${i + 1}`,
+          name: `${personality.name} CTA ${i + 1}`,
           blocks: modifiedBlocks,
           traffic_percentage: 50 / ctaVariations.length,
           status: 'draft'
@@ -238,9 +238,9 @@ export class AIOptimizer {
     }
   }
 
-  private async analyzeBlock(block: FunnelBlock, metrics: OptimizationMetrics, brandMode: string): Promise<OptimizationSuggestion[]> {
+  private async analyzeBlock(block: FunnelBlock, metrics: OptimizationMetrics, brandMode: string | null): Promise<OptimizationSuggestion[]> {
     const suggestions: OptimizationSuggestion[] = []
-    const personality = resolvePersonality(brandMode)
+    const personality = resolvePersonality(isBrandMode(brandMode) ? brandMode : undefined)
 
     // Analyze headlines
     if (block.content.headline) {
@@ -348,7 +348,7 @@ Each headline should:
 
 Return only the 3 headlines, one per line.`
 
-      const response = await generateAIContent(prompt, {
+      const response = await generateContent(prompt, {
         temperature: 0.9,
         max_tokens: 150
       })
@@ -378,7 +378,7 @@ Each headline should:
 
 Return only the 3 headlines, one per line.`
 
-    const response = await generateAIContent(prompt, {
+    const response = await generateContent(prompt, {
       temperature: 0.8,
       max_tokens: 150
     })
@@ -409,7 +409,7 @@ Each CTA should:
 
 Return only the 3 CTAs, one per line.`
 
-      const response = await generateAIContent(prompt, {
+      const response = await generateContent(prompt, {
         temperature: 0.8,
         max_tokens: 100
       })
@@ -439,7 +439,7 @@ Each CTA should:
 
 Return only the 3 CTAs, one per line.`
 
-    const response = await generateAIContent(prompt, {
+    const response = await generateContent(prompt, {
       temperature: 0.7,
       max_tokens: 100
     })
@@ -461,13 +461,13 @@ Return only the 3 CTAs, one per line.`
 
 "${headline}"
 
-Personality: ${personality.traits.communication_style}
-Target audience: ${personality.traits.target_audience}
-Urgency level: ${personality.traits.urgency_level}
+Personality: ${personality.name}
+Authority tone: ${personality.authorityTone}
+Trust posture: ${personality.trustPosture}
 
 Return only the optimized headline.`
 
-    return await generateAIContent(prompt, {
+    return await generateContent(prompt, {
       temperature: 0.6,
       max_tokens: 100
     })
@@ -484,12 +484,12 @@ Return only the optimized headline.`
 
 "${cta}"
 
-Personality: ${personality.traits.communication_style}
-Urgency level: ${personality.traits.urgency_level}
+Personality: ${personality.name}
+Authority tone: ${personality.authorityTone}
 
 Return only the optimized CTA (under 25 characters).`
 
-    return await generateAIContent(prompt, {
+    return await generateContent(prompt, {
       temperature: 0.6,
       max_tokens: 50
     })

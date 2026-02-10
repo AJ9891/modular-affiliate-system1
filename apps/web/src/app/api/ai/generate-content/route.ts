@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     
     // Validate behavior before proceeding
-    const action: AIAction = 'content-generation'
+    const action: AIAction = 'generate'
     const hasConsent = true // Assume consent for authenticated users
     
     const behaviorValidation = validateAIBehavior({

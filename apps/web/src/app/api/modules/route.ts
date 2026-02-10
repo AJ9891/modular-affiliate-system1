@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
   if (check) return check
   
   try {
+    const supabase = createRouteHandlerClient({ cookies })
     const { data: modules, error } = await supabase!
       .from('niches')
       .select('*')

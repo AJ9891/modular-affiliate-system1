@@ -20,6 +20,8 @@ export {
 } from './PremiumTypography'
 export type { PremiumTypographyProps } from './PremiumTypography'
 
+export { Alert, AlertDescription } from './alert'
+
 // Re-export existing shadcn/ui components for consistency
 export { Button } from './button'
 export { Card } from './card'

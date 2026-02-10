@@ -1,5 +1,77 @@
-import { BrandBrain } from '@/types/brand-brain';
+import { BrandBrain, type UIExpressionProfile } from '@/types/brand-brain';
 import { CANONICAL_PERSONALITIES } from '../personality/canonical-definitions';
+
+const DEFAULT_UI_EXPRESSION: UIExpressionProfile = {
+  hero: {
+    variants: ['meltdown', 'anti-guru', 'rocket'] as ('meltdown' | 'anti-guru' | 'rocket')[],
+    motionIntensity: 'medium',
+    visualNoise: 'controlled'
+  },
+  typography: {
+    tone: 'confident' as const,
+    emphasisStyle: 'highlight' as const
+  },
+  surfaces: {
+    depth: 'layered' as const,
+    borderStyle: 'sharp' as const
+  },
+  microInteractions: {
+    hoverAllowed: true,
+    glitchAllowed: true,
+    pulseAllowed: false
+  },
+  sound: {
+    ambientProfiles: ['glitch'] as ('checklist' | 'hum' | 'glitch')[],
+    maxVolume: 60
+  }
+};
+
+const DEFAULT_SOUND_POLICY = {
+  voiceCharacteristics: {
+    shouldBe: ['helpful', 'clear', 'on-brand'],
+    shouldNotBe: ['deceptive', 'manipulative', 'overpromising']
+  },
+  wordChoice: {
+    preferred: ['transparent', 'practical', 'specific'],
+    avoid: ['guaranteed', 'overnight', 'secret'],
+    inclusivityRules: ['use inclusive language', 'avoid gendered terms unless required']
+  },
+  messaging: {
+    problemSolutionFraming: true,
+    benefitFocused: true,
+    socialProofStyle: 'mixed' as const,
+    urgencyPolicy: 'subtle' as const
+  },
+  customerCommunication: {
+    addressStyle: 'friendly' as const,
+    empathyLevel: 'moderate' as const,
+    responseTimePromise: 'Within 24 hours'
+  }
+};
+
+const DEFAULT_FORBIDDEN_CLAIMS = {
+  legal: {
+    healthClaims: ['Cure, prevent, or treat diseases'],
+    financialGuarantees: ['Guaranteed income', 'Get rich quick'],
+    absoluteStatements: ['Always works', '100% success'],
+    competitorMentions: 'factual-only' as const
+  },
+  regulatory: {
+    ftcDisclosures: ['Include affiliate disclosures where required'],
+    gdprCompliance: ['Do not store personal data without consent'],
+    industryRegulations: ['Follow email marketing laws (CAN-SPAM)']
+  },
+  ethics: {
+    exploitativeClaims: ['Fear-based manipulation', 'Shaming the user'],
+    fearMongeringLimits: ['No false urgency', 'Avoid scare tactics'],
+    transparencyRules: ['Be clear about limitations', 'No hidden fees']
+  },
+  contentRestrictions: {
+    prohibitedTopics: ['Hate speech', 'Illegal activities'],
+    sensitiveTopics: ['Medical advice', 'Financial advice'],
+    ageRestrictions: '18+ content requires gating'
+  }
+};
 
 /**
  * Brand Brain Personality Profiles
@@ -107,9 +179,20 @@ export const GLITCH_BRAND_BRAIN: Omit<BrandBrain, 'id' | 'createdAt' | 'updatedA
     interaction: {
       requireConfirmation: ["ai-generation"], // "Are you sure you want more AI BS?"
       autoSave: false, // Manual control
-      keyboardShortcuts: ["ctrl+r"] // For "reality check"
+      keyboardShortcuts: ["ctrl+r"], // For "reality check"
+      loadingStyle: "progress-bar",
+      errorStyle: "banner"
+    },
+    accessibility: {
+      wcagLevel: "AA",
+      minContrastRatio: 4.5,
+      keyboardNav: true,
+      screenReaderOptimized: true
     }
-  }
+  },
+  uiExpressionProfile: DEFAULT_UI_EXPRESSION,
+  soundPolicy: DEFAULT_SOUND_POLICY,
+  forbiddenClaims: DEFAULT_FORBIDDEN_CLAIMS
 };
 
 export const ANCHOR_BRAND_BRAIN: Omit<BrandBrain, 'id' | 'createdAt' | 'updatedAt' | 'userId'> = {
@@ -199,16 +282,27 @@ export const ANCHOR_BRAND_BRAIN: Omit<BrandBrain, 'id' | 'createdAt' | 'updatedA
     },
     copy: {
       headlineStyle: "direct-statement", // "Here's what they won't tell you"
-      buttonTextStyle: "honest-action", // "Get the real numbers"
+      buttonTextStyle: "action-verb", // "Get the real numbers"
       maxHeadlineLength: 50, // Concise and punchy
       maxButtonLength: 20
     },
     interaction: {
       requireConfirmation: ["major-decisions"], // "Are you ready for the truth?"
       autoSave: true, // Efficient, no games
-      keyboardShortcuts: ["ctrl+t"] // For "truth mode"
+      keyboardShortcuts: ["ctrl+t"], // For "truth mode"
+      loadingStyle: "spinner",
+      errorStyle: "toast"
+    },
+    accessibility: {
+      wcagLevel: "AA",
+      minContrastRatio: 4.5,
+      keyboardNav: true,
+      screenReaderOptimized: true
     }
-  }
+  },
+  uiExpressionProfile: DEFAULT_UI_EXPRESSION,
+  soundPolicy: DEFAULT_SOUND_POLICY,
+  forbiddenClaims: DEFAULT_FORBIDDEN_CLAIMS
 };
 
 export const BOOST_BRAND_BRAIN: Omit<BrandBrain, 'id' | 'createdAt' | 'updatedAt' | 'userId'> = {
@@ -232,14 +326,14 @@ export const BOOST_BRAND_BRAIN: Omit<BrandBrain, 'id' | 'createdAt' | 'updatedAt
       tone: "encouraging", // PRIMARY TRAIT CONFIRMED
       traits: ["optimistic", "solution-focused", "energetic", "supportive", "forward-thinking"],
       formalityLevel: 2, // Friendly but professional
-      humorLevel: "light", // Positive, uplifting
+      humorLevel: "moderate", // Positive, uplifting
       emojiUsage: "moderate" // Rockets, progress bars, celebration
     },
     language: {
-      complexity: "accessible",
-      sentenceStructure: "energetic",
+      complexity: "clear",
+      sentenceStructure: "conversational",
       voicePreference: "active", 
-      jargonPolicy: "simplified" // Make complex stuff simple
+      jargonPolicy: "minimal" // Make complex stuff simple
     }
   },
   
@@ -298,16 +392,27 @@ export const BOOST_BRAND_BRAIN: Omit<BrandBrain, 'id' | 'createdAt' | 'updatedAt
     },
     copy: {
       headlineStyle: "benefit-focused", // "Ready to 10x your progress?"
-      buttonTextStyle: "action-momentum", // "Start building now"
+      buttonTextStyle: "action-verb", // "Start building now"
       maxHeadlineLength: 60, // Room for benefit statements
       maxButtonLength: 25
     },
     interaction: {
       requireConfirmation: ["destructive-actions"], // Protect progress
       autoSave: true, // Keep momentum going
-      keyboardShortcuts: ["ctrl+b"] // For "boost mode"
+      keyboardShortcuts: ["ctrl+b"], // For "boost mode"
+      loadingStyle: "skeleton",
+      errorStyle: "inline"
+    },
+    accessibility: {
+      wcagLevel: "AA",
+      minContrastRatio: 4.5,
+      keyboardNav: true,
+      screenReaderOptimized: true
     }
-  }
+  },
+  uiExpressionProfile: DEFAULT_UI_EXPRESSION,
+  soundPolicy: DEFAULT_SOUND_POLICY,
+  forbiddenClaims: DEFAULT_FORBIDDEN_CLAIMS
 };
 
 // Export personality-specific Brand Brains

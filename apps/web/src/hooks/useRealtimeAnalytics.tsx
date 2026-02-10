@@ -98,9 +98,7 @@ export function useRealtimeAnalytics() {
       
       // Attempt to reconnect after 5 seconds
       setTimeout(() => {
-        if (connectionStatus !== 'connected') {
-          connect()
-        }
+        connect()
       }, 5000)
     }
 

@@ -9,6 +9,7 @@ export async function POST(request: NextRequest) {
   if (check) return check
   
   try {
+    const supabase = createRouteHandlerClient({ cookies })
     // Get user from session
     const accessToken = request.cookies.get('sb-access-token')?.value
     

@@ -4,11 +4,11 @@ import { cookies } from 'next/headers'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { subdomain: string; slug?: string[] } }
+  context: { params: Promise<{ subdomain: string; slug?: string[] }> }
 ) {
   try {
-    const { subdomain } = params
-    const slug = params.slug || []
+    const { subdomain, slug: slugParam } = await context.params
+    const slug = slugParam || []
     
     // Create Supabase client
     const supabase = createRouteHandlerClient({ cookies })

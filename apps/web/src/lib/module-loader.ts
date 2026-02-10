@@ -11,7 +11,10 @@ class ModuleLoader {
 
     try {
       // Dynamically import the module
-      const module = await import(`@modular-affiliate/modules/${moduleId}`)
+      const module = await import(
+        /* webpackExclude: /\.d\.ts$/ */
+        `@modular-affiliate/modules/${moduleId}`
+      )
       const moduleContract: ModuleContract = module.default
 
       // Validate module contract

@@ -3,13 +3,13 @@ import type { NextRequest } from 'next/server'
 import {
   parseSubdomain,
   createSubdomainMiddlewareClient,
-  getSubdomainRedirectUrl
+  getSubdomainRedirectUrl,
 } from './lib/subdomain-auth'
 import { addSecurityHeaders } from './lib/security'
 import { isPublicPath } from './config/publicPaths'
 
-export async function middleware(req: NextRequest) {
-  // ✅ Allow public pages - bypass auth completely
+export async function proxy(req: NextRequest) {
+  // Allow public pages without auth and still attach security headers
   if (isPublicPath(req.nextUrl.pathname)) {
     const res = NextResponse.next()
     return addSecurityHeaders(res)
@@ -17,7 +17,7 @@ export async function middleware(req: NextRequest) {
 
   const res = NextResponse.next()
   const { isSubdomain, subdomain } = parseSubdomain(req)
-  
+
   // Handle subdomain routing
   if (isSubdomain && subdomain) {
     // Check if this is a subdomain-specific route
@@ -28,7 +28,7 @@ export async function middleware(req: NextRequest) {
       return NextResponse.rewrite(url)
     }
   }
-  
+
   // Configure Supabase client with proper cookie domain handling for subdomains
   const supabase = createSubdomainMiddlewareClient(req, res)
 
@@ -36,7 +36,7 @@ export async function middleware(req: NextRequest) {
   const {
     data: { session },
   } = await supabase.auth.getSession()
-  
+
   // Add user ID to headers for rate limiting if authenticated
   if (session?.user) {
     res.headers.set('x-user-id', session.user.id)
@@ -44,7 +44,7 @@ export async function middleware(req: NextRequest) {
 
   // Protect authenticated routes
   const protectedPaths = ['/launchpad', '/dashboard', '/admin', '/builder', '/domains']
-  const isProtectedPath = protectedPaths.some(path => req.nextUrl.pathname.startsWith(path))
+  const isProtectedPath = protectedPaths.some((path) => req.nextUrl.pathname.startsWith(path))
 
   if (isProtectedPath && !session) {
     const redirectUrl = getSubdomainRedirectUrl(req, '/login')

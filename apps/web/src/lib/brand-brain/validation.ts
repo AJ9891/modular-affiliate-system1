@@ -132,8 +132,8 @@ export function validateAllPersonalityProfiles(): ValidationResult {
       ...brandBrain,
       id: `test-${personalityId}`,
       userId: 'test-user',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
 
     const validation = validateBrandBrainAlignment(fullBrandBrain);

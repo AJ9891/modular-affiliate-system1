@@ -146,7 +146,11 @@ export function validatePersonalityContract(personality: any) {
 
 export function getPersonalityByTrait(trait: string) {
   const personalities = Object.values(CANONICAL_PERSONALITIES);
-  return personalities.find(p => p.primaryTrait === trait || p.secondaryTraits.includes(trait));
+  return personalities.find(
+    (p) =>
+      p.primaryTrait === trait ||
+      (p.secondaryTraits as readonly string[]).includes(trait)
+  );
 }
 
 // Trait mapping for legacy systems

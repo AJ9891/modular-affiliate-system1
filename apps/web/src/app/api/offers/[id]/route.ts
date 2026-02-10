@@ -6,14 +6,14 @@ import { createClient } from '@supabase/supabase-js'
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const check = checkSupabase()
   if (check) return check
 
   try {
     const body = await request.json()
-    const offerId = params.id
+    const { id: offerId } = await context.params
 
     // Use service role client to bypass RLS
     const adminClient = createClient(
@@ -48,13 +48,13 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const check = checkSupabase()
   if (check) return check
 
   try {
-    const offerId = params.id
+    const { id: offerId } = await context.params
 
     // Use service role client to bypass RLS
     const adminClient = createClient(

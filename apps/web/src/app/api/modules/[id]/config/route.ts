@@ -3,10 +3,10 @@ import { moduleLoader } from '@/lib/module-loader'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const moduleId = params.id
+    const { id: moduleId } = await context.params
     const module = await moduleLoader.loadModule(moduleId)
 
     if (!module) {

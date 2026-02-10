@@ -185,7 +185,10 @@ function exampleCascadePreview() {
   console.log('Behavior:', preview.behavior)
   console.log('Contract:', preview.contract)
   console.log('AI Profile:', preview.aiProfile)
-  console.log('Prompt (first 200 chars):', preview.prompt?.system.slice(0, 200))
+  const promptPreview = typeof preview.prompt === 'string'
+    ? preview.prompt.slice(0, 200)
+    : (preview.prompt as any)?.system?.slice(0, 200)
+  console.log('Prompt (first 200 chars):', promptPreview)
 
   // Get a summary for debugging
   const summary = getCascadeSummary('ai_meltdown')

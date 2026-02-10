@@ -44,6 +44,7 @@ const nextConfig = {
     ignoreBuildErrors: process.env.NODE_ENV === 'production',
   },
   experimental: {
+    webpackBuildWorker: false,
     serverActions: {
       allowedOrigins: [
         "localhost:3000", 

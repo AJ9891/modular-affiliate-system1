@@ -284,7 +284,7 @@ export class PlanManager {
           .eq('user_id', userId)
           .eq('active', true)
 
-        if (funnelCount >= 2) {
+        if ((funnelCount ?? 0) >= 2) {
           return {
             shouldUpgrade: true,
             reason: 'Ready for more funnels? Upgrade to Pro for unlimited funnels and A/B testing.',
@@ -301,7 +301,7 @@ export class PlanManager {
           .eq('account_owner_id', userId)
           .eq('status', 'active')
 
-        if (teamCount > 0) {
+        if ((teamCount ?? 0) > 0) {
           return {
             shouldUpgrade: true,
             reason: 'Managing a team? Upgrade to Agency for collaboration tools and white-label options.',

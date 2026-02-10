@@ -9,13 +9,14 @@ import { checkSupabase } from '@/lib/check-supabase'
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const check = checkSupabase()
   if (check) return check
 
   try {
-    const offerId = params.id
+    const supabase = createRouteHandlerClient({ cookies })
+    const { id: offerId } = await context.params
     const searchParams = request.nextUrl.searchParams
     
     // Extract tracking parameters

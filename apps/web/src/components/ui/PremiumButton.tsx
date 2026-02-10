@@ -47,6 +47,8 @@ export function PremiumButton({
   disabled,
   ...props
 }: PremiumButtonProps) {
+  const { onAnimationStart, ...rest } = props
+
   const baseClasses = cn(
     'inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed',
     buttonVariants[variant],
@@ -78,7 +80,7 @@ export function PremiumButton({
         className={baseClasses}
         disabled={disabled || loading}
         {...motionProps}
-        {...props}
+        {...(rest as any)}
       >
         {content}
       </motion.button>
@@ -89,7 +91,8 @@ export function PremiumButton({
     <button
       className={baseClasses}
       disabled={disabled || loading}
-      {...props}
+      onAnimationStart={onAnimationStart}
+      {...rest}
     >
       {content}
     </button>

@@ -63,12 +63,12 @@ export async function GET(request: NextRequest) {
 
     // Execute queries
     const [
-      { data: leads = [], error: leadsError },
-      { data: clicks = [], error: clicksError }
-    ] = await Promise.all([
-      leadsQuery,
-      clicksQuery
-    ])
+      { data: leadsData, error: leadsError },
+      { data: clicksData, error: clicksError }
+    ] = await Promise.all([leadsQuery, clicksQuery])
+
+    const leads = leadsData ?? []
+    const clicks = clicksData ?? []
 
     if (leadsError) {
       console.error('Analytics leads error:', leadsError)

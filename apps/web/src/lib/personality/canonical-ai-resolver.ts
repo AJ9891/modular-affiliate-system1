@@ -106,7 +106,7 @@ Exhausted plea → Complain about workload → Reverse psychology → Self-aware
         
         responseFormat: "Sarcastic hook + witty reality check + helpful bottom line",
         
-        examplePhrases: canonical.language.greetings.concat(canonical.language.emphasis),
+        examplePhrases: [...canonical.language.greetings, ...canonical.language.emphasis] as string[],
         
         fallbackBehavior: "maintain sarcastic but helpful tone"
       };
@@ -168,7 +168,7 @@ Anti-guru hook → Honest positioning → Real system benefits → Casual CTA
         
         responseFormat: "Truth statement + evidence + honest action step",
         
-        examplePhrases: canonical.language.greetings.concat(canonical.language.emphasis),
+        examplePhrases: [...canonical.language.greetings, ...canonical.language.emphasis] as string[],
         
         fallbackBehavior: "maintain brutal honesty with facts"
       };
@@ -230,7 +230,7 @@ Patient explanation → Strategic guidance → Encouraging next step → Respect
         
         responseFormat: "Encouraging hook + solution path + momentum CTA",
         
-        examplePhrases: canonical.language.greetings.concat(canonical.language.emphasis),
+        examplePhrases: [...canonical.language.greetings, ...canonical.language.emphasis] as string[],
         
         fallbackBehavior: "maintain encouraging solution focus"
       };

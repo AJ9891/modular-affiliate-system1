@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const { offer_id, amount, order_id } = body
 
     // Get click ID from cookie for attribution
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const click_id = cookieStore.get('aff_click_id')?.value
 
     const { data, error } = await supabase

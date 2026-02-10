@@ -10,6 +10,7 @@ import { cookies } from 'next/headers'
  */
 export async function POST(request: NextRequest) {
   try {
+    const supabase = createRouteHandlerClient({ cookies })
     const { recipientEmail, funnelId, dateRange } = await request.json()
 
     // Get funnel analytics from database
@@ -77,6 +78,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    const supabase = createRouteHandlerClient({ cookies })
     const url = new URL(request.url)
     const campaignId = url.searchParams.get('campaignId')
 

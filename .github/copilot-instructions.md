@@ -19,10 +19,10 @@ A production-ready affiliate marketing platform with visual funnel building, ema
 
 ## Critical Architecture Patterns
 
-### 1. **Subdomain Routing** (`/src/middleware.ts`)
+### 1. **Subdomain Routing** (`/src/proxy.ts`)
 
 - Users get personal subdomains: `user.app.com`
-- Middleware rewrites: `/page` → `/subdomain/user/page`
+- Proxy rewrites: `/page` → `/subdomain/user/page`
 - Funnel pages (`/f/*`) bypass auth entirely
 - Cookie domains handled automatically for auth
 
@@ -40,7 +40,7 @@ const supabase = createRouteHandlerClient({ cookies })
 // ✅ Client components - use explicit client
 import { supabase } from '@/lib/supabase-client'
 
-// ✅ Middleware - use subdomain helper
+// ✅ Proxy (edge) - use subdomain helper
 import { createSubdomainMiddlewareClient } from '@/lib/subdomain-auth'
 const supabase = createSubdomainMiddlewareClient(req, res)
 
@@ -318,7 +318,7 @@ apps/web/src/
 │   ├── supabase.ts      # Lazy proxy client (legacy compat)
 │   ├── supabase-client.ts # Explicit client components
 │   └── subdomain-auth.ts # Subdomain helpers
-└── middleware.ts        # Handles routing + auth
+└── proxy.ts            # Handles routing + auth (Next.js proxy convention)
 ```
 
 ## Database Query Patterns

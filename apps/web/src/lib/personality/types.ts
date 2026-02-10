@@ -14,7 +14,10 @@ export type BrandMode = 'ai_meltdown' | 'anti_guru' | 'rocket_future';
 export type AuthorityTone = 
   | 'calm'       // Steady, confident, reassuring
   | 'blunt'      // Direct, no-nonsense
-  | 'unraveling'; // Unstable, chaotic
+  | 'unraveling' // Unstable, chaotic
+  | 'sarcastic'
+  | 'brutally_honest'
+  | 'encouraging';
 
 /**
  * Confidence Posture: How certain the platform appears
@@ -31,7 +34,9 @@ export type ConfidencePosture =
 export type HumorDensity = 
   | 'none'      // No jokes, all business
   | 'dry'       // Subtle, sarcastic wit
-  | 'glitchy';  // Unpredictable, absurdist
+  | 'glitchy'   // Unpredictable, absurdist
+  | 'heavy'
+  | 'light';
 
 /**
  * Motion Profile: How the interface moves
@@ -40,7 +45,9 @@ export type HumorDensity =
 export type MotionProfile = 
   | 'calm'          // Deliberate, smooth, predictable
   | 'flat'          // Minimal or no motion
-  | 'unstable';     // Jittery, unpredictable, chaotic
+  | 'unstable'      // Jittery, unpredictable, chaotic
+  | 'glitchy'
+  | 'smooth';
 
 /**
  * Ornament Level: How much visual decoration
@@ -49,7 +56,9 @@ export type MotionProfile =
 export type OrnamentLevel = 
   | 'none'          // Brutalist, zero decoration
   | 'light'         // Subtle hints, gentle touches
-  | 'expressive';   // Full visual language, layered
+  | 'expressive'    // Full visual language, layered
+  | 'satirical'
+  | 'uplifting';
 
 /**
  * Contrast Bias: Visual separation strategy
@@ -58,7 +67,9 @@ export type OrnamentLevel =
 export type ContrastBias = 
   | 'neutral'       // Standard separation, comfortable
   | 'high'          // Sharp boundaries, clear hierarchy
-  | 'broken';       // Intentional clashes, visual tension
+  | 'broken'        // Intentional clashes, visual tension
+  | 'sharp'
+  | 'bright';
 
 /**
  * Animation Budget: How much motion is allowed
@@ -67,7 +78,9 @@ export type ContrastBias =
 export type AnimationBudget = 
   | 'zero'          // No animations, instant states
   | 'micro-only'    // Only micro-interactions
-  | 'low';          // Essential transitions only
+  | 'low'           // Essential transitions only
+  | 'medium'
+  | 'satisfying';
 
 /**
  * Spatial Rhythm: How content flows through space
@@ -75,7 +88,9 @@ export type AnimationBudget =
 export type SpatialRhythm = 
   | 'generous'      // Lots of breathing room
   | 'standard'      // Balanced, familiar
-  | 'compressed';   // Tight, information-dense
+  | 'compressed'    // Tight, information-dense
+  | 'edgy'
+  | 'flowing';
 
 /**
  * Sound Profile: Governed sound behavior
@@ -93,7 +108,10 @@ export type SoundProfile =
 export type TrustPosture = 
   | 'mentor'         // Expert guiding you
   | 'peer'           // Equal partner
-  | 'co-conspirator'; // We're in this together
+  | 'co-conspirator' // We're in this together
+  | 'skeptical-peer'
+  | 'truth-teller'
+  | 'supportive-coach';
 
 /**
  * Vocabulary Rules: What language patterns are allowed
@@ -111,10 +129,10 @@ export interface VocabularyRules {
  * Interaction Rules: How the platform responds to user actions
  */
 export interface InteractionRules {
-  responseSpeed: 'instant' | 'deliberate' | 'variable';
-  verbosity: 'terse' | 'balanced' | 'verbose';
-  proactivity: 'reactive' | 'suggestive' | 'pushy';
-  errorHandling: 'apologetic' | 'matter-of-fact' | 'encouraging';
+  responseSpeed: 'instant' | 'deliberate' | 'variable' | 'witty' | 'energetic';
+  verbosity: 'terse' | 'balanced' | 'verbose' | 'conversational' | 'direct' | 'encouraging';
+  proactivity: 'reactive' | 'suggestive' | 'pushy' | 'satirical' | 'confrontational' | 'motivational';
+  errorHandling: 'apologetic' | 'matter-of-fact' | 'encouraging' | 'sarcastic-acknowledgment' | 'brutally-honest' | 'solution-focused';
 }
 
 /**
@@ -122,9 +140,9 @@ export interface InteractionRules {
  */
 export interface ContentGenerationRules {
   paragraphLength: 'short' | 'medium' | 'long';
-  sentenceStructure: 'simple' | 'varied' | 'complex';
-  callToActionStyle: 'soft' | 'direct' | 'urgent';
-  storytellingMode: 'none' | 'minimal' | 'narrative-driven';
+  sentenceStructure: 'simple' | 'varied' | 'complex' | 'conversational' | 'direct' | 'energetic';
+  callToActionStyle: 'soft' | 'direct' | 'urgent' | 'reverse-psychology' | 'brutally-honest' | 'momentum-focused';
+  storytellingMode: 'none' | 'minimal' | 'narrative-driven' | 'satirical' | 'reality-check' | 'progress-driven';
 }
 
 /**
@@ -181,7 +199,7 @@ export interface PersonalityProfile {
 
   // System hints (for AI and automation)
   systemPromptSuffix?: string;  // Appended to all AI prompts
-  fallbackBehavior?: 'neutral' | 'maintain-character' | 'escalate';
+  fallbackBehavior?: 'neutral' | 'maintain-character' | 'escalate' | 'maintain-sarcasm' | 'maintain-brutal-honesty' | 'maintain-encouragement';
 }
 
 /**

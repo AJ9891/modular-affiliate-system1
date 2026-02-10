@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 
 export async function GET() {
   try {
+    const supabase = createRouteHandlerClient({ cookies })
     const results = {
       downloads_table: false,
       download_logs_table: false,

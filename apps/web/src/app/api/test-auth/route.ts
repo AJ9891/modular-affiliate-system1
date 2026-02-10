@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 
 export async function GET() {
   try {
+    const supabase = createRouteHandlerClient({ cookies })
     if (!supabase) {
       return NextResponse.json({ 
         status: 'error',

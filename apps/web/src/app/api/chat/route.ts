@@ -11,6 +11,7 @@ import {
 // GET /api/chat?conversationId=xxx - Get conversation history
 export async function GET(request: NextRequest) {
   try {
+    const supabase = createRouteHandlerClient({ cookies })
     const accessToken = request.cookies.get('sb-access-token')?.value
     
     if (!accessToken) {
@@ -72,6 +73,7 @@ export async function GET(request: NextRequest) {
 // POST /api/chat - Send a message and get AI response
 export async function POST(request: NextRequest) {
   try {
+    const supabase = createRouteHandlerClient({ cookies })
     const accessToken = request.cookies.get('sb-access-token')?.value
     
     if (!accessToken) {
@@ -307,6 +309,7 @@ Always maintain a helpful, professional tone. Users are building their business 
 // PATCH /api/chat?conversationId=xxx - Update conversation status (e.g., escalate to human support)
 export async function PATCH(request: NextRequest) {
   try {
+    const supabase = createRouteHandlerClient({ cookies })
     const accessToken = request.cookies.get('sb-access-token')?.value
     
     if (!accessToken) {

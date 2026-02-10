@@ -6,8 +6,8 @@ import { teamInviteSchema } from '@/lib/security'
 
 // GET /api/team/members - List team members
 export const GET = withRateLimit(
-  withAuth(
-    withErrorHandling(async (req: NextRequest, userId: string) => {
+  withErrorHandling(
+    withAuth(async (req: NextRequest, userId: string) => {
       const supabase = createRouteHandlerClient({ cookies })
       
       // Check if user is account owner or admin
@@ -62,98 +62,111 @@ export const GET = withRateLimit(
 
 // POST /api/team/members - Invite team member
 export const POST = withRateLimit(
-  withAuth(
-    withValidation(
-      withErrorHandling(async (req: NextRequest, userId: string, validatedData: any) => {
-        const supabase = createRouteHandlerClient({ cookies })
-        const { email, role } = validatedData
+  withErrorHandling(
+    withAuth(async (req: NextRequest, userId: string) => {
+      const body = await req.json()
+      const validation = teamInviteSchema.safeParse(body)
 
-        // Check if user is account owner or admin
-        const { data: userTeamData } = await supabase
-          .from('team_members')
-          .select('role')
-          .eq('account_owner_id', userId)
-          .single()
+      if (!validation.success) {
+        const errors = validation.error.issues.map(err => `${err.path.join('.')}: ${err.message}`)
+        return NextResponse.json({ error: 'Validation failed', details: errors }, { status: 400 })
+      }
 
-        if (!userTeamData && !await isAccountOwner(userId, supabase)) {
-          return NextResponse.json(
-            { error: 'Only account owners and admins can invite team members' },
-            { status: 403 }
-          )
-        }
+      const { email, role } = validation.data
+      const supabase = createRouteHandlerClient({ cookies })
 
-        // Check if user already invited
-        const { data: existingInvite } = await supabase
-          .from('team_members')
-          .select('id, status')
-          .eq('account_owner_id', userId)
-          .eq('member_email', email)
-          .single()
+      // Check if user is account owner or admin
+      const { data: userTeamData } = await supabase
+        .from('team_members')
+        .select('role')
+        .eq('account_owner_id', userId)
+        .single()
 
-        if (existingInvite) {
-          return NextResponse.json(
-            { 
-              error: existingInvite.status === 'active' 
-                ? 'User is already a team member' 
-                : 'Invitation already sent' 
-            },
-            { status: 400 }
-          )
-        }
+      if (!userTeamData && !await isAccountOwner(userId, supabase)) {
+        return NextResponse.json(
+          { error: 'Only account owners and admins can invite team members' },
+          { status: 403 }
+        )
+      }
 
-        // Generate unique invite token
-        const inviteToken = crypto.randomUUID()
+      // Check if user already invited
+      const { data: existingInvite } = await supabase
+        .from('team_members')
+        .select('id, status')
+        .eq('account_owner_id', userId)
+        .eq('member_email', email)
+        .single()
 
-        // Create invitation
-        const { data: invitation, error } = await supabase
-          .from('team_members')
-          .insert({
-            account_owner_id: userId,
-            member_email: email,
-            role,
-            status: 'pending',
-            invite_token: inviteToken,
-            invited_at: new Date().toISOString()
-          })
-          .select()
-          .single()
+      if (existingInvite) {
+        return NextResponse.json(
+          { 
+            error: existingInvite.status === 'active' 
+              ? 'User is already a team member' 
+              : 'Invitation already sent' 
+          },
+          { status: 400 }
+        )
+      }
 
-        if (error) {
-          throw new Error('Failed to create invitation')
-        }
+      // Generate unique invite token
+      const inviteToken = crypto.randomUUID()
 
-        // Log team activity
-        await logTeamActivity(supabase, userId, 'invite_sent', 'team_member', invitation.id, {
-          email,
+      // Create invitation
+      const { data: invitation, error } = await supabase
+        .from('team_members')
+        .insert({
+          account_owner_id: userId,
+          member_email: email,
           role,
-          inviteToken
+          status: 'pending',
+          invite_token: inviteToken,
+          invited_at: new Date().toISOString()
         })
+        .select()
+        .single()
 
-        // TODO: Send invitation email
-        console.log(`Team invitation sent to ${email} with role ${role}`)
+      if (error) {
+        throw new Error('Failed to create invitation')
+      }
 
-        return NextResponse.json({
-          success: true,
-          invitation,
-          inviteUrl: `${process.env.NEXT_PUBLIC_APP_URL}/team/accept/${inviteToken}`
-        })
-      }),
-      teamInviteSchema
-    )
+      // Log team activity
+      await logTeamActivity(supabase, userId, 'invite_sent', 'team_member', invitation.id, {
+        email,
+        role,
+        inviteToken
+      })
+
+      // TODO: Send invitation email
+      console.log(`Team invitation sent to ${email} with role ${role}`)
+
+      return NextResponse.json({
+        success: true,
+        invitation,
+        inviteUrl: `${process.env.NEXT_PUBLIC_APP_URL}/team/accept/${inviteToken}`
+      })
+    })
   ),
   'api'
 )
 
 // DELETE /api/team/members/[memberId] - Remove team member
 export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { memberId: string } }
+  req: NextRequest
 ) {
+  const url = new URL(req.url)
+  const memberId = url.searchParams.get('memberId')
+
+  if (!memberId) {
+    return NextResponse.json(
+      { error: 'memberId is required' },
+      { status: 400 }
+    )
+  }
+
   return withRateLimit(
-    withAuth(
-      withErrorHandling(async (req: NextRequest, userId: string) => {
+    withErrorHandling(
+      withAuth(async (req: NextRequest, userId: string) => {
         const supabase = createRouteHandlerClient({ cookies })
-        const { memberId } = params
 
         // Check permissions
         if (!await hasTeamPermission(userId, 'admin', supabase)) {
@@ -188,7 +201,7 @@ export async function DELETE(
         })
       })
     )
-  )(req, userId)
+  )(req)
 }
 
 // Helper functions
