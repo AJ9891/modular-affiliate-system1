@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { 
-  parseSubdomain, 
+import {
+  parseSubdomain,
   createSubdomainMiddlewareClient,
-  getSubdomainRedirectUrl 
+  getSubdomainRedirectUrl
 } from './lib/subdomain-auth'
 import { addSecurityHeaders } from './lib/security'
+import { isPublicPath } from './config/publicPaths'
 
 export async function middleware(req: NextRequest) {
   // ✅ Allow public pages - bypass auth completely
-  if (req.nextUrl.pathname.startsWith('/f/') || req.nextUrl.pathname.startsWith('/do_not_click')) {
+  if (isPublicPath(req.nextUrl.pathname)) {
     const res = NextResponse.next()
     return addSecurityHeaders(res)
   }

@@ -2,15 +2,14 @@
 
 import { usePathname } from 'next/navigation'
 import { ReactNode, useEffect, useState } from 'react'
+import { isExactPublicPath } from '@/config/publicPaths'
 
 export default function ConditionalWrapper({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = useState(false)
-  
-  // Don't add margin on homepage, login, signup, pricing, or special pages
-  const noMarginOn = ['/', '/login', '/signup', '/pricing', '/features', '/get-started', '/do_not_click']
-  
-  const shouldAddMargin = !noMarginOn.includes(pathname)
+
+  // Don't add margin on public pages
+  const shouldAddMargin = !isExactPublicPath(pathname)
 
   // Listen for sidebar collapse state changes
   useEffect(() => {

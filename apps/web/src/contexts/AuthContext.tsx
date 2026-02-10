@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import { isPublicPath } from '@/config/publicPaths'
 
 interface User {
   id: string
@@ -40,12 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setUser(null)
         // Only redirect to login if on a protected page
-        const publicPaths = ['/', '/login', '/signup', '/pricing', '/features', '/get-started', '/niches', '/do_not_click', '/f']
-        const isPublicPath = publicPaths.some(path => {
-          if (path === '/') return pathname === '/'
-          return pathname === path || pathname.startsWith(path + '/')
-        })
-        if (!isPublicPath) {
+        if (!isPublicPath(pathname)) {
           router.push('/login')
         }
       }
