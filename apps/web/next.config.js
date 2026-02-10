@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Silence Turbopack/webpack config warning
+  turbopack: {},
   // Development optimizations
   ...(process.env.NODE_ENV === 'development' && {
     // Force webpack dev mode with source maps
