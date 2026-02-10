@@ -12,7 +12,7 @@ Create a centralized whitelist system and 15 professional funnel templates (5 pe
 
 Public paths are duplicated across 4 locations:
 
-- `middleware.ts` (lines 12)
+- `proxy.ts` (replaces middleware.ts)
 - `AuthContext.tsx` (lines 37)
 - `ConditionalSidebar.tsx` (line 11)
 - `ConditionalWrapper.tsx` (line 11)
@@ -55,7 +55,7 @@ export function isPublicPath(pathname: string): boolean {
 
 ### Files to Update
 
-1. **middleware.ts**
+1. **proxy.ts** (Next.js proxy)
 
    ```typescript
    import { isPublicPath } from '@/config/publicPaths'
@@ -334,7 +334,7 @@ interface FunnelTemplate {
 ### Phase 1: Centralized Whitelist (Estimated: 30 min)
 
 1. Create `/apps/web/src/config/publicPaths.ts`
-2. Update `middleware.ts` to import and use
+2. Update `proxy.ts` to import and use
 3. Update `AuthContext.tsx` to import and use
 4. Update `ConditionalSidebar.tsx` to import and use
 5. Update `ConditionalWrapper.tsx` to import and use
@@ -388,7 +388,7 @@ apps/web/src/
 │       └── funnels/
 │           └── templates/
 │               └── route.ts         # NEW - Template API
-└── middleware.ts                    # UPDATED
+└── proxy.ts                        # UPDATED (proxy entrypoint)
 ```
 
 ---

@@ -11,7 +11,7 @@ The subdomain authentication was not working properly due to:
 
 ## Solution
 
-### 1. Updated Middleware (`/src/middleware.ts`)
+### 1. Updated Proxy (`/src/proxy.ts`)
 
 - Added subdomain detection and routing
 - Configured Supabase client with proper cookie domain settings

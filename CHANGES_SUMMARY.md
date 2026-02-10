@@ -1,5 +1,7 @@
 # Changes Made to Fix the First Domino
 
+**Update:** Next.js edge entrypoint migrated from `middleware.ts` to `proxy.ts` (subdomain routing, Supabase session refresh, and security headers preserved per new proxy convention).
+
 ## Files Modified
 
 ### 1. `/apps/web/src/lib/supabase.ts` ✅

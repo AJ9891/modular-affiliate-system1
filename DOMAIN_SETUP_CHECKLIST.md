@@ -110,7 +110,7 @@ npx vercel --prod --yes
 
 ## 📝 Optional Enhancements
 
-- [ ] Add subdomain routing middleware to serve user funnels at their subdomain
+- [ ] Add subdomain routing proxy to serve user funnels at their subdomain
 - [ ] Add custom domain verification status checking
 - [ ] Add rate limiting to domain API endpoints
 - [ ] Add admin panel to view all domains
