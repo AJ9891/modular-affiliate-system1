@@ -55,6 +55,16 @@ const nextConfig = {
   },
   async rewrites() {
     return [
+      // Preserve API routes on subdomains
+      {
+        source: '/api/:path*',
+        destination: '/api/:path*',
+      },
+      // Preserve Next.js assets on subdomains
+      {
+        source: '/_next/:path*',
+        destination: '/_next/:path*',
+      },
       // Handle subdomain routing
       {
         source: '/:path*',
