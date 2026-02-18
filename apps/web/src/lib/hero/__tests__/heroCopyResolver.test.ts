@@ -115,7 +115,7 @@ describe('Hero Copy Resolution Chain', () => {
       const prompt = buildHeroPrompt(aiProfile, contract)
       
       // Verify chain coherence
-      expect(personality.authorityTone).toBe('unraveling')
+      expect(personality.authorityTone).toBe('sarcastic')
       expect(behavior.headlineStyle).toBe('fractured')
       expect(contract.headlineLength).toBe('short')
       expect(contract.allowSarcasm).toBe(true)
@@ -131,7 +131,7 @@ describe('Hero Copy Resolution Chain', () => {
       const prompt = buildHeroPrompt(aiProfile, contract)
       
       // Verify chain coherence
-      expect(personality.authorityTone).toBe('blunt')
+      expect(personality.authorityTone).toBe('brutally_honest')
       expect(behavior.headlineStyle).toBe('flat')
       expect(contract.headlineLength).toBe('medium')
       expect(contract.allowSarcasm).toBe(false)
@@ -147,7 +147,7 @@ describe('Hero Copy Resolution Chain', () => {
       const prompt = buildHeroPrompt(aiProfile, contract)
       
       // Verify chain coherence
-      expect(personality.authorityTone).toBe('calm')
+      expect(personality.authorityTone).toBe('encouraging')
       expect(behavior.subcopyStyle).toBe('explanatory')
       expect(contract.subcopyDensity).toBe('explained')
       expect(prompt).toContain('Subcopy density: explained')

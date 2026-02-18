@@ -1,45 +1,54 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Target, Users, Lightbulb, ArrowRight } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { Target, Users, Lightbulb, ArrowRight, Activity } from 'lucide-react'
 
 interface Step2ChooseObjectiveProps {
-  onNext: (objective: string) => void
+  onNext: (payload: { campaignName: string; funnelType: string; trafficGoal: string }) => void
   selectedObjective?: string
+  initialCampaignName?: string
+  initialFunnelType?: string
+  initialTrafficGoal?: string
   onBack?: () => void
 }
 
-const OBJECTIVES = [
-  {
-    id: 'promote-offer',
-    name: 'Promote an offer',
-    description: 'Drive sales for a product or service',
-    icon: Target,
-    color: 'bg-green-500'
-  },
-  {
-    id: 'capture-leads',
-    name: 'Capture leads',
-    description: 'Build an email list for future marketing',
-    icon: Users,
-    color: 'bg-blue-500'
-  },
-  {
-    id: 'test-idea',
-    name: 'Test an idea',
-    description: 'Validate a concept before full investment',
-    icon: Lightbulb,
-    color: 'bg-purple-500'
-  }
+const FUNNEL_TYPES = [
+  { id: 'lead-magnet', name: 'Lead Magnet', description: 'Capture emails with a free value' },
+  { id: 'product-review', name: 'Product Review', description: 'Compare and recommend offers' },
+  { id: 'vsl', name: 'Video Sales Letter', description: 'Sell with video-first storytelling' },
+  { id: 'webinar', name: 'Webinar', description: 'Collect registrations for live/evergreen' }
 ]
 
-export default function Step2ChooseObjective({ onNext, selectedObjective, onBack }: Step2ChooseObjectiveProps) {
-  const [selected, setSelected] = useState(selectedObjective || '')
+const TRAFFIC_GOALS = [
+  { id: 'grow-email', label: 'Grow email list' },
+  { id: 'paid-traffic', label: 'Tune paid traffic' },
+  { id: 'organic', label: 'Convert organic visitors' }
+]
+
+export default function Step2ChooseObjective({ onNext, selectedObjective, initialCampaignName, initialFunnelType, initialTrafficGoal, onBack }: Step2ChooseObjectiveProps) {
+  const [campaignName, setCampaignName] = useState(initialCampaignName || '')
+  const [funnelType, setFunnelType] = useState(initialFunnelType || selectedObjective || '')
+  const [trafficGoal, setTrafficGoal] = useState(initialTrafficGoal || '')
+
+  useEffect(() => {
+    if (initialCampaignName || initialFunnelType || initialTrafficGoal) return
+    if (typeof window === 'undefined') return
+    const savedName = localStorage.getItem('launchpad_campaign_name') || ''
+    const savedType = localStorage.getItem('launchpad_funnel_type') || ''
+    const savedGoal = localStorage.getItem('launchpad_traffic_goal') || ''
+    if (savedName) setCampaignName(savedName)
+    if (savedType) setFunnelType(savedType)
+    if (savedGoal) setTrafficGoal(savedGoal)
+  }, [initialCampaignName, initialFunnelType, initialTrafficGoal])
 
   const handleNext = () => {
-    if (selected) {
-      onNext(selected)
+    if (!campaignName || !funnelType || !trafficGoal) return
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('launchpad_campaign_name', campaignName)
+      localStorage.setItem('launchpad_funnel_type', funnelType)
+      localStorage.setItem('launchpad_traffic_goal', trafficGoal)
     }
+    onNext({ campaignName, funnelType, trafficGoal })
   }
 
   return (
@@ -47,45 +56,77 @@ export default function Step2ChooseObjective({ onNext, selectedObjective, onBack
       <div className="text-center mb-8">
         <div className="text-6xl mb-4">🎯</div>
         <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          What's this funnel for?
+          Startup Checklist
         </h1>
         <p className="text-lg text-gray-600 mb-2">
-          Your choice helps tailor copy, structure, and tracking.
+          Three quick steps to get you moving. Nothing goes live yet.
         </p>
-        <p className="text-sm text-gray-500">
-          You can change this later if needed.
-        </p>
+        <p className="text-sm text-blue-600 font-semibold">Throttle: {`${Number(!!campaignName) + Number(!!funnelType) + Number(!!trafficGoal)}/3`} Completed</p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6 mb-8">
-        {OBJECTIVES.map((objective) => {
-          const Icon = objective.icon
-          const isSelected = selected === objective.id
+      <div className="space-y-6 mb-10">
+        <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <Activity className="text-blue-600" size={20} />
+            <div>
+              <p className="font-semibold text-gray-900">Name your campaign</p>
+              <p className="text-sm text-gray-600">Helps label your funnel and reports.</p>
+            </div>
+          </div>
+          <input
+            value={campaignName}
+            onChange={(e) => setCampaignName(e.target.value)}
+            placeholder="e.g., Spring Launch — Wellness Bundle"
+            className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
 
-          return (
-            <button
-              key={objective.id}
-              onClick={() => setSelected(objective.id)}
-              className={`
-                p-6 rounded-lg border-2 text-left transition-all
-                ${isSelected
-                  ? 'border-blue-500 bg-blue-50 shadow-md'
-                  : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
-                }
-              `}
-            >
-              <div className={`inline-flex items-center justify-center w-12 h-12 rounded-lg ${objective.color} text-white mb-4`}>
-                <Icon className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {objective.name}
-              </h3>
-              <p className="text-sm text-gray-600">
-                {objective.description}
-              </p>
-            </button>
-          )
-        })}
+        <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <Target className="text-green-600" size={20} />
+            <div>
+              <p className="font-semibold text-gray-900">Choose a funnel type</p>
+              <p className="text-sm text-gray-600">We’ll preload structure and copy suggestions.</p>
+            </div>
+          </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            {FUNNEL_TYPES.map(type => (
+              <button
+                key={type.id}
+                onClick={() => setFunnelType(type.id)}
+                className={`text-left p-4 rounded-lg border transition-colors ${
+                  funnelType === type.id ? 'border-blue-500 bg-blue-50 shadow-sm' : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <p className="font-semibold text-gray-900">{type.name}</p>
+                <p className="text-sm text-gray-600">{type.description}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <Users className="text-purple-600" size={20} />
+            <div>
+              <p className="font-semibold text-gray-900">Set a traffic goal</p>
+              <p className="text-sm text-gray-600">So we can highlight the right filters and reports.</p>
+            </div>
+          </div>
+          <div className="grid md:grid-cols-3 gap-3">
+            {TRAFFIC_GOALS.map(goal => (
+              <button
+                key={goal.id}
+                onClick={() => setTrafficGoal(goal.id)}
+                className={`p-3 rounded-lg border text-left transition-colors ${
+                  trafficGoal === goal.id ? 'border-blue-500 bg-blue-50 shadow-sm' : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <p className="font-semibold text-gray-900 text-sm">{goal.label}</p>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="flex justify-between">
@@ -99,16 +140,16 @@ export default function Step2ChooseObjective({ onNext, selectedObjective, onBack
         )}
         <button
           onClick={handleNext}
-          disabled={!selected}
+          disabled={!campaignName || !funnelType || !trafficGoal}
           className={`
             inline-flex items-center gap-2 px-8 py-3 rounded-lg font-semibold transition-colors ml-auto
-            ${selected
+            ${campaignName && funnelType && trafficGoal
               ? 'bg-blue-600 text-white hover:bg-blue-700'
               : 'bg-gray-200 text-gray-400 cursor-not-allowed'
             }
           `}
         >
-          Lock Objective
+          Throttle Up
           <ArrowRight className="w-5 h-5" />
         </button>
       </div>

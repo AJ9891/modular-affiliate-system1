@@ -31,17 +31,17 @@ import { CANONICAL_PERSONALITIES } from './canonical-definitions';
 const AI_MELTDOWN_PERSONALITY: PersonalityProfile = {
   mode: 'ai_meltdown',
   name: 'AI Meltdown',
-  description: 'Sarcastic AI hype puncturing. Rolling eyes at automation promises.',
+  description: 'Exhausted but sarcastic AI hype puncturing. Rolling eyes at automation promises.',
 
   // Core behavioral rules - ALIGNED WITH CANONICAL
-  authorityTone: 'sarcastic', // FIXED: was 'unraveling' 
-  humorDensity: 'heavy', // FIXED: was 'glitchy'
+  authorityTone: 'sarcastic', // Tone stays sarcastic
+  humorDensity: 'glitchy', // Keep glitch energy for hero behavior
   soundProfile: 'glitch_comm',
-  trustPosture: 'skeptical-peer', // FIXED: was 'co-conspirator'
+  trustPosture: 'co-conspirator', // Lean into exhausted sarcasm partnership
 
   // Visual behavior (sarcastic aesthetic)
   visuals: {
-    motionProfile: 'glitchy', // Keep tech aesthetic
+    motionProfile: 'glitchy', // Keep tech aesthetic and glitch feel without chaos
     ornamentLevel: 'satirical', // FIXED: was 'expressive'
     contrastBias: 'sharp', // FIXED: was 'broken'
     animationBudget: 'medium', // FIXED: was 'low'
@@ -186,7 +186,7 @@ const ROCKET_FUTURE_PERSONALITY: PersonalityProfile = {
   authorityTone: 'encouraging', // FIXED: was 'calm' - more energetic
   humorDensity: 'light', // FIXED: was 'dry' - more positive
   soundProfile: 'procedural_hum',
-  trustPosture: 'supportive-coach', // FIXED: was 'mentor' - more encouraging
+  trustPosture: 'mentor', // Encourage but keep explanatory guidance
 
   // Visual behavior (optimistic and energetic)
   visuals: {

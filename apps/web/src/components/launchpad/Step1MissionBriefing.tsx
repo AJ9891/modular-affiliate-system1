@@ -1,13 +1,35 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { ArrowRight, MapPin } from 'lucide-react'
 
 interface Step1MissionBriefingProps {
-  onNext: () => void
+  onComplete: (intent: string) => void
+  initialIntent?: string
 }
 
-export default function Step1MissionBriefing({ onNext }: Step1MissionBriefingProps) {
+const INTENTS = [
+  { id: 'create-funnel', label: 'Create my first funnel' },
+  { id: 'import-traffic', label: 'Import traffic data' },
+  { id: 'setup-email', label: 'Set up email automation' }
+]
+
+export default function Step1MissionBriefing({ onComplete, initialIntent }: Step1MissionBriefingProps) {
+  const [intent, setIntent] = useState(initialIntent || '')
+
+  useEffect(() => {
+    if (initialIntent) return
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('launchpad_intent') : null
+    if (saved) setIntent(saved)
+  }, [initialIntent])
+
+  const handleNext = () => {
+    if (!intent) return
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('launchpad_intent', intent)
+    }
+    onComplete(intent)
+  }
   return (
     <div className="max-w-2xl mx-auto px-6 py-12">
       <div className="text-center mb-8">
@@ -35,10 +57,38 @@ export default function Step1MissionBriefing({ onNext }: Step1MissionBriefingPro
         </div>
       </div>
 
+      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8 shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-900 mb-3">What brings you here?</h2>
+        <p className="text-sm text-gray-600 mb-4">Pick the closest intent. We’ll tailor the next steps.</p>
+        <div className="space-y-3">
+          {INTENTS.map(option => (
+            <label
+              key={option.id}
+              className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                intent === option.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <input
+                type="radio"
+                name="intent"
+                value={option.id}
+                checked={intent === option.id}
+                onChange={() => setIntent(option.id)}
+                className="h-4 w-4 text-blue-600"
+              />
+              <span className="text-gray-800">{option.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
       <div className="flex justify-center">
         <button
-          onClick={onNext}
-          className="inline-flex items-center gap-2 bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+          onClick={handleNext}
+          disabled={!intent}
+          className={`inline-flex items-center gap-2 px-8 py-3 rounded-lg font-semibold transition-colors ${
+            intent ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+          }`}
         >
           Begin Launch Sequence
           <ArrowRight className="w-5 h-5" />

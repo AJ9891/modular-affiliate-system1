@@ -74,9 +74,11 @@ export function validateBrandBrainAlignment(brandBrain: BrandBrain): ValidationR
  */
 function isTraitAligned(tone: string, expectedTrait: string): boolean {
   const alignmentMap: Record<string, string[]> = {
-    'sarcastic': ['sarcastic', 'satirical', 'witty'],
-    'brutally_honest': ['brutally_honest', 'direct', 'blunt'],
-    'encouraging': ['encouraging', 'optimistic', 'supportive']
+    exhausted: ['sarcastic', 'exhausted_sarcastic', 'exhausted'],
+    sarcastic: ['sarcastic', 'satirical', 'witty'],
+    brutally_honest: ['brutally_honest', 'direct', 'blunt'],
+    encouraging: ['encouraging', 'optimistic', 'supportive'],
+    helpful_guide: ['encouraging', 'supportive', 'helpful']
   };
 
   const validTones = alignmentMap[expectedTrait] || [];
@@ -157,7 +159,7 @@ export function validateAllPersonalityProfiles(): ValidationResult {
 export function checkPersonalityAlignment(): {
   glitchIsSarcastic: boolean;
   anchorIsBrutallyHonest: boolean;
-  boostIsEncouraging: boolean;
+  boostIsHelpful: boolean;
   allAligned: boolean;
 } {
   const glitchTone = PERSONALITY_BRAND_BRAINS.glitch.personalityProfile.voice.tone;
@@ -167,8 +169,8 @@ export function checkPersonalityAlignment(): {
   return {
     glitchIsSarcastic: glitchTone === 'sarcastic',
     anchorIsBrutallyHonest: anchorTone === 'brutally_honest',
-    boostIsEncouraging: boostTone === 'encouraging',
-    allAligned: glitchTone === 'sarcastic' && anchorTone === 'brutally_honest' && boostTone === 'encouraging'
+    boostIsHelpful: boostTone === 'encouraging' || boostTone === 'helpful_guide',
+    allAligned: glitchTone === 'sarcastic' && anchorTone === 'brutally_honest' && (boostTone === 'encouraging' || boostTone === 'helpful_guide')
   };
 }
 
@@ -184,7 +186,7 @@ export function generateValidationReport(): string {
   report += "Quick Alignment Check:\n";
   report += `- AI Meltdown is sarcastic: ${alignmentCheck.glitchIsSarcastic ? '✅' : '❌'}\n`;
   report += `- Anti-Guru is brutally honest: ${alignmentCheck.anchorIsBrutallyHonest ? '✅' : '❌'}\n`;
-  report += `- Rocket Future is encouraging: ${alignmentCheck.boostIsEncouraging ? '✅' : '❌'}\n`;
+  report += `- Rocket Future is encouraging: ${alignmentCheck.boostIsHelpful ? '✅' : '❌'}\n`;
   report += `- All personalities aligned: ${alignmentCheck.allAligned ? '✅' : '❌'}\n\n`;
   
   report += `Detailed Validation: ${profileValidation.isValid ? '✅ PASSED' : '❌ FAILED'}\n\n`;

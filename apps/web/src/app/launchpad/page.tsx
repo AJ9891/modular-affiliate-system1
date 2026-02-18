@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import LaunchProgressHeader from '@/components/LaunchProgressHeader'
 import Step1MissionBriefing from '@/components/launchpad/Step1MissionBriefing'
@@ -39,14 +39,17 @@ const STEPS = {
  * - AI-powered content generation
  */
 export default function LaunchpadPage() {
-  const searchParams = useSearchParams()
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState<number | null>(null)
   const [userData, setUserData] = useState<any>(null)
   const [setupComplete, setSetupComplete] = useState(false)
   const [userProfile, setUserProfile] = useState<any>(null)
   const [userId, setUserId] = useState<string>('')
+  const [intent, setIntent] = useState<string>('')
   const [selectedObjective, setSelectedObjective] = useState<string>('')
+  const [campaignName, setCampaignName] = useState<string>('')
+  const [trafficGoal, setTrafficGoal] = useState<string>('')
+  const [onboardingId, setOnboardingId] = useState<string>('')
   const [funnelUrl, setFunnelUrl] = useState<string>('')
   const [completedSteps, setCompletedSteps] = useState<number[]>([])
   const [stats, setStats] = useState({
@@ -73,7 +76,7 @@ export default function LaunchpadPage() {
 
       const { data } = await supabase
         .from('users')
-        .select('onboarding_step, max_launchpads, plan, email, is_admin, onboarding_seen')
+        .select('onboarding_step, max_launchpads, plan, email, is_admin, onboarding_seen, funnel_type')
         .eq('id', user.id)
         .single()
 
@@ -82,6 +85,22 @@ export default function LaunchpadPage() {
       setUserData(data)
       setUserProfile(data)
       setUserId(user.id)
+      if (data.funnel_type) setSelectedObjective(data.funnel_type)
+
+      // Load onboarding progress from dedicated table
+      const { data: onboarding } = await supabase
+        .from('onboarding_progress')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (onboarding) {
+        setOnboardingId(onboarding.id)
+        if (onboarding.intent) setIntent(onboarding.intent)
+        if (onboarding.campaign_name) setCampaignName(onboarding.campaign_name)
+        if (onboarding.funnel_type) setSelectedObjective(onboarding.funnel_type)
+        if (onboarding.traffic_goal) setTrafficGoal(onboarding.traffic_goal)
+      }
       
       console.log('User data:', data)
       console.log('Onboarding step:', data.onboarding_step, 'Max launchpads:', data.max_launchpads, 'Is admin:', data.is_admin)
@@ -98,7 +117,7 @@ export default function LaunchpadPage() {
       console.log('Can create launchpad:', canCreate, 'Max:', data.max_launchpads, 'Is admin:', data.is_admin)
       
       // Allow access to launchpad for onboarding, but track if they can create
-      const onboardingStep = data.onboarding_step ?? STEPS.MISSION_BRIEFING
+      const onboardingStep = onboarding?.current_step ?? data.onboarding_step ?? STEPS.MISSION_BRIEFING
       setCurrentStep(onboardingStep)
       setUserData({ ...data, canCreateLaunchpad: canCreate })
 
@@ -128,7 +147,49 @@ export default function LaunchpadPage() {
     return (count || 0) < maxLaunchpads
   }
 
-  const advanceStep = async (nextStep: number) => {
+  const upsertOnboardingProgress = async (overrides?: Partial<{
+    intent: string
+    campaign_name: string
+    funnel_type: string
+    traffic_goal: string
+    current_step: number
+  }>) => {
+    const { data: auth } = await supabase.auth.getUser()
+    if (!auth?.user) return
+
+    const resolvedIntent = overrides?.intent ?? intent
+    const resolvedCampaign = overrides?.campaign_name ?? campaignName
+    const resolvedFunnel = overrides?.funnel_type ?? selectedObjective
+    const resolvedTraffic = overrides?.traffic_goal ?? trafficGoal
+    const resolvedStep = overrides?.current_step ?? currentStep ?? STEPS.MISSION_BRIEFING
+
+    const payload = {
+      user_id: auth.user.id,
+      intent: resolvedIntent,
+      campaign_name: resolvedCampaign,
+      funnel_type: resolvedFunnel,
+      traffic_goal: resolvedTraffic,
+      current_step: resolvedStep,
+      checklist: {
+        intent: !!resolvedIntent,
+        campaign: !!resolvedCampaign,
+        funnelType: !!resolvedFunnel,
+        trafficGoal: !!resolvedTraffic,
+      }
+    }
+
+    const { data: upserted, error } = await supabase
+      .from('onboarding_progress')
+      .upsert(payload, { onConflict: 'user_id' })
+      .select('id')
+      .single()
+
+    if (!error && upserted?.id) {
+      setOnboardingId(upserted.id)
+    }
+  }
+
+  const advanceStep = async (nextStep: number, overrides?: Partial<{ intent: string; campaign_name: string; funnel_type: string; traffic_goal: string }>) => {
     if (!userData) return
 
     setCurrentStep(nextStep)
@@ -143,18 +204,47 @@ export default function LaunchpadPage() {
       .from('users')
       .update({ onboarding_step: nextStep })
       .eq('id', auth.user.id)
+
+    await upsertOnboardingProgress({
+      intent: overrides?.intent,
+      campaign_name: overrides?.campaign_name,
+      funnel_type: overrides?.funnel_type,
+      traffic_goal: overrides?.traffic_goal,
+      current_step: nextStep,
+    })
   }
 
-  const handleMissionBriefingComplete = () => {
-    advanceStep(STEPS.CHOOSE_OBJECTIVE)
+  const handleMissionIntent = async (intentValue: string) => {
+    setIntent(intentValue)
+    try {
+      await upsertOnboardingProgress({ intent: intentValue })
+    } catch (err) {
+      console.warn('Optional intent persistence skipped:', err)
+    }
+    advanceStep(STEPS.CHOOSE_OBJECTIVE, { intent: intentValue })
   }
 
-  const handleObjectiveSelect = (objective: string) => {
-    setSelectedObjective(objective)
-  }
+  const handleObjectiveComplete = async (payload: { campaignName: string; funnelType: string; trafficGoal: string }) => {
+    setSelectedObjective(payload.funnelType)
+    setCampaignName(payload.campaignName)
+    setTrafficGoal(payload.trafficGoal)
 
-  const handleObjectiveComplete = () => {
-    advanceStep(STEPS.BUILD_FUNNEL)
+    // Persist onboarding data if available
+    try {
+      await upsertOnboardingProgress({
+        campaign_name: payload.campaignName,
+        funnel_type: payload.funnelType,
+        traffic_goal: payload.trafficGoal,
+      })
+    } catch (err) {
+      console.warn('Optional onboarding persistence skipped:', err)
+    }
+
+    advanceStep(STEPS.BUILD_FUNNEL, {
+      campaign_name: payload.campaignName,
+      funnel_type: payload.funnelType,
+      traffic_goal: payload.trafficGoal,
+    })
   }
 
   const handleFunnelComplete = (funnelUrl: string) => {
@@ -176,6 +266,7 @@ export default function LaunchpadPage() {
 
   const handleLiftoffComplete = () => {
     // Mark onboarding as complete
+    advanceStep(STEPS.COMPLETE)
     setSetupComplete(true)
     router.push('/dashboard')
   }
@@ -385,12 +476,15 @@ export default function LaunchpadPage() {
 
       <div className="max-w-6xl mx-auto px-4 py-8">
         {currentStep === STEPS.MISSION_BRIEFING && (
-          <Step1MissionBriefing onNext={handleMissionBriefingComplete} />
+          <Step1MissionBriefing onComplete={handleMissionIntent} initialIntent={intent} />
         )}
 
         {currentStep === STEPS.CHOOSE_OBJECTIVE && (
           <Step2ChooseObjective
             selectedObjective={selectedObjective}
+            initialCampaignName={campaignName}
+            initialFunnelType={selectedObjective}
+            initialTrafficGoal={trafficGoal}
             onNext={handleObjectiveComplete}
             onBack={handleBack}
           />

@@ -15,16 +15,16 @@ import { BRAND_MODES } from '../contexts/BrandModeContext';
 describe('Personality Trait Alignment', () => {
   
   test('Canonical personalities have correct primary traits', () => {
-    expect(CANONICAL_PERSONALITIES.glitch.primaryTrait).toBe('sarcastic');
+      expect(CANONICAL_PERSONALITIES.glitch.primaryTrait).toBe('exhausted');
     expect(CANONICAL_PERSONALITIES.anchor.primaryTrait).toBe('brutally_honest');
-    expect(CANONICAL_PERSONALITIES.boost.primaryTrait).toBe('encouraging');
+      expect(CANONICAL_PERSONALITIES.boost.primaryTrait).toBe('helpful_guide');
   });
 
   test('AI Meltdown is sarcastic (not brutally honest)', () => {
     const glitch = CANONICAL_PERSONALITIES.glitch;
     
     expect(glitch.name).toBe('AI Meltdown');
-    expect(glitch.primaryTrait).toBe('sarcastic');
+      expect(glitch.primaryTrait).toBe('exhausted');
     expect(glitch.voice.tone).toBe('sarcastic');
     expect(glitch.secondaryTraits).toContain('witty');
     expect(glitch.secondaryTraits).not.toContain('brutally_honest');
@@ -44,7 +44,7 @@ describe('Personality Trait Alignment', () => {
     const boost = CANONICAL_PERSONALITIES.boost;
     
     expect(boost.name).toBe('Rocket Future');
-    expect(boost.primaryTrait).toBe('encouraging');
+      expect(boost.primaryTrait).toBe('helpful_guide');
     expect(boost.voice.tone).toBe('encouraging');
     expect(boost.secondaryTraits).toContain('optimistic');
   });
@@ -68,7 +68,7 @@ describe('Brand Brain Profile Alignment', () => {
     
     expect(alignment.glitchIsSarcastic).toBe(true);
     expect(alignment.anchorIsBrutallyHonest).toBe(true);
-    expect(alignment.boostIsEncouraging).toBe(true);
+    expect(alignment.boostIsHelpful).toBe(true);
     expect(alignment.allAligned).toBe(true);
   });
 
@@ -128,9 +128,9 @@ describe('AI Generation Alignment', () => {
     const anchorAI = buildCanonicalAIProfile('anchor');
     const boostAI = buildCanonicalAIProfile('boost');
     
-    expect(glitchAI.primaryTrait).toBe('sarcastic');
+  expect(glitchAI.primaryTrait).toBe('exhausted');
     expect(anchorAI.primaryTrait).toBe('brutally_honest');
-    expect(boostAI.primaryTrait).toBe('encouraging');
+   expect(boostAI.primaryTrait).toBe('helpful_guide');
   });
 
   test('AI profiles avoid cross-contamination', () => {

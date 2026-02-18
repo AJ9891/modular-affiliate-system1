@@ -31,13 +31,13 @@ export function resolveAIPrompt(
   personality: PersonalityProfile
 ): AIPromptProfile {
   switch (personality.authorityTone) {
-    case 'unraveling':
+    case 'sarcastic':
       return aiMeltdown
 
-    case 'blunt':
+    case 'brutally_honest':
       return antiGuru
 
-    case 'calm':
+    case 'encouraging':
       return rocketFuture
 
     default:

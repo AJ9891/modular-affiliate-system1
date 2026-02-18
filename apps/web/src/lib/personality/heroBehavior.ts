@@ -38,14 +38,14 @@ export function resolveHeroBehavior(
 ): HeroBehavior {
   // Headline style logic
   const headlineStyle = (() => {
-    if (personality.humorDensity === 'glitchy') return 'fractured'
-    if (personality.authorityTone === 'blunt') return 'flat'
+    if (personality.humorDensity === 'glitchy' || personality.visuals.motionProfile === 'glitchy') return 'fractured'
+    if (personality.authorityTone === 'blunt' || personality.authorityTone === 'brutally_honest') return 'flat'
     return 'confident'
   })()
 
   // Subcopy style logic
   const subcopyStyle = (() => {
-    if (personality.trustPosture === 'mentor') return 'explanatory'
+    if (personality.trustPosture === 'mentor' || personality.trustPosture === 'supportive-coach') return 'explanatory'
     if (personality.trustPosture === 'co-conspirator') return 'resistant'
     return 'minimal'
   })()
@@ -54,6 +54,7 @@ export function resolveHeroBehavior(
   const visualTension = (() => {
     switch (personality.visuals.motionProfile) {
       case 'unstable': return 0.8
+      case 'glitchy': return 0.7
       case 'calm': return 0.4
       case 'flat': return 0.1
       default: return 0.1
@@ -64,6 +65,7 @@ export function resolveHeroBehavior(
   const animationIntensity = (() => {
     switch (personality.visuals.motionProfile) {
       case 'unstable': return 1.0
+      case 'glitchy': return 0.9
       case 'calm': return 0.7
       case 'flat': return 0.2
       default: return 0.3
@@ -72,7 +74,8 @@ export function resolveHeroBehavior(
 
   // Glitch permission
   const allowGlitch = personality.humorDensity === 'glitchy' || 
-                      personality.visuals.motionProfile === 'unstable'
+                      personality.visuals.motionProfile === 'unstable' ||
+                      personality.visuals.motionProfile === 'glitchy'
 
   // Ambient sound permission
   const allowAmbientSound = personality.soundProfile !== 'none'

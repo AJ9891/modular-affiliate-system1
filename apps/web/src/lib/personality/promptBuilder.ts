@@ -15,6 +15,70 @@ import {
   type CopyContract
 } from './copyContract'
 import { resolveAIPrompt, type AIProfile } from './aiProfile'
+import {
+  assemblePrompt,
+  resolveAIContext,
+  bindVoice,
+  HeroPromptContract,
+  type PromptContract,
+  type VoiceId
+} from '@modular-affiliate/ai'
+
+// Launchpad-wide guardrails injected into every prompt
+const GLOBAL_GUARDRAILS = `
+LAUNCHPAD GUARDRAILS (APPLY ALWAYS):
+- Prime directive: reduce effort and increase clarity. Never change the user goal. Do not add promises, urgency, scarcity, or income claims unless provided.
+- Suggest, don't replace: respond to existing copy; if empty, draft. Offer options, not finals.
+- Explain the why: include a brief note on why the suggestion helps and when not to use it. Keep it calm and skippable.
+- No hidden persuasion: flag risky claims instead of silently removing them.
+- Voice binding: required voice and tone are hard constraints. No unrequested experiments.
+`
+
+const CONTEXT_RULES: Record<PromptConfig['contentType'], string> = {
+  hero: 'Context sensitivity: live funnels should be conservative, risk warnings enabled, and no tonal experimentation.',
+  feature: 'Context sensitivity: keep structure clear; conservative suggestions for live funnels.',
+  error: 'Context sensitivity: prioritize reassurance and clarity; never add urgency.',
+  affiliate: 'Context sensitivity: disclose relationships, avoid hype, and keep claims reality-based.',
+  onboarding: 'Context sensitivity: onboarding uses Boost-style clarity only; zero personality variance; extra explanation allowed.'
+}
+
+function guardrailBlock(contentType: PromptConfig['contentType']) {
+  return `\n${GLOBAL_GUARDRAILS}\n${CONTEXT_RULES[contentType]}\n`.trim()
+}
+
+// Infer voice id from AI profile/system text (lightweight mapper to new voice binder)
+function inferVoiceId(aiProfile: AIProfile): VoiceId {
+  const sys = aiProfile.system.toLowerCase()
+  if (sys.includes('anti-guru') || sys.includes('brutally honest')) return 'anti-guru'
+  if (sys.includes('glitch') || sys.includes('meltdown') || sys.includes('sarcastic')) return 'glitch'
+  return 'boost'
+}
+
+function assembleHeroContractPrompt(aiProfile: AIProfile, contract: CopyContract, context: { productName: string; niche?: string; keyBenefit?: string; targetAudience?: string }) {
+  const voiceId = inferVoiceId(aiProfile)
+  const aiContext = resolveAIContext({
+    componentId: 'HeroBlock',
+    pageMode: 'builder',
+    userLevel: 'active',
+    templateVoice: voiceId,
+    riskLevel: 'medium',
+    metadata: { keyBenefit: context.keyBenefit, niche: context.niche, targetAudience: context.targetAudience }
+  })
+
+  if (!aiContext) return null
+  const boundVoice = bindVoice(aiContext)
+  if (!boundVoice) return null
+
+  const contractNote: PromptContract = { ...HeroPromptContract }
+
+  return assemblePrompt({
+    context: aiContext,
+    voiceHeader: boundVoice.header,
+    contract: contractNote,
+    componentInstructions: 'Generate 3 hero options (headline, subcopy, CTA). Explain why each works. Never change the offer.',
+    userContent: JSON.stringify(context, null, 2)
+  })
+}
 
 export interface PromptConfig {
   contentType: 'hero' | 'feature' | 'error' | 'affiliate' | 'onboarding'
@@ -36,17 +100,25 @@ export function buildHeroPrompt(
     targetAudience?: string
   }
 ): string {
-  return `
+  const sarcasmAllowed = (contract as any).allowSarcasm ?? false
+  const forbidPromises = (contract as any).forbidPromises ?? true
+  const assembled = assembleHeroContractPrompt(aiProfile, contract, context)
+
+  const legacyPrompt = `
 ${aiProfile.system}
+
+${guardrailBlock('hero')}
 
 You are writing HERO COPY for a landing page.
 
 CONSTRAINTS:
-- Headline: Maximum ${contract.maxHeadlineWords} words
-- Subcopy: Maximum ${contract.maxSubcopyWords} words  
-- CTA: Maximum ${contract.maxCtaWords} words
+- Headline length: ${contract.maxHeadlineWords} words
+- Subcopy length: ${contract.maxSubcopyWords} words  
+- CTA length: ${contract.maxCtaWords} words
 - Voice: ${contract.requiredVoice}
 - Tone: ${contract.requiredTone}
+- Sarcasm allowed: ${sarcasmAllowed}
+- Promises forbidden: ${forbidPromises}
 
 CONTEXT:
 Product: ${context.productName}
@@ -67,6 +139,12 @@ Return JSON format:
   "cta": "Clear call-to-action aligned with personality"
 }
 `.trim()
+
+  if (assembled) {
+    return `${assembled.prompt}\n\n---\nLEGACY PROMPT\n${legacyPrompt}`.trim()
+  }
+
+  return legacyPrompt
 }
 
 /**
@@ -83,6 +161,8 @@ export function buildFeaturePrompt(
 ): string {
   return `
 ${aiProfile.system}
+
+${guardrailBlock('feature')}
 
 You are writing FEATURE COPY for a landing page feature section.
 
@@ -125,6 +205,8 @@ export function buildErrorPrompt(
 ): string {
   return `
 ${aiProfile.system}
+
+${guardrailBlock('error')}
 
 You are writing ERROR MESSAGE COPY for user-facing error states.
 
@@ -177,6 +259,8 @@ export function buildAffiliatePrompt(
   return `
 ${aiProfile.system}
 
+${guardrailBlock('affiliate')}
+
 You are writing AFFILIATE MARKETING COPY for a product landing page.
 
 CONSTRAINTS:
@@ -227,6 +311,8 @@ export function buildOnboardingPrompt(
 ): string {
   return `
 ${aiProfile.system}
+
+${guardrailBlock('onboarding')}
 
 You are writing ONBOARDING COPY for a user interface.
 
