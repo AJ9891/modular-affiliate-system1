@@ -437,7 +437,7 @@ export function validatePersonalityAlignment() {
   return {
     glitchIsSarcastic: glitchTone === 'sarcastic',
     anchorIsBrutallyHonest: anchorTone === 'brutally_honest',
-    boostIsHelpful: boostTone === 'helpful_guide',
-    allAligned: glitchTone === 'sarcastic' && anchorTone === 'brutally_honest' && boostTone === 'helpful_guide'
+    boostIsHelpful: boostTone === 'encouraging',
+    allAligned: glitchTone === 'sarcastic' && anchorTone === 'brutally_honest' && boostTone === 'encouraging'
   };
 }

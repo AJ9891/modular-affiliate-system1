@@ -1,10 +1,12 @@
-import type { VoiceId } from '../context/Context.types'
+import type { PageMode, VoiceId } from '../context/Context.types'
+
+export type { VoiceId }
 
 export interface VoiceHeader {
   id: VoiceId
   system: string
   constraints: string[]
-  allowedContexts?: ('builder' | 'onboarding' | 'live_funnel')[]
+  allowedContexts?: (PageMode | 'templates')[]
 }
 
 export interface VoiceDefinition extends VoiceHeader {
