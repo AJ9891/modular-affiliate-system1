@@ -5,15 +5,15 @@
 @layer base {
   :root {
     /* Core Brand - Enhanced Premium Colors */
-    --bg-primary: #0a0d16;
+    --bg-primary: #0A0F14;
     --bg-secondary: #0f1319;
     --bg-surface: #141821;
     --bg-surface-elevated: #1a1f2b;
     --bg-surface-subtle: #1e2430;
 
-    --text-primary: #f8fafc;
-    --text-secondary: #cbd5e1;
-    --text-muted: #64748b;
+    --text-primary: #EAF8FF;
+    --text-secondary: #9FB4C8;
+    --text-muted: #6C7A89;
     --text-accent: #e2e8f0;
 
     --border-subtle: rgba(148, 163, 184, 0.08);
@@ -124,6 +124,23 @@
 
 /* Launchpad 4 Success Premium Design System */
 @layer components {
+  /* Glass HUD utility panels */
+  .hud-panel {
+    @apply rounded-hud backdrop-blur-hud p-5 border transition duration-200 ease-smooth;
+  }
+
+  .hud-dark {
+    background: rgba(18, 28, 38, 0.72);
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: theme('boxShadow.hudDark');
+  }
+
+  .hud-light {
+    background: rgba(255,255,255,0.75);
+    border: 1px solid rgba(0,0,0,0.08);
+    box-shadow: theme('boxShadow.hudLight');
+  }
+
   /* Enhanced gradient backgrounds */
   .bg-brand-gradient {
     background: linear-gradient(135deg, hsl(var(--navy)) 0%, hsl(var(--purple)) 50%, hsl(15 23 52) 100%);
