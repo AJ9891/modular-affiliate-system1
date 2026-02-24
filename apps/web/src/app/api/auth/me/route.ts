@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   const check = checkSupabase()
   if (check) return check
   
-  const supabase = createSubdomainRouteHandlerClient(request)
+  const supabase = await createSubdomainRouteHandlerClient(request)
   
   try {
     const { data: { user }, error } = await supabase.auth.getUser()

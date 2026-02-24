@@ -33,8 +33,9 @@ export function createSubdomainMiddlewareClient(req: NextRequest, res: NextRespo
   return createMiddlewareClient({ req, res })
 }
 
-export function createSubdomainRouteHandlerClient(req: NextRequest) {
-  return createRouteHandlerClient({ cookies })
+export async function createSubdomainRouteHandlerClient(req: NextRequest) {
+  const cookieStore = await cookies()
+  return createRouteHandlerClient({ cookies: () => cookieStore })
 }
 
 export async function validateSubdomainAccess(

@@ -3,9 +3,14 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { BrandBrainManager } from '@/lib/brand-brain/manager';
 
+async function getSupabaseRouteClient() {
+  const cookieStore = await cookies();
+  return createRouteHandlerClient({ cookies: () => cookieStore });
+}
+
 export async function POST(request: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await getSupabaseRouteClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {

@@ -2,6 +2,11 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+async function getSupabaseRouteClient() {
+  const cookieStore = await cookies();
+  return createRouteHandlerClient({ cookies: () => cookieStore });
+}
+
 export async function GET(request: Request) {
   const isDevelopment = process.env.NODE_ENV === 'development';
   
@@ -11,7 +16,7 @@ export async function GET(request: Request) {
       console.log('[BRAND-BRAIN API] Request URL:', request.url);
     }
 
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await getSupabaseRouteClient();
     
     // Check authentication first
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -113,7 +118,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await getSupabaseRouteClient();
     
     // Check authentication first
     const { data: { user }, error: authError } = await supabase.auth.getUser();

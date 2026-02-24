@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   const check = checkSupabase()
   if (check) return check
   
-  const supabase = createSubdomainRouteHandlerClient(request)
+  const supabase = await createSubdomainRouteHandlerClient(request)
   
   try {
     const { email, password } = await request.json()
