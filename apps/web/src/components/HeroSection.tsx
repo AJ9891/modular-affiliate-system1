@@ -46,7 +46,7 @@ export function HeroSection() {
 
   // Typography tone classes
   const getTypographyClasses = () => {
-    const baseClasses = 'text-5xl md:text-7xl font-extrabold mb-6 drop-shadow-2xl break-words px-4'
+    const baseClasses = 'text-4xl sm:text-5xl md:text-7xl font-extrabold mb-6 drop-shadow-2xl break-words px-4 text-center leading-tight flex flex-wrap justify-center items-baseline gap-2'
     
     switch (ui.typography.tone) {
       case 'fractured':
@@ -76,7 +76,7 @@ export function HeroSection() {
   }
 
   return (
-    <section className="flex min-h-screen flex-col items-center justify-center p-8 bg-brand-gradient launch-pad pt-16 relative overflow-hidden">
+    <section className="flex min-h-screen flex-col items-center justify-center p-8 bg-brand-gradient launch-pad pt-24 md:pt-32 relative overflow-hidden">
       {/* Background effects - intensity based on visual noise */}
       {ui.hero.visualNoise !== 'none' && (
         <>
@@ -105,9 +105,9 @@ export function HeroSection() {
       >
         {/* Hero Title with Typography Tone */}
         <h1 className={getTypographyClasses()}>
-          <span className="text-white relative z-20">Launchpad</span>
-          <span className="text-brand-gradient text-6xl md:text-8xl relative z-10 -mx-2">4</span>
-          <span className="text-white relative z-20">Success</span>
+          <span className="text-white relative z-20 whitespace-nowrap">Launchpad</span>
+          <span className="text-brand-gradient text-5xl sm:text-6xl md:text-8xl relative z-10">4</span>
+          <span className="text-white relative z-20 whitespace-nowrap">Success</span>
         </h1>
 
         {/* Tagline with Emphasis Style */}
