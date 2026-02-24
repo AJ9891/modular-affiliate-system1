@@ -27,8 +27,6 @@ const nextConfig = {
       }
       return config;
     },
-    // Disable all minification
-    swcMinify: false,
     // Enable verbose error reporting
     onDemandEntries: {
       maxInactiveAge: 60 * 1000,
