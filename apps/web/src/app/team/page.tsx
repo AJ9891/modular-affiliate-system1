@@ -142,46 +142,46 @@ export default function TeamPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="cockpit-shell page-crew flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading team...</p>
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-anchor-400"></div>
+          <p className="text-text-secondary">Loading crew roster...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="cockpit-shell page-crew py-8">
+      <div className="cockpit-container max-w-6xl">
         {/* Header */}
         <div className="mb-8">
-          <Link href="/dashboard" className="text-purple-600 hover:underline mb-4 inline-block">
+          <Link href="/dashboard" className="mb-4 inline-block text-text-secondary hover:text-text-primary">
             ← Back to Dashboard
           </Link>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Team Management</h1>
-          <p className="text-gray-600">Collaborate with your team on funnels and offers</p>
+          <h1 className="mb-2 text-4xl font-semibold text-text-primary">Crew Management</h1>
+          <p className="text-text-secondary">Collaborate with your team on funnels and offers</p>
         </div>
 
         {/* Alerts */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-6">
+          <div className="mb-6 rounded-lg border border-red-400/35 bg-red-500/12 px-4 py-3 text-red-200">
             {error}
           </div>
         )}
         {success && (
-          <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-6">
+          <div className="mb-6 rounded-lg border border-emerald-400/35 bg-emerald-500/12 px-4 py-3 text-emerald-200">
             {success}
           </div>
         )}
         {inviteLink && (
-          <div className="bg-blue-50 border border-blue-200 text-blue-900 px-4 py-3 rounded-lg mb-6">
-            <p className="font-semibold mb-2">Invite Link Generated:</p>
+          <div className="mb-6 rounded-lg border border-rocket-500/35 bg-rocket-500/12 px-4 py-3 text-text-primary">
+            <p className="mb-2 font-semibold">Invite Link Generated:</p>
             <div className="flex gap-2 items-center">
-              <code className="flex-1 bg-white px-3 py-2 rounded text-sm">{inviteLink}</code>
+              <code className="flex-1 rounded border border-[var(--border-subtle)] bg-[rgba(10,16,24,0.5)] px-3 py-2 text-sm text-text-secondary">{inviteLink}</code>
               <button
                 onClick={() => copyInviteLink(inviteLink)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="hud-button-secondary px-4 py-2"
               >
                 Copy
               </button>
@@ -194,7 +194,7 @@ export default function TeamPage() {
           <div className="mb-8">
             <button
               onClick={() => setShowInviteForm(!showInviteForm)}
-              className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold"
+              className="hud-button-primary px-6 py-3"
             >
               {showInviteForm ? 'Cancel' : '+ Invite Team Member'}
             </button>
@@ -203,30 +203,30 @@ export default function TeamPage() {
 
         {/* Invite Form */}
         {showInviteForm && (
-          <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-            <h2 className="text-xl font-bold mb-4">Invite Team Member</h2>
+          <div className="hud-card mb-8">
+            <h2 className="mb-4 text-xl font-semibold text-text-primary">Invite Crew Member</h2>
             <form onSubmit={handleInvite} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-text-secondary">
                   Email Address
                 </label>
                 <input
                   type="email"
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                  className="hud-input"
                   placeholder="colleague@example.com"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-text-secondary">
                   Role
                 </label>
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value as any)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                  className="hud-select"
                 >
                   <option value="viewer">Viewer - Can view funnels and offers</option>
                   <option value="editor">Editor - Can create and edit funnels</option>
@@ -235,7 +235,7 @@ export default function TeamPage() {
               </div>
               <button
                 type="submit"
-                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                className="hud-button-primary px-6 py-2"
               >
                 Send Invite
               </button>
@@ -245,30 +245,33 @@ export default function TeamPage() {
 
         {/* Team Members List */}
         {teamData?.isOwner && teamData.ownedTeam.length > 0 && (
-          <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-            <h2 className="text-xl font-bold mb-4">Your Team</h2>
+          <div className="hud-card mb-8">
+            <h2 className="mb-4 text-xl font-semibold text-text-primary">Crew Roster</h2>
             <div className="space-y-4">
               {teamData.ownedTeam.map((member) => (
                 <div
                   key={member.id}
-                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+                  className="flex items-center justify-between rounded-lg border border-[var(--border-subtle)] bg-[rgba(12,18,26,0.5)] p-4"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
-                      <p className="font-semibold text-gray-900">{member.member_email}</p>
+                      <p className="font-semibold text-text-primary">{member.member_email}</p>
                       <span
-                        className={`px-2 py-1 text-xs rounded-full ${
+                        className={`rounded-full px-2 py-1 text-xs ${
                           member.status === 'active'
-                            ? 'bg-green-100 text-green-800'
+                            ? 'bg-emerald-500/20 text-emerald-200'
                             : member.status === 'pending'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-gray-100 text-gray-800'
+                            ? 'bg-amber-500/20 text-amber-200'
+                            : 'bg-slate-500/20 text-slate-200'
                         }`}
                       >
                         {member.status}
                       </span>
+                      <span className={`role-badge role-badge-${member.role}`}>
+                        {member.role}
+                      </span>
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="mt-1 text-sm text-text-secondary">
                       Invited {new Date(member.invited_at).toLocaleDateString()}
                       {member.accepted_at && ` · Joined ${new Date(member.accepted_at).toLocaleDateString()}`}
                     </p>
@@ -278,7 +281,7 @@ export default function TeamPage() {
                       <select
                         value={member.role}
                         onChange={(e) => handleUpdateRole(member.id, e.target.value)}
-                        className="px-3 py-1 border border-gray-300 rounded-lg text-sm"
+                        className="hud-select px-3 py-1 text-sm"
                       >
                         <option value="viewer">Viewer</option>
                         <option value="editor">Editor</option>
@@ -287,7 +290,7 @@ export default function TeamPage() {
                     )}
                     <button
                       onClick={() => handleRemoveMember(member.id)}
-                      className="text-red-600 hover:text-red-700 text-sm font-medium"
+                      className="text-sm font-medium text-red-300 hover:text-red-200"
                     >
                       Remove
                     </button>
@@ -300,24 +303,24 @@ export default function TeamPage() {
 
         {/* Teams User Is Part Of */}
         {teamData?.memberOf && teamData.memberOf.length > 0 && (
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-xl font-bold mb-4">Teams You're Part Of</h2>
+          <div className="hud-card">
+            <h2 className="mb-4 text-xl font-semibold text-text-primary">Teams You're Part Of</h2>
             <div className="space-y-4">
               {teamData.memberOf.map((membership) => (
                 <div
                   key={membership.id}
-                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+                  className="flex items-center justify-between rounded-lg border border-[var(--border-subtle)] bg-[rgba(12,18,26,0.5)] p-4"
                 >
                   <div>
-                    <p className="font-semibold text-gray-900">
+                    <p className="font-semibold text-text-primary">
                       Team Account
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-text-secondary">
                       Role: <span className="font-medium capitalize">{membership.role}</span>
                     </p>
                   </div>
-                  <span className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">
-                    Active
+                  <span className={`role-badge role-badge-${membership.role}`}>
+                    {membership.role}
                   </span>
                 </div>
               ))}
@@ -327,15 +330,15 @@ export default function TeamPage() {
 
         {/* Empty State */}
         {teamData && !teamData.isOwner && teamData.memberOf.length === 0 && (
-          <div className="bg-white rounded-xl shadow-sm p-12 text-center">
+          <div className="hud-card text-center">
             <div className="text-6xl mb-4">👥</div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">No Team Yet</h2>
-            <p className="text-gray-600 mb-6">
+            <h2 className="mb-2 text-2xl font-semibold text-text-primary">No Team Yet</h2>
+            <p className="mb-6 text-text-secondary">
               Team collaboration is available on the Agency plan.
             </p>
             <Link
               href="/pricing"
-              className="inline-block px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold"
+              className="hud-button-primary inline-block px-6 py-3"
             >
               Upgrade to Agency
             </Link>

@@ -97,25 +97,25 @@ function BuilderContent() {
   const selectedBlock = blocks.find(b => b.id === selectedBlockId)
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="cockpit-shell page-engineering-bay overlay-blueprint-grid">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-50">
-        <div className="max-w-full px-6 py-4 flex justify-between items-center">
-          <Link href="/dashboard" className="text-blue-600 hover:underline">
+      <header className="sticky top-0 z-50 px-6 py-4 md:px-10">
+        <div className="hud-strip flex max-w-full items-center justify-between px-6 py-4">
+          <Link href="/dashboard" className="text-text-secondary transition hover:text-text-primary">
             ← Back to Dashboard
           </Link>
           
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-600">Voice:</span>
-              <span className="text-lg font-semibold text-blue-600">
+              <span className="text-sm font-medium text-text-secondary">Mode:</span>
+              <span className="text-lg font-semibold text-text-primary">
                 {mode === 'rocket' && '🚀 Rocket'}
                 {mode === 'meltdown' && '🤖 Meltdown'}
                 {mode === 'antiguru' && '⚡ Anti-Guru'}
               </span>
               <button
                 onClick={() => setShowPersonalityPanel(!showPersonalityPanel)}
-                className="ml-2 px-3 py-1 text-sm border rounded-lg hover:bg-gray-50"
+                className="hud-button-secondary ml-2 px-3 py-1 text-sm"
               >
                 Change
               </button>
@@ -125,12 +125,12 @@ function BuilderContent() {
               placeholder="Funnel Name"
               value={funnelName}
               onChange={(e) => setFunnelName(e.target.value)}
-              className="px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-600 focus:outline-none"
+              className="hud-input w-56"
             />
             <button
               onClick={saveFunnel}
               disabled={saving || blocks.length === 0}
-              className="px-6 py-2 bg-gradient-to-r from-blue-600 to-green-600 text-white font-bold rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="hud-button-primary disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving ? 'Saving...' : 'Save Funnel'}
             </button>
@@ -139,7 +139,7 @@ function BuilderContent() {
 
         {/* Personality Selector Panel */}
         {showPersonalityPanel && (
-          <div className="bg-gray-50 border-t p-6">
+          <div className="hud-card mt-3">
             <PersonalitySelector 
               compact={false} 
               onSelectionComplete={() => setShowPersonalityPanel(false)}
@@ -150,30 +150,30 @@ function BuilderContent() {
 
       <div className="flex h-[calc(100vh-73px)]">
         {/* Block Library Sidebar */}
-        <div className="w-64 bg-white border-r p-4 overflow-y-auto">
-          <h2 className="text-lg font-bold mb-4">Block Library</h2>
+        <div className="w-72 overflow-y-auto border-r border-[var(--border-subtle)] bg-[rgba(8,14,20,0.5)] p-4">
+          <h2 className="mb-4 text-lg font-semibold text-text-primary">Structural Assembly</h2>
           <div className="space-y-2">
             {blockTypes.map(({ type, label, icon }) => (
               <button
                 key={type}
                 onClick={() => addBlock(type)}
-                className="w-full px-4 py-3 text-left bg-gray-50 border-2 border-gray-200 rounded-lg hover:border-blue-600 hover:bg-blue-50 transition-colors flex items-center gap-3"
+                className="hud-card-tight flex w-full items-center gap-3 px-4 py-3 text-left transition hover:border-rocket-500/50"
               >
                 <span className="text-2xl">{icon}</span>
-                <span className="font-medium">{label}</span>
+                <span className="font-medium text-text-primary">{label}</span>
               </button>
             ))}
           </div>
         </div>
 
         {/* Canvas */}
-        <div className="flex-1 overflow-auto p-8 bg-gray-100">
+        <div className="telemetry-grid flex-1 overflow-auto p-8">
           <div className="max-w-4xl mx-auto">
             {blocks.length === 0 ? (
-              <div className="bg-white rounded-xl shadow-lg p-16 text-center">
+              <div className="hud-card p-16 text-center">
                 <div className="text-6xl mb-4">🎨</div>
-                <h3 className="text-2xl font-bold mb-2">Start Building Your Funnel</h3>
-                <p className="text-gray-600">
+                <h3 className="mb-2 text-2xl font-semibold text-text-primary">Engineering Bay Ready</h3>
+                <p className="text-text-secondary">
                   Add blocks from the left sidebar to create your funnel
                 </p>
               </div>
@@ -183,35 +183,35 @@ function BuilderContent() {
                   <div
                     key={block.id}
                     onClick={() => setSelectedBlockId(block.id)}
-                    className={`bg-white rounded-xl shadow-sm p-6 cursor-pointer border-2 transition-all ${
+                    className={`cursor-pointer rounded-xl border p-6 transition ${
                       selectedBlockId === block.id 
-                        ? 'border-blue-600 shadow-lg' 
-                        : 'border-transparent hover:border-gray-300'
+                        ? 'border-rocket-500/60 bg-[rgba(18,28,38,0.75)] shadow-hudDark' 
+                        : 'border-[var(--border-subtle)] bg-[rgba(14,22,30,0.6)] hover:border-rocket-500/30'
                     }`}
                   >
                     <div className="flex justify-between items-center mb-4">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-lg capitalize">{block.type}</span>
-                        <span className="text-sm text-gray-500">#{index + 1}</span>
+                        <span className="text-lg font-semibold capitalize text-text-primary">{block.type}</span>
+                        <span className="text-sm text-text-muted">#{index + 1}</span>
                       </div>
                       <div className="flex gap-2">
                         <button
                           onClick={(e) => { e.stopPropagation(); moveBlock(block.id, 'up') }}
                           disabled={index === 0}
-                          className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                          className="hud-button-secondary px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-30"
                         >
                           ↑
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); moveBlock(block.id, 'down') }}
                           disabled={index === blocks.length - 1}
-                          className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                          className="hud-button-secondary px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-30"
                         >
                           ↓
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); removeBlock(block.id) }}
-                          className="px-3 py-1 text-sm bg-red-100 hover:bg-red-200 text-red-700 rounded"
+                          className="hud-button-danger px-3 py-1 text-sm"
                         >
                           Delete
                         </button>
@@ -226,15 +226,16 @@ function BuilderContent() {
         </div>
 
         {/* Properties Panel */}
-        <div className="w-96 bg-white border-l p-6 overflow-y-auto">
-          <h2 className="text-lg font-bold mb-4">Block Properties</h2>
+        <div className="w-96 overflow-y-auto border-l border-[var(--border-subtle)] bg-[rgba(8,14,20,0.55)] p-6">
+          <h2 className="mb-1 text-lg font-semibold text-text-primary">Settings</h2>
+          <p className="mb-4 text-xs uppercase tracking-system text-text-muted">Raw Telemetry</p>
           {selectedBlock ? (
             <BlockEditor
               block={selectedBlock}
               onChange={(updates) => updateBlock(selectedBlock.id, updates)}
             />
           ) : (
-            <p className="text-gray-500 text-sm">Select a block to edit its properties</p>
+            <p className="text-sm text-text-muted">Select a module to edit its properties</p>
           )}
         </div>
       </div>
@@ -244,41 +245,41 @@ function BuilderContent() {
 
 function BlockPreview({ block }: { block: FunnelBlock }) {
   return (
-    <div className="p-4 bg-gray-50 rounded-lg">
+    <div className="rounded-lg border border-[var(--border-subtle)] bg-[rgba(9,15,22,0.45)] p-4">
       {block.type === 'hero' && (
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-2">{block.content.headline || 'Headline'}</h2>
-          <p className="text-gray-600 mb-4">{block.content.subheadline || 'Subheadline'}</p>
-          <button className="px-6 py-2 bg-blue-600 text-white rounded-lg">
+          <h2 className="mb-2 text-2xl font-semibold text-text-primary">{block.content.headline || 'Headline'}</h2>
+          <p className="mb-4 text-text-secondary">{block.content.subheadline || 'Subheadline'}</p>
+          <button className="hud-button-primary px-6 py-2">
             {block.content.cta || 'Call to Action'}
           </button>
         </div>
       )}
       {block.type === 'benefits' && (
         <div>
-          <h3 className="text-xl font-bold mb-3">{block.content.title || 'Benefits'}</h3>
-          <div className="space-y-2 text-sm text-gray-600">
+          <h3 className="mb-3 text-xl font-semibold text-text-primary">{block.content.title || 'Benefits'}</h3>
+          <div className="space-y-2 text-sm text-text-secondary">
             {block.content.items?.length > 0 ? (
               block.content.items.map((item: any, i: number) => (
                 <div key={i}>• {item.title}</div>
               ))
             ) : (
-              <div className="text-gray-400">No items added yet</div>
+              <div className="text-text-muted">No items added yet</div>
             )}
           </div>
         </div>
       )}
       {block.type === 'cta' && (
-        <div className="text-center p-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg">
-          <h3 className="text-xl font-bold mb-4">{block.content.headline || 'Ready to get started?'}</h3>
-          <button className="px-8 py-3 bg-white text-blue-600 font-bold rounded-lg">
+        <div className="rounded-lg border border-rocket-500/45 bg-[rgba(12,35,30,0.66)] p-6 text-center">
+          <h3 className="mb-4 text-xl font-semibold text-text-primary">{block.content.headline || 'Ready to get started?'}</h3>
+          <button className="hud-button-secondary px-8 py-3">
             {block.content.buttonText || 'Click Here'}
           </button>
         </div>
       )}
       {!['hero', 'benefits', 'cta'].includes(block.type) && (
-        <div className="text-sm text-gray-600">
-          <div className="font-semibold mb-2 capitalize">{block.type} Block</div>
+        <div className="text-sm text-text-secondary">
+          <div className="mb-2 font-semibold capitalize text-text-primary">{block.type} Block</div>
           <pre className="text-xs overflow-auto max-h-32">
             {JSON.stringify(block.content, null, 2)}
           </pre>
@@ -307,24 +308,24 @@ function BlockEditor({ block, onChange }: {
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-semibold mb-2">Block Type</label>
+        <label className="mb-2 block text-sm font-semibold text-text-secondary">Module Type</label>
         <input
           type="text"
           value={block.type}
           disabled
-          className="w-full px-3 py-2 border rounded-lg bg-gray-100 text-gray-600 capitalize"
+          className="hud-input capitalize text-text-secondary"
         />
       </div>
       
       <div>
-        <label className="block text-sm font-semibold mb-2">Content (JSON)</label>
+        <label className="mb-2 block text-sm font-semibold text-text-secondary">Raw Telemetry (JSON)</label>
         <textarea
           value={contentJson}
           onChange={(e) => handleContentChange(e.target.value)}
           rows={15}
-          className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg font-mono text-xs focus:border-blue-600 focus:outline-none"
+          className="hud-textarea font-mono text-xs"
         />
-        <p className="text-xs text-gray-500 mt-1">Edit the JSON to update the block content</p>
+        <p className="mt-1 text-xs text-text-muted">Edit JSON directly to update this module.</p>
       </div>
     </div>
   )

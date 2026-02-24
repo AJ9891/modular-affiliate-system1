@@ -81,10 +81,10 @@ export default function AdminAnalytics() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-brand-gradient launch-pad">
+      <div className="cockpit-shell page-command-authority flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-orange mx-auto mb-4"></div>
-          <p className="text-white">Loading analytics...</p>
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-anchor-400"></div>
+          <p className="text-text-secondary">Loading command telemetry...</p>
         </div>
       </div>
     )
@@ -92,11 +92,11 @@ export default function AdminAnalytics() {
 
   if (!user || !isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-brand-gradient launch-pad">
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border-2 border-brand-purple/20 max-w-md">
-          <h1 className="text-2xl font-bold text-brand-navy mb-4">Access Denied</h1>
-          <p className="text-brand-purple mb-6">This page is only accessible to administrators.</p>
-          <Link href="/dashboard" className="btn-launch inline-block">
+      <div className="cockpit-shell page-command-authority flex items-center justify-center">
+        <div className="hud-card max-w-md">
+          <h1 className="mb-4 text-2xl font-semibold text-text-primary">Access Denied</h1>
+          <p className="mb-6 text-text-secondary">This page is only accessible to administrators.</p>
+          <Link href="/dashboard" className="hud-button-primary inline-block">
             Return to Dashboard
           </Link>
         </div>
@@ -125,40 +125,40 @@ export default function AdminAnalytics() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="cockpit-shell page-command-authority py-8">
+      <div className="cockpit-container max-w-6xl">
         <div className="mb-6">
-          <Link href="/dashboard" className="text-brand-purple hover:text-brand-cyan transition-colors">
+          <Link href="/dashboard" className="text-text-secondary transition hover:text-text-primary">
             ← Back to Dashboard
           </Link>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-8 border-2 border-brand-purple/20 mb-8">
+        <div className="hud-card mb-8 border-[rgba(174,183,194,0.22)]">
           <div className="flex items-center gap-3 mb-6">
             <span className="text-4xl">📊</span>
             <div>
-              <h1 className="text-3xl font-bold text-brand-navy">Admin Analytics</h1>
-              <p className="text-brand-purple">AI usage and cost tracking</p>
+              <h1 className="text-3xl font-semibold text-text-primary">Command Analytics</h1>
+              <p className="text-text-secondary">AI usage and cost tracking</p>
             </div>
           </div>
 
           {error && (
-            <div className="bg-red-50 border-2 border-red-500 rounded-xl p-4 mb-6">
-              <p className="text-red-700">{error}</p>
+            <div className="mb-6 rounded-xl border border-red-400/35 bg-red-500/12 p-4">
+              <p className="text-red-200">{error}</p>
             </div>
           )}
 
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-brand-purple/10 rounded-xl p-6 border-2 border-brand-purple/30">
-              <div className="text-sm text-brand-purple font-semibold mb-1">Total Requests</div>
-              <div className="text-3xl font-bold text-brand-navy">
+            <div className="hud-card-tight p-6">
+              <div className="mb-1 text-sm font-semibold uppercase tracking-system text-text-secondary">Total Requests</div>
+              <div className="text-3xl font-semibold text-text-primary">
                 {totalRequests.toLocaleString()}
               </div>
             </div>
-            <div className="bg-brand-orange/10 rounded-xl p-6 border-2 border-brand-orange/30">
-              <div className="text-sm text-brand-orange font-semibold mb-1">Total Cost</div>
-              <div className="text-3xl font-bold text-brand-navy">
+            <div className="hud-card-tight p-6">
+              <div className="mb-1 text-sm font-semibold uppercase tracking-system text-text-secondary">Total Cost</div>
+              <div className="text-3xl font-semibold text-text-primary">
                 ${totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
@@ -166,16 +166,16 @@ export default function AdminAnalytics() {
 
           {/* Provider Breakdown */}
           <section className="mb-8">
-            <h2 className="text-xl font-bold text-brand-navy mb-4">Usage by Provider</h2>
+            <h2 className="mb-4 text-xl font-semibold text-text-primary">Usage by Provider</h2>
             {data?.totals && data.totals.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b-2 border-brand-purple/20">
-                      <th className="text-left py-3 px-4 text-brand-purple font-semibold">Provider</th>
-                      <th className="text-right py-3 px-4 text-brand-purple font-semibold">Requests</th>
-                      <th className="text-right py-3 px-4 text-brand-purple font-semibold">Total Cost</th>
-                      <th className="text-right py-3 px-4 text-brand-purple font-semibold">Avg Cost</th>
+                    <tr className="border-b border-[var(--border-subtle)]">
+                      <th className="px-4 py-3 text-left font-semibold text-text-secondary">Provider</th>
+                      <th className="px-4 py-3 text-right font-semibold text-text-secondary">Requests</th>
+                      <th className="px-4 py-3 text-right font-semibold text-text-secondary">Total Cost</th>
+                      <th className="px-4 py-3 text-right font-semibold text-text-secondary">Avg Cost</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -191,15 +191,15 @@ export default function AdminAnalytics() {
                       const avgCost = requests > 0 && !isNaN(totalCost) ? totalCost / requests : 0
                       
                       return (
-                        <tr key={t.provider || `unknown-${idx}`} className="border-b border-brand-purple/10 hover:bg-brand-purple/5">
-                          <td className="py-3 px-4 font-semibold text-brand-navy">{String(t.provider || 'Unknown')}</td>
-                          <td className="py-3 px-4 text-right text-brand-navy">
+                        <tr key={t.provider || `unknown-${idx}`} className="border-b border-[var(--border-subtle)] hover:bg-[rgba(255,255,255,0.03)]">
+                          <td className="px-4 py-3 font-semibold text-text-primary">{String(t.provider || 'Unknown')}</td>
+                          <td className="px-4 py-3 text-right text-text-primary">
                             {(isNaN(requests) ? 0 : requests).toLocaleString()}
                           </td>
-                          <td className="py-3 px-4 text-right text-brand-orange font-semibold">
+                          <td className="px-4 py-3 text-right font-semibold text-rocket-500">
                             ${(isNaN(totalCost) ? 0 : totalCost).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
-                          <td className="py-3 px-4 text-right text-brand-cyan">
+                          <td className="px-4 py-3 text-right text-text-secondary">
                             {requests > 0 && !isNaN(avgCost) && avgCost > 0
                               ? `$${avgCost.toFixed(4)}`
                               : '$0.0000'}
@@ -211,7 +211,7 @@ export default function AdminAnalytics() {
                 </table>
               </div>
             ) : (
-              <div className="text-center py-8 text-brand-purple">
+              <div className="py-8 text-center text-text-secondary">
                 No usage data available
               </div>
             )}
@@ -220,9 +220,9 @@ export default function AdminAnalytics() {
           {/* Top Users */}
           {data?.topUsers && data.topUsers.length > 0 && (
             <section>
-              <h2 className="text-xl font-bold text-brand-navy mb-4">Top AI Users</h2>
-              <div className="bg-brand-cyan/10 border border-brand-cyan/30 rounded-lg p-4 overflow-x-auto">
-                <pre className="text-sm text-brand-navy">
+              <h2 className="mb-4 text-xl font-semibold text-text-primary">Top AI Users</h2>
+              <div className="overflow-x-auto rounded-lg border border-[var(--border-subtle)] bg-[rgba(10,16,24,0.55)] p-4">
+                <pre className="text-sm text-text-secondary">
                   {JSON.stringify(data.topUsers, null, 2)}
                 </pre>
               </div>
@@ -232,9 +232,9 @@ export default function AdminAnalytics() {
           {/* Cost Summary */}
           {data?.costSummary && (
             <section className="mt-8">
-              <h2 className="text-xl font-bold text-brand-navy mb-4">Cost Summary</h2>
-              <div className="bg-brand-purple/10 border border-brand-purple/30 rounded-lg p-4 overflow-x-auto">
-                <pre className="text-sm text-brand-navy">
+              <h2 className="mb-4 text-xl font-semibold text-text-primary">Cost Summary</h2>
+              <div className="overflow-x-auto rounded-lg border border-[var(--border-subtle)] bg-[rgba(10,16,24,0.55)] p-4">
+                <pre className="text-sm text-text-secondary">
                   {JSON.stringify(data.costSummary, null, 2)}
                 </pre>
               </div>
@@ -246,7 +246,7 @@ export default function AdminAnalytics() {
         <div className="text-center">
           <button
             onClick={loadAnalytics}
-            className="btn-launch px-8 py-3"
+            className="hud-button-secondary px-8 py-3"
           >
             Refresh Analytics 🔄
           </button>

@@ -23,8 +23,8 @@ export default function AIGeneratorPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-green-900 flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
+      <div className="cockpit-shell page-ai-core flex items-center justify-center">
+        <div className="text-xl text-text-secondary">Loading AI core...</div>
       </div>
     )
   }
@@ -136,7 +136,7 @@ export default function AIGeneratorPage() {
       if (parsed.headline || parsed.benefits || parsed.cta) {
         // Render AI-generated content as structured JSON
         return (
-          <div className="bg-white rounded-lg p-8">
+          <div className="hud-card bg-[rgba(255,255,255,0.96)] text-slate-900">
             <div className="prose prose-lg max-w-none">
               {parsed.headline && (
                 <h1 className="text-5xl font-bold text-gray-900 mb-6">{parsed.headline}</h1>
@@ -236,7 +236,7 @@ export default function AIGeneratorPage() {
       
       // Fallback for other JSON structures
       return (
-        <div className="bg-white rounded-lg p-8">
+        <div className="hud-card bg-[rgba(255,255,255,0.96)] text-slate-900">
           <pre className="text-gray-800 whitespace-pre-wrap font-sans">
             {JSON.stringify(parsed, null, 2)}
           </pre>
@@ -245,7 +245,7 @@ export default function AIGeneratorPage() {
     } catch (e) {
       // Not JSON, render as plain text with formatting
       return (
-        <div className="bg-white rounded-lg p-8 prose prose-lg max-w-none">
+        <div className="hud-card prose prose-lg max-w-none bg-[rgba(255,255,255,0.96)] text-slate-900">
           <div 
             className="text-gray-800"
             dangerouslySetInnerHTML={{ 
@@ -258,29 +258,29 @@ export default function AIGeneratorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-green-900 py-12 px-4">
-      <div className="max-w-5xl mx-auto">
+    <div className="cockpit-shell page-ai-core py-12">
+      <div className="cockpit-container">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">
-            AI Content Generator
+          <h1 className="mb-2 text-4xl font-semibold text-text-primary">
+            AI Core Chamber
           </h1>
-          <p className="text-blue-200">Create high-converting copy with AI</p>
+          <p className="text-text-secondary">Activate onboard intelligence and generate conversion-ready copy.</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Input Form */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-            <h2 className="text-2xl font-bold text-white mb-6">Generate Content</h2>
+          <div className="hud-card">
+            <h2 className="mb-6 text-2xl font-semibold text-text-primary">Personality & Prompting</h2>
             
             <form onSubmit={handleGenerate} className="space-y-4">
               {/* Content Type */}
               <div>
-                <label className="block text-white mb-2 font-semibold">Content Type</label>
+                <label className="mb-2 block font-semibold text-text-secondary">Content Type</label>
                 <select
                   value={contentType}
                   onChange={(e) => setContentType(e.target.value as any)}
-                  className="w-full px-4 py-3 rounded-lg bg-white/20 text-white border border-white/30 focus:border-yellow-400 focus:outline-none"
+                  className="hud-select"
                 >
                   <option value="headline" className="bg-gray-800 text-white">Headline</option>
                   <option value="subheadline" className="bg-gray-800 text-white">Subheadline</option>
@@ -293,50 +293,50 @@ export default function AIGeneratorPage() {
 
               {/* Niche */}
               <div>
-                <label className="block text-white mb-2 font-semibold">Niche</label>
+                <label className="mb-2 block font-semibold text-text-secondary">Niche</label>
                 <input
                   type="text"
                   value={formData.niche}
                   onChange={(e) => setFormData({ ...formData, niche: e.target.value })}
                   placeholder="e.g., Health & Fitness, Finance, Tech"
-                  className="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:border-yellow-400 focus:outline-none"
+                  className="hud-input"
                   required
                 />
               </div>
 
               {/* Product Name */}
               <div>
-                <label className="block text-white mb-2 font-semibold">Product/Offer Name</label>
+                <label className="mb-2 block font-semibold text-text-secondary">Product/Offer Name</label>
                 <input
                   type="text"
                   value={formData.productName}
                   onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
                   placeholder="e.g., Weight Loss Program, Trading Course"
-                  className="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:border-yellow-400 focus:outline-none"
+                  className="hud-input"
                   required
                 />
               </div>
 
               {/* Target Audience */}
               <div>
-                <label className="block text-white mb-2 font-semibold">Target Audience</label>
+                <label className="mb-2 block font-semibold text-text-secondary">Target Audience</label>
                 <input
                   type="text"
                   value={formData.audience}
                   onChange={(e) => setFormData({ ...formData, audience: e.target.value })}
                   placeholder="e.g., Busy professionals, New moms, Beginners"
-                  className="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:border-yellow-400 focus:outline-none"
+                  className="hud-input"
                   required
                 />
               </div>
 
               {/* Tone */}
               <div>
-                <label className="block text-white mb-2 font-semibold">Tone</label>
+                <label className="mb-2 block font-semibold text-text-secondary">Tone</label>
                 <select
                   value={formData.tone}
                   onChange={(e) => setFormData({ ...formData, tone: e.target.value as any })}
-                  className="w-full px-4 py-3 rounded-lg bg-white/20 text-white border border-white/30 focus:border-yellow-400 focus:outline-none"
+                  className="hud-select"
                 >
                   <option value="professional" className="bg-gray-800 text-white">Professional</option>
                   <option value="casual" className="bg-gray-800 text-white">Casual</option>
@@ -348,13 +348,13 @@ export default function AIGeneratorPage() {
 
               {/* Additional Context */}
               <div>
-                <label className="block text-white mb-2 font-semibold">Additional Context (Optional)</label>
+                <label className="mb-2 block font-semibold text-text-secondary">Additional Context (Optional)</label>
                 <textarea
                   value={formData.context}
                   onChange={(e) => setFormData({ ...formData, context: e.target.value })}
                   placeholder="Any additional details or specific angles..."
                   rows={3}
-                  className="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:border-yellow-400 focus:outline-none"
+                  className="hud-textarea"
                 />
               </div>
 
@@ -362,7 +362,7 @@ export default function AIGeneratorPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full px-6 py-4 bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-lg font-bold transition disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+                className="hud-button-primary w-full px-6 py-4 text-lg disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading ? '✨ Generating...' : '✨ Generate Content'}
               </button>
@@ -370,19 +370,19 @@ export default function AIGeneratorPage() {
           </div>
 
           {/* Output */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+          <div className="hud-card">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-white">Generated Content</h2>
+              <h2 className="text-2xl font-semibold text-text-primary">Core Output</h2>
               <div className="flex items-center gap-2">
                 {generatedContent && (
                   <>
-                    <div className="flex bg-white/20 rounded-lg p-1">
+                    <div className="flex rounded-lg border border-[var(--border-subtle)] bg-[rgba(14,22,30,0.5)] p-1">
                       <button
                         onClick={() => setViewMode('preview')}
                         className={`px-3 py-1 rounded transition ${
                           viewMode === 'preview'
-                            ? 'bg-yellow-400 text-gray-900'
-                            : 'text-white hover:bg-white/10'
+                            ? 'bg-rocket-500 text-slate-950'
+                            : 'text-text-secondary hover:bg-[rgba(255,255,255,0.06)]'
                         }`}
                       >
                         👁️ Preview
@@ -391,8 +391,8 @@ export default function AIGeneratorPage() {
                         onClick={() => setViewMode('code')}
                         className={`px-3 py-1 rounded transition ${
                           viewMode === 'code'
-                            ? 'bg-yellow-400 text-gray-900'
-                            : 'text-white hover:bg-white/10'
+                            ? 'bg-rocket-500 text-slate-950'
+                            : 'text-text-secondary hover:bg-[rgba(255,255,255,0.06)]'
                         }`}
                       >
                         💻 Code
@@ -400,13 +400,13 @@ export default function AIGeneratorPage() {
                     </div>
                     <button
                       onClick={saveContent}
-                      className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition"
+                      className="hud-button-secondary px-4 py-2"
                     >
                       ⭐ Save
                     </button>
                     <button
                       onClick={copyToClipboard}
-                      className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg font-semibold transition"
+                      className="hud-button-secondary px-4 py-2"
                     >
                       📋 Copy
                     </button>
@@ -417,16 +417,16 @@ export default function AIGeneratorPage() {
 
             {loading ? (
               <div className="flex flex-col items-center justify-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mb-4"></div>
-                <p className="text-blue-200">AI is crafting your content...</p>
+                <div className="mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-rocket-500"></div>
+                <p className="text-text-secondary">AI core is crafting your content...</p>
               </div>
             ) : generatedContent ? (
               <div className="min-h-[400px]">
                 {viewMode === 'preview' ? (
                   renderPreview()
                 ) : (
-                  <div className="bg-black/30 rounded-lg p-6">
-                    <pre className="text-white whitespace-pre-wrap font-mono text-sm overflow-x-auto">
+                  <div className="rounded-lg border border-[var(--border-subtle)] bg-[rgba(8,14,21,0.78)] p-6">
+                    <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-sm text-text-primary">
                       {generatedContent}
                     </pre>
                   </div>
@@ -435,7 +435,7 @@ export default function AIGeneratorPage() {
             ) : (
               <div className="flex flex-col items-center justify-center py-20 text-center">
                 <div className="text-6xl mb-4">🤖</div>
-                <p className="text-blue-200 text-lg">
+                <p className="text-lg text-text-secondary">
                   Fill out the form and click "Generate Content" to create AI-powered copy
                 </p>
               </div>
@@ -445,30 +445,30 @@ export default function AIGeneratorPage() {
 
         {/* Saved Content */}
         {savedContent.length > 0 && (
-          <div className="mt-8 bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-            <h3 className="text-2xl font-bold text-white mb-4">⭐ Saved Favorites ({savedContent.length})</h3>
+          <div className="hud-card mt-8">
+            <h3 className="mb-4 text-2xl font-semibold text-text-primary">Saved Favorites ({savedContent.length})</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {savedContent.map((item) => (
-                <div key={item.id} className="bg-white/10 border border-white/20 rounded-lg p-4">
+                <div key={item.id} className="hud-card-tight p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-blue-200 uppercase font-semibold">{item.type}</span>
-                    <span className="text-xs text-blue-300">
+                    <span className="text-xs uppercase font-semibold text-text-secondary">{item.type}</span>
+                    <span className="text-xs text-text-muted">
                       {new Date(item.timestamp).toLocaleDateString()}
                     </span>
                   </div>
-                  <div className="text-white text-sm mb-3 line-clamp-3 overflow-hidden">
+                  <div className="mb-3 line-clamp-3 overflow-hidden text-sm text-text-primary">
                     {item.content.substring(0, 100)}...
                   </div>
                   <div className="flex gap-2">
                     <button
                       onClick={() => loadSavedContent(item.id)}
-                      className="flex-1 px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded transition"
+                      className="hud-button-secondary flex-1 px-3 py-1 text-sm"
                     >
                       Load
                     </button>
                     <button
                       onClick={() => deleteSavedContent(item.id)}
-                      className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm rounded transition"
+                      className="hud-button-danger px-3 py-1 text-sm"
                     >
                       🗑️
                     </button>
@@ -480,9 +480,9 @@ export default function AIGeneratorPage() {
         )}
 
         {/* Tips */}
-        <div className="mt-8 bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-          <h3 className="text-xl font-bold text-white mb-4">💡 Tips for Better Results</h3>
-          <ul className="space-y-2 text-blue-200">
+        <div className="hud-card mt-8">
+          <h3 className="mb-4 text-xl font-semibold text-text-primary">Tips for Better Results</h3>
+          <ul className="space-y-2 text-text-secondary">
             <li>• Be specific about your niche and target audience</li>
             <li>• Include key benefits or features in the context field</li>
             <li>• Try different tones to see what resonates best</li>
@@ -495,7 +495,7 @@ export default function AIGeneratorPage() {
         <div className="mt-8 text-center">
           <Link
             href="/dashboard"
-            className="inline-block px-8 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg font-semibold transition border border-white/20"
+            className="hud-button-secondary inline-block px-8 py-3"
           >
             ← Back to Dashboard
           </Link>

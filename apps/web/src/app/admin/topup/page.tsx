@@ -92,10 +92,10 @@ function TopUpContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-brand-gradient launch-pad">
+      <div className="cockpit-shell page-command-authority flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-orange mx-auto mb-4"></div>
-          <p className="text-white">Loading...</p>
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-anchor-400"></div>
+          <p className="text-text-secondary">Loading command authority...</p>
         </div>
       </div>
     )
@@ -103,11 +103,11 @@ function TopUpContent() {
 
   if (!user || !isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-brand-gradient launch-pad">
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border-2 border-brand-purple/20 max-w-md">
-          <h1 className="text-2xl font-bold text-brand-navy mb-4">Access Denied</h1>
-          <p className="text-brand-purple mb-6">This page is only accessible to administrators.</p>
-          <Link href="/dashboard" className="btn-launch inline-block">
+      <div className="cockpit-shell page-command-authority flex items-center justify-center">
+        <div className="hud-card max-w-md">
+          <h1 className="mb-4 text-2xl font-semibold text-text-primary">Access Denied</h1>
+          <p className="mb-6 text-text-secondary">This page is only accessible to administrators.</p>
+          <Link href="/dashboard" className="hud-button-primary inline-block">
             Return to Dashboard
           </Link>
         </div>
@@ -116,38 +116,38 @@ function TopUpContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="cockpit-shell page-command-authority py-8">
+      <div className="cockpit-container max-w-2xl">
         <div className="mb-6">
-          <Link href="/dashboard" className="text-brand-purple hover:text-brand-cyan transition-colors">
+          <Link href="/dashboard" className="text-text-secondary transition hover:text-text-primary">
             ← Back to Dashboard
           </Link>
         </div>
 
         {success && (
-          <div className="bg-green-50 border-2 border-green-500 rounded-xl p-4 mb-6">
+          <div className="mb-6 rounded-xl border border-emerald-400/35 bg-emerald-500/12 p-4">
             <div className="flex items-center gap-2">
               <span className="text-2xl">✅</span>
               <div>
-                <h3 className="font-bold text-green-800">Payment Successful!</h3>
-                <p className="text-green-700">Credits have been added to the user's account.</p>
+                <h3 className="font-semibold text-emerald-200">Payment Successful!</h3>
+                <p className="text-emerald-300">Credits have been added to the user's account.</p>
               </div>
             </div>
           </div>
         )}
 
-        <div className="bg-white rounded-2xl shadow-lg p-8 border-2 border-brand-purple/20">
+        <div className="hud-card border-[rgba(174,183,194,0.22)]">
           <div className="flex items-center gap-3 mb-6">
             <span className="text-4xl">💳</span>
             <div>
-              <h1 className="text-3xl font-bold text-brand-navy">Admin Credit Top-up</h1>
-              <p className="text-brand-purple">Add credits to user accounts via Stripe</p>
+              <h1 className="text-3xl font-semibold text-text-primary">Fuel Credit Top-up</h1>
+              <p className="text-text-secondary">Add credits to user accounts via Stripe</p>
             </div>
           </div>
 
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-semibold mb-2 text-brand-purple">
+              <label className="mb-2 block text-sm font-semibold text-text-secondary">
                 User ID to Top-up
               </label>
               <input
@@ -155,12 +155,12 @@ function TopUpContent() {
                 value={targetUserId}
                 onChange={(e) => setTargetUserId(e.target.value)}
                 placeholder="Enter user UUID"
-                className="w-full px-4 py-3 border-2 border-brand-purple/30 rounded-lg focus:border-brand-cyan focus:outline-none"
+                className="hud-input"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold mb-2 text-brand-purple">
+              <label className="mb-2 block text-sm font-semibold text-text-secondary">
                 Amount (USD)
               </label>
               <input
@@ -169,24 +169,24 @@ function TopUpContent() {
                 step="1"
                 value={amount}
                 onChange={(e) => setAmount(Number(e.target.value))}
-                className="w-full px-4 py-3 border-2 border-brand-purple/30 rounded-lg focus:border-brand-cyan focus:outline-none"
+                className="hud-input"
               />
-              <p className="text-sm text-brand-purple mt-2">
-                Credits to add: <strong className="text-brand-orange">{amount * 10}</strong> ({amount} USD × 10 credits per dollar)
+              <p className="mt-2 text-sm text-text-secondary">
+                Credits to add: <strong className="text-rocket-500">{amount * 10}</strong> ({amount} USD × 10 credits per dollar)
               </p>
             </div>
 
             <button
               disabled={processing || !targetUserId || amount <= 0}
               onClick={createCheckout}
-              className="w-full btn-launch py-4 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="hud-button-primary w-full py-4 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {processing ? 'Creating Checkout...' : 'Create Stripe Checkout 🚀'}
             </button>
           </div>
 
-          <div className="mt-6 p-4 bg-brand-cyan/10 border border-brand-cyan/30 rounded-lg">
-            <p className="text-sm text-brand-navy">
+          <div className="mt-6 rounded-lg border border-[var(--border-subtle)] bg-[rgba(10,16,24,0.55)] p-4">
+            <p className="text-sm text-text-secondary">
               <strong>Note:</strong> This will create a Stripe Checkout session. After successful payment, 
               credits will automatically be added to the user's account via webhook.
             </p>
@@ -199,10 +199,10 @@ function TopUpContent() {
 
 export default function TopUpAdminPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-brand-gradient launch-pad">
+    <Suspense fallback={<div className="cockpit-shell page-command-authority flex items-center justify-center">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-orange mx-auto mb-4"></div>
-        <p className="text-white">Loading...</p>
+        <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-anchor-400"></div>
+        <p className="text-text-secondary">Loading...</p>
       </div>
     </div>}>
       <TopUpContent />

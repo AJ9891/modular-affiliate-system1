@@ -16,6 +16,7 @@ export default function SubscriptionPage() {
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [loading, setLoading] = useState(true)
   const [portalLoading, setPortalLoading] = useState(false)
+  const planLevels: Record<string, number> = { starter: 33, pro: 66, agency: 100 }
 
   useEffect(() => {
     checkAuth()
@@ -79,36 +80,36 @@ export default function SubscriptionPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-green-900 flex items-center justify-center">
-        <div className="text-white text-xl">Loading subscription...</div>
+      <div className="cockpit-shell page-fuel-management flex items-center justify-center">
+        <div className="text-xl text-text-secondary">Loading fuel status...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-green-900 py-12 px-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="cockpit-shell page-fuel-management py-12">
+      <div className="cockpit-container max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">
-            Subscription Management
+          <h1 className="mb-2 text-4xl font-semibold text-text-primary">
+            Fuel Management
           </h1>
-          <p className="text-blue-200">Manage your plan and billing</p>
+          <p className="text-text-secondary">Plan overview, status gauges, and billing controls.</p>
         </div>
 
         {subscription ? (
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 mb-8">
+          <div className="hud-card mb-8">
             <div className="flex items-start justify-between mb-6">
               <div>
-                <h2 className="text-3xl font-bold text-white mb-2">
+                <h2 className="mb-2 text-3xl font-semibold text-text-primary">
                   {subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1)} Plan
                 </h2>
                 <div className="flex items-center gap-2">
                   <span
-                    className={`px-3 py-1 rounded-full text-sm font-bold ${
+                    className={`rounded-full px-3 py-1 text-sm font-bold ${
                       subscription.status === 'active'
-                        ? 'bg-green-500 text-white'
+                        ? 'bg-emerald-500 text-slate-950'
                         : subscription.status === 'past_due'
-                        ? 'bg-yellow-500 text-gray-900'
+                        ? 'bg-amber-400 text-slate-950'
                         : 'bg-red-500 text-white'
                     }`}
                   >
@@ -118,15 +119,42 @@ export default function SubscriptionPage() {
               </div>
 
               <div className="text-right">
-                <div className="text-4xl font-bold text-white">
+                <div className="text-4xl font-semibold text-text-primary">
                   ${subscription.plan === 'starter' ? '29' : subscription.plan === 'pro' ? '79' : '199'}
                 </div>
-                <div className="text-blue-200">per month</div>
+                <div className="text-text-secondary">per month</div>
+              </div>
+            </div>
+
+            <div className="mb-6 space-y-3">
+              <div>
+                <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-system text-text-secondary">
+                  <span>Subscription Fuel</span>
+                  <span>{planLevels[subscription.plan] ?? 20}%</span>
+                </div>
+                <div className="h-3 rounded-full bg-[rgba(10,16,24,0.72)]">
+                  <div
+                    className="h-3 rounded-full bg-gradient-to-r from-rocket-600 to-rocket-500"
+                    style={{ width: `${planLevels[subscription.plan] ?? 20}%` }}
+                  />
+                </div>
+              </div>
+              <div>
+                <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-system text-text-secondary">
+                  <span>System Health</span>
+                  <span>{subscription.status === 'active' ? '100%' : '55%'}</span>
+                </div>
+                <div className="h-3 rounded-full bg-[rgba(10,16,24,0.72)]">
+                  <div
+                    className="h-3 rounded-full bg-gradient-to-r from-sky-500 to-emerald-400"
+                    style={{ width: subscription.status === 'active' ? '100%' : '55%' }}
+                  />
+                </div>
               </div>
             </div>
 
             {subscription.currentPeriodEnd && (
-              <div className="mb-6 text-blue-200">
+              <div className="mb-6 text-text-secondary">
                 Next billing date: {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
               </div>
             )}
@@ -134,24 +162,24 @@ export default function SubscriptionPage() {
             <button
               onClick={handleManageSubscription}
               disabled={portalLoading}
-              className="w-full px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-lg font-bold transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="hud-button-primary w-full px-6 py-3 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {portalLoading ? 'Loading...' : 'Manage Billing & Payment Methods'}
             </button>
 
-            <p className="text-sm text-blue-200 mt-4 text-center">
+            <p className="mt-4 text-center text-sm text-text-secondary">
               Update payment methods, download invoices, or cancel your subscription
             </p>
           </div>
         ) : (
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-12 border border-white/20 mb-8 text-center">
-            <div className="text-white text-2xl mb-4">No Active Subscription</div>
-            <p className="text-blue-200 mb-6">
+          <div className="hud-card mb-8 text-center">
+            <div className="mb-4 text-2xl text-text-primary">No Active Subscription</div>
+            <p className="mb-6 text-text-secondary">
               Choose a plan to unlock all features and start building your affiliate funnels
             </p>
             <Link
               href="/pricing"
-              className="inline-block px-8 py-3 bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-lg font-bold transition"
+              className="hud-button-primary inline-block px-8 py-3"
             >
               View Pricing Plans
             </Link>
@@ -161,7 +189,7 @@ export default function SubscriptionPage() {
         <div className="text-center">
           <Link
             href="/dashboard"
-            className="inline-block px-8 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg font-semibold transition border border-white/20"
+            className="hud-button-secondary inline-block px-8 py-3"
           >
             ← Back to Dashboard
           </Link>
