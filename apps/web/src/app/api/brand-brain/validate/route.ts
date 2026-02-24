@@ -5,7 +5,8 @@ import { BrandBrainManager } from '@/lib/brand-brain/manager';
 
 async function getSupabaseRouteClient() {
   const cookieStore = await cookies();
-  return createRouteHandlerClient({ cookies: () => cookieStore });
+  const cookieAdapter = (() => cookieStore) as unknown as () => ReturnType<typeof cookies>;
+  return createRouteHandlerClient({ cookies: cookieAdapter });
 }
 
 export async function POST(request: Request) {
