@@ -4,19 +4,35 @@ import { BRAND_MODES, BrandMode, BrandModeKey } from '@/contexts/BrandModeContex
 // Re-export types for convenience
 export type { BrandMode, BrandModeKey }
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+function getPublicSupabaseEnv() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Supabase public client is not configured.')
+  }
+  return { supabaseUrl, supabaseAnonKey }
+}
 
-const supabaseClient = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+function getAdminSupabaseEnv() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('Supabase admin client is not configured.')
+  }
+  return { supabaseUrl, serviceRoleKey }
+}
 
 export async function getFunnelBrandMode(
   funnelId: string
 ): Promise<BrandMode> {
+  const { supabaseUrl, serviceRoleKey } = getAdminSupabaseEnv()
+  const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  })
+
   const { data, error } = await supabaseAdmin
     .from('funnels')
     .select('brand_mode')
@@ -34,6 +50,9 @@ export async function updateFunnelBrandMode(
   funnelId: string,
   brandMode: BrandModeKey
 ) {
+  const { supabaseUrl, supabaseAnonKey } = getPublicSupabaseEnv()
+  const supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
+
   const { error } = await supabaseClient
     .from('funnels')
     .update({ brand_mode: brandMode })

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { checkSupabase } from '@/lib/check-supabase'
 import { createSubdomainRouteHandlerClient } from '@/lib/subdomain-auth'
+import { createClient } from '@supabase/supabase-js'
 
 const AUTH_COOKIE_CHUNK_SIZE = 3180
 
@@ -31,6 +32,19 @@ function chunkCookieValue(value: string): string[] {
   return chunks ?? [value]
 }
 
+function getSupabaseAdminClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!supabaseUrl || !serviceRoleKey) return null
+
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  })
+}
+
 export async function POST(request: NextRequest) {
   const check = checkSupabase()
   if (check) return check
@@ -58,8 +72,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('Login attempt for:', email)
-
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -78,22 +90,14 @@ export async function POST(request: NextRequest) {
       }, { status: 401 })
     }
 
-    console.log('Login successful for:', email)
-
-    // Ensure user exists in public.users table using service role to bypass RLS
-    if (data.user && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    // Best effort: ensure user exists in public.users table if service key is configured.
+    if (data.user) {
       try {
-        const { createClient } = await import('@supabase/supabase-js')
-        const adminClient = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY,
-          {
-            auth: {
-              autoRefreshToken: false,
-              persistSession: false
-            }
-          }
-        )
+        const adminClient = getSupabaseAdminClient()
+        if (!adminClient) {
+          // Continue without blocking auth when service role is not configured.
+          return createLoginSuccessResponse(data)
+        }
 
         const { error: upsertError } = await adminClient.from('users').upsert({
           id: data.user.id,
@@ -106,54 +110,13 @@ export async function POST(request: NextRequest) {
         
         if (upsertError) {
           console.error('Failed to upsert user in public.users:', upsertError)
-        } else {
-          console.log('User ensured in public.users table')
         }
       } catch (err) {
         console.error('Error upserting user:', err)
       }
-    } else if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      console.warn('SUPABASE_SERVICE_ROLE_KEY not set - cannot ensure user in public.users table')
     }
 
-    const response = NextResponse.json({ 
-      user: data.user,
-      session: data.session 
-    }, { status: 200 })
-
-    // Keep legacy token cookies for routes that still read sb-access-token directly.
-    const secure = process.env.NODE_ENV === 'production'
-    const cookieOptions = {
-      path: '/',
-      sameSite: 'lax' as const,
-      secure,
-      maxAge: 60 * 60 * 24 * 30,
-    }
-
-    if (data.session?.access_token) {
-      response.cookies.set('sb-access-token', data.session.access_token, cookieOptions)
-    }
-
-    if (data.session?.refresh_token) {
-      response.cookies.set('sb-refresh-token', data.session.refresh_token, cookieOptions)
-    }
-
-    // Also set the auth-helpers cookie format explicitly so /api/auth/me can read it reliably.
-    const authCookieBase = getSupabaseAuthCookieBaseName()
-    if (authCookieBase && data.session) {
-      const serializedSession = serializeSessionForCookie(data.session)
-      const sessionChunks = chunkCookieValue(serializedSession)
-
-      if (sessionChunks.length === 1) {
-        response.cookies.set(authCookieBase, serializedSession, cookieOptions)
-      } else {
-        sessionChunks.forEach((chunk, index) => {
-          response.cookies.set(`${authCookieBase}.${index}`, chunk, cookieOptions)
-        })
-      }
-    }
-
-    return response
+    return createLoginSuccessResponse(data)
   } catch (error: any) {
     console.error('Login error:', error)
     return NextResponse.json(
@@ -161,4 +124,45 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+function createLoginSuccessResponse(data: { user: any; session: any }) {
+  const response = NextResponse.json({
+    user: data.user,
+    session: data.session
+  }, { status: 200 })
+
+  // Keep legacy token cookies for routes that still read sb-access-token directly.
+  const secure = process.env.NODE_ENV === 'production'
+  const cookieOptions = {
+    path: '/',
+    sameSite: 'lax' as const,
+    secure,
+    maxAge: 60 * 60 * 24 * 30,
+  }
+
+  if (data.session?.access_token) {
+    response.cookies.set('sb-access-token', data.session.access_token, cookieOptions)
+  }
+
+  if (data.session?.refresh_token) {
+    response.cookies.set('sb-refresh-token', data.session.refresh_token, cookieOptions)
+  }
+
+  // Also set the auth-helpers cookie format explicitly so /api/auth/me can read it reliably.
+  const authCookieBase = getSupabaseAuthCookieBaseName()
+  if (authCookieBase && data.session) {
+    const serializedSession = serializeSessionForCookie(data.session)
+    const sessionChunks = chunkCookieValue(serializedSession)
+
+    if (sessionChunks.length === 1) {
+      response.cookies.set(authCookieBase, serializedSession, cookieOptions)
+    } else {
+      sessionChunks.forEach((chunk, index) => {
+        response.cookies.set(`${authCookieBase}.${index}`, chunk, cookieOptions)
+      })
+    }
+  }
+
+  return response
 }
