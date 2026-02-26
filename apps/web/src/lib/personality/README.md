@@ -68,7 +68,7 @@ const heroCopy = await generateHeroCopy('anti_guru', {
 
 ## Architecture
 
-```
+```text
 lib/personality/
 ├── types.ts                 # Core personality types
 ├── resolvePersonality.ts    # brand_mode → PersonalityProfile

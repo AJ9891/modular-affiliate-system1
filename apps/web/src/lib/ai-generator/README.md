@@ -23,7 +23,7 @@ const completion = await openai.chat.completions.create({
 
 ## Architecture
 
-```
+```text
 User's brand_mode → PersonalityProfile → AIPromptProfile → AI Generation
 ```
 
@@ -112,7 +112,7 @@ export async function POST(req: Request) {
 
 ## File Structure
 
-```
+```text
 apps/web/src/lib/ai-generator/
 ├── types.ts              # AIPromptProfile definition
 ├── promptResolver.ts     # personality → prompt mapper

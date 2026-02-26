@@ -59,7 +59,7 @@ Generates attention-grabbing headlines for landing pages.
 
 **Example Output:**
 
-```
+```text
 "Lose 15 Pounds in 30 Days - Even With a Busy Schedule!"
 ```
 
@@ -69,7 +69,7 @@ Creates supporting subheadlines that build desire.
 
 **Example Output:**
 
-```
+```text
 "Join 10,000+ moms who transformed their bodies with just 15 minutes a day"
 ```
 
@@ -79,7 +79,7 @@ Generates compelling button text.
 
 **Example Output:**
 
-```
+```text
 "Start My Transformation"
 ```
 
@@ -89,7 +89,7 @@ Creates benefit-focused bullet points.
 
 **Example Output:**
 
-```
+```text
 - Burn fat in just 15 minutes per day
 - No gym or equipment needed
 - Meal plans designed for busy schedules

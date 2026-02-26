@@ -179,7 +179,7 @@ Applied to:
 
 The complete RLS fix is in:
 
-```
+```text
 /infra/migrations/fix_rls_warnings.sql
 ```
 

@@ -46,7 +46,7 @@ Go to your Supabase dashboard:
 
 ## 📁 File Structure
 
-```
+```text
 apps/web/src/
 ├── app/
 │   ├── api/
@@ -349,7 +349,7 @@ When building funnels, you can:
 
 ### Example Funnel Flow
 
-```
+```text
 Landing Page
     ↓
 Email Capture (DownloadGate)

@@ -2,7 +2,7 @@
 
 ## The Problem You Had
 
-```
+```text
 ❌ Cannot use import statement outside a module
 ❌ Firebase: auth/network-request-failed  
 ❌ 500 error on api/brand-brain
@@ -98,7 +98,7 @@ cd apps/web && npm run build
 
 ### Before Fix
 
-```
+```text
 Module load error
   → Browser gets broken JS
     → "Cannot use import" in console
@@ -110,7 +110,7 @@ Module load error
 
 ### After Fix
 
-```
+```text
 Module loads OK
   → React initializes
     → Firebase connects properly

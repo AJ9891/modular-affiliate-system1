@@ -17,7 +17,7 @@ That's it. That's the entire pattern.
 
 ## Architecture
 
-```
+```text
 PersonalityProfile = {
   mode: 'ai_meltdown' | 'anti_guru' | 'rocket_future'
   authorityTone: 'calm' | 'blunt' | 'unraveling'
@@ -254,7 +254,7 @@ function MyList({ items }) {
 
 ### AI Meltdown
 
-```
+```text
 visuals: {
   noise: 'chaotic',           // Max visual chaos
   density: 'packed',          // High information density
@@ -269,7 +269,7 @@ Result: Overwhelming, glitchy, maximum stimulation
 
 ### Anti-Guru
 
-```
+```text
 visuals: {
   noise: 'clean',             // Minimal chaos
   density: 'sparse',          // Generous whitespace
@@ -284,7 +284,7 @@ Result: Direct, no-nonsense, easy to scan
 
 ### Rocket Future
 
-```
+```text
 visuals: {
   noise: 'ambient',           // Subtle textures
   density: 'balanced',        // Standard spacing

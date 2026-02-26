@@ -2,7 +2,7 @@
 
 ## Component Overview
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                        USER BROWSER                              │
 │                                                                   │
@@ -46,7 +46,7 @@
 
 ## Data Flow: Lead Capture to Email Automation
 
-```
+```text
 ┌─────────────┐
 │   Visitor   │
 │ Lands on    │
@@ -94,7 +94,7 @@
 
 ## Funnel Builder Architecture
 
-```
+```text
 ┌──────────────────────────────────────────────────────────┐
 │               VISUAL FUNNEL BUILDER                      │
 │                                                           │
@@ -130,7 +130,7 @@
 
 ## Analytics & Reporting Flow
 
-```
+```text
 ┌────────────────┐
 │   Dashboard    │
 │   Page Loads   │
@@ -170,7 +170,7 @@
 
 ## Email Campaign Flow
 
-```
+```text
 ┌─────────────────┐
 │ Create Campaign │
 │  in Dashboard   │
@@ -210,7 +210,7 @@
 
 ## Database Schema Relationships
 
-```
+```text
         ┌─────────┐
         │  users  │
         └────┬────┘
@@ -247,7 +247,7 @@
 
 ## Module System
 
-```
+```text
 ┌────────────────────────────────────────┐
 │        Module Loader                   │
 │                                        │
@@ -276,7 +276,7 @@
 
 ## Deployment Architecture
 
-```
+```text
 ┌──────────────────┐
 │   GitHub Repo    │
 └────────┬─────────┘

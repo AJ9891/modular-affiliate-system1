@@ -299,7 +299,7 @@ The personality context system integrates with BrandBrain:
 3. Route context modulates expression based on pathname
 4. Components consume context-aware tokens via hooks
 
-```
+```text
 User Brand Mode → Personality Profile → Route Context → Visual/Motion/Sound Tokens → Components
 ```
 

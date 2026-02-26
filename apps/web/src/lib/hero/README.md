@@ -6,7 +6,7 @@ This system resolves hero copy constraints from personality, ensuring AI-generat
 
 ## Architecture
 
-```
+```text
 Personality Profile
        ↓
 Hero Behavior ────→ Hero Copy Contract

@@ -42,34 +42,32 @@
 *
 * Old (BROKEN):
 
-* ```
-* // supabase.ts
-* const url = process.env.NEXT_PUBLIC_SUPABASE_URL  // Throws NOW
-*
-* // api/route.ts
-* import { supabase } from '@/lib/supabase'  // ERROR here
-*
-* // Next.js can't catch it, browser gets raw error
+```ts
+// supabase.ts
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL  // Throws NOW
 
-* ```
-*
+// api/route.ts
+import { supabase } from '@/lib/supabase'  // ERROR here
+
+// Next.js can't catch it, browser gets raw error
+```
+
 * New (FIXED):
 
-* ```
-* // supabase.ts
-* export const supabase = new Proxy({}, {
-* get: () => {
-*     const url = process.env.NEXT_PUBLIC_SUPABASE_URL  // Throws LATER
-*     // ...
-* }
-* })
-*
-* // api/route.ts
-* import { supabase } from '@/lib/supabase'  // OK
-* const result = await supabase.from('...').select()  // ERROR here (caught by middleware)
+```ts
+// supabase.ts
+export const supabase = new Proxy({}, {
+  get: () => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL  // Throws LATER
+    // ...
+  },
+})
 
-* ```
-*
+// api/route.ts
+import { supabase } from '@/lib/supabase'  // OK
+const result = await supabase.from('...').select()  // ERROR here (caught by middleware)
+```
+
 * The second one allows Next.js to catch and handle the error properly.
 *
 *

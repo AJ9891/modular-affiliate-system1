@@ -82,7 +82,7 @@ npm run deploy
 
 Each line is a complete JSON object:
 
-```
+```text
 {"message": "Hello", "action": null}
 {"message": " there", "action": null}
 ```
@@ -91,7 +91,7 @@ Each line is a complete JSON object:
 
 Actions at end of response with `ACTION:` prefix:
 
-```
+```text
 "Great! Let's get started. 🚀
 
 ACTION: {"action": "CREATE_CHECKOUT", "plan": "starter"}"

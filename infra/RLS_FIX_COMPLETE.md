@@ -132,7 +132,7 @@ System operations with full access:
 
 1. **Open SQL Editor**:
 
-   ```
+   ```text
    https://supabase.com/dashboard/project/urwrbjejcozbzgknbuhn/sql/new
    ```
 
@@ -168,7 +168,7 @@ psql "YOUR_CONNECTION_STRING" -f migrations/fix_rls_warnings.sql
 
 ### Before 😰
 
-```
+```text
 Database Tables:
 ⚠️ users - RLS disabled
 ⚠️ funnels - RLS disabled  
@@ -184,7 +184,7 @@ Team Isolation: ❌ NOT ENFORCED
 
 ### After 🎉
 
-```
+```text
 Database Tables:
 ✅ users - RLS enabled (2 policies)
 ✅ funnels - RLS enabled (5 policies)
@@ -234,7 +234,7 @@ Team Isolation: ✅ ENFORCED
 
 ## Files Created
 
-```
+```text
 infra/
 ├── migrations/
 │   └── fix_rls_warnings.sql          # Main migration (680 lines)

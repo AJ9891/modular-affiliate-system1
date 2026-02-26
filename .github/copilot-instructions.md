@@ -306,7 +306,7 @@ const { data } = await supabase
 
 ## File Organization Patterns
 
-```
+```text
 apps/web/src/
 ├── app/                    # Next.js 14 App Router
 │   ├── api/               # API routes (use createRouteHandlerClient)

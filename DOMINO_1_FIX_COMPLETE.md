@@ -2,7 +2,7 @@
 
 ## The Cascade You Were Experiencing
 
-```
+```text
 1. ❌ Cannot use import statement outside a module
    ↓
 2. ❌ Firebase: Error (auth/network-request-failed)
@@ -90,7 +90,7 @@ export const supabase = new Proxy({}, {
 
 ## The Three Sealed Chambers
 
-```
+```text
 ┌──────────────────┐
 │  Browser/Client  │ ← React, 'use client' components
 │  NEXT_PUBLIC_*   │ ← Only these env vars exposed
@@ -111,7 +111,7 @@ export const supabase = new Proxy({}, {
 └──────────────────┘
 ```
 
-**RULE: Never share imports across chambers**
+### RULE: Never share imports across chambers
 
 ---
 

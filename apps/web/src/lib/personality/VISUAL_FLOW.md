@@ -1,6 +1,6 @@
 # Cascade Pattern - Visual Flow
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                         SINGLE DECISION POINT                            │
 │                                                                          │
@@ -57,7 +57,7 @@
 
 ### Layer 1: Personality Resolution
 
-```
+```text
 INPUT:  brand_mode (string)
 OUTPUT: PersonalityProfile (object)
 ROLE:   Single source of truth for behavioral rules
@@ -65,7 +65,7 @@ ROLE:   Single source of truth for behavioral rules
 
 ### Layer 2a: Behavior Resolution
 
-```
+```text
 INPUT:  PersonalityProfile
 OUTPUT: HeroBehavior (or FeatureBehavior, etc.)
 ROLE:   Defines HOW the UI physically behaves
@@ -73,7 +73,7 @@ ROLE:   Defines HOW the UI physically behaves
 
 ### Layer 2b: AI Profile Resolution
 
-```
+```text
 INPUT:  PersonalityProfile
 OUTPUT: AIProfile
 ROLE:   Defines worldview, ethics, forbidden patterns
@@ -81,7 +81,7 @@ ROLE:   Defines worldview, ethics, forbidden patterns
 
 ### Layer 3: Copy Contract Resolution
 
-```
+```text
 INPUT:  Behavior + Personality
 OUTPUT: CopyContract
 ROLE:   Translates posture → language constraints
@@ -89,7 +89,7 @@ ROLE:   Translates posture → language constraints
 
 ### Layer 4: Prompt Building
 
-```
+```text
 INPUT:  AIProfile + CopyContract + Context
 OUTPUT: PromptConfig
 ROLE:   Combines all constraints into final prompt
@@ -97,7 +97,7 @@ ROLE:   Combines all constraints into final prompt
 
 ### Layer 5: AI Generation
 
-```
+```text
 INPUT:  PromptConfig
 OUTPUT: Generated Copy
 ROLE:   AI fills shapes defined by constraints
@@ -105,7 +105,7 @@ ROLE:   AI fills shapes defined by constraints
 
 ## Example Flow: Anti-Guru Hero
 
-```
+```text
 brand_mode: 'anti_guru'
     │
     ▼
@@ -170,7 +170,7 @@ Change personality → Everything regenerates correctly
 
 ## Validation Flow
 
-```
+```text
 Generated Copy
     │
     ├─────────────────┬──────────────────
@@ -186,7 +186,7 @@ CopyContract      AIProfile
 
 ## Reusability Pattern
 
-```
+```text
 Content Type = Behavior Resolver + Contract Resolver + Prompt Builder
 
 Hero Section:
@@ -211,7 +211,7 @@ Everything else stays identical.
 
 ### Traditional Approach (Broken)
 
-```
+```text
 brand_mode → [MAGIC BLACK BOX] → copy
               ↑
          Hope for the best
@@ -219,7 +219,7 @@ brand_mode → [MAGIC BLACK BOX] → copy
 
 ### Cascade Approach (Governed)
 
-```
+```text
 brand_mode → personality → behavior → contract → profile → prompt → copy
               ↓              ↓          ↓          ↓         ↓
             testable     testable   testable   testable  testable
@@ -239,7 +239,7 @@ With them, AI obeys.
 
 ## Pattern Benefits
 
-```
+```text
 ✓ Single source of truth
 ✓ No branching chaos
 ✓ Fully testable
@@ -252,7 +252,7 @@ With them, AI obeys.
 
 ## Anti-Pattern Detection
 
-```
+```text
 ❌ if (brandMode === 'anti_guru') { ... }
    └─ Branching logic
 
@@ -268,7 +268,7 @@ With them, AI obeys.
 
 ## The Bridge Most Systems Skip
 
-```
+```text
      Behavior
         │
         ▼

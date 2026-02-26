@@ -91,7 +91,7 @@ Fixed critical issues in the AI selling chat module that were preventing proper 
 
 ### Streaming Protocol
 
-```
+```text
 Before: Concatenated JSON objects without delimiters
 After: Newline-delimited JSON (NDJSON)
   {"message": "Hello", "action": null}
@@ -102,7 +102,7 @@ After: Newline-delimited JSON (NDJSON)
 
 ### Action Format
 
-```
+```text
 AI Response: "Great! I'll get that started for you. 🚀
 
 ACTION: {"action": "CREATE_CHECKOUT", "plan": "starter"}"

@@ -4,7 +4,7 @@ Sound is now **governed, not sprinkled**. The personality system controls when a
 
 ## Architecture
 
-```
+```text
 PersonalityProfile (soundProfile) 
     ↓
 resolveSoundBehavior() → SoundBehavior
@@ -153,7 +153,7 @@ Can't override personality rules.
 
 Place sound files in `/public/sounds/`:
 
-```
+```text
 /public/sounds/
   ├── checklist.mp3  (subtle click)
   ├── glitch.mp3     (digital interference)

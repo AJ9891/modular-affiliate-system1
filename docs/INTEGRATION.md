@@ -92,7 +92,7 @@ This system combines the best features from:
 
 ## 📁 Project Structure
 
-```
+```text
 apps/
 ├── web/
 │   ├── src/

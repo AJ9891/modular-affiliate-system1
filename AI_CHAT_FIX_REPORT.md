@@ -86,7 +86,7 @@ controller.enqueue(encoder.encode(
 
 **Protocol**:
 
-```
+```text
 {"message":"Hello","action":null}
 {"message":" ","action":null}
 {"message":"there","action":null}
@@ -231,7 +231,7 @@ CREATE INDEX idx_chat_messages_type ON public.chat_messages(type);
 
 ### ✅ TypeScript Compilation
 
-```
+```text
 $ npx tsc --noEmit
 # No errors found
 ```

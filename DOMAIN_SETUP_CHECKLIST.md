@@ -15,7 +15,7 @@
 
 ### 1. Run Database Migration
 
-**Priority: HIGH**
+### Priority: HIGH
 
 Execute in Supabase SQL Editor (<https://supabase.com/dashboard/project/urwrbjejcozbzgknbuhn/sql/new>):
 
@@ -35,7 +35,7 @@ CREATE INDEX IF NOT EXISTS idx_users_plan ON public.users(plan);
 
 ### 2. Add Vercel Environment Variables
 
-**Priority: HIGH (Required for custom domains)**
+### Priority: HIGH (Required for custom domains)
 
 #### Get VERCEL_API_TOKEN
 
@@ -64,7 +64,7 @@ CREATE INDEX IF NOT EXISTS idx_users_plan ON public.users(plan);
 
 ### 3. Configure Wildcard Subdomain DNS
 
-**Priority: MEDIUM (Required for subdomains to work)**
+### Priority: MEDIUM (Required for subdomains to work)
 
 In your DNS provider for `launchpad4success.com`:
 
@@ -89,7 +89,7 @@ Or via dashboard:
 
 ### 4. Deploy to Production
 
-**Priority: MEDIUM**
+### Priority: MEDIUM
 
 After completing steps 1-3:
 
@@ -100,7 +100,7 @@ npx vercel --prod --yes
 
 ### 5. Test the System
 
-**Priority: LOW**
+### Priority: LOW
 
 1. Visit: https://[your-production-url]/domains
 2. Set a subdomain (e.g., "test123")
