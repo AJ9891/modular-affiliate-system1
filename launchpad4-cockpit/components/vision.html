@@ -1,0 +1,24 @@
+<div id="vision-console" class="vision-collapsed" aria-hidden="true">
+  <div class="vision-header">
+    <span id="vision-voice">⚓ Anchor</span>
+    <div class="vision-controls">
+      <button type="button" onclick="expandVision()">Expand</button>
+      <button type="button" onclick="closeVisionOverlay()">Close</button>
+    </div>
+  </div>
+
+  <div class="vision-chat">
+    <div id="chat-log">
+      <p><strong>Vision:</strong> System online. Awaiting directive.</p>
+    </div>
+
+    <div class="vision-input-row">
+      <input id="vision-input" placeholder="Ask Vision..." />
+      <button id="vision-send" type="button">Send</button>
+    </div>
+  </div>
+</div>
+
+<div class="vision-launcher" onclick="openVision()" role="button" aria-label="Open Vision">
+  👁
+</div>
