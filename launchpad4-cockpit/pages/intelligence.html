@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Intelligence | Launchpad 4</title>
+    <link rel="stylesheet" href="../css/cockpit.css" />
+    <link rel="stylesheet" href="../css/systems.css" />
+  </head>
+  <body class="system-page">
+    <main class="system-shell">
+      <header class="system-header">
+        <a href="../index.html" class="cockpit-return">&larr; Cockpit</a>
+        <h1>Launchpad 4 | System Intelligence</h1>
+      </header>
+
+      <div class="system-grid">
+        <section class="console-panel">
+          <h2>Voice Personality</h2>
+          <div class="control-stack">
+            <div class="voice-button-row">
+              <button class="voice-button" type="button" data-voice-button="anchor" onclick="setVoice('anchor')">⚓ Anchor</button>
+              <button class="voice-button" type="button" data-voice-button="rocket" onclick="setVoice('rocket')">🚀 Rocket</button>
+              <button class="voice-button" type="button" data-voice-button="glitch" onclick="setVoice('glitch')">⚡ Glitch</button>
+            </div>
+            <p>Active voice: <strong id="activeVoiceValue">Anchor</strong></p>
+          </div>
+        </section>
+
+        <section class="console-panel">
+          <h2>AI Configuration</h2>
+          <ul class="setting-list">
+            <li>Message tone profile</li>
+            <li>Typing speed behavior</li>
+            <li>Pulse feedback behavior</li>
+          </ul>
+        </section>
+
+        <section class="console-panel">
+          <h2>System Behavior</h2>
+          <div class="toggle-row">
+            <label for="autoVoiceAdaptation">Auto Voice Adaptation</label>
+            <input id="autoVoiceAdaptation" type="checkbox" />
+            <strong id="autoVoiceAdaptationState">ON</strong>
+          </div>
+        </section>
+      </div>
+
+      <section class="vision-mini-access">
+        <h2>Vision Access</h2>
+        <p>Return to cockpit to engage Launchpad 4 Vision co-pilot.</p>
+        <a class="vision-mini-button" href="../index.html">Open Vision</a>
+      </section>
+    </main>
+
+    <div id="vision-root"></div>
+    <script src="../js/vision-memory.js"></script>
+    <script type="module" src="../js/vision-chat.js"></script>
+    <script src="../js/vision-events.js"></script>
+    <script src="../js/vision-loader.js"></script>
+    <script src="../js/systems.js"></script>
+  </body>
+</html>
