@@ -22,22 +22,19 @@
     "lint:md:fix": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#.next\" \"#.turbo\" \"#.vercel\" --fix",
     "type-check": "turbo run type-check",
     "clean": "turbo run clean && rm -rf node_modules",
-    "deploy": "npm run build && vercel --prod",
-    "deploy:preview": "npm run build && vercel",
+    "deploy": "npm run build && npx vercel --prod",
+    "deploy:preview": "npm run build && npx vercel",
     "web": "npm run dev --workspace=apps/web",
     "admin": "npm run dev --workspace=apps/admin",
     "renderer": "npm run dev --workspace=apps/renderer"
   },
   "devDependencies": {
-    "markdownlint-cli2": "^0.20.0",
+    "markdownlint-cli2": "^0.21.0",
     "markdownlint-cli2-formatter-pretty": "^0.0.9",
     "turbo": "^2.0.0"
   },
   "engines": {
     "node": ">=18.0.0"
-  },
-  "dependencies": {
-    "vercel": "50.14.0"
   },
   "lint-staged": {
     "*.md": [
