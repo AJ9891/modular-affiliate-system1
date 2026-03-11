@@ -152,7 +152,7 @@ export default function Dashboard() {
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <Link
-              href="/builder"
+              href="/builder-v2"
               className="hud-card-tight p-6 transition hover:border-rocket-500/40"
             >
               <div className="text-4xl mb-3">🎨</div>
@@ -272,7 +272,7 @@ export default function Dashboard() {
             You haven't created any funnels yet. Let's get started by choosing a niche and building your first high-converting funnel!
           </p>
           <Link
-            href="/builder"
+            href="/builder-v2"
             className="hud-button-primary inline-block px-8 py-4"
           >
             Create Your First Funnel

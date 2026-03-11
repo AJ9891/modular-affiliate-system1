@@ -46,7 +46,7 @@ export function HeroSection() {
             <Link href="/get-started" className="btn-launch-premium px-7 py-3 text-sm">
               Initiate Launch
             </Link>
-            <Link href="/builder" className="btn-secondary-premium px-7 py-3 text-sm">
+            <Link href="/builder-v2" className="btn-secondary-premium px-7 py-3 text-sm">
               View Demo
             </Link>
           </div>
