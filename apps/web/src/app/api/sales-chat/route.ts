@@ -4,9 +4,13 @@ import { BrandBrainManager } from '@/lib/brand-brain/manager'
 import { extractActionFromResponse, isValidAction, formatActionJson } from '@/lib/chat-utils'
 import { createServiceRoleClient } from '@/lib/supabase-server'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
-})
+function getOpenAI() {
+  const apiKey = process.env.OPENAI_API_KEY
+  if (!apiKey) {
+    throw new Error('OPENAI_API_KEY is not set')
+  }
+  return new OpenAI({ apiKey })
+}
 
 const supabase = createServiceRoleClient()
 
@@ -242,7 +246,7 @@ export async function POST(req: NextRequest) {
       // Fail silently, use fallback
     }
 
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAI().chat.completions.create({
       model: 'gpt-4o-mini',
       temperature: 0.6,
       stream: true,

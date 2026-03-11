@@ -1,8 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Silence Turbopack/webpack config warning
-  turbopack: {},
+  // Ensure Turbopack resolves from repo root (and allow webpack fallback when env disables Turbo)
+  turbopack: {
+    root: require('path').join(__dirname, '..', '..'),
+  },
   // Development optimizations
   ...(process.env.NODE_ENV === 'development' && {
     // Force webpack dev mode with source maps
