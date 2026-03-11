@@ -1,17 +1,14 @@
 import { NextRequest } from 'next/server'
 import OpenAI from 'openai'
-import { createClient } from '@supabase/supabase-js'
 import { BrandBrainManager } from '@/lib/brand-brain/manager'
 import { extractActionFromResponse, isValidAction, formatActionJson } from '@/lib/chat-utils'
+import { createServiceRoleClient } from '@/lib/supabase-server'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 })
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // server-only
-)
+const supabase = createServiceRoleClient()
 
 // Fallback system prompt if BrandBrain is not configured
 const FALLBACK_SYSTEM_PROMPT = `You are Launchpad 4 Success, an AI sales assistant for the Launchpad 4 Success platform.

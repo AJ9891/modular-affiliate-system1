@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
 import { checkSupabase } from '@/lib/check-supabase'
-import { createClient } from '@supabase/supabase-js'
+import { createServiceRoleClient, createServerRouteClient } from '@/lib/supabase-server'
+import { requireUser } from '@/lib/authz'
 
 export async function GET() {
   const check = checkSupabase()
   if (check) return check
 
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createServerRouteClient()
+    await requireUser(supabase) // ensure caller is authenticated
     const { data, error } = await supabase!
       .from('offers')
       .select('*')
@@ -20,10 +20,10 @@ export async function GET() {
     }
 
     return NextResponse.json({ offers: data })
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: error.message || 'Internal server error' },
+      { status: error.status ?? 500 }
     )
   }
 }
@@ -39,16 +39,7 @@ export async function POST(request: NextRequest) {
     console.log('Creating offer:', { name, description, affiliate_link, commission_rate, niche_id })
 
     // Use service role client to bypass RLS
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+    const adminClient = createServiceRoleClient()
 
     const { data, error } = await adminClient
       .from('offers')
@@ -73,7 +64,7 @@ export async function POST(request: NextRequest) {
     console.error('Exception creating offer:', error)
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
-      { status: 500 }
+      { status: error.status ?? 500 }
     )
   }
 }

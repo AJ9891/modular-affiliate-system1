@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { checkSupabase } from '@/lib/check-supabase'
 import { createSubdomainRouteHandlerClient } from '@/lib/subdomain-auth'
-import { createClient } from '@supabase/supabase-js'
+import { createServiceRoleClient, loadSupabaseEnv } from '@/lib/supabase-server'
 
 const AUTH_COOKIE_CHUNK_SIZE = 3180
 
@@ -33,16 +33,12 @@ function chunkCookieValue(value: string): string[] {
 }
 
 function getSupabaseAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!supabaseUrl || !serviceRoleKey) return null
-
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  })
+  try {
+    loadSupabaseEnv(true)
+    return createServiceRoleClient()
+  } catch {
+    return null
+  }
 }
 
 export async function POST(request: NextRequest) {

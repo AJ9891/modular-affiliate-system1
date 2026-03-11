@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
 import { checkSupabase } from '@/lib/check-supabase'
+import { createServiceRoleClient, createServerRouteClient } from '@/lib/supabase-server'
+import { requireUser } from '@/lib/authz'
 
 export async function GET(request: NextRequest) {
   const check = checkSupabase()
   if (check) return check
   
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createServerRouteClient()
+    await requireUser(supabase)
     const { data: funnels, error } = await supabase!
       .from('funnels')
       .select('*')
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
   const check = checkSupabase()
   if (check) return check
   
-  const supabaseClient = createRouteHandlerClient({ cookies })
+  const supabaseClient = await createServerRouteClient()
   
   try {
     // Get user from session using Supabase auth-helpers
@@ -127,17 +128,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create admin client for operations
-    const { createClient } = await import('@supabase/supabase-js')
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+    const adminClient = createServiceRoleClient()
 
     // Ensure user exists in public.users table
     const { data: existingUser } = await adminClient

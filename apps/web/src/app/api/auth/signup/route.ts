@@ -1,19 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { checkSupabase } from '@/lib/check-supabase'
-import { createClient } from '@supabase/supabase-js'
 import { createSubdomainRouteHandlerClient } from '@/lib/subdomain-auth'
+import { createServiceRoleClient, loadSupabaseEnv } from '@/lib/supabase-server'
 
 function getSupabaseAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!supabaseUrl || !serviceRoleKey) return null
-
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  })
+  try {
+    loadSupabaseEnv(true)
+    return createServiceRoleClient()
+  } catch {
+    return null
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -60,10 +56,10 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ user: data.user }, { status: 201 })
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: error.message || 'Internal server error' },
+      { status: error.status ?? 500 }
     )
   }
 }

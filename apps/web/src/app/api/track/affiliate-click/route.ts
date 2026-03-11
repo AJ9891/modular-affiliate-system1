@@ -1,23 +1,9 @@
 import { NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServiceRoleClient } from '@/lib/supabase-server'
 
 export async function POST(req: NextRequest) {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (!supabaseUrl || !serviceRoleKey) {
-      return Response.json(
-        { error: 'Supabase service client not configured' },
-        { status: 503 }
-      )
-    }
-
-    const supabase = createClient(supabaseUrl, serviceRoleKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    })
+    const supabase = createServiceRoleClient()
 
     const { user_id, partner, source, metadata } = await req.json()
 
@@ -42,8 +28,8 @@ export async function POST(req: NextRequest) {
     }
 
     return Response.json({ success: true, click: data })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Affiliate click tracking error:', error)
-    return Response.json({ error: 'Internal server error' }, { status: 500 })
+    return Response.json({ error: error.message || 'Internal server error' }, { status: 500 })
   }
 }

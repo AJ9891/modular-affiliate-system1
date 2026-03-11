@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { stripe, dollarsToCredits } from '@/lib/stripe'
 import { sendshark } from '@/lib/sendshark'
 import { headers } from 'next/headers'
-import { createClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
+import { createServiceRoleClient } from '@/lib/supabase-server'
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || ''
+const supabaseAdmin = createServiceRoleClient()
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
@@ -91,17 +92,7 @@ async function handleCreditTopup(session: Stripe.Checkout.Session) {
   if (!targetUserId) return
 
   try {
-    // Use service role client to bypass RLS
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+    const adminClient = supabaseAdmin
 
     // Get topup record
     const { data: topupData, error: topupErr } = await adminClient
@@ -191,17 +182,7 @@ async function handleCheckoutSessionCompleted(session: any) {
   if (!userId) return
 
   try {
-    // Use service role client to bypass RLS
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+    const adminClient = supabaseAdmin
 
     const { error } = await adminClient
       .from('users')
@@ -254,16 +235,7 @@ async function provisionSendsharkAccount(userId: string, email: string, plan: st
       console.log(`✅ Sendshark account provisioned for ${email}`)
       
       // Update user record with Sendshark info
-      const adminClient = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false
-          }
-        }
-      )
+      const adminClient = supabaseAdmin
 
       await adminClient
         .from('users')
@@ -324,16 +296,7 @@ async function handleSubscriptionUpdated(subscription: any) {
   if (!customerId) return
 
   try {
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+    const adminClient = supabaseAdmin
 
     const { error } = await adminClient
       .from('users')
@@ -357,16 +320,7 @@ async function handleSubscriptionDeleted(subscription: any) {
   if (!customerId) return
 
   try {
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+    const adminClient = supabaseAdmin
 
     const { error } = await adminClient
       .from('users')
@@ -391,17 +345,7 @@ async function handleInvoicePaymentSucceeded(invoice: any) {
   if (!customerId) return
 
   try {
-    // Use service role client to bypass RLS
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+    const adminClient = supabaseAdmin
 
     // Get user info
     const { data: userData } = await adminClient
@@ -439,16 +383,7 @@ async function handleInvoicePaymentFailed(invoice: any) {
   if (!customerId) return
 
   try {
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+    const adminClient = supabaseAdmin
 
     const { error } = await adminClient
       .from('users')
@@ -465,3 +400,4 @@ async function handleInvoicePaymentFailed(invoice: any) {
     console.error('Error updating payment status:', error)
   }
 }
+
