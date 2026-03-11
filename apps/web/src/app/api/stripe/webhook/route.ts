@@ -5,9 +5,11 @@ import { log } from '@/lib/log'
 import { headers } from 'next/headers'
 import Stripe from 'stripe'
 import { createServiceRoleClient } from '@/lib/supabase-server'
+import { PlanManager } from '@/lib/plan-manager'
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || ''
 const supabaseAdmin = createServiceRoleClient()
+const planManager = new PlanManager()
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
@@ -200,7 +202,7 @@ async function handleCheckoutSessionCompleted(session: any) {
     if (error) {
       console.error('Failed to update user subscription:', error)
     } else {
-      console.log(`Subscription activated for user ${userId}, plan: ${plan}`)
+      log.info(`Subscription activated for user ${userId}, plan: ${plan}`)
     }
 
     // Auto-provision Sendshark account for the user
@@ -402,4 +404,5 @@ async function handleInvoicePaymentFailed(invoice: any) {
     console.error('Error updating payment status:', error)
   }
 }
+
 

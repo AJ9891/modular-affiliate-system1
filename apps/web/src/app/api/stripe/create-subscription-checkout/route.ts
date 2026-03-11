@@ -1,6 +1,8 @@
 import Stripe from 'stripe'
 import { NextRequest, NextResponse } from 'next/server'
 import { log } from '@/lib/log'
+import { validateSubscription } from '@/lib/validators/stripe'
+import { ok, error } from '@/lib/http'
 
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY
@@ -21,7 +23,7 @@ function validatePayload(plan: string, email?: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { plan, userId, email } = await req.json()
+    const { plan, userId, email } = validateSubscription(await req.json())
     validatePayload(plan, email)
 
     const stripe = getStripe()
@@ -44,12 +46,9 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    return NextResponse.json({ url: session.url })
+    return ok({ url: session.url })
   } catch (error: any) {
     log.error('Create subscription checkout failed', { error: error?.message })
-    return NextResponse.json(
-      { error: error?.message || 'Unable to create checkout session' },
-      { status: 400 }
-    )
+    return error(error)
   }
 }
