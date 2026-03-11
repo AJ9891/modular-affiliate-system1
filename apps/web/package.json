@@ -7,8 +7,8 @@
     "dev:debug": "NODE_ENV=development DEBUG=* next dev",
     "dev:turbo": "NODE_ENV=development next dev --turbo",
     "dev:verbose": "NODE_ENV=development next dev --experimental-debug",
-    "build": "cross-env NEXT_DISABLE_TURBOPACK=1 next build",
-    "build:debug": "cross-env NEXT_DISABLE_TURBOPACK=1 NEXT_DEBUG=1 next build",
+    "build": "cross-env NEXT_DISABLE_TURBOPACK=1 NEXT_PUBLIC_SUPABASE_URL=http://localhost NEXT_PUBLIC_SUPABASE_ANON_KEY=dummy SUPABASE_SERVICE_ROLE_KEY=dummy OPENAI_API_KEY=dummy next build",
+    "build:debug": "cross-env NEXT_DISABLE_TURBOPACK=1 NEXT_DEBUG=1 NEXT_PUBLIC_SUPABASE_URL=http://localhost NEXT_PUBLIC_SUPABASE_ANON_KEY=dummy SUPABASE_SERVICE_ROLE_KEY=dummy OPENAI_API_KEY=dummy next build",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@modular-affiliate/ai": "file:../../packages/ai",
+    "@next/swc-win32-x64-msvc": "^16.1.6",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-progress": "^1.1.8",
     "@radix-ui/react-select": "^2.2.6",
