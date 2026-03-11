@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe, dollarsToCredits } from '@/lib/stripe'
 import { sendshark } from '@/lib/sendshark'
+import { log } from '@/lib/log'
 import { headers } from 'next/headers'
 import Stripe from 'stripe'
 import { createServiceRoleClient } from '@/lib/supabase-server'
@@ -14,6 +15,7 @@ export const dynamic = 'force-dynamic'
 export async function POST(request: NextRequest) {
   try {
     if (!stripe) {
+      log.error('Stripe not configured')
       return NextResponse.json(
         { error: 'Stripe not configured' },
         { status: 503 }
@@ -36,7 +38,7 @@ export async function POST(request: NextRequest) {
     try {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
     } catch (err: any) {
-      console.error('Webhook signature verification failed:', err.message)
+      log.error('Webhook signature verification failed', { message: err?.message })
       return NextResponse.json(
         { error: `Webhook Error: ${err.message}` },
         { status: 400 }
@@ -70,12 +72,12 @@ export async function POST(request: NextRequest) {
         break
 
       default:
-        console.log(`Unhandled event type: ${event.type}`)
+        log.warn('Unhandled Stripe event', { type: event.type })
     }
 
     return NextResponse.json({ received: true })
   } catch (error: any) {
-    console.error('Webhook error:', error)
+    log.error('Webhook error', { error: error?.message })
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }

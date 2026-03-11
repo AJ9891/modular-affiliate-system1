@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { checkSupabase } from '@/lib/check-supabase'
 import { createSubdomainRouteHandlerClient } from '@/lib/subdomain-auth'
 import { createServiceRoleClient, loadSupabaseEnv } from '@/lib/supabase-server'
+import { log } from '@/lib/log'
 
 function getSupabaseAdminClient() {
   try {
@@ -27,6 +28,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (error) {
+      log.warn('Signup error', { error: error.message })
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
@@ -48,15 +50,16 @@ export async function POST(request: NextRequest) {
         })
         
         if (insertError) {
-          console.error('Failed to create user in public.users:', insertError)
+          log.error('Failed to create user in public.users', { error: insertError.message })
         }
       } catch (err) {
-        console.error('Error creating user:', err)
+        log.error('Error creating user', { error: String(err) })
       }
     }
 
     return NextResponse.json({ user: data.user }, { status: 201 })
   } catch (error: any) {
+    log.error('Signup handler failed', { error: error?.message })
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: error.status ?? 500 }

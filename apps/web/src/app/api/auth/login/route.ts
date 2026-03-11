@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { checkSupabase } from '@/lib/check-supabase'
 import { createSubdomainRouteHandlerClient } from '@/lib/subdomain-auth'
 import { createServiceRoleClient, loadSupabaseEnv } from '@/lib/supabase-server'
+import { log } from '@/lib/log'
 
 const AUTH_COOKIE_CHUNK_SIZE = 3180
 
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
     try {
       body = await request.json()
     } catch (parseError) {
-      console.error('Failed to parse request body:', parseError)
+      log.warn('Failed to parse request body', { error: String(parseError) })
       return NextResponse.json(
         { error: 'Invalid request body' },
         { status: 400 }
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (error) {
-      console.error('Supabase auth error:', error)
+      log.warn('Supabase auth error', { error: error?.message })
       return NextResponse.json({ 
         error: error.message || 'Invalid email or password' 
       }, { status: 401 })
@@ -105,16 +106,16 @@ export async function POST(request: NextRequest) {
         })
         
         if (upsertError) {
-          console.error('Failed to upsert user in public.users:', upsertError)
+          log.error('Failed to upsert user in public.users', { error: upsertError?.message })
         }
       } catch (err) {
-        console.error('Error upserting user:', err)
+        log.error('Error upserting user', { error: String(err) })
       }
     }
 
     return createLoginSuccessResponse(data)
   } catch (error: any) {
-    console.error('Login error:', error)
+    log.error('Login error', { error: error?.message })
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }

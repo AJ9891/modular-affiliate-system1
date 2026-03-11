@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { stripe, dollarsToCredits } from '@/lib/stripe'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+import { log } from '@/lib/log'
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
@@ -35,6 +36,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (!stripe) {
+    log.error('Stripe not configured')
     return NextResponse.json(
       { error: 'Stripe not configured' },
       { status: 500 }
@@ -78,7 +80,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url: session.url, id: session.id }, { status: 200 })
   } catch (err: any) {
-    console.error(err)
+    log.error('Stripe checkout error', { error: err?.message })
     return NextResponse.json(
       { error: err.message || 'Stripe error' },
       { status: 500 }
