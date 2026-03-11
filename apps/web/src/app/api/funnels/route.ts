@@ -4,6 +4,7 @@ import { createServiceRoleClient, createServerRouteClient } from '@/lib/supabase
 import { requireUser } from '@/lib/authz'
 import { validateFunnel } from '@/lib/validators/funnels'
 import { error, ok, readJson, ValidationError } from '@/lib/http'
+import { checkUserCanPerform, incrementUserUsage } from '@/lib/plan-manager'
 
 export async function GET(request: NextRequest) {
   const check = checkSupabase()
@@ -111,6 +112,12 @@ export async function POST(request: NextRequest) {
 
     // Create admin client for operations
     const adminClient = createServiceRoleClient()
+
+    // Plan gating: max funnels
+    const canCreate = await checkUserCanPerform(user.id, 'maxFunnels')
+    if (!canCreate) {
+      return NextResponse.json({ error: 'Plan limit reached for funnels' }, { status: 402 })
+    }
 
     // Ensure user exists in public.users table
     const { data: existingUser } = await adminClient
@@ -267,6 +274,9 @@ export async function POST(request: NextRequest) {
     if (isDevelopment) {
       console.log('[FUNNELS API] Funnel created successfully:', data[0]?.funnel_id)
     }
+
+    // Count funnel creation as usage
+    await incrementUserUsage(user.id, 'funnel_creation')
 
     return NextResponse.json({ 
       funnel: data[0],
