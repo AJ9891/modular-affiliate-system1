@@ -1,7 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { checkSupabase } from '@/lib/check-supabase'
 import { createServiceRoleClient, createServerRouteClient } from '@/lib/supabase-server'
 import { requireUser } from '@/lib/authz'
+import { validateOffer } from '@/lib/validators/offers'
+import { error, ok, readJson } from '@/lib/http'
 
 export async function GET() {
   const check = checkSupabase()
@@ -16,15 +18,12 @@ export async function GET() {
       .order('created_at', { ascending: false })
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 })
+      throw error
     }
 
-    return NextResponse.json({ offers: data })
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: error.status ?? 500 }
-    )
+    return ok({ offers: data })
+  } catch (err) {
+    return error(err)
   }
 }
 
@@ -33,8 +32,8 @@ export async function POST(request: NextRequest) {
   if (check) return check
 
   try {
-    const body = await request.json()
-    const { name, description, affiliate_link, commission_rate, niche_id } = body
+    const body = await readJson(request)
+    const { name, description, affiliate_link, commission_rate, niche_id } = validateOffer(body)
 
     console.log('Creating offer:', { name, description, affiliate_link, commission_rate, niche_id })
 
@@ -54,17 +53,13 @@ export async function POST(request: NextRequest) {
       .select()
 
     if (error) {
-      console.error('Error creating offer:', error)
-      return NextResponse.json({ error: error.message, details: error }, { status: 400 })
+      throw error
     }
 
     console.log('Offer created successfully:', data)
-    return NextResponse.json({ offer: data[0] }, { status: 201 })
-  } catch (error: any) {
-    console.error('Exception creating offer:', error)
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: error.status ?? 500 }
-    )
+    return ok({ offer: data[0] }, 201)
+  } catch (err) {
+    console.error('Exception creating offer:', err)
+    return error(err)
   }
 }

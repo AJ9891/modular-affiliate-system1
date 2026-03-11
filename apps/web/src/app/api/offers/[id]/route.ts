@@ -1,7 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { checkSupabase } from '@/lib/check-supabase'
 import { createServiceRoleClient, createServerRouteClient } from '@/lib/supabase-server'
 import { requireUser } from '@/lib/authz'
+import { validateOffer } from '@/lib/validators/offers'
+import { error, ok, readJson } from '@/lib/http'
 
 export async function PUT(
   request: NextRequest,
@@ -14,7 +16,7 @@ export async function PUT(
     const supabase = await createServerRouteClient()
     await requireUser(supabase)
 
-    const body = await request.json()
+    const body = validateOffer(await readJson(request))
     const { id: offerId } = await context.params
 
     // Use service role client to bypass RLS
@@ -27,15 +29,12 @@ export async function PUT(
       .select()
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 })
+      throw error
     }
 
-    return NextResponse.json({ offer: data[0] })
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: error.status ?? 500 }
-    )
+    return ok({ offer: data[0] })
+  } catch (err) {
+    return error(err)
   }
 }
 
@@ -61,14 +60,11 @@ export async function DELETE(
       .eq('id', offerId)
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 })
+      throw error
     }
 
-    return NextResponse.json({ success: true })
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: error.status ?? 500 }
-    )
+    return ok({ success: true })
+  } catch (err) {
+    return error(err)
   }
 }

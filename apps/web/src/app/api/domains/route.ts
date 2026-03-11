@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { checkSupabase } from '@/lib/check-supabase'
 import { createServiceRoleClient, createServerRouteClient } from '@/lib/supabase-server'
 import { canUseCustomDomain, fetchUserProfile, requireUser } from '@/lib/authz'
+import { validateDomain } from '@/lib/validators/domains'
+import { error, ok, readJson } from '@/lib/http'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,7 +41,7 @@ export async function GET(request: NextRequest) {
       'custom_domain, subdomain, subscription_plan, email, is_admin'
     )
 
-    return NextResponse.json({
+    return ok({
       subdomain: userData?.subdomain || null,
       customDomain: userData?.custom_domain || null,
       plan: userData?.subscription_plan || 'starter',
@@ -47,11 +49,7 @@ export async function GET(request: NextRequest) {
     })
   } catch (error: any) {
     console.error('Error fetching domains:', error)
-    const status = error.status ?? 500
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status }
-    )
+    return error(error)
   }
 }
 
@@ -65,7 +63,7 @@ export async function POST(request: NextRequest) {
     const supabase = await createServerRouteClient()
     const user = await requireUser(supabase)
 
-    const body = await request.json()
+    const body = validateDomain(await readJson(request))
     const { domain, type } = body // type: 'subdomain' or 'custom'
 
     const adminClient = createServiceRoleClient()
@@ -115,7 +113,7 @@ export async function POST(request: NextRequest) {
         .update({ subdomain: domain })
         .eq('id', user.id)
 
-      return NextResponse.json({
+      return ok({
         success: true,
         subdomain: domain,
         url: `https://${domain}.launchpad4success.pro`
@@ -160,7 +158,7 @@ export async function POST(request: NextRequest) {
         .update({ custom_domain: domain })
         .eq('id', user.id)
 
-      return NextResponse.json({
+      return ok({
         success: true,
         domain,
         vercelConfig: vercelData,
@@ -182,16 +180,9 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    return NextResponse.json(
-      { error: 'Invalid domain type' },
-      { status: 400 }
-    )
+    throw new Error('Invalid domain type')
   } catch (error: any) {
     console.error('Error managing domain:', error)
-    const status = error.status ?? 500
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status }
-    )
+    return error(error)
   }
 }

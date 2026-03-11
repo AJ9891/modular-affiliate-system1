@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { checkSupabase } from '@/lib/check-supabase'
 import { createServiceRoleClient, createServerRouteClient } from '@/lib/supabase-server'
 import { requireUser } from '@/lib/authz'
+import { validateFunnel } from '@/lib/validators/funnels'
+import { error, ok, readJson, ValidationError } from '@/lib/http'
 
 export async function GET(request: NextRequest) {
   const check = checkSupabase()
@@ -15,15 +17,12 @@ export async function GET(request: NextRequest) {
       .select('*')
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 })
+      throw error
     }
 
-    return NextResponse.json({ funnels }, { status: 200 })
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return ok({ funnels }, { status: 200 })
+  } catch (err) {
+    return error(err)
   }
 }
 
@@ -61,15 +60,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse and validate request body
-    let body
-    try {
-      body = await request.json()
-    } catch (parseError) {
-      console.error('[FUNNELS API] JSON parse error:', parseError)
-      return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 })
-    }
-
-    const { name, template, niche, blocks, theme, slug } = body
+    const { name, template, niche, blocks, theme, slug } = validateFunnel(await readJson(request))
 
     if (isDevelopment) {
       console.log('[FUNNELS API] Received funnel data:', { 
@@ -81,15 +72,6 @@ export async function POST(request: NextRequest) {
         slug,
         bodyKeys: Object.keys(body)
       })
-    }
-
-    // Validate required fields
-    if (!name || typeof name !== 'string' || name.trim() === '') {
-      return NextResponse.json({ error: 'Funnel name is required and must be a non-empty string' }, { status: 400 })
-    }
-
-    if (!Array.isArray(blocks)) {
-      return NextResponse.json({ error: 'Blocks must be an array' }, { status: 400 })
     }
 
     // Comprehensive data sanitization to prevent 'new' keyword issues
@@ -291,11 +273,9 @@ export async function POST(request: NextRequest) {
       funnelId: data[0].funnel_id,
       success: true
     }, { status: 201 })
-  } catch (error: any) {
-    console.error('Funnel creation error:', error)
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    )
+  } catch (err: any) {
+    if (err instanceof ValidationError) return error(err)
+    console.error('Funnel creation error:', err)
+    return error(err)
   }
 }
