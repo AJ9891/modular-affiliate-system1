@@ -12,6 +12,13 @@ export const subscriptionCheckoutSchema = z.object({
   email: z.string().email()
 })
 
+export const payoutSchema = z.object({
+  affiliateId: z.string().uuid(),
+  amount: z.number().positive(),
+  description: z.string().max(255).optional(),
+  idempotencyKey: z.string().max(64).optional()
+})
+
 export function validateCheckout(body: unknown) {
   const parsed = createCheckoutSchema.safeParse(body)
   if (!parsed.success) throw new ValidationError('Invalid checkout payload', parsed.error.format())
