@@ -142,7 +142,7 @@ export default function TeamPage() {
 
   if (loading) {
     return (
-      <div className="cockpit-shell page-crew flex items-center justify-center">
+      <div className="theme-crew cockpit-shell page-crew flex items-center justify-center">
         <div className="text-center">
           <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-anchor-400"></div>
           <p className="text-text-secondary">Loading crew roster...</p>
@@ -152,7 +152,7 @@ export default function TeamPage() {
   }
 
   return (
-    <div className="cockpit-shell page-crew py-8">
+    <div className="theme-crew cockpit-shell page-crew py-8">
       <div className="cockpit-container max-w-6xl">
         {/* Header */}
         <div className="mb-8">

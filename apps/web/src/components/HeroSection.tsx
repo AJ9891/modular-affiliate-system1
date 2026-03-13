@@ -39,8 +39,8 @@ export function HeroSection() {
           <h1 className="mt-5 text-[42px] font-semibold leading-[1.1] tracking-[-0.02em] text-text-primary">
             Launchpad 4 Success
           </h1>
-          <p className="mx-auto mt-3 max-w-[34ch] text-[15px] leading-[1.6] text-text-secondary">
-            Build. Launch. Scale.
+          <p className="mx-auto mt-3 max-w-[36ch] text-[15px] leading-[1.6] text-text-secondary">
+            AI-native, quietly self-aware flight deck that builds, watches, and adapts with you.
           </p>
           <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
             <Link href="/get-started" className="btn-launch-premium px-7 py-3 text-sm">

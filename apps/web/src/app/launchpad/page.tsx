@@ -12,7 +12,8 @@ import Step5ActivateEmail from '@/components/launchpad/Step5ActivateEmail'
 import Step6PublishLive from '@/components/launchpad/Step6PublishLive'
 import Step7Liftoff from '@/components/launchpad/Step7Liftoff'
 import { AmbientSoundToggle } from '@/components/AmbientSoundToggle'
-import { Target, Users, DollarSign, TrendingUp, Plus, ArrowRight, CheckCircle, Sparkles, Zap, BarChart, Brain } from 'lucide-react'
+import { LaunchpadVision } from '@/components/LaunchpadVision'
+import { DollarSign, Sparkles, Zap, BarChart, Brain } from 'lucide-react'
 
 export const runtime = 'edge'
 
@@ -363,118 +364,49 @@ export default function LaunchpadPage() {
   ]
 
   if (setupComplete || stats.funnels > 0) {
-    // Main dashboard for returning users
+    const visionStats = [
+      { label: 'Active Funnels', value: stats.funnels.toString() },
+      { label: 'Leads', value: (stats.leads ?? 0).toLocaleString() },
+      { label: 'Revenue', value: `$${(stats.revenue ?? 0).toLocaleString()}` },
+      { label: 'Conversions', value: stats.conversions.toString() },
+    ]
+
+    const visionActions = quickActions.map((action) => ({
+      title: action.title,
+      description: action.description,
+      href: action.href,
+      icon: action.icon,
+      accent: 'cyan' as const,
+    }))
+
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="max-w-7xl mx-auto px-4 py-12">
-          <div className="mb-12">
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Welcome Back! 🚀
-              </h1>
-              <AmbientSoundToggle defaultEnabled={true} />
-            </div>
-            <p className="text-xl text-gray-600">
-              Your affiliate empire is growing. Here&apos;s what&apos;s happening.
-            </p>
-          </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-            <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-blue-500">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-gray-600">Active Funnels</span>
-                <Target className="text-blue-500" size={24} />
-              </div>
-              <div className="text-3xl font-bold">{stats.funnels}</div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-green-500">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-gray-600">Total Leads</span>
-                <Users className="text-green-500" size={24} />
-              </div>
-              <div className="text-3xl font-bold">{(stats.leads ?? 0).toLocaleString()}</div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-purple-500">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-gray-600">Revenue</span>
-                <DollarSign className="text-purple-500" size={24} />
-              </div>
-              <div className="text-3xl font-bold">${(stats.revenue ?? 0).toLocaleString()}</div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-orange-500">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-gray-600">Conversions</span>
-                <TrendingUp className="text-orange-500" size={24} />
-              </div>
-              <div className="text-3xl font-bold">{stats.conversions}</div>
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold mb-6">Quick Actions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {quickActions.map((action, index) => {
-                const ActionIcon = action.icon
-                return (
-                  <a
-                    key={index}
-                    href={action.href}
-                    className={`
-                      bg-gradient-to-br ${action.color} 
-                      text-white rounded-xl shadow-lg p-6 
-                      hover:shadow-2xl transition-all transform hover:-translate-y-1
-                    `}
-                  >
-                    <ActionIcon className="mb-4" size={32} />
-                    <h3 className="font-bold text-lg mb-2">{action.title}</h3>
-                    <p className="text-sm opacity-90">{action.description}</p>
-                  </a>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Funnel Templates */}
-          <div>
-            <h2 className="text-2xl font-bold mb-6">Start a New Funnel</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {funnelTemplates.map((template, index) => (
-                <div
-                  key={index}
-                  className="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all cursor-pointer"
-                >
-                  <h3 className="font-bold text-lg mb-2">{template.name}</h3>
-                  <p className="text-gray-600 text-sm mb-4">{template.description}</p>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500">{template.blocks} blocks</span>
-                    <span className="text-green-600 font-semibold">{template.conversions}</span>
-                  </div>
-                  <button className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
-                    Use Template <ArrowRight size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
+      <div className="relative">
+        <div className="absolute right-6 top-6 z-20">
+          <AmbientSoundToggle defaultEnabled={true} />
         </div>
+        <LaunchpadVision stats={visionStats} actions={visionActions} userPlan={userData?.plan} />
       </div>
     )
   }
 
   // Onboarding for new users
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+    <div className="theme-launch">
       <LaunchProgressHeader
         currentStep={currentStep}
         completedSteps={completedSteps}
       />
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+        <div className="card-surface rounded-2xl border border-white/10 p-5 text-sm text-amber-100/90">
+          <p className="font-semibold text-white flex items-center gap-2">
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-orange-500/80 text-xs">🚀</span>
+            Rocket is your launch personality for onboarding.
+          </p>
+          <p className="mt-1 text-amber-100/80">
+            Guidance stays supportive and momentum-focused until you reach orbit.
+          </p>
+        </div>
         {currentStep === STEPS.MISSION_BRIEFING && (
           <Step1MissionBriefing onComplete={handleMissionIntent} initialIntent={intent} />
         )}

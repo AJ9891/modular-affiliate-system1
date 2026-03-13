@@ -11,6 +11,9 @@ import { getRateLimitKey, rateLimit, RATE_LIMIT_CONFIGS } from './lib/rate-limit
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
+  const supabaseEnvReady =
+    !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   // API rate limiting (covers auth + public abuse-prone endpoints)
   if (pathname.startsWith('/api/')) {
@@ -76,7 +79,15 @@ export async function proxy(req: NextRequest) {
   }
 
   // Configure Supabase client with proper cookie domain handling for subdomains
+  if (!supabaseEnvReady) {
+    // In local/preview runs without Supabase creds, skip auth enforcement but keep security headers.
+    return addSecurityHeaders(res)
+  }
+
   const supabase = createSubdomainMiddlewareClient(req, res)
+  if (!supabase) {
+    return addSecurityHeaders(res)
+  }
 
   // Refresh session if expired - required for Server Components
   const {

@@ -96,7 +96,7 @@ export default function DownloadsPage() {
   };
 
   return (
-    <div className="cockpit-shell page-cargo-bay py-8">
+    <div className="theme-cargo cockpit-shell page-cargo-bay py-8">
       <div className="cockpit-container max-w-6xl">
         {/* Header */}
         <div className="mb-8">

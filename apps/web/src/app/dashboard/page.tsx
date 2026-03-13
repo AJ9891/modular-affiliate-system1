@@ -53,7 +53,7 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="cockpit-shell page-flight-deck flex items-center justify-center">
+      <div className="theme-orbit cockpit-shell page-flight-deck flex items-center justify-center">
         <div className="text-center">
           <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-rocket-500"></div>
           <p className="text-text-secondary">Loading flight deck...</p>
@@ -63,7 +63,7 @@ export default function Dashboard() {
   }
 
   return (
-    <main className="cockpit-shell page-flight-deck">
+    <main className="theme-orbit cockpit-shell page-flight-deck">
       {/* Header */}
       <header className="px-6 pt-6 md:px-10">
         <div className="hud-strip mx-auto flex h-14 w-full max-w-7xl items-center justify-between px-5">

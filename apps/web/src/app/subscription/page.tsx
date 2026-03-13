@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import StripeConnectSection from '@/components/StripeConnectSection'
 
 interface Subscription {
   plan: string
@@ -80,15 +81,19 @@ export default function SubscriptionPage() {
 
   if (loading) {
     return (
-      <div className="cockpit-shell page-fuel-management flex items-center justify-center">
+      <div className="theme-fuel cockpit-shell page-fuel-management flex items-center justify-center">
         <div className="text-xl text-text-secondary">Loading fuel status...</div>
       </div>
     )
   }
 
   return (
-    <div className="cockpit-shell page-fuel-management py-12">
+    <div className="theme-fuel cockpit-shell page-fuel-management py-12">
       <div className="cockpit-container max-w-4xl">
+        <div className="mb-6">
+          <StripeConnectSection />
+        </div>
+
         <div className="mb-8">
           <h1 className="mb-2 text-4xl font-semibold text-text-primary">
             Fuel Management

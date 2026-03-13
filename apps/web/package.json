@@ -7,6 +7,7 @@
     "dev:debug": "NODE_ENV=development DEBUG=* next dev",
     "dev:turbo": "NODE_ENV=development next dev --turbo",
     "dev:verbose": "NODE_ENV=development next dev --experimental-debug",
+    "dev:win": "cross-env NODE_ENV=development NEXT_DISABLE_TURBOPACK=1 next dev --port 3002",
     "build": "cross-env NEXT_DISABLE_TURBOPACK=1 NEXT_PUBLIC_SUPABASE_URL=http://localhost NEXT_PUBLIC_SUPABASE_ANON_KEY=dummy SUPABASE_SERVICE_ROLE_KEY=dummy OPENAI_API_KEY=dummy STRIPE_SECRET_KEY=dummy STRIPE_PRICE_STARTER=dummy STRIPE_PRICE_PRO=dummy STRIPE_PRICE_AGENCY=dummy NEXT_PUBLIC_SITE_URL=http://localhost next build",
     "build:debug": "cross-env NEXT_DISABLE_TURBOPACK=1 NEXT_DEBUG=1 NEXT_PUBLIC_SUPABASE_URL=http://localhost NEXT_PUBLIC_SUPABASE_ANON_KEY=dummy SUPABASE_SERVICE_ROLE_KEY=dummy OPENAI_API_KEY=dummy STRIPE_SECRET_KEY=dummy STRIPE_PRICE_STARTER=dummy STRIPE_PRICE_PRO=dummy STRIPE_PRICE_AGENCY=dummy NEXT_PUBLIC_SITE_URL=http://localhost next build",
     "start": "next start",

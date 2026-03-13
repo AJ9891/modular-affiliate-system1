@@ -54,7 +54,7 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="cockpit-shell page-telemetry flex items-center justify-center">
+      <div className="theme-telemetry cockpit-shell page-telemetry flex items-center justify-center">
         <div className="text-xl text-text-secondary">Loading telemetry...</div>
       </div>
     )
@@ -62,14 +62,14 @@ export default function AnalyticsPage() {
 
   if (!analytics) {
     return (
-      <div className="cockpit-shell page-telemetry flex items-center justify-center">
+      <div className="theme-telemetry cockpit-shell page-telemetry flex items-center justify-center">
         <div className="text-xl text-text-secondary">Failed to load analytics data</div>
       </div>
     )
   }
 
   return (
-    <div className="cockpit-shell page-telemetry telemetry-grid py-12">
+    <div className="theme-telemetry cockpit-shell page-telemetry telemetry-grid py-12">
       <div className="cockpit-container relative z-10">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">

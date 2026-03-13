@@ -694,4 +694,98 @@
     0%, 100% { opacity: 0.5; }
     50% { opacity: 0.95; }
   }
+
+  /* Theming: launch (onboarding) vs orbit (post-onboarding) */
+  .theme-launch {
+    background: radial-gradient(circle at 20% 20%, rgba(255,136,0,0.14), transparent 35%),
+                radial-gradient(circle at 80% 10%, rgba(255,64,128,0.12), transparent 32%),
+                linear-gradient(135deg, #0b0f1d 0%, #150d2c 60%, #0b1025 100%);
+    color: #f9fbff;
+    min-height: 100vh;
+  }
+
+  .theme-launch .card-surface {
+    background: linear-gradient(160deg, rgba(255,122,0,0.12), rgba(255,99,71,0.08));
+    border: 1px solid rgba(255,160,90,0.35);
+    box-shadow: 0 12px 45px rgba(255,140,70,0.15);
+  }
+
+  .theme-launch .cta-primary {
+    background: linear-gradient(120deg, #ff7a00, #ff4d67);
+    color: #0b0f1d;
+    box-shadow: 0 10px 30px rgba(255,100,40,0.35);
+  }
+
+  .theme-orbit {
+    background: radial-gradient(circle at 15% 15%, rgba(56,189,248,0.08), transparent 35%),
+                radial-gradient(circle at 80% 25%, rgba(94,234,212,0.08), transparent 32%),
+                linear-gradient(135deg, #050a12 0%, #0a1324 60%, #050a14 100%);
+    color: #e8f6ff;
+    min-height: 100vh;
+  }
+
+  .theme-orbit .card-surface {
+    background: linear-gradient(160deg, rgba(56,189,248,0.08), rgba(16,64,120,0.18));
+    border: 1px solid rgba(80,200,255,0.28);
+    box-shadow: 0 10px 36px rgba(56,189,248,0.18);
+  }
+
+  /* Landing mission control */
+  .mission-hero {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #070b16 0%, #0c1426 60%, #090f1e 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .mission-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 30%, rgba(14,165,233,0.12), transparent 45%),
+                radial-gradient(circle at 70% 20%, rgba(126,34,206,0.12), transparent 40%),
+                linear-gradient(135deg, #060912 0%, #0b1222 60%, #070d18 100%);
+    filter: blur(6px) brightness(0.9);
+    opacity: 0.75;
+  }
+  .mission-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 20% 20%, rgba(56,189,248,0.12), transparent 32%),
+                radial-gradient(circle at 80% 10%, rgba(14,165,233,0.12), transparent 30%);
+  }
+  .mission-nav { backdrop-filter: blur(8px); background: linear-gradient(90deg, rgba(7,11,22,0.65), rgba(7,11,22,0.35)); }
+  .mission-console { position: relative; z-index: 1; display: grid; place-items: center; padding: 5rem 1.5rem 3rem; }
+  .glass-console {
+    max-width: 520px;
+    width: 100%;
+    text-align: center;
+    padding: 2.75rem 2.25rem;
+    border-radius: 18px;
+    background: rgba(12, 18, 32, 0.72);
+    border: 1px solid rgba(94, 234, 212, 0.28);
+    box-shadow: 0 20px 70px rgba(0, 0, 0, 0.45), 0 0 45px rgba(59, 205, 255, 0.25);
+    backdrop-filter: blur(14px);
+  }
+  .glass-tile {
+    border-radius: 14px;
+    padding: 16px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  }
+  .cta-secondary {
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #e8f6ff;
+    background: rgba(255,255,255,0.05);
+  }
+
+  /* Additional room themes */
+  .theme-engineering { background: linear-gradient(135deg, #060b16, #0a1222); min-height: 100vh; }
+  .theme-telemetry { background: linear-gradient(145deg, #050914, #0b1728); min-height: 100vh; }
+  .theme-ai-core { background: radial-gradient(circle at 50% 20%, rgba(190,90,255,0.08), transparent 40%), linear-gradient(135deg, #050912, #0c1020); min-height: 100vh; }
+  .theme-fuel { background: linear-gradient(140deg, #0a0f19, #0d1728); min-height: 100vh; }
+  .theme-cargo { background: linear-gradient(130deg, #080d17, #0e1522); min-height: 100vh; }
+  .theme-crew { background: linear-gradient(135deg, #070d18, #0b1424); min-height: 100vh; }
+  .theme-command { background: linear-gradient(135deg, #060b14, #0c1423); min-height: 100vh; }
 }

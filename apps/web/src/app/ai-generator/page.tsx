@@ -23,7 +23,7 @@ export default function AIGeneratorPage() {
 
   if (authLoading) {
     return (
-      <div className="cockpit-shell page-ai-core flex items-center justify-center">
+      <div className="theme-ai-core cockpit-shell page-ai-core flex items-center justify-center">
         <div className="text-xl text-text-secondary">Loading AI core...</div>
       </div>
     )
@@ -258,7 +258,7 @@ export default function AIGeneratorPage() {
   }
 
   return (
-    <div className="cockpit-shell page-ai-core py-12">
+    <div className="theme-ai-core cockpit-shell page-ai-core py-12">
       <div className="cockpit-container">
         {/* Header */}
         <div className="mb-8">
