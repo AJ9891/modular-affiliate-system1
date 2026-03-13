@@ -29,9 +29,10 @@ body {
 .cockpit {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  height: calc(100vh - 160px);
+  min-height: 520px;
   background-image: url('../assets/dashboard-dark.png');
-  background-size: contain;
+  background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
   margin: auto;
@@ -45,7 +46,7 @@ body {
   position: absolute;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.35s ease;
+  transition: all 0.35s ease, box-shadow 0.2s ease, outline 0.2s ease;
   border: 0;
   background: transparent;
   padding: 0;
@@ -54,6 +55,8 @@ body {
 .module:hover,
 .hotspot:hover {
   box-shadow: 0 0 25px var(--glow-color);
+  outline: 2px solid color-mix(in srgb, var(--glow-color) 75%, transparent);
+  outline-offset: 0;
 }
 
 .module span,
@@ -105,6 +108,30 @@ body {
 .resize-handle.ne { top: -6px; right: -6px; cursor: nesw-resize; }
 .resize-handle.sw { bottom: -6px; left: -6px; cursor: nesw-resize; }
 .resize-handle.se { bottom: -6px; right: -6px; cursor: nwse-resize; }
+.resize-handle { display: none !important; }
+
+.vertex-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(0, 255, 255, 0.95);
+  border: 1px solid #fff;
+  transform: translate(-50%, -50%);
+  display: none;
+  cursor: move;
+  z-index: 10;
+}
+
+.module.edit-mode .vertex-handle {
+  display: block;
+}
+
+.module .label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
 
 .vision,
 .vision-module {
