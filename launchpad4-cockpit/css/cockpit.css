@@ -9,6 +9,17 @@ body {
   overflow-x: hidden;
 }
 
+.edit-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.5rem 0 1rem;
+}
+
+.edit-toolbar button {
+  margin-left: 0.25rem;
+}
+
 .absolute-fill {
   position: absolute;
   inset: 0;
@@ -62,6 +73,38 @@ body {
 .hotspot:hover span {
   opacity: 1;
 }
+
+.module.edit-mode span {
+  opacity: 1;
+}
+
+/* Layout edit mode */
+.module.edit-mode {
+  outline: 1px dashed rgba(0, 255, 255, 0.6);
+  background: rgba(0, 255, 255, 0.05);
+}
+
+.module .resize-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: rgba(0, 255, 255, 0.9);
+  border: 1px solid #fff;
+  border-radius: 2px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.module.edit-mode .resize-handle {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.resize-handle.nw { top: -6px; left: -6px; cursor: nwse-resize; }
+.resize-handle.ne { top: -6px; right: -6px; cursor: nesw-resize; }
+.resize-handle.sw { bottom: -6px; left: -6px; cursor: nesw-resize; }
+.resize-handle.se { bottom: -6px; right: -6px; cursor: nwse-resize; }
 
 .vision,
 .vision-module {

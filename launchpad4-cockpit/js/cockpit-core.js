@@ -62,6 +62,9 @@ let pulseResetTimer = null;
 let revertVoiceTimer = null;
 let missionTimelineSteps = ['Launch', 'Funnel', 'Optimization'];
 let missionActiveIndex = 0;
+const LAYOUT_KEY = 'cockpitLayout';
+let editMode = false;
+let dragState = null;
 
 function getSelectedModuleVoice() {
   const stored = window.localStorage.getItem(VOICE_KEY);
@@ -300,6 +303,9 @@ function showVisionDock() {
 }
 
 function openVision() {
+  if (editMode) {
+    return;
+  }
   stopVisionSignal();
   visionPanel.classList.add('vision-open');
   visionPanel.classList.remove('vision-expanded');
@@ -326,6 +332,9 @@ function expandFull() {
 
 function openModule(module) {
   const route = routes[module];
+  if (editMode) {
+    return;
+  }
   if (!route) {
     return;
   }
@@ -346,6 +355,189 @@ function expandImage() {
   window.setTimeout(() => {
     openModule('radar');
   }, 800);
+}
+
+/* --------------------------
+ * Layout editor (drag corners)
+ * -------------------------- */
+function percentifyRect(rect, parentRect) {
+  return {
+    left: ((rect.left - parentRect.left) / parentRect.width) * 100,
+    top: ((rect.top - parentRect.top) / parentRect.height) * 100,
+    width: (rect.width / parentRect.width) * 100,
+    height: (rect.height / parentRect.height) * 100
+  };
+}
+
+function applyLayoutToModule(module, layoutEntry) {
+  if (!layoutEntry) return;
+  module.style.left = `${layoutEntry.left}%`;
+  module.style.top = `${layoutEntry.top}%`;
+  module.style.width = `${layoutEntry.width}%`;
+  module.style.height = `${layoutEntry.height}%`;
+  module.style.right = '';
+}
+
+function saveLayout() {
+  const layout = {};
+  const parentRect = cockpit.getBoundingClientRect();
+  document.querySelectorAll('.module').forEach((mod) => {
+    const key = mod.dataset.key || mod.dataset.route || mod.dataset.action;
+    if (!key) return;
+    const rect = mod.getBoundingClientRect();
+    layout[key] = percentifyRect(rect, parentRect);
+  });
+  window.localStorage.setItem(LAYOUT_KEY, JSON.stringify(layout));
+}
+
+function loadLayout() {
+  const saved = window.localStorage.getItem(LAYOUT_KEY);
+  if (!saved) return;
+  const layout = JSON.parse(saved);
+  document.querySelectorAll('.module').forEach((mod) => {
+    const key = mod.dataset.key || mod.dataset.route || mod.dataset.action;
+    if (layout[key]) {
+      applyLayoutToModule(mod, layout[key]);
+    }
+  });
+}
+
+function addHandles(module) {
+  const positions = ['nw', 'ne', 'sw', 'se'];
+  positions.forEach((pos) => {
+    const handle = document.createElement('div');
+    handle.className = `resize-handle ${pos}`;
+    handle.dataset.dir = pos;
+    module.appendChild(handle);
+  });
+}
+
+function enableEditMode(flag) {
+  editMode = flag;
+  document.querySelectorAll('.module').forEach((mod) => {
+    mod.classList.toggle('edit-mode', flag);
+    if (flag && !mod.querySelector('.resize-handle')) {
+      addHandles(mod);
+    }
+  });
+}
+
+function onHandleMouseDown(e) {
+  if (!editMode) return;
+  const handle = e.target;
+  if (!handle.classList.contains('resize-handle')) return;
+  const module = handle.closest('.module');
+  if (!module) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+
+  const parentRect = cockpit.getBoundingClientRect();
+  const modRect = module.getBoundingClientRect();
+
+  dragState = {
+    module,
+    dir: handle.dataset.dir,
+    startMouseX: e.clientX,
+    startMouseY: e.clientY,
+    startLeft: modRect.left,
+    startTop: modRect.top,
+    startWidth: modRect.width,
+    startHeight: modRect.height,
+    parentRect
+  };
+
+  document.addEventListener('mousemove', onHandleMouseMove);
+  document.addEventListener('mouseup', onHandleMouseUp);
+}
+
+function onHandleMouseMove(e) {
+  if (!dragState) return;
+
+  const dx = e.clientX - dragState.startMouseX;
+  const dy = e.clientY - dragState.startMouseY;
+  let newLeft = dragState.startLeft;
+  let newTop = dragState.startTop;
+  let newWidth = dragState.startWidth;
+  let newHeight = dragState.startHeight;
+
+  if (dragState.dir.includes('e')) {
+    newWidth = dragState.startWidth + dx;
+  }
+  if (dragState.dir.includes('s')) {
+    newHeight = dragState.startHeight + dy;
+  }
+  if (dragState.dir.includes('w')) {
+    newWidth = dragState.startWidth - dx;
+    newLeft = dragState.startLeft + dx;
+  }
+  if (dragState.dir.includes('n')) {
+    newHeight = dragState.startHeight - dy;
+    newTop = dragState.startTop + dy;
+  }
+
+  // Clamp
+  const minSize = 30;
+  newWidth = Math.max(minSize, newWidth);
+  newHeight = Math.max(minSize, newHeight);
+
+  // Keep within cockpit
+  const maxLeft = dragState.parentRect.left + dragState.parentRect.width - newWidth;
+  const maxTop = dragState.parentRect.top + dragState.parentRect.height - newHeight;
+  newLeft = Math.min(Math.max(newLeft, dragState.parentRect.left), maxLeft);
+  newTop = Math.min(Math.max(newTop, dragState.parentRect.top), maxTop);
+
+  const pct = percentifyRect(
+    {
+      left: newLeft,
+      top: newTop,
+      width: newWidth,
+      height: newHeight
+    },
+    dragState.parentRect
+  );
+
+  const mod = dragState.module;
+  mod.style.left = `${pct.left}%`;
+  mod.style.top = `${pct.top}%`;
+  mod.style.width = `${pct.width}%`;
+  mod.style.height = `${pct.height}%`;
+  mod.style.right = '';
+}
+
+function onHandleMouseUp() {
+  document.removeEventListener('mousemove', onHandleMouseMove);
+  document.removeEventListener('mouseup', onHandleMouseUp);
+  if (dragState) {
+    saveLayout();
+  }
+  dragState = null;
+}
+
+function resetLayout() {
+  window.localStorage.removeItem(LAYOUT_KEY);
+  window.location.reload();
+}
+
+function initLayoutEditor() {
+  const toggle = document.getElementById('editToggle');
+  const resetBtn = document.getElementById('resetLayout');
+
+  loadLayout();
+
+  if (toggle) {
+    toggle.addEventListener('change', (e) => {
+      enableEditMode(e.target.checked);
+    });
+  }
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', resetLayout);
+  }
+
+  document.querySelectorAll('.module').forEach((mod) => {
+    mod.addEventListener('mousedown', onHandleMouseDown);
+  });
 }
 
 function inferAdaptiveVoice(message) {
@@ -678,3 +870,4 @@ setActiveVoice(defaultVoice);
 syncIntelligencePanel();
 updateMissionTimeline(missionTimelineSteps, missionActiveIndex);
 hideVisionDock();
+initLayoutEditor();

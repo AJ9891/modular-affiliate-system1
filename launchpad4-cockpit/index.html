@@ -27,11 +27,17 @@
             <h3>Command Interface</h3>
           </hgroup>
 
+          <div class="edit-toolbar">
+            <label><input id="editToggle" type="checkbox" /> Layout edit mode (drag corners to fit)</label>
+            <button id="resetLayout" type="button">Reset layout</button>
+          </div>
+
           <div class="cockpit" id="cockpit">
             <button
               class="module vision vision-module"
               style="top: 8%; right: 5%; width: 26%; height: 26%"
               data-action="vision"
+              data-key="vision"
               type="button"
             >
               <span id="visionModuleLabel">⚓ Launchpad 4 Vision</span>
@@ -41,6 +47,7 @@
               class="module"
               style="top: 45%; right: 8%; width: 23%; height: 28%"
               data-route="radar"
+              data-key="radar"
               type="button"
             >
               <span>Radar</span>
@@ -50,6 +57,7 @@
               class="module"
               style="top: 62%; right: 3%; width: 10%; height: 14%"
               data-route="settings"
+              data-key="settings"
               type="button"
             >
               <span>Settings</span>
@@ -59,6 +67,7 @@
               class="module"
               style="top: 10%; left: 6%; width: 24%; height: 24%"
               data-route="communications"
+              data-key="communications"
               type="button"
             >
               <span>Communications</span>
@@ -68,6 +77,7 @@
               class="module"
               style="top: 38%; left: 9%; width: 22%; height: 18%"
               data-route="fuel"
+              data-key="fuel"
               type="button"
             >
               <span>Fuel</span>
@@ -77,6 +87,8 @@
               class="module"
               style="top: 58%; left: 10%; width: 18%; height: 18%"
               data-route="navigation"
+              data-key="domains"
+              data-key="navigation"
               type="button"
             >
               <span>Navigation</span>
@@ -86,6 +98,7 @@
               class="module"
               style="top: 42%; left: 34%; width: 20%; height: 16%"
               data-route="propulsion"
+              data-key="propulsion"
               type="button"
             >
               <span>Propulsion</span>
@@ -95,6 +108,7 @@
               class="module"
               style="top: 42%; right: 34%; width: 20%; height: 16%"
               data-route="intelligence"
+              data-key="intelligence"
               type="button"
             >
               <span>Intelligence</span>
