@@ -8,6 +8,74 @@ const routes = {
   settings: '/pages/settings.html',
   domains: '/pages/navigation.html'
 };
+
+// Module configuration (derived from cockpitModules.ts)
+const MODULES = [
+  {
+    id: 'vision',
+    name: 'Launchpad 4 Vision',
+    route: '#vision',
+    position: { x: '69%', y: '8%' }, // right-side placement (using left %)
+    shape: { width: '26%', height: '26%', clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)' },
+    isVision: true
+  },
+  {
+    id: 'radar',
+    name: 'Radar',
+    route: '/pages/radar.html',
+    position: { x: '69%', y: '45%' },
+    shape: { width: '23%', height: '28%' }
+  },
+  {
+    id: 'settings',
+    name: 'Settings',
+    route: '/pages/settings.html',
+    position: { x: '82%', y: '62%' },
+    shape: { width: '10%', height: '14%' }
+  },
+  {
+    id: 'communications',
+    name: 'Communications',
+    route: '/pages/communications.html',
+    position: { x: '6%', y: '10%' },
+    shape: { width: '24%', height: '24%' }
+  },
+  {
+    id: 'fuel',
+    name: 'Fuel',
+    route: '/pages/fuel.html',
+    position: { x: '9%', y: '38%' },
+    shape: { width: '22%', height: '18%' }
+  },
+  {
+    id: 'navigation',
+    name: 'Navigation',
+    route: '/pages/navigation.html',
+    position: { x: '10%', y: '58%' },
+    shape: { width: '18%', height: '18%' }
+  },
+  {
+    id: 'propulsion',
+    name: 'Propulsion',
+    route: '/pages/propulsion.html',
+    position: { x: '34%', y: '42%' },
+    shape: { width: '20%', height: '16%' }
+  },
+  {
+    id: 'intelligence',
+    name: 'Intelligence',
+    route: '/pages/intelligence.html',
+    position: { x: '46%', y: '42%' },
+    shape: { width: '20%', height: '16%' }
+  },
+  {
+    id: 'domains',
+    name: 'Domains & Routing',
+    route: '/pages/navigation.html',
+    position: { x: '44%', y: '60%' },
+    shape: { width: '12%', height: '18%' }
+  }
+];
 const VOICE_KEY = 'lp4_voice';
 const AUTO_VOICE_KEY = 'lp4_auto_voice';
 
@@ -31,7 +99,7 @@ const VOICE_META = {
 
 const visionPanel = document.getElementById('visionPanel');
 const cockpit = document.getElementById('cockpit');
-const visionHotspot = document.querySelector('[data-action="vision"]');
+let visionHotspot = null;
 const closeVisionButton = document.getElementById('closeVision');
 const expandVisionButton = document.getElementById('expandVision');
 const strategyImage = document.getElementById('strategyImage');
@@ -746,6 +814,51 @@ function onVertexMouseUp() {
   vertexDragState = null;
 }
 
+/* ---------- Render modules from config ---------- */
+function renderModules() {
+  if (!cockpit) return;
+
+  // remove any existing module buttons (safety)
+  cockpit.querySelectorAll('.module').forEach((m) => m.remove());
+
+  MODULES.forEach((modConfig) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'module';
+    btn.dataset.key = modConfig.id;
+    if (modConfig.route) {
+      btn.dataset.route = modConfig.route.replace('/pages/', '').replace('.html', '');
+    }
+    if (modConfig.isVision) {
+      btn.dataset.action = 'vision';
+      btn.classList.add('vision', 'vision-module');
+    }
+
+    // positioning
+    if (modConfig.position?.x) btn.style.left = modConfig.position.x;
+    if (modConfig.position?.y) btn.style.top = modConfig.position.y;
+    if (modConfig.shape?.width) btn.style.width = modConfig.shape.width;
+    if (modConfig.shape?.height) btn.style.height = modConfig.shape.height;
+
+    // clip path from corners or provided clipPath
+    if (modConfig.shape?.corners && modConfig.shape.corners.length === 4) {
+      const pts = modConfig.shape.corners.map((c) => `${c.x}% ${c.y}%`).join(', ');
+      btn.style.clipPath = `polygon(${pts})`;
+      btn.style.webkitClipPath = `polygon(${pts})`;
+    } else if (modConfig.shape?.clipPath) {
+      btn.style.clipPath = modConfig.shape.clipPath;
+      btn.style.webkitClipPath = modConfig.shape.clipPath;
+    }
+
+    const label = document.createElement('span');
+    label.textContent = modConfig.name;
+    btn.appendChild(label);
+
+    // insert before vision panel so panel stays on top layer
+    cockpit.insertBefore(btn, visionPanel);
+  });
+}
+
 function inferAdaptiveVoice(message) {
   const text = message.toLowerCase();
 
@@ -1021,6 +1134,9 @@ function newAIMessage(text = 'New mission signal received.') {
     });
   }, 150);
 }
+
+renderModules();
+visionHotspot = document.querySelector('[data-action="vision"]');
 
 visionHotspot?.addEventListener('click', openVision);
 closeVisionButton?.addEventListener('click', closeVision);
