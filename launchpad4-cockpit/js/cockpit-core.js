@@ -90,6 +90,12 @@ const VOICE_META = {
   }
 };
 
+const VOICE_COLORS = {
+  anchor: 'rgba(0,180,160,0.9)', // teal
+  rocket: 'rgba(0,150,255,1)',   // cyan
+  glitch: 'rgba(255,0,255,0.9)'  // magenta
+};
+
 const visionPanel = document.getElementById('visionPanel');
 const cockpit = document.getElementById('cockpit');
 let visionHotspot = null;
@@ -218,19 +224,19 @@ function setMode(mode) {
   const root = document.documentElement;
 
   if (mode === 'glitch') {
-    root.style.setProperty('--glow-color', 'rgba(255,0,255,0.9)');
+    root.style.setProperty('--glow-color', VOICE_COLORS.glitch);
     root.style.setProperty('--pulse-duration', '0.9s');
     document.body.classList.add('glitch-mode');
   }
 
   if (mode === 'anchor') {
-    root.style.setProperty('--glow-color', 'rgba(0,180,160,0.9)');
+    root.style.setProperty('--glow-color', VOICE_COLORS.anchor);
     root.style.setProperty('--pulse-duration', '1.6s');
     document.body.classList.remove('glitch-mode');
   }
 
   if (mode === 'rocket') {
-    root.style.setProperty('--glow-color', 'rgba(0,150,255,1)');
+    root.style.setProperty('--glow-color', VOICE_COLORS.rocket);
     root.style.setProperty('--pulse-duration', '0.8s');
     document.body.classList.remove('glitch-mode');
   }
@@ -289,6 +295,8 @@ function setActiveVoice(voice) {
   activeVoice = voice;
   applyVoiceIndicators(activeVoice);
   applyVoiceVisuals(activeVoice);
+  const color = VOICE_COLORS[activeVoice] || VOICE_COLORS.rocket;
+  document.documentElement.style.setProperty('--glow-color', color);
 }
 
 function setVoice(voice) {
