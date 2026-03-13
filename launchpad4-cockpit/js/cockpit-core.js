@@ -55,7 +55,7 @@ const voiceRadios = document.querySelectorAll('input[name="voiceProfile"]');
 const autoVoiceToggle = document.getElementById('autoVoiceToggle');
 const autoVoiceState = document.getElementById('autoVoiceState');
 
-let defaultVoice = window.localStorage.getItem(VOICE_KEY) || 'anchor';
+let defaultVoice = window.localStorage.getItem(VOICE_KEY) || 'rocket';
 let activeVoice = defaultVoice;
 let autoVoiceAdaptation = window.localStorage.getItem(AUTO_VOICE_KEY) !== 'off';
 let pulseResetTimer = null;
@@ -63,8 +63,11 @@ let revertVoiceTimer = null;
 let missionTimelineSteps = ['Launch', 'Funnel', 'Optimization'];
 let missionActiveIndex = 0;
 const LAYOUT_KEY = 'cockpitLayout';
+const LAYOUT_POLY_KEY = 'cockpitLayoutPoly';
 let editMode = false;
 let dragState = null;
+let dragMoveState = null;
+let vertexDragState = null;
 
 function getSelectedModuleVoice() {
   const stored = window.localStorage.getItem(VOICE_KEY);
@@ -416,10 +419,22 @@ function enableEditMode(flag) {
   editMode = flag;
   document.querySelectorAll('.module').forEach((mod) => {
     mod.classList.toggle('edit-mode', flag);
-    if (flag && !mod.querySelector('.resize-handle')) {
-      addHandles(mod);
+    if (flag && !mod.querySelector('.vertex-handle')) {
+      addVertexHandles(mod);
     }
   });
+
+  if (!flag) {
+    dragState = null;
+    dragMoveState = null;
+    vertexDragState = null;
+    document.removeEventListener('mousemove', onHandleMouseMove);
+    document.removeEventListener('mouseup', onHandleMouseUp);
+    document.removeEventListener('mousemove', onModuleMouseMove);
+    document.removeEventListener('mouseup', onModuleMouseUp);
+    document.removeEventListener('mousemove', onVertexMouseMove);
+    document.removeEventListener('mouseup', onVertexMouseUp);
+  }
 }
 
 function onHandleMouseDown(e) {
@@ -514,30 +529,221 @@ function onHandleMouseUp() {
   dragState = null;
 }
 
+function onModuleMouseDown(e) {
+  if (!editMode) return;
+  const target = e.target;
+  if (target.classList.contains('resize-handle')) return; // resize handled elsewhere
+  const module = target.closest('.module');
+  if (!module) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+
+  const parentRect = cockpit.getBoundingClientRect();
+  const modRect = module.getBoundingClientRect();
+
+  dragMoveState = {
+    module,
+    startMouseX: e.clientX,
+    startMouseY: e.clientY,
+    startLeft: modRect.left,
+    startTop: modRect.top,
+    width: modRect.width,
+    height: modRect.height,
+    parentRect
+  };
+
+  document.addEventListener('mousemove', onModuleMouseMove);
+  document.addEventListener('mouseup', onModuleMouseUp);
+}
+
+function onModuleMouseMove(e) {
+  if (!dragMoveState) return;
+
+  const dx = e.clientX - dragMoveState.startMouseX;
+  const dy = e.clientY - dragMoveState.startMouseY;
+
+  let newLeft = dragMoveState.startLeft + dx;
+  let newTop = dragMoveState.startTop + dy;
+
+  // clamp within cockpit
+  const { parentRect, width, height } = dragMoveState;
+  const maxLeft = parentRect.left + parentRect.width - width;
+  const maxTop = parentRect.top + parentRect.height - height;
+  newLeft = Math.min(Math.max(newLeft, parentRect.left), maxLeft);
+  newTop = Math.min(Math.max(newTop, parentRect.top), maxTop);
+
+  const pct = percentifyRect(
+    { left: newLeft, top: newTop, width, height },
+    parentRect
+  );
+
+  const mod = dragMoveState.module;
+  mod.style.left = `${pct.left}%`;
+  mod.style.top = `${pct.top}%`;
+  mod.style.width = `${pct.width}%`;
+  mod.style.height = `${pct.height}%`;
+  mod.style.right = '';
+}
+
+function onModuleMouseUp() {
+  document.removeEventListener('mousemove', onModuleMouseMove);
+  document.removeEventListener('mouseup', onModuleMouseUp);
+  if (dragMoveState) {
+    saveLayout();
+  }
+  dragMoveState = null;
+}
+
 function resetLayout() {
   window.localStorage.removeItem(LAYOUT_KEY);
   window.location.reload();
 }
 
 function initLayoutEditor() {
-  const toggle = document.getElementById('editToggle');
-  const resetBtn = document.getElementById('resetLayout');
-
+  // Layout is locked by default; we still load saved layout and vertex polygons for correctness.
   loadLayout();
 
-  if (toggle) {
-    toggle.addEventListener('change', (e) => {
-      enableEditMode(e.target.checked);
-    });
-  }
-
-  if (resetBtn) {
-    resetBtn.addEventListener('click', resetLayout);
-  }
-
   document.querySelectorAll('.module').forEach((mod) => {
-    mod.addEventListener('mousedown', onHandleMouseDown);
+    mod.addEventListener('mousedown', onModuleMouseDown);
+    mod.addEventListener('mousedown', onVertexMouseDown);
+    if (!mod.querySelector('.vertex-handle')) {
+      addVertexHandles(mod);
+    }
   });
+}
+
+/* ---------- Polygonal corner editing for warp-fit ---------- */
+function getModuleKey(mod) {
+  return mod.dataset.key || mod.dataset.route || mod.dataset.action;
+}
+
+function loadPolyLayout() {
+  const saved = window.localStorage.getItem(LAYOUT_POLY_KEY);
+  return saved ? JSON.parse(saved) : {};
+}
+
+function savePolyLayout(layout) {
+  window.localStorage.setItem(LAYOUT_POLY_KEY, JSON.stringify(layout));
+}
+
+function getOrCreatePoly(mod, layout) {
+  const key = getModuleKey(mod);
+  if (!key) return null;
+  if (layout[key]) return layout[key];
+
+  const parentRect = cockpit.getBoundingClientRect();
+  const rect = mod.getBoundingClientRect();
+  const pct = percentifyRect(rect, parentRect);
+  const poly = [
+    { x: pct.left, y: pct.top },
+    { x: pct.left + pct.width, y: pct.top },
+    { x: pct.left + pct.width, y: pct.top + pct.height },
+    { x: pct.left, y: pct.top + pct.height }
+  ];
+  layout[key] = poly;
+  return poly;
+}
+
+function applyPoly(mod, poly) {
+  if (!poly) return;
+  // cover cockpit; polygon defines hit area
+  mod.style.left = '0';
+  mod.style.top = '0';
+  mod.style.width = '100%';
+  mod.style.height = '100%';
+
+  const points = poly.map((p) => `${p.x}% ${p.y}%`).join(', ');
+  mod.style.clipPath = `polygon(${points})`;
+  mod.style.webkitClipPath = `polygon(${points})`;
+
+  // center label at polygon centroid
+  const label = mod.querySelector('span');
+  if (label) {
+    const cx = poly.reduce((s, p) => s + p.x, 0) / poly.length;
+    const cy = poly.reduce((s, p) => s + p.y, 0) / poly.length;
+    label.style.left = `${cx}%`;
+    label.style.top = `${cy}%`;
+    label.classList.add('label');
+  }
+
+  // vertex handles position
+  const handles = mod.querySelectorAll('.vertex-handle');
+  handles.forEach((h, idx) => {
+    const pt = poly[idx];
+    if (pt) {
+      h.style.left = `${pt.x}%`;
+      h.style.top = `${pt.y}%`;
+    }
+  });
+}
+
+function addVertexHandles(mod) {
+  const layout = loadPolyLayout();
+  const poly = getOrCreatePoly(mod, layout);
+  savePolyLayout(layout);
+
+  // only add once
+  if (!mod.querySelector('.vertex-handle')) {
+    for (let i = 0; i < 4; i += 1) {
+      const handle = document.createElement('div');
+      handle.className = 'vertex-handle';
+      handle.dataset.vertex = String(i);
+      mod.appendChild(handle);
+    }
+  }
+  applyPoly(mod, poly);
+}
+
+function onVertexMouseDown(e) {
+  if (!editMode) return;
+  const handle = e.target;
+  if (!handle.classList.contains('vertex-handle')) return;
+  const module = handle.closest('.module');
+  if (!module) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+
+  const layout = loadPolyLayout();
+  const key = getModuleKey(module);
+  const poly = getOrCreatePoly(module, layout);
+
+  vertexDragState = {
+    module,
+    key,
+    poly,
+    index: Number(handle.dataset.vertex),
+    parentRect: cockpit.getBoundingClientRect()
+  };
+
+  document.addEventListener('mousemove', onVertexMouseMove);
+  document.addEventListener('mouseup', onVertexMouseUp);
+}
+
+function onVertexMouseMove(e) {
+  if (!vertexDragState) return;
+  const { parentRect, poly, index } = vertexDragState;
+  const x = ((e.clientX - parentRect.left) / parentRect.width) * 100;
+  const y = ((e.clientY - parentRect.top) / parentRect.height) * 100;
+
+  poly[index] = {
+    x: Math.min(Math.max(x, 0), 100),
+    y: Math.min(Math.max(y, 0), 100)
+  };
+
+  applyPoly(vertexDragState.module, poly);
+}
+
+function onVertexMouseUp() {
+  document.removeEventListener('mousemove', onVertexMouseMove);
+  document.removeEventListener('mouseup', onVertexMouseUp);
+  if (vertexDragState) {
+    const layout = loadPolyLayout();
+    layout[vertexDragState.key] = vertexDragState.poly;
+    savePolyLayout(layout);
+  }
+  vertexDragState = null;
 }
 
 function inferAdaptiveVoice(message) {
