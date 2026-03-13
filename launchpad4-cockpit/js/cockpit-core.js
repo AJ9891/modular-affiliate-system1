@@ -48,13 +48,6 @@ const MODULES = [
     shape: { width: '22%', height: '18%' }
   },
   {
-    id: 'navigation',
-    name: 'Navigation',
-    route: '/pages/navigation.html',
-    position: { x: '10%', y: '58%' },
-    shape: { width: '18%', height: '18%' }
-  },
-  {
     id: 'propulsion',
     name: 'Propulsion',
     route: '/pages/propulsion.html',
@@ -69,8 +62,8 @@ const MODULES = [
     shape: { width: '20%', height: '16%' }
   },
   {
-    id: 'domains',
-    name: 'Domains & Routing',
+    id: 'navigation',
+    name: 'Navigation',
     route: '/pages/navigation.html',
     position: { x: '44%', y: '60%' },
     shape: { width: '12%', height: '18%' }
