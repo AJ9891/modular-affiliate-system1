@@ -92,10 +92,10 @@ function TopUpContent() {
 
   if (loading) {
     return (
-      <div className="cockpit-shell page-command-authority flex items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-anchor-400"></div>
-          <p className="text-text-secondary">Loading command authority...</p>
+      <div className="theme-command cockpit-shell page-command-authority flex items-center justify-center">
+        <div className="text-center text-white/80 space-y-2">
+          <div className="mx-auto mb-2 h-12 w-12 animate-spin rounded-full border-b-2 border-cyan-400"></div>
+          <p>Loading command authority...</p>
         </div>
       </div>
     )
@@ -103,10 +103,10 @@ function TopUpContent() {
 
   if (!user || !isAdmin) {
     return (
-      <div className="cockpit-shell page-command-authority flex items-center justify-center">
-        <div className="hud-card max-w-md">
-          <h1 className="mb-4 text-2xl font-semibold text-text-primary">Access Denied</h1>
-          <p className="mb-6 text-text-secondary">This page is only accessible to administrators.</p>
+      <div className="theme-command cockpit-shell page-command-authority flex items-center justify-center">
+        <div className="glass-tile max-w-md text-white">
+          <h1 className="mb-3 text-2xl font-semibold">Access Denied</h1>
+          <p className="mb-5 text-white/75">This page is only accessible to administrators.</p>
           <Link href="/dashboard" className="hud-button-primary inline-block">
             Return to Dashboard
           </Link>
@@ -116,7 +116,7 @@ function TopUpContent() {
   }
 
   return (
-    <div className="cockpit-shell page-command-authority py-8">
+    <div className="theme-command cockpit-shell page-command-authority py-8">
       <div className="cockpit-container max-w-2xl">
         <div className="mb-6">
           <Link href="/dashboard" className="text-text-secondary transition hover:text-text-primary">
