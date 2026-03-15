@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Sparkles, Rocket, BarChart3, Brain, Gauge, ShieldCheck } from 'lucide-react'
+import { CockpitModules } from '@/components/CockpitModules'
 
 const ONBOARDING_COMPLETE = 8
 
@@ -64,6 +65,22 @@ export default function CockpitHome() {
             Funnels, analytics, email, billing — all from one deck. Systems nominal.
           </p>
         </header>
+
+        {/* Interactive modules map */}
+        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-black/30 p-4 backdrop-blur">
+          <div
+            className="relative w-full"
+            style={{
+              aspectRatio: '16 / 9',
+              backgroundImage: "url('/dashboard-dark.png')",
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              borderRadius: '12px'
+            }}
+          >
+            <CockpitModules />
+          </div>
+        </div>
 
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Card title="Funnels" desc="Build and publish" href="/visual-builder" icon={Rocket} />
