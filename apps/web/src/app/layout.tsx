@@ -11,6 +11,7 @@ import Footer from "@/components/Footer"
 import { LaunchpadAmbientSound } from "@/components/LaunchpadAmbientSound"
 import { useEffect } from "react"
 import { trackPageView } from "@/lib/telemetry"
+import { logError } from "@/lib/logging"
 
 export const metadata: Metadata = {
   title: "Launchpad4Success - Build High-Converting Affiliate Funnels",
@@ -60,7 +61,11 @@ export default function RootLayout({
   };
 
   useEffect(() => {
-    trackPageView()
+    try {
+      trackPageView()
+    } catch (err) {
+      logError(err, { source: 'trackPageView' })
+    }
   }, [])
 
   return (
