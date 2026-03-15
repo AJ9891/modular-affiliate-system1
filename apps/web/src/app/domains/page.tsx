@@ -107,13 +107,21 @@ export default function DomainsPage() {
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-500/10 border border-red-400/40 rounded-lg text-red-200">
-            {error}
+          <div className="mb-6 p-4 rounded-lg border border-red-400/50 bg-red-500/15 text-red-100 flex items-start gap-3">
+            <span className="text-lg">⚠️</span>
+            <div>
+              <p className="font-semibold">Error</p>
+              <p className="text-sm">{error}</p>
+            </div>
           </div>
         )}
         {success && (
-          <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-400/40 rounded-lg text-emerald-200">
-            {success}
+          <div className="mb-6 p-4 rounded-lg border border-emerald-400/40 bg-emerald-500/15 text-emerald-100 flex items-start gap-3">
+            <span className="text-lg">✅</span>
+            <div>
+              <p className="font-semibold">Success</p>
+              <p className="text-sm">{success}</p>
+            </div>
           </div>
         )}
 
