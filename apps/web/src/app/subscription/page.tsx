@@ -50,11 +50,6 @@ export default function SubscriptionPage() {
   }
 
   async function handleManageSubscription() {
-    if (!user?.stripe_customer_id) {
-      alert('No active subscription found')
-      return
-    }
-
     setPortalLoading(true)
 
     try {
@@ -62,7 +57,7 @@ export default function SubscriptionPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customerId: user.stripe_customer_id,
+          customerId: user?.stripe_customer_id || subscription?.customer_id
         }),
       })
 
