@@ -65,6 +65,23 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
+  // Enforce admin-only access for /admin routes based on role or is_admin
+  if (pathname.startsWith('/admin')) {
+    const { data, error } = await supabase
+      .from('users')
+      .select('role, is_admin')
+      .eq('id', session.user.id)
+      .maybeSingle()
+
+    const isAdmin =
+      (!error && data && (data.role === 'admin' || data.role === 'owner')) ||
+      data?.is_admin === true
+
+    if (!isAdmin) {
+      return NextResponse.redirect(new URL('/dashboard', req.url))
+    }
+  }
+
   const isOnboardingPath = pathname.startsWith('/launchpad')
 
   if (!isOnboardingPath) {

@@ -36,12 +36,14 @@ function TopUpContent() {
       setUser(user)
 
       const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_admin')
+        .from('users')
+        .select('is_admin, role')
         .eq('id', user.id)
         .single()
 
-      if (!profile?.is_admin) {
+      const allowed = profile?.is_admin || profile?.role === 'admin' || profile?.role === 'owner'
+
+      if (!allowed) {
         router.push('/dashboard')
         return
       }

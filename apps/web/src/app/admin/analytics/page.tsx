@@ -42,11 +42,13 @@ export default function AdminAnalytics() {
 
       const { data: adminUser, error: adminError } = await supabase
         .from('users')
-        .select('is_admin')
+        .select('is_admin, role')
         .eq('id', user.id)
         .single()
 
-      if (adminError || !adminUser?.is_admin) {
+      const allowed = adminUser?.is_admin || adminUser?.role === 'admin' || adminUser?.role === 'owner'
+
+      if (adminError || !allowed) {
         router.push('/dashboard')
         return
       }
