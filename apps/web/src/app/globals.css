@@ -755,7 +755,29 @@
                 radial-gradient(circle at 80% 10%, rgba(14,165,233,0.12), transparent 30%);
   }
   .mission-nav { backdrop-filter: blur(8px); background: linear-gradient(90deg, rgba(7,11,22,0.65), rgba(7,11,22,0.35)); }
-  .mission-console { position: relative; z-index: 1; display: grid; place-items: center; padding: 5rem 1.5rem 3rem; }
+  .mission-hero {
+    min-height: 100vh;
+    background:
+      linear-gradient(180deg, rgba(5,9,18,0.82), rgba(5,9,18,0.88)),
+      radial-gradient(circle at 40% 20%, rgba(46,230,194,0.16), transparent 40%),
+      radial-gradient(circle at 70% 0%, rgba(14,165,233,0.12), transparent 38%),
+      url('/dashboard-dark.png');
+    background-size: cover;
+    background-position: center;
+    backdrop-filter: blur(6px);
+    position: relative;
+  }
+
+  .mission-hero::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 260px;
+    background: linear-gradient(180deg, transparent, rgba(5,8,14,0.75) 40%, rgba(5,8,14,0.92));
+    pointer-events: none;
+  }
+
+  .mission-console { position: relative; z-index: 1; display: grid; place-items: center; padding: 7rem 1.5rem 3rem; }
   .glass-console {
     max-width: 520px;
     width: 100%;

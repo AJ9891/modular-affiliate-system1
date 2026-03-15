@@ -30,10 +30,12 @@ export default function Home() {
       </nav>
 
       <section className="mission-console">
-        <div className="glass-console">
-          <p className="system-ready text-xs uppercase tracking-[0.25em] text-teal-200/80">System Ready</p>
+        <div className="glass-console shadow-2xl">
+          <p className="system-ready text-xs uppercase tracking-[0.25em] text-teal-200/80">
+            System Ready • All Systems Nominal
+          </p>
           <h1 className="mt-3 text-3xl font-semibold text-white">Launchpad 4 Success</h1>
-          <p className="mt-2 text-sm text-white/80">Mission Control before ignition.</p>
+          <p className="mt-2 text-sm text-white/80">AI-native mission control before ignition.</p>
           <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
             <Link href="/get-started" className="cta-primary px-6 py-3 rounded-lg text-sm font-semibold">
               Initiate Launch
@@ -45,7 +47,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="px-6 pb-8 md:px-10">
+      <section className="px-6 pb-8 md:px-10 relative z-10">
         <div className="mx-auto grid max-w-5xl gap-4 md:grid-cols-3">
           {systems.map((system) => (
             <article key={system.title} className="glass-tile">
@@ -59,7 +61,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="px-6 pb-8 text-center text-xs uppercase tracking-system text-white/60 md:px-10">
+      <section className="px-6 pb-10 text-center text-xs uppercase tracking-system text-white/60 md:px-10 relative z-10">
         <p>Professional Flight Deck • Calm authority • AI-native</p>
       </section>
 
