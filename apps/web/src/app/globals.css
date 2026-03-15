@@ -789,3 +789,84 @@
   .theme-crew { background: linear-gradient(135deg, #070d18, #0b1424); min-height: 100vh; }
   .theme-command { background: linear-gradient(135deg, #060b14, #0c1423); min-height: 100vh; }
 }
+
+@media (max-width: 960px) {
+  .vision-open {
+    width: 42%;
+  }
+
+  .vision-expanded {
+    width: 94%;
+    left: 3%;
+  }
+
+  .module span,
+  .hotspot span {
+    font-size: 0.68rem;
+  }
+
+  .chat-input {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .crew-status-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .vision-panel.vision-expanded .vision-main {
+    flex-direction: column;
+  }
+
+  .vision-panel.vision-expanded .vision-dock {
+    width: 100%;
+    flex: 0 0 auto;
+    max-height: 38%;
+  }
+}
+
+@media (max-width: 720px) {
+  .system-page {
+    padding: 20px;
+  }
+
+  .system-topbar {
+    flex-wrap: wrap;
+  }
+
+  /* Cockpit map responsiveness */
+  .cockpit {
+    height: auto;
+    min-height: 320px;
+  }
+
+  .glass-console {
+    padding: 2rem 1.5rem;
+  }
+
+  .mission-console {
+    padding-top: 3rem;
+  }
+
+  .mission-nav {
+    background: rgba(7, 11, 22, 0.9);
+  }
+
+  .vision-panel.vision-open {
+    width: 90%;
+    right: 5%;
+    left: 5%;
+    transform: rotateY(0deg) scale(1);
+  }
+
+  .vision-panel.vision-expanded {
+    width: 100%;
+    left: 0;
+    right: 0;
+    top: 5%;
+    height: 90%;
+  }
+
+  .chat-input {
+    grid-template-columns: 1fr;
+  }
+}
