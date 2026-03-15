@@ -9,9 +9,7 @@ import ConditionalWrapper from "@/components/ConditionalWrapper"
 import AIChatWidget from "@/components/AIChatWidget"
 import Footer from "@/components/Footer"
 import { LaunchpadAmbientSound } from "@/components/LaunchpadAmbientSound"
-import { useEffect } from "react"
-import { trackPageView } from "@/lib/telemetry"
-import { logError } from "@/lib/logging"
+import { TelemetryObserver } from "@/components/TelemetryObserver"
 
 export const metadata: Metadata = {
   title: "Launchpad4Success - Build High-Converting Affiliate Funnels",
@@ -60,14 +58,6 @@ export default function RootLayout({
     "description": "Creator of Launchpad 4 Success, an independent marketing platform focused on clear systems, automation, and practical implementation."
   };
 
-  useEffect(() => {
-    try {
-      trackPageView()
-    } catch (err) {
-      logError(err, { source: 'trackPageView' })
-    }
-  }, [])
-
   return (
     <html lang="en" className="dark">
       <head>
@@ -88,6 +78,7 @@ export default function RootLayout({
               <ConditionalWrapper>
                 {children}
               </ConditionalWrapper>
+              <TelemetryObserver />
               <AIChatWidget />
               <LaunchpadAmbientSound />
               <Footer />

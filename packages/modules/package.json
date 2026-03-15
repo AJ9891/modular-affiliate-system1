@@ -7,6 +7,9 @@
     "build": "tsc",
     "dev": "tsc --watch"
   },
+  "dependencies": {
+    "@modular-affiliate/sdk": "file:../sdk"
+  },
   "devDependencies": {
     "typescript": "^5.0.0"
   }

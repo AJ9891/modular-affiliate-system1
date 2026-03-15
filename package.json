@@ -31,7 +31,7 @@
   "devDependencies": {
     "markdownlint-cli2": "^0.20.0",
     "markdownlint-cli2-formatter-pretty": "^0.0.9",
-    "turbo": "^2.0.0"
+    "turbo": "^2.8.17"
   },
   "engines": {
     "node": ">=18.0.0"

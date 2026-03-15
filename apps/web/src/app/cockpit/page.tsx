@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Sparkles, Rocket, BarChart3, Brain, Gauge, ShieldCheck } from 'lucide-react'
 import { CockpitModules } from '@/components/CockpitModules'
@@ -9,8 +9,18 @@ import { CockpitModules } from '@/components/CockpitModules'
 const ONBOARDING_COMPLETE = 8
 
 export default function CockpitHome() {
+  return (
+    <Suspense fallback={<LoadingState />}>
+      <CockpitContent />
+    </Suspense>
+  )
+}
+
+function CockpitContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
+  const [needsOnboarding, setNeedsOnboarding] = useState(false)
 
   useEffect(() => {
     const run = async () => {
@@ -27,6 +37,11 @@ export default function CockpitHome() {
         return
       }
 
+      const skipFlag =
+        typeof window !== 'undefined' &&
+        (localStorage.getItem('lp_skip_onboarding') === '1' ||
+          searchParams.get('skip_onboarding') === '1')
+
       const { data, error } = await supabase
         .from('users')
         .select('onboarding_step')
@@ -34,25 +49,25 @@ export default function CockpitHome() {
         .maybeSingle()
 
       if (!error && data && (data.onboarding_step ?? 0) < ONBOARDING_COMPLETE) {
-        router.replace('/launchpad')
-        return
+        if (!skipFlag) {
+          router.replace('/launchpad')
+          return
+        }
+
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('lp_skip_onboarding', '1')
+        }
+        setNeedsOnboarding(true)
       }
 
       setLoading(false)
     }
 
     run()
-  }, [router])
+  }, [router, searchParams])
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-cyan-400" />
-          <p className="text-sm opacity-80">Preparing cockpit...</p>
-        </div>
-      </div>
-    )
+    return <LoadingState />
   }
 
   return (
@@ -64,6 +79,30 @@ export default function CockpitHome() {
           <p className="text-sm text-slate-300">
             Funnels, analytics, email, billing — all from one deck. Systems nominal.
           </p>
+          {needsOnboarding && (
+            <div className="mt-3 rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-100 flex items-center justify-between">
+              <span>Complete onboarding to unlock full systems.</span>
+              <div className="flex items-center gap-2">
+                <a
+                  href="/launchpad"
+                  className="rounded-md border border-amber-300/60 px-3 py-1 text-amber-50 hover:border-amber-200 transition"
+                >
+                  Resume Launch
+                </a>
+                <button
+                  onClick={() => {
+                    if (typeof window !== 'undefined') {
+                      localStorage.setItem('lp_skip_onboarding', '1')
+                    }
+                    setNeedsOnboarding(true)
+                  }}
+                  className="rounded-md border border-amber-300/40 px-3 py-1 text-amber-100/80 hover:border-amber-200/80 transition"
+                >
+                  Skip for now
+                </button>
+              </div>
+            </div>
+          )}
         </header>
 
         {/* Interactive modules map */}
@@ -111,6 +150,17 @@ export default function CockpitHome() {
         </section>
       </div>
     </main>
+  )
+}
+
+function LoadingState() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">
+      <div className="text-center">
+        <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-cyan-400" />
+        <p className="text-sm opacity-80">Preparing cockpit...</p>
+      </div>
+    </div>
   )
 }
 

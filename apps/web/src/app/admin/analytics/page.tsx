@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { AdminMetricCard } from '@/components/AdminMetricCard'
 
 interface ProviderTotal {
   provider: string
@@ -138,10 +139,10 @@ export default function AdminAnalytics() {
           </div>
         )}
 
-        <div className="glass-tile grid gap-6 md:grid-cols-3">
-          <Metric label="Total Requests" value={totalRequests.toLocaleString()} />
-          <Metric label="Total Cost" value={`$${totalCost.toFixed(2)}`} />
-          <Metric label="Providers" value={data?.totals?.length || 0} />
+        <div className="grid gap-4 md:grid-cols-3">
+          <AdminMetricCard label="Total Requests" value={totalRequests.toLocaleString()} />
+          <AdminMetricCard label="Total Cost" value={`$${totalCost.toFixed(2)}`} hint="All providers" />
+          <AdminMetricCard label="Providers" value={data?.totals?.length?.toString() || '0'} />
         </div>
 
         {/* Provider Totals */}
