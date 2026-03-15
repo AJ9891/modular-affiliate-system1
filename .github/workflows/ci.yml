@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+
+      - name: Install
+        run: npm install
+
+      - name: Lint
+        run: npm run lint
+        working-directory: apps/web
+
+      - name: Build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://localhost
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy
+          SUPABASE_SERVICE_ROLE_KEY: dummy
+          OPENAI_API_KEY: dummy
+          STRIPE_SECRET_KEY: dummy
+          STRIPE_PRICE_STARTER: dummy
+          STRIPE_PRICE_PRO: dummy
+          STRIPE_PRICE_AGENCY: dummy
+          NEXT_PUBLIC_SITE_URL: http://localhost
+          NEXT_DISABLE_TURBOPACK: 1
+        run: npm run build
+        working-directory: apps/web
