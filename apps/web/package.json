@@ -13,7 +13,7 @@
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
-    "deploy": "vercel --prod",
+    "deploy": "npx vercel --prod",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
@@ -23,7 +23,6 @@
   },
   "dependencies": {
     "@modular-affiliate/ai": "file:../../packages/ai",
-    "@next/swc-win32-x64-msvc": "^16.1.6",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-progress": "^1.1.8",
     "@radix-ui/react-select": "^2.2.6",
