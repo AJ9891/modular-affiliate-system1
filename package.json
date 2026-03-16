@@ -29,7 +29,7 @@
     "renderer": "npm run dev --workspace=apps/renderer"
   },
   "devDependencies": {
-    "markdownlint-cli2": "^0.20.0",
+    "markdownlint-cli2": "^0.21.0",
     "markdownlint-cli2-formatter-pretty": "^0.0.9",
     "turbo": "^2.8.17"
   },
