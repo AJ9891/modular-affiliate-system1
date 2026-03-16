@@ -18,15 +18,18 @@
     "build:debug": "NODE_ENV=development turbo run build:debug",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
-    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#.next\" \"#.turbo\" \"#.vercel\"",
-    "lint:md:fix": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#.next\" \"#.turbo\" \"#.vercel\" --fix",
+    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#**/node_modules/**\" \"#.next\" \"#.turbo\" \"#.vercel\"",
+    "lint:md:fix": "markdownlint-cli2 \"**/*.md\" \"#**/node_modules/**\" \"#.next\" \"#.turbo\" \"#.vercel\" --fix",
     "type-check": "turbo run type-check",
     "clean": "turbo run clean && rm -rf node_modules",
-    "deploy": "npm run build && npx vercel --prod",
-    "deploy:preview": "npm run build && npx vercel",
+    "deploy": "npm run build && vercel --prod",
+    "deploy:preview": "npm run build && vercel",
     "web": "npm run dev --workspace=apps/web",
     "admin": "npm run dev --workspace=apps/admin",
-    "renderer": "npm run dev --workspace=apps/renderer"
+    "renderer": "npm run dev --workspace=apps/renderer",
+    "mcp:talk-to-figma": "npx ai-figma-mcp@latest",
+    "mcp:health": "echo \"TODO: replace with a real health check command\"",
+    "mcp:logs": "# pipe or view logs depending on your process manager"
   },
   "devDependencies": {
     "markdownlint-cli2": "^0.21.0",
@@ -35,6 +38,9 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "vercel": "^41.0.2"
   },
   "lint-staged": {
     "*.md": [

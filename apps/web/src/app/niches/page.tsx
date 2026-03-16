@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -32,27 +33,38 @@ export default function Niches() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-green-500 p-8">
-      <div className="max-w-6xl mx-auto">
+    <main className="relative min-h-screen overflow-hidden bg-[#020913] text-slate-100">
+      <div className="pointer-events-none absolute inset-0">
+        <Image
+          src="/Backgrounds/dashboard-dark.png"
+          alt="Cockpit background"
+          fill
+          priority
+          className="object-cover object-center opacity-80"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#020913]/60 via-[#020913]/80 to-[#020913]/95" />
+      </div>
+
+      <div className="relative mx-auto max-w-6xl px-6 py-12">
         <Link href="/" className="text-white hover:underline mb-8 inline-block">
           ← Back to Home
         </Link>
-        
+
         <h1 className="text-5xl font-bold text-white text-center mb-4">
           Choose Your Niche
         </h1>
         <p className="text-xl text-white text-center mb-12 opacity-90">
           Pre-built modules for profitable markets
         </p>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 hover:scale-105 transition-transform">
+          <div className="bg-white/5 backdrop-blur-xl rounded-2xl shadow-2xl p-8 hover:scale-105 transition-transform">
             <div className="text-5xl mb-4">💪</div>
             <h3 className="text-2xl font-bold mb-3">Health & Wellness</h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-slate-200 mb-4">
               Weight loss, fitness, nutrition, and healthy living offers
             </p>
-            <ul className="space-y-2 mb-6 text-sm text-gray-700">
+            <ul className="space-y-2 mb-6 text-sm text-slate-300">
               <li>• Pre-made templates</li>
               <li>• Popular affiliate programs</li>
               <li>• Proven copy examples</li>
@@ -65,14 +77,14 @@ export default function Niches() {
               {activating === 'health' ? 'Activating...' : 'Use This Niche'}
             </button>
           </div>
-          
-          <div className="bg-white rounded-2xl shadow-2xl p-8 hover:scale-105 transition-transform">
+
+          <div className="bg-white/5 backdrop-blur-xl rounded-2xl shadow-2xl p-8 hover:scale-105 transition-transform">
             <div className="text-5xl mb-4">💰</div>
             <h3 className="text-2xl font-bold mb-3">Finance & Investing</h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-slate-200 mb-4">
               Make money, investing, crypto, and personal finance
             </p>
-            <ul className="space-y-2 mb-6 text-sm text-gray-700">
+            <ul className="space-y-2 mb-6 text-sm text-slate-300">
               <li>• High commission offers</li>
               <li>• Trust-building templates</li>
               <li>• Compliance-ready copy</li>
@@ -85,14 +97,14 @@ export default function Niches() {
               {activating === 'finance' ? 'Activating...' : 'Use This Niche'}
             </button>
           </div>
-          
-          <div className="bg-white rounded-2xl shadow-2xl p-8 hover:scale-105 transition-transform">
+
+          <div className="bg-white/5 backdrop-blur-xl rounded-2xl shadow-2xl p-8 hover:scale-105 transition-transform">
             <div className="text-5xl mb-4">💻</div>
             <h3 className="text-2xl font-bold mb-3">Technology & Software</h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-slate-200 mb-4">
               SaaS tools, apps, courses, and digital products
             </p>
-            <ul className="space-y-2 mb-6 text-sm text-gray-700">
+            <ul className="space-y-2 mb-6 text-sm text-slate-300">
               <li>• Recurring commissions</li>
               <li>• Demo-focused funnels</li>
               <li>• Feature comparison pages</li>
@@ -105,14 +117,14 @@ export default function Niches() {
               {activating === 'technology' ? 'Activating...' : 'Use This Niche'}
             </button>
           </div>
-          
-          <div className="bg-white rounded-2xl shadow-2xl p-8 hover:scale-105 transition-transform">
+
+          <div className="bg-white/5 backdrop-blur-xl rounded-2xl shadow-2xl p-8 hover:scale-105 transition-transform">
             <div className="text-5xl mb-4">❤️</div>
             <h3 className="text-2xl font-bold mb-3">Dating & Relationships</h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-slate-200 mb-4">
               Dating advice, relationship coaching, self-improvement
             </p>
-            <ul className="space-y-2 mb-6 text-sm text-gray-700">
+            <ul className="space-y-2 mb-6 text-sm text-slate-300">
               <li>• Emotional copy templates</li>
               <li>• Story-driven funnels</li>
               <li>• High conversion rates</li>
@@ -125,14 +137,14 @@ export default function Niches() {
               {activating === 'dating' ? 'Activating...' : 'Use This Niche'}
             </button>
           </div>
-          
-          <div className="bg-white rounded-2xl shadow-2xl p-8 hover:scale-105 transition-transform">
+
+          <div className="bg-white/5 backdrop-blur-xl rounded-2xl shadow-2xl p-8 hover:scale-105 transition-transform">
             <div className="text-5xl mb-4">🎓</div>
             <h3 className="text-2xl font-bold mb-3">Education & Courses</h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-slate-200 mb-4">
               Online courses, coaching programs, certifications
             </p>
-            <ul className="space-y-2 mb-6 text-sm text-gray-700">
+            <ul className="space-y-2 mb-6 text-sm text-slate-300">
               <li>• Course preview funnels</li>
               <li>• Webinar templates</li>
               <li>• Authority-building pages</li>
@@ -145,14 +157,14 @@ export default function Niches() {
               {activating === 'education' ? 'Activating...' : 'Use This Niche'}
             </button>
           </div>
-          
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 text-white rounded-2xl shadow-2xl p-8 hover:scale-105 transition-transform">
+
+          <div className="bg-white/5 backdrop-blur-xl rounded-2xl shadow-2xl p-8 hover:scale-105 transition-transform">
             <div className="text-5xl mb-4">✨</div>
             <h3 className="text-2xl font-bold mb-3">Custom Niche</h3>
-            <p className="text-gray-300 mb-4">
+            <p className="text-slate-200 mb-4">
               Build your own niche from scratch with our flexible system
             </p>
-            <ul className="space-y-2 mb-6 text-sm text-gray-400">
+            <ul className="space-y-2 mb-6 text-sm text-slate-300">
               <li>• Full customization</li>
               <li>• Import your own offers</li>
               <li>• Unlimited flexibility</li>
