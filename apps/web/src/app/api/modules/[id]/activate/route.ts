@@ -24,7 +24,7 @@ export async function POST(
     }
 
     // Save activation to database
-    const { data, error } = await supabase!
+    const { data: _data, error } = await supabase!
       .from('niches')
       .upsert({ 
         module_id: module.module_id,

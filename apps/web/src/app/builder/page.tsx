@@ -344,7 +344,7 @@ function getDefaultContent(type: string): Record<string, any> {
   return defaults[type] || {}
 }
 
-function getDefaultStyle(type: string): Record<string, any> {
+function getDefaultStyle(_type: string): Record<string, any> {
   return {
     background: 'white',
     padding: 'large',

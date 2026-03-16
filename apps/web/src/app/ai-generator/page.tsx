@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 
 export default function AIGeneratorPage() {
-  const { user, loading: authLoading } = useAuth()
+  const { loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)
   const [generatedContent, setGeneratedContent] = useState<string>('')
   const [viewMode, setViewMode] = useState<'code' | 'preview'>('preview')

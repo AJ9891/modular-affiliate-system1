@@ -15,7 +15,6 @@ import {
   CheckCircle,
   ArrowRight,
   PlayCircle,
-  Settings,
   BarChart,
   Users,
   Sparkles
@@ -35,7 +34,7 @@ export default function LaunchpadPage() {
   const searchParams = useSearchParams()
   const [currentStep, setCurrentStep] = useState(0)
   const [setupComplete, setSetupComplete] = useState(false)
-  const [userProfile, setUserProfile] = useState<any>(null)
+  const [_userProfile, setUserProfile] = useState<any>(null)
   const [selectedNiche, setSelectedNiche] = useState<string>('')
   const [selectedTemplate, setSelectedTemplate] = useState<string>('')
   const [createdFunnel, setCreatedFunnel] = useState<any>(null)

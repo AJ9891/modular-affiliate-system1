@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { checkSupabase } from '@/lib/check-supabase'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   const check = checkSupabase()
   if (check) return check
   

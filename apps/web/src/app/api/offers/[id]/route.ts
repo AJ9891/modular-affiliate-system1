@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
 import { checkSupabase } from '@/lib/check-supabase'
 import { createClient } from '@supabase/supabase-js'
 

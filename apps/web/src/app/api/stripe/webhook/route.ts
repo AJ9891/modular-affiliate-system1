@@ -257,7 +257,7 @@ async function handleSubscriptionDeleted(subscription: any) {
 
 async function handleInvoicePaymentSucceeded(invoice: any) {
   const customerId = invoice.customer
-  const customerEmail = invoice.customer_email
+  const _customerEmail = invoice.customer_email
   
   if (!supabase) return
 

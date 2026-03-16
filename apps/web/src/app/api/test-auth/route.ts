@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
 export async function GET() {
@@ -11,7 +11,7 @@ export async function GET() {
     }
 
     // Test database connection
-    const { data, error } = await supabase
+    const { data: _data, error } = await supabase
       .from('users')
       .select('count')
       .limit(1)

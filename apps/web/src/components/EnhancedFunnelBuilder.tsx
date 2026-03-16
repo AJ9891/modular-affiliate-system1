@@ -142,7 +142,7 @@ const blockTemplates: Record<string, Omit<BlockConfig, 'id'>> = {
   }
 }
 
-export default function EnhancedFunnelBuilder({ initialNiche = 'general', funnelId }: EnhancedFunnelBuilderProps = {}) {
+export default function EnhancedFunnelBuilder({ initialNiche = 'general' }: EnhancedFunnelBuilderProps = {}) {
   const [funnel, setFunnel] = useState<FunnelConfig>({
     name: 'New Funnel',
     niche: initialNiche,

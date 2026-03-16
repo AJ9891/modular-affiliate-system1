@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     const click_id = crypto.randomUUID()
 
     // Store click data
-    const { data, error } = await supabase!
+    const { data: _data, error } = await supabase!
       .from('clicks')
       .insert({
         click_id,
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       tracked: true 
     }, { status: 200 })
 
-    const cookieStore = cookies()
+    const _cookieStore = cookies()
     response.cookies.set('aff_click_id', click_id, {
       maxAge: 30 * 24 * 60 * 60, // 30 days
       httpOnly: true,

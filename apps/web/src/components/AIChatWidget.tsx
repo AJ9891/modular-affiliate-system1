@@ -35,20 +35,6 @@ export default function AIChatWidget() {
     }
   }
 
-  async function loadConversation() {
-    if (!conversationId) return
-
-    try {
-      const response = await fetch(`/api/chat?conversationId=${conversationId}`)
-      if (response.ok) {
-        const data = await response.json()
-        setMessages(data.messages || [])
-      }
-    } catch (error) {
-      console.error('Failed to load conversation:', error)
-    }
-  }
-
   async function sendMessage() {
     if (!input.trim() || loading) return
 
