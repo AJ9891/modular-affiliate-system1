@@ -6,7 +6,7 @@ import { validateFunnel } from '@/lib/validators/funnels'
 import { error, ok, readJson, ValidationError } from '@/lib/http'
 import { checkUserCanPerform, incrementUserUsage } from '@/lib/plan-manager'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   const check = checkSupabase()
   if (check) return check
   

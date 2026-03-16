@@ -228,7 +228,7 @@ class SendsharkService {
       end: Date
     }
   }) {
-    const { recipientEmail, funnelId, stats, dateRange } = params
+    const { recipientEmail, funnelId: _funnelId, stats, dateRange } = params
 
     const html = `
       <!DOCTYPE html>

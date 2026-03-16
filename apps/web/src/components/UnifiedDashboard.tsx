@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Mail, Users, TrendingUp, DollarSign, BarChart3, Calendar, Download, RefreshCw } from 'lucide-react'
+import { Mail, Users, TrendingUp, DollarSign, Download, RefreshCw } from 'lucide-react'
 
 interface DashboardStats {
   totalLeads: number

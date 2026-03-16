@@ -1,26 +1,29 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { checkSupabase } from '@/lib/check-supabase'
-import { createServiceRoleClient, createServerRouteClient } from '@/lib/supabase-server'
-import { requireUser } from '@/lib/authz'
-import { validateOffer } from '@/lib/validators/offers'
-import { error, ok, readJson } from '@/lib/http'
+import { createClient } from '@supabase/supabase-js'
 
 export async function PUT(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   const check = checkSupabase()
   if (check) return check
 
   try {
-    const supabase = await createServerRouteClient()
-    await requireUser(supabase)
-
-    const body = validateOffer(await readJson(request))
-    const { id: offerId } = await context.params
+    const body = await request.json()
+    const offerId = params.id
 
     // Use service role client to bypass RLS
-    const adminClient = createServiceRoleClient()
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
 
     const { data, error } = await adminClient
       .from('offers')
@@ -29,30 +32,39 @@ export async function PUT(
       .select()
 
     if (error) {
-      throw error
+      return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
-    return ok({ offer: data[0] })
-  } catch (err) {
-    return error(err)
+    return NextResponse.json({ offer: data[0] })
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }
 
 export async function DELETE(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   const check = checkSupabase()
   if (check) return check
 
   try {
-    const supabase = await createServerRouteClient()
-    await requireUser(supabase)
-
-    const { id: offerId } = await context.params
+    const offerId = params.id
 
     // Use service role client to bypass RLS
-    const adminClient = createServiceRoleClient()
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
 
     const { error } = await adminClient
       .from('offers')
@@ -60,11 +72,14 @@ export async function DELETE(
       .eq('id', offerId)
 
     if (error) {
-      throw error
+      return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
-    return ok({ success: true })
-  } catch (err) {
-    return error(err)
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }

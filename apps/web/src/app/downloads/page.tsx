@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Download, Trash2, Copy, ExternalLink, FileText, CheckCircle, AlertCircle } from 'lucide-react';
+import { Trash2, Copy, ExternalLink, FileText, CheckCircle, AlertCircle } from 'lucide-react';
 import UploadManager from '@/components/UploadManager';
 
 interface DownloadItem {
