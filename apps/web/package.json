@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint . --max-warnings=2000",
+    "lint:fix": "eslint . --fix",
     "deploy": "vercel --prod"
   },
   "dependencies": {
@@ -27,9 +28,15 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@next/eslint-plugin-next": "^16.0.3",
+    "@typescript-eslint/eslint-plugin": "^7.17.0",
+    "@typescript-eslint/parser": "^7.17.0",
     "autoprefixer": "^10.4.19",
-    "eslint": "^9",
+    "eslint": "^8.57.1",
     "eslint-config-next": "^16.0.3",
+    "eslint-plugin-react": "^7.34.1",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "globals": "^13.24.0",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
