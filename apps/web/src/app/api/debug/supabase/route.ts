@@ -12,7 +12,7 @@ export async function GET() {
     }
 
     // Test database connection
-    const { data, error } = await supabase
+    const { data: _data, error } = await supabase
       .from('users')
       .select('count')
       .limit(1)
@@ -27,7 +27,7 @@ export async function GET() {
     }
 
     // Test auth
-    const { data: authData, error: authError } = await supabase.auth.getSession()
+    const { data: _authData, error: authError } = await supabase.auth.getSession()
 
     return NextResponse.json({
       status: 'success',

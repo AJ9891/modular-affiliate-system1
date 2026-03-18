@@ -3,6 +3,8 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import Stripe from 'stripe'
 import { checkSupabase } from '@/lib/check-supabase'
+import { payoutSchema } from '@/lib/validators/stripe'
+import { log } from '@/lib/log'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-12-15.clover',
@@ -34,7 +36,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
-    const { affiliateId, amount, description } = await request.json()
+    const { affiliateId, amount, description, idempotencyKey } = payoutSchema.parse(await request.json())
 
     if (!affiliateId || !amount) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -55,18 +57,60 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Affiliate payouts not enabled' }, { status: 400 })
     }
 
+    // Idempotency: if there is a pending/paid payout with same idempotency key, reuse
+    if (idempotencyKey) {
+      const { data: existing } = await supabase
+        .from('affiliate_payouts')
+        .select('stripe_transfer_id, status')
+        .eq('idempotency_key', idempotencyKey)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (existing?.stripe_transfer_id) {
+        return NextResponse.json({
+          success: existing.status === 'paid',
+          transferId: existing.stripe_transfer_id,
+          amount
+        })
+      }
+    }
+
+    // Record the payout as pending
+    const { data: pendingRows, error: insertErr } = await supabase
+      .from('affiliate_payouts')
+      .insert({
+        user_id: affiliateId,
+        amount: amount,
+        currency: 'usd',
+        status: 'pending',
+        idempotency_key: idempotencyKey || null,
+        payout_date: new Date().toISOString()
+      })
+      .select('id')
+      .limit(1)
+
+    if (insertErr) {
+      log.error('Failed to insert pending payout', { error: insertErr.message })
+      return NextResponse.json({ error: 'Could not record payout' }, { status: 500 })
+    }
+
+    const payoutId = pendingRows?.[0]?.id
+
     // Create transfer to affiliate's Stripe Connect account
     const transfer = await stripe.transfers.create({
       amount: Math.round(amount * 100), // Convert to cents
       currency: 'usd',
       destination: affiliateData.stripe_connect_account_id,
       description: description || 'Affiliate commission payout',
+      transfer_group: payoutId ? `payout_${payoutId}` : undefined
     })
 
     // Record the payout in database
     const { error: payoutError } = await supabase
       .from('affiliate_payouts')
       .insert({
+        id: payoutId,
         user_id: affiliateId,
         amount: amount,
         currency: 'usd',
@@ -74,9 +118,10 @@ export async function POST(request: NextRequest) {
         status: 'paid',
         payout_date: new Date().toISOString()
       })
+      .select()
 
     if (payoutError) {
-      console.error('Error recording payout:', payoutError)
+      log.error('Error recording payout', { error: payoutError.message })
       // Don't fail the request if database insert fails, but log it
     }
 
@@ -86,7 +131,7 @@ export async function POST(request: NextRequest) {
       amount: amount
     })
   } catch (error: any) {
-    console.error('Stripe payout error:', error)
+    log.error('Stripe payout error', { error: error?.message })
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

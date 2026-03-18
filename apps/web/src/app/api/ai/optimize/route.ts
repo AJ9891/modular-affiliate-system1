@@ -3,12 +3,14 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { AIOptimizer } from '@/lib/ai-optimizer'
 import { withRateLimit, withAuth, withErrorHandling } from '@/lib/api-middleware'
+import { checkUserCanPerform, incrementUserUsage } from '@/lib/plan-manager'
 
 // POST /api/ai/optimize-funnel - Analyze and get optimization suggestions
 async function optimizeFunnel(request: NextRequest) {
   const supabase = createRouteHandlerClient({ cookies })
   const { data: { user } } = await supabase.auth.getUser()
-  
+  if (!user) throw new Error('Not authenticated')
+
   const { funnelId, timeframe = 30 } = await request.json()
 
   if (!funnelId) {
@@ -27,8 +29,15 @@ async function optimizeFunnel(request: NextRequest) {
     throw new Error('Funnel not found or access denied')
   }
 
+  const allowed = await checkUserCanPerform(user.id, 'maxAIGenerationsPerMonth')
+  if (!allowed) {
+    return NextResponse.json({ error: 'Plan limit reached for AI generations' }, { status: 402 })
+  }
+
   const optimizer = new AIOptimizer()
   const suggestions = await optimizer.analyzeFunnelPerformance(funnelId, timeframe)
+
+  await incrementUserUsage(user.id, 'ai_generation')
 
   return NextResponse.json({
     funnelId,
@@ -43,6 +52,7 @@ async function optimizeFunnel(request: NextRequest) {
 async function autoOptimize(request: NextRequest) {
   const supabase = createRouteHandlerClient({ cookies })
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
   
   const { funnelId, blockId } = await request.json()
 
@@ -60,6 +70,11 @@ async function autoOptimize(request: NextRequest) {
 
   if (error || !funnel) {
     throw new Error('Funnel not found or access denied')
+  }
+
+  const allowed = await checkUserCanPerform(user.id, 'maxAIGenerationsPerMonth')
+  if (!allowed) {
+    return NextResponse.json({ error: 'Plan limit reached for AI generations' }, { status: 402 })
   }
 
   const optimizer = new AIOptimizer()
@@ -84,6 +99,8 @@ async function autoOptimize(request: NextRequest) {
   if (updateError) {
     throw new Error(`Failed to update funnel: ${updateError.message}`)
   }
+
+  await incrementUserUsage(user.id, 'ai_generation')
 
   return NextResponse.json({
     success: true,

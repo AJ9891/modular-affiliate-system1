@@ -30,6 +30,12 @@ export function parseSubdomain(request: NextRequest): SubdomainInfo {
 }
 
 export function createSubdomainMiddlewareClient(req: NextRequest, res: NextResponse) {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    // Returning null allows callers to bypass auth when env is not configured (e.g., local preview)
+    // Callers must check for null before using the client.
+    // @ts-expect-error intent: allow null in dev without Supabase
+    return null
+  }
   return createMiddlewareClient({ req, res })
 }
 

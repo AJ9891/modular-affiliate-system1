@@ -1,5 +1,4 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createServiceRoleClient } from './supabase-server'
 
 export interface PlanLimits {
   maxFunnels: number | 'unlimited'
@@ -171,8 +170,8 @@ export const PLAN_DEFINITIONS: Record<string, PlanDefinition> = {
 export class PlanManager {
   private supabase
 
-  constructor() {
-    this.supabase = createRouteHandlerClient({ cookies })
+  constructor(client = createServiceRoleClient()) {
+    this.supabase = client
   }
 
   // Check if user can perform action based on their plan limits

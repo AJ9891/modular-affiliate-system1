@@ -25,7 +25,6 @@ interface FunnelConfig {
 interface EnhancedFunnelBuilderProps {
   initialNiche?: string
   funnelId?: string | null
-  onSave?: (funnelId: string, slug: string) => void
 }
 
 const nicheData: Record<string, { name: string; emoji: string; color: string }> = {
@@ -97,14 +96,14 @@ const blockTemplates: Record<string, Omit<BlockConfig, 'id'>> = {
       plans: [
         {
           name: 'Basic',
-          price: '$30',
+          price: '$29',
           period: '/month',
           features: ['Feature 1', 'Feature 2', 'Feature 3'],
           cta: 'Get Started'
         },
         {
           name: 'Pro',
-          price: '$45',
+          price: '$79',
           period: '/month',
           features: ['Everything in Basic', 'Feature 4', 'Feature 5'],
           cta: 'Get Started',
@@ -143,19 +142,9 @@ const blockTemplates: Record<string, Omit<BlockConfig, 'id'>> = {
   }
 }
 
-export default function EnhancedFunnelBuilder(props: EnhancedFunnelBuilderProps) {
-  const { initialNiche = 'general', funnelId, onSave } = props
-  
-  // Debug the funnelId prop
-  console.log('[EnhancedFunnelBuilder] Received props:', { 
-    initialNiche, 
-    funnelId, 
-    funnelIdType: typeof funnelId,
-    isNew: funnelId === 'new' || funnelId === null || funnelId === undefined
-  })
-  
+export default function EnhancedFunnelBuilder({ initialNiche = 'general' }: EnhancedFunnelBuilderProps = {}) {
   const [funnel, setFunnel] = useState<FunnelConfig>({
-    name: `My Funnel ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+    name: 'New Funnel',
     niche: initialNiche,
     blocks: [],
     theme: {
@@ -176,25 +165,15 @@ export default function EnhancedFunnelBuilder(props: EnhancedFunnelBuilderProps)
 
   const addBlock = (type: keyof typeof blockTemplates) => {
     const template = blockTemplates[type]
-    const blockId = `block-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    
-    console.log('[addBlock] Creating new block:', { type, blockId })
-    
     const newBlock: BlockConfig = {
-      id: blockId,
+      id: `block-${Date.now()}`,
       type: template.type,
-      content: { ...template.content },
-      style: { ...template.style }
+      content: template.content,
+      style: template.style
     }
-    
-    // Ensure no 'new' values in the block data
-    const sanitizedBlock = JSON.parse(JSON.stringify(newBlock).replace(/"new"/g, '"custom"'))
-    
-    console.log('[addBlock] Adding sanitized block:', sanitizedBlock)
-    
     setFunnel(prev => ({
       ...prev,
-      blocks: [...prev.blocks, sanitizedBlock]
+      blocks: [...prev.blocks, newBlock]
     }))
   }
 
@@ -207,7 +186,6 @@ export default function EnhancedFunnelBuilder(props: EnhancedFunnelBuilderProps)
   }
 
   const updateBlock = (id: string, updates: Partial<BlockConfig>) => {
-    console.log('Updating block:', id, 'with updates:', updates)
     setFunnel(prev => ({
       ...prev,
       blocks: prev.blocks.map(b => b.id === id ? { ...b, ...updates } : b)
@@ -237,99 +215,18 @@ export default function EnhancedFunnelBuilder(props: EnhancedFunnelBuilderProps)
 
   const saveFunnel = async () => {
     try {
-      console.log('[saveFunnel] Starting save process')
-      console.log('[saveFunnel] Current funnel state:', {
-        name: funnel.name,
-        niche: funnel.niche,
-        blocksCount: funnel.blocks.length,
-        funnelId: funnelId,
-        theme: funnel.theme
-      })
-      
-      // Validate funnel name
-      if (!funnel.name || funnel.name.trim() === '') {
-        alert('Please enter a funnel name')
-        return
-      }
-      
-      // Generate slug from funnel name, avoid 'new' keyword
-      let slug = funnel.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'untitled-funnel'
-      if (slug.includes('new')) {
-        slug = slug.replace(/new/g, 'custom')
-        console.log('[saveFunnel] Replaced "new" in slug:', slug)
-      }
-      
-      // Deep clean blocks - remove all client-side IDs and sanitize content
-      const cleanedBlocks = funnel.blocks.map((block, index) => {
-        const cleanedBlock = {
-          type: block.type,
-          content: { ...block.content },
-          style: { ...block.style }
-        }
-        
-        // Remove any 'new' values in the block data
-        let blockStr = JSON.stringify(cleanedBlock)
-        if (blockStr.includes('"new"')) {
-          console.log(`[saveFunnel] Block ${index} contains "new" values, sanitizing:`, blockStr.substring(0, 100))
-          blockStr = blockStr.replace(/"new"/g, '"custom"')
-          return JSON.parse(blockStr)
-        }
-        
-        return cleanedBlock
-      })
-      
-      const payload = {
-        name: funnel.name.trim(),
-        slug,
-        niche: funnel.niche || initialNiche || 'general',
-        blocks: cleanedBlocks,
-        theme: funnel.theme
-      }
-      
-      // Final validation - ensure no 'new' values in payload
-      const payloadStr = JSON.stringify(payload)
-      if (payloadStr.includes('"new"')) {
-        console.error('[saveFunnel] Payload still contains "new" values:', payloadStr)
-        alert('Data validation failed: Found invalid values in funnel data')
-        return
-      }
-
-      console.log('[saveFunnel] Sending sanitized payload:', {
-        ...payload,
-        blocks: `${payload.blocks.length} blocks`,
-        payloadSize: payloadStr.length
-      })
-      
       const response = await fetch('/api/funnels', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(funnel)
       })
-
-      console.log('[saveFunnel] Response status:', response.status)
       const data = await response.json()
-      console.log('[saveFunnel] Response data:', data)
-      
-      if (!response.ok) {
-        console.error('[saveFunnel] Save failed:', data.error)
-        alert(`Failed to save funnel: ${data.error || 'Unknown error'}`)
-        return
-      }
-
-      if (data.funnelId) {
+      if (data.success) {
         alert('Funnel saved successfully!')
-        console.log('[saveFunnel] Funnel saved with ID:', data.funnelId)
-        // Call onSave callback with funnel ID and slug
-        if (props.onSave) {
-          props.onSave(data.funnelId, slug)
-        }
-      } else {
-        console.error('[saveFunnel] No funnel ID in response:', data)
-        alert('Failed to save funnel: No funnel ID returned')
       }
     } catch (error) {
-      console.error('[saveFunnel] Save error:', error)
-      alert(`Failed to save funnel: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      console.error('Save error:', error)
+      alert('Failed to save funnel')
     }
   }
 
@@ -343,10 +240,7 @@ export default function EnhancedFunnelBuilder(props: EnhancedFunnelBuilderProps)
         onDragStart={() => handleDragStart(funnel.blocks.indexOf(block))}
         onDragOver={(e) => handleDragOver(e, funnel.blocks.indexOf(block))}
         onDragEnd={handleDragEnd}
-        onClick={() => {
-          console.log('Selecting block:', block.id, 'type:', block.type)
-          setSelectedBlock(block.id)
-        }}
+        onClick={() => setSelectedBlock(block.id)}
         className={`
           relative p-4 mb-4 border-2 rounded-lg cursor-move transition-all
           ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}

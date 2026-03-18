@@ -72,13 +72,13 @@ This migration addresses ALL RLS (Row Level Security) warnings in your Supabase 
 
 1. Open your Supabase dashboard:
 
-   ```
+   ```text
    https://supabase.com/dashboard/project/urwrbjejcozbzgknbuhn
    ```
 
 2. Navigate to **SQL Editor**:
 
-   ```
+   ```text
    https://supabase.com/dashboard/project/urwrbjejcozbzgknbuhn/sql/new
    ```
 
@@ -176,7 +176,7 @@ SELECT * FROM funnels WHERE team_id = 'your-team-id';
 
 ### Before Fix
 
-```
+```text
 ⚠️ users - RLS disabled
 ⚠️ funnels - RLS disabled
 ⚠️ offers - RLS disabled
@@ -185,7 +185,7 @@ SELECT * FROM funnels WHERE team_id = 'your-team-id';
 
 ### After Fix
 
-```
+```text
 ✅ users - RLS enabled with 2 policies
 ✅ funnels - RLS enabled with 5 policies
 ✅ offers - RLS enabled with 2 policies

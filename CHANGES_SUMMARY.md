@@ -65,7 +65,7 @@
 
 ### Before (BROKEN)
 
-```
+```text
 Client requests page
 → Next.js bundles modules
 → @/lib/supabase.ts loads
@@ -77,7 +77,7 @@ Client requests page
 
 ### After (FIXED)
 
-```
+```text
 Client requests page
 → Next.js bundles modules
 → @/lib/supabase.ts loads ✅ (no throw)

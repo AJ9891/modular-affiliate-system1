@@ -84,7 +84,7 @@ To enable `*.launchpad4success.com` subdomains:
 
 1. Add a wildcard CNAME record in your DNS provider:
 
-```
+```text
 Type: CNAME
 Name: *
 Value: cname.vercel-dns.com

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { stripe, dollarsToCredits } from '@/lib/stripe'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+import { log } from '@/lib/log'
+import { validateCheckout } from '@/lib/validators/stripe'
+import { error, ok } from '@/lib/http'
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
@@ -24,8 +27,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 })
   }
 
-  const body = await req.json()
-  const { target_user_id, amount_usd } = body
+  const { target_user_id, amount_usd } = validateCheckout(await req.json())
   
   if (!target_user_id || !amount_usd) {
     return NextResponse.json(
@@ -35,6 +37,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (!stripe) {
+    log.error('Stripe not configured')
     return NextResponse.json(
       { error: 'Stripe not configured' },
       { status: 500 }
@@ -76,12 +79,9 @@ export async function POST(req: NextRequest) {
       status: 'pending'
     })
 
-    return NextResponse.json({ url: session.url, id: session.id }, { status: 200 })
+    return ok({ url: session.url, id: session.id })
   } catch (err: any) {
-    console.error(err)
-    return NextResponse.json(
-      { error: err.message || 'Stripe error' },
-      { status: 500 }
-    )
+    log.error('Stripe checkout error', { error: err?.message })
+    return error(err)
   }
 }

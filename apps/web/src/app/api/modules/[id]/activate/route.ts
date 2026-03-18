@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { supabase } from '@/lib/supabase'
 import { checkSupabase } from '@/lib/check-supabase'
 import { moduleLoader } from '@/lib/module-loader'
 
 export async function POST(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   const check = checkSupabase()
   if (check) return check
   
   try {
-    const { id: moduleId } = await context.params
+    const moduleId = params.id
 
     // Load the module
     const module = await moduleLoader.loadModule(moduleId)
@@ -24,11 +23,8 @@ export async function POST(
       )
     }
 
-    // Create server-only Supabase client
-    const supabase = createRouteHandlerClient({ cookies })
-
     // Save activation to database
-    const { data, error } = await supabase
+    const { data: _data, error } = await supabase!
       .from('niches')
       .upsert({ 
         module_id: module.module_id,

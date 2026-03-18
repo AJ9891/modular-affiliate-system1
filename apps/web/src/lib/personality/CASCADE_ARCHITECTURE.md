@@ -102,7 +102,7 @@ Everything else stays identical.
 
 ## File Structure
 
-```
+```text
 lib/personality/
 ├── types.ts                 # Core personality types
 ├── resolvePersonality.ts    # brand_mode → PersonalityProfile

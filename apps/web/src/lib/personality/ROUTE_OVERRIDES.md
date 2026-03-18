@@ -88,7 +88,7 @@ function MyComponent() {
 
 ## How It Works
 
-```
+```text
 User visits /onboarding
        ↓
 PersonalityProvider checks route

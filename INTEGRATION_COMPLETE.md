@@ -248,19 +248,19 @@ This will verify:
 
 ### Common Issues
 
-**"Cannot connect to Supabase"**
+### "Cannot connect to Supabase"
 
 - Check your Supabase URL and keys
 - Verify project is active
 - Check network connection
 
-**"AI features not working"**
+### "AI features not working"
 
 - Verify OpenAI API key is set
 - Check API quota/credits
 - Review API key permissions
 
-**"Email not sending"**
+### "Email not sending"
 
 - Confirm Sendshark API key
 - Check API quota

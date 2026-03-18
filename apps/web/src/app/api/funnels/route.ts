@@ -1,28 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
 import { checkSupabase } from '@/lib/check-supabase'
+import { createServiceRoleClient, createServerRouteClient } from '@/lib/supabase-server'
+import { requireUser } from '@/lib/authz'
+import { validateFunnel } from '@/lib/validators/funnels'
+import { error, ok, readJson, ValidationError } from '@/lib/http'
+import { checkUserCanPerform, incrementUserUsage } from '@/lib/plan-manager'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   const check = checkSupabase()
   if (check) return check
   
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createServerRouteClient()
+    await requireUser(supabase)
     const { data: funnels, error } = await supabase!
       .from('funnels')
       .select('*')
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 })
+      throw error
     }
 
-    return NextResponse.json({ funnels }, { status: 200 })
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return ok({ funnels }, { status: 200 })
+  } catch (err) {
+    return error(err)
   }
 }
 
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
   const check = checkSupabase()
   if (check) return check
   
-  const supabaseClient = createRouteHandlerClient({ cookies })
+  const supabaseClient = await createServerRouteClient()
   
   try {
     // Get user from session using Supabase auth-helpers
@@ -60,15 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse and validate request body
-    let body
-    try {
-      body = await request.json()
-    } catch (parseError) {
-      console.error('[FUNNELS API] JSON parse error:', parseError)
-      return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 })
-    }
-
-    const { name, template, niche, blocks, theme, slug } = body
+    const { name, template, niche, blocks, theme, slug } = validateFunnel(await readJson(request))
 
     if (isDevelopment) {
       console.log('[FUNNELS API] Received funnel data:', { 
@@ -80,15 +73,6 @@ export async function POST(request: NextRequest) {
         slug,
         bodyKeys: Object.keys(body)
       })
-    }
-
-    // Validate required fields
-    if (!name || typeof name !== 'string' || name.trim() === '') {
-      return NextResponse.json({ error: 'Funnel name is required and must be a non-empty string' }, { status: 400 })
-    }
-
-    if (!Array.isArray(blocks)) {
-      return NextResponse.json({ error: 'Blocks must be an array' }, { status: 400 })
     }
 
     // Comprehensive data sanitization to prevent 'new' keyword issues
@@ -127,17 +111,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Create admin client for operations
-    const { createClient } = await import('@supabase/supabase-js')
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+    const adminClient = createServiceRoleClient()
+
+    // Plan gating: max funnels
+    const canCreate = await checkUserCanPerform(user.id, 'maxFunnels')
+    if (!canCreate) {
+      return NextResponse.json({ error: 'Plan limit reached for funnels' }, { status: 402 })
+    }
 
     // Ensure user exists in public.users table
     const { data: existingUser } = await adminClient
@@ -295,16 +275,17 @@ export async function POST(request: NextRequest) {
       console.log('[FUNNELS API] Funnel created successfully:', data[0]?.funnel_id)
     }
 
+    // Count funnel creation as usage
+    await incrementUserUsage(user.id, 'funnel_creation')
+
     return NextResponse.json({ 
       funnel: data[0],
       funnelId: data[0].funnel_id,
       success: true
     }, { status: 201 })
-  } catch (error: any) {
-    console.error('Funnel creation error:', error)
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    )
+  } catch (err: any) {
+    if (err instanceof ValidationError) return error(err)
+    console.error('Funnel creation error:', err)
+    return error(err)
   }
 }

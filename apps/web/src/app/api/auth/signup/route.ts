@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { checkSupabase } from '@/lib/check-supabase'
-import { createClient } from '@supabase/supabase-js'
 import { createSubdomainRouteHandlerClient } from '@/lib/subdomain-auth'
+import { createServiceRoleClient, loadSupabaseEnv } from '@/lib/supabase-server'
+import { log } from '@/lib/log'
+
+function getSupabaseAdminClient() {
+  try {
+    loadSupabaseEnv(true)
+    return createServiceRoleClient()
+  } catch {
+    return null
+  }
+}
 
 export async function POST(request: NextRequest) {
   const check = checkSupabase()
@@ -18,22 +28,17 @@ export async function POST(request: NextRequest) {
     })
 
     if (error) {
+      log.warn('Signup error', { error: error.message })
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
-    // Create user in public.users table using service role key to bypass RLS
-    if (data.user && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    // Best effort: create user in public.users table if service key is configured.
+    if (data.user) {
       try {
-        const adminClient = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY,
-          {
-            auth: {
-              autoRefreshToken: false,
-              persistSession: false
-            }
-          }
-        )
+        const adminClient = getSupabaseAdminClient()
+        if (!adminClient) {
+          return NextResponse.json({ user: data.user }, { status: 201 })
+        }
 
         const { error: insertError } = await adminClient.from('users').upsert({
           id: data.user.id,
@@ -45,22 +50,19 @@ export async function POST(request: NextRequest) {
         })
         
         if (insertError) {
-          console.error('Failed to create user in public.users:', insertError)
-        } else {
-          console.log('User created in public.users table')
+          log.error('Failed to create user in public.users', { error: insertError.message })
         }
       } catch (err) {
-        console.error('Error creating user:', err)
+        log.error('Error creating user', { error: String(err) })
       }
-    } else if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      console.warn('SUPABASE_SERVICE_ROLE_KEY not set - cannot create user in public.users table')
     }
 
     return NextResponse.json({ user: data.user }, { status: 201 })
-  } catch (error) {
+  } catch (error: any) {
+    log.error('Signup handler failed', { error: error?.message })
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: error.message || 'Internal server error' },
+      { status: error.status ?? 500 }
     )
   }
 }

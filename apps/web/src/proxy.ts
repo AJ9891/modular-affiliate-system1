@@ -7,10 +7,59 @@ import {
 } from './lib/subdomain-auth'
 import { addSecurityHeaders } from './lib/security'
 import { isPublicPath } from './config/publicPaths'
+import { getRateLimitKey, rateLimit, RATE_LIMIT_CONFIGS } from './lib/rate-limit'
 
 export async function proxy(req: NextRequest) {
+  const { pathname } = req.nextUrl
+  const supabaseEnvReady =
+    !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  // API rate limiting (covers auth + public abuse-prone endpoints)
+  if (pathname.startsWith('/api/')) {
+    const AUTH_PATHS = ['/api/auth/login', '/api/auth/signup']
+    const PUBLIC_ABUSE_PATHS = [
+      '/api/leads/capture',
+      '/api/track/affiliate-click',
+      '/api/chat',
+      '/api/ai/generate-content',
+      '/api/ai/optimize',
+    ]
+
+    let bucket = RATE_LIMIT_CONFIGS.api
+    if (AUTH_PATHS.some(p => pathname.startsWith(p))) {
+      bucket = RATE_LIMIT_CONFIGS.auth
+    } else if (PUBLIC_ABUSE_PATHS.some(p => pathname.startsWith(p))) {
+      bucket = RATE_LIMIT_CONFIGS.api
+    }
+
+    const key = getRateLimitKey(req, pathname.startsWith('/api/auth') ? 'auth' : 'api')
+    const result = rateLimit(key, bucket)
+
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please slow down.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': Math.ceil((result.resetTime - Date.now()) / 1000).toString(),
+            'X-RateLimit-Limit': bucket.limit.toString(),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': result.resetTime.toString(),
+          },
+        }
+      )
+    }
+
+    const res = NextResponse.next()
+    res.headers.set('X-RateLimit-Limit', bucket.limit.toString())
+    res.headers.set('X-RateLimit-Remaining', result.remaining.toString())
+    res.headers.set('X-RateLimit-Reset', result.resetTime.toString())
+    return res
+  }
+
   // Allow public pages without auth and still attach security headers
-  if (isPublicPath(req.nextUrl.pathname)) {
+  if (isPublicPath(pathname)) {
     const res = NextResponse.next()
     return addSecurityHeaders(res)
   }
@@ -30,7 +79,15 @@ export async function proxy(req: NextRequest) {
   }
 
   // Configure Supabase client with proper cookie domain handling for subdomains
+  if (!supabaseEnvReady) {
+    // In local/preview runs without Supabase creds, skip auth enforcement but keep security headers.
+    return addSecurityHeaders(res)
+  }
+
   const supabase = createSubdomainMiddlewareClient(req, res)
+  if (!supabase) {
+    return addSecurityHeaders(res)
+  }
 
   // Refresh session if expired - required for Server Components
   const {
@@ -63,14 +120,9 @@ export async function proxy(req: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     * - api routes (important for auth callbacks)
-     */
-    '/((?!api/|_next/static|_next/image|favicon.ico|.*\\..*|public/).*)',
+    // API routes (rate limiting)
+    '/api/:path*',
+    // All other routes except static assets
+    '/((?!_next/static|_next/image|favicon.ico|.*\\..*|public/).*)',
   ],
 }

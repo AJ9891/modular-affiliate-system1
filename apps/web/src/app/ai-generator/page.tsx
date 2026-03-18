@@ -3,21 +3,20 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
-import { useAIConsent } from '@/components/ai/consent-dialog'
 
 export default function AIGeneratorPage() {
-  const { user, loading: authLoading } = useAuth()
-  const { requestConsent, ConsentDialog } = useAIConsent()
+  const { loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)
   const [generatedContent, setGeneratedContent] = useState<string>('')
   const [viewMode, setViewMode] = useState<'code' | 'preview'>('preview')
   const [savedContent, setSavedContent] = useState<Array<{id: string, content: string, type: string, timestamp: number}>>([])
+  const [designVariant, setDesignVariant] = useState(0)
   const [contentType, setContentType] = useState<'headline' | 'subheadline' | 'cta' | 'bullet-points' | 'full-page' | 'email'>('headline')
   const [formData, setFormData] = useState({
     niche: '',
     productName: '',
     audience: '',
-    tone: 'professional' as 'professional' | 'casual' | 'urgent' | 'friendly' | 'funny',
+    tone: 'professional' as 'professional' | 'casual' | 'urgent' | 'friendly',
     context: '',
   })
 
@@ -31,21 +30,6 @@ export default function AIGeneratorPage() {
 
   async function handleGenerate(e: React.FormEvent) {
     e.preventDefault()
-    
-    // Request consent for AI generation
-    requestConsent({
-      type: "generate",
-      description: `${contentType} for ${formData.productName || 'your product'}`,
-      onConfirm: () => performGeneration(),
-      onManualOverride: () => {
-        // User chose manual override - show them a form or editor
-        setGeneratedContent('// Manual content creation mode\n// Write your content here...')
-        setViewMode('code')
-      }
-    })
-  }
-
-  async function performGeneration() {
     setLoading(true)
     setGeneratedContent('')
 
@@ -55,26 +39,20 @@ export default function AIGeneratorPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: contentType,
-          action: 'generate',
-          hasConsent: true,
           ...formData,
         }),
       })
 
       if (!res.ok) {
         const error = await res.json()
-        
-        // Handle AI guidelines violations gracefully
-        if (error.issues) {
-          alert(`Content generation failed due to guidelines: ${error.issues.join(', ')}`)
-        } else {
-          alert(error.error || 'Failed to generate content')
-        }
+        alert(error.error || 'Failed to generate content')
         return
       }
 
       const data = await res.json()
       setGeneratedContent(data.content)
+      // Randomize design variant each time
+      setDesignVariant(Math.floor(Math.random() * 5))
     } catch (error) {
       console.error('Generation error:', error)
       alert('Failed to generate content. Please try again.')
@@ -128,60 +106,245 @@ export default function AIGeneratorPage() {
   })
 
   function renderPreview() {
+    // Design variants for visual variety
+    const gradients = [
+      'from-blue-600 via-purple-600 to-green-500',
+      'from-pink-500 via-red-500 to-yellow-500',
+      'from-indigo-600 via-purple-600 to-pink-600',
+      'from-green-500 via-teal-500 to-blue-600',
+      'from-orange-500 via-red-600 to-pink-600',
+    ]
+    
+    const buttonColors = [
+      'bg-yellow-400 hover:bg-yellow-300 text-gray-900',
+      'bg-green-500 hover:bg-green-400 text-white',
+      'bg-pink-500 hover:bg-pink-400 text-white',
+      'bg-orange-500 hover:bg-orange-400 text-white',
+      'bg-blue-500 hover:bg-blue-400 text-white',
+    ]
+    
+    const layouts = [
+      'text-center',
+      'text-left',
+      'text-center',
+      'text-left',
+      'text-center',
+    ]
+    
+    const cardStyles = [
+      'bg-white/10 backdrop-blur-lg rounded-xl border border-white/20',
+      'bg-white/20 backdrop-blur-md rounded-2xl border-2 border-white/30 shadow-xl',
+      'bg-gradient-to-br from-white/10 to-white/5 rounded-lg border border-white/30',
+      'bg-black/20 backdrop-blur-sm rounded-xl border border-white/10',
+      'bg-white/15 backdrop-blur-lg rounded-2xl border border-white/40 shadow-2xl',
+    ]
+    
+    const gradient = gradients[designVariant % gradients.length]
+    const buttonColor = buttonColors[designVariant % buttonColors.length]
+    const layout = layouts[designVariant % layouts.length]
+    const cardStyle = cardStyles[designVariant % cardStyles.length]
+    
     try {
       // Try to parse as JSON first
       const parsed = JSON.parse(generatedContent)
       
-      // Let AI generate completely custom landing pages - display raw content
+      // Check if it's a landing page structure
       if (parsed.headline || parsed.benefits || parsed.cta) {
-        // Render AI-generated content as structured JSON
-        return (
-          <div className="bg-white rounded-lg p-8">
-            <div className="prose prose-lg max-w-none">
+        
+        // Layout Variant 1: Traditional Center-aligned
+        if (designVariant === 0) {
+          return (
+            <div className={`bg-gradient-to-br ${gradient} rounded-lg p-12 text-center space-y-8`}>
               {parsed.headline && (
-                <h1 className="text-5xl font-bold text-gray-900 mb-6">{parsed.headline}</h1>
+                <h1 className="text-5xl md:text-6xl font-extrabold text-white drop-shadow-lg mb-4">
+                  {parsed.headline}
+                </h1>
               )}
-              
               {parsed.subheadline && (
-                <h2 className="text-2xl text-gray-700 mb-6">{parsed.subheadline}</h2>
+                <p className="text-2xl text-white font-semibold opacity-90 max-w-3xl mx-auto">
+                  {parsed.subheadline}
+                </p>
               )}
-              
-              {parsed.cta && (
-                <p className="text-lg text-gray-600 mb-6 font-semibold">CTA: {parsed.cta}</p>
-              )}
-              
               {parsed.benefits && Array.isArray(parsed.benefits) && (
-                <div className="mb-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Benefits:</h3>
-                  <ul className="space-y-3">
-                    {parsed.benefits.map((benefit: any, index: number) => (
-                      <li key={index} className="flex gap-3">
-                        <span className="font-bold text-gray-900 min-w-[30px]">{index + 1}.</span>
-                        <div>
-                          <p className="font-semibold text-gray-900">{benefit.title}</p>
-                          <p className="text-gray-700 text-sm">{benefit.description}</p>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+                  {parsed.benefits.map((benefit: any, index: number) => (
+                    <div key={index} className={`${cardStyle} p-8 text-center`}>
+                      <div className="text-4xl mb-4">✨</div>
+                      <h3 className="text-xl font-bold text-white mb-3">{benefit.title}</h3>
+                      <p className="text-white/90">{benefit.description}</p>
+                    </div>
+                  ))}
                 </div>
               )}
-              
-              {Object.keys(parsed).length > 0 && (
-                <div className="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                  <p className="text-xs text-gray-600 mb-2">Full AI-Generated JSON:</p>
-                  <pre className="text-xs text-gray-800 overflow-x-auto">
-                    {JSON.stringify(parsed, null, 2)}
-                  </pre>
+              {parsed.cta && (
+                <button className={`mt-12 px-12 py-5 ${buttonColor} text-2xl font-bold rounded-full transition-all transform hover:scale-110 shadow-2xl`}>
+                  {parsed.cta} →
+                </button>
+              )}
+            </div>
+          )
+        }
+        
+        // Layout Variant 2: Left-aligned with Hero Image Placeholder
+        if (designVariant === 1) {
+          return (
+            <div className={`bg-gradient-to-br ${gradient} rounded-lg overflow-hidden`}>
+              <div className="grid md:grid-cols-2 gap-8 p-12">
+                <div className="space-y-6">
+                  {parsed.headline && (
+                    <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+                      {parsed.headline}
+                    </h1>
+                  )}
+                  {parsed.subheadline && (
+                    <p className="text-xl text-white/90">{parsed.subheadline}</p>
+                  )}
+                  {parsed.cta && (
+                    <button className={`px-8 py-4 ${buttonColor} text-lg font-bold rounded-lg transition-all shadow-xl`}>
+                      {parsed.cta}
+                    </button>
+                  )}
+                </div>
+                <div className="bg-white/20 rounded-xl flex items-center justify-center p-8">
+                  <div className="text-white/50 text-center">
+                    <div className="text-6xl mb-4">🚀</div>
+                    <p className="text-sm">Hero Image</p>
+                  </div>
+                </div>
+              </div>
+              {parsed.benefits && Array.isArray(parsed.benefits) && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-12 pt-0">
+                  {parsed.benefits.map((benefit: any, index: number) => (
+                    <div key={index} className={`${cardStyle} p-6`}>
+                      <h3 className="text-lg font-bold text-white mb-2">{benefit.title}</h3>
+                      <p className="text-white/80 text-sm">{benefit.description}</p>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
-          </div>
-        )
+          )
+        }
+        
+        // Layout Variant 3: Feature Cards with Numbers
+        if (designVariant === 2) {
+          return (
+            <div className={`bg-gradient-to-br ${gradient} rounded-lg p-12 space-y-12`}>
+              <div className="text-center space-y-4">
+                {parsed.headline && (
+                  <h1 className="text-5xl font-extrabold text-white">{parsed.headline}</h1>
+                )}
+                {parsed.subheadline && (
+                  <p className="text-xl text-white/90 max-w-2xl mx-auto">{parsed.subheadline}</p>
+                )}
+              </div>
+              {parsed.benefits && Array.isArray(parsed.benefits) && (
+                <div className="space-y-6">
+                  {parsed.benefits.map((benefit: any, index: number) => (
+                    <div key={index} className={`${cardStyle} p-8 flex gap-6 items-start`}>
+                      <div className="text-5xl font-bold text-white/30 min-w-[60px]">
+                        {String(index + 1).padStart(2, '0')}
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold text-white mb-3">{benefit.title}</h3>
+                        <p className="text-white/90 text-lg">{benefit.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {parsed.cta && (
+                <div className="text-center">
+                  <button className={`px-10 py-4 ${buttonColor} text-xl font-bold rounded-lg transition-all transform hover:scale-105 shadow-2xl`}>
+                    {parsed.cta}
+                  </button>
+                </div>
+              )}
+            </div>
+          )
+        }
+        
+        // Layout Variant 4: Minimal Clean Design
+        if (designVariant === 3) {
+          return (
+            <div className="bg-white rounded-lg p-12 space-y-10">
+              <div className="text-center space-y-6 border-b-4 border-gray-200 pb-10">
+                {parsed.headline && (
+                  <h1 className={`text-5xl font-black bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
+                    {parsed.headline}
+                  </h1>
+                )}
+                {parsed.subheadline && (
+                  <p className="text-xl text-gray-700 max-w-3xl mx-auto">{parsed.subheadline}</p>
+                )}
+              </div>
+              {parsed.benefits && Array.isArray(parsed.benefits) && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {parsed.benefits.map((benefit: any, index: number) => (
+                    <div key={index} className="text-center space-y-3">
+                      <div className={`inline-block p-4 rounded-full bg-gradient-to-br ${gradient} text-white text-2xl`}>
+                        {['🎯', '⚡', '🌟'][index] || '✨'}
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-900">{benefit.title}</h3>
+                      <p className="text-gray-600">{benefit.description}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {parsed.cta && (
+                <div className="text-center pt-6">
+                  <button className={`px-10 py-4 bg-gradient-to-r ${gradient} text-white text-xl font-bold rounded-full transition-all transform hover:scale-105 shadow-xl`}>
+                    {parsed.cta}
+                  </button>
+                </div>
+              )}
+            </div>
+          )
+        }
+        
+        // Layout Variant 5: Card-based Stacked Design
+        if (designVariant === 4) {
+          return (
+            <div className={`bg-gradient-to-br ${gradient} rounded-lg p-8 space-y-6`}>
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-10 text-center border-2 border-white/30">
+                {parsed.headline && (
+                  <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                    {parsed.headline}
+                  </h1>
+                )}
+                {parsed.subheadline && (
+                  <p className="text-lg text-white/90">{parsed.subheadline}</p>
+                )}
+              </div>
+              {parsed.benefits && Array.isArray(parsed.benefits) && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {parsed.benefits.map((benefit: any, index: number) => (
+                    <div key={index} className="bg-white rounded-xl p-6 shadow-xl">
+                      <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                        <span className={`inline-block w-8 h-8 rounded-full bg-gradient-to-r ${gradient} flex items-center justify-center text-white text-sm`}>
+                          {index + 1}
+                        </span>
+                        {benefit.title}
+                      </h3>
+                      <p className="text-gray-700">{benefit.description}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {parsed.cta && (
+                <div className="text-center pt-4">
+                  <button className={`px-10 py-4 ${buttonColor} text-xl font-bold rounded-xl transition-all transform hover:scale-105 shadow-2xl`}>
+                    {parsed.cta} ✨
+                  </button>
+                </div>
+              )}
+            </div>
+          )
+        }
         
         // Default fallback
         return (
-          <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg p-12 space-y-8">
+          <div className={`bg-gradient-to-br ${gradient} rounded-lg p-12 ${layout} space-y-8`}>
             {/* Headline */}
             {parsed.headline && (
               <h1 className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-lg">
@@ -200,7 +363,7 @@ export default function AIGeneratorPage() {
             {parsed.benefits && Array.isArray(parsed.benefits) && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
                 {parsed.benefits.map((benefit: any, index: number) => (
-                  <div key={index} className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg p-6">
+                  <div key={index} className={`${cardStyle} p-6`}>
                     <h3 className="text-xl font-bold text-white mb-3">
                       {benefit.title}
                     </h3>
@@ -214,7 +377,7 @@ export default function AIGeneratorPage() {
             
             {/* Bullet Points */}
             {parsed.bulletPoints && Array.isArray(parsed.bulletPoints) && (
-              <ul className="max-w-2xl space-y-3 text-white text-lg">
+              <ul className={`${layout === 'text-left' ? 'text-left' : 'text-left'} max-w-2xl ${layout === 'text-center' ? 'mx-auto' : ''} space-y-3 text-white text-lg`}>
                 {parsed.bulletPoints.map((point: string, index: number) => (
                   <li key={index} className="flex items-start gap-3">
                     <span className="text-yellow-400 text-xl">✓</span>
@@ -226,7 +389,7 @@ export default function AIGeneratorPage() {
             
             {/* CTA */}
             {parsed.cta && (
-              <button className="mt-8 px-10 py-4 bg-yellow-400 hover:bg-yellow-300 text-xl font-bold rounded-lg transition-all transform hover:scale-105 shadow-2xl text-gray-900">
+              <button className={`mt-8 px-10 py-4 ${buttonColor} text-xl font-bold rounded-lg transition-all transform hover:scale-105 shadow-2xl`}>
                 {parsed.cta}
               </button>
             )}
@@ -342,7 +505,6 @@ export default function AIGeneratorPage() {
                   <option value="casual" className="bg-gray-800 text-white">Casual</option>
                   <option value="urgent" className="bg-gray-800 text-white">Urgent</option>
                   <option value="friendly" className="bg-gray-800 text-white">Friendly</option>
-                  <option value="funny" className="bg-gray-800 text-white">Funny</option>
                 </select>
               </div>
 
@@ -403,6 +565,13 @@ export default function AIGeneratorPage() {
                       className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition"
                     >
                       ⭐ Save
+                    </button>
+                    <button
+                      onClick={() => setDesignVariant(Math.floor(Math.random() * 5))}
+                      className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold transition"
+                      title="Change visual design"
+                    >
+                      🎨 New Style
                     </button>
                     <button
                       onClick={copyToClipboard}
@@ -501,9 +670,6 @@ export default function AIGeneratorPage() {
           </Link>
         </div>
       </div>
-      
-      {/* AI Consent Dialog */}
-      <ConsentDialog />
     </div>
   )
 }

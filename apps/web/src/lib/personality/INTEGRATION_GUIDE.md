@@ -183,7 +183,7 @@ You have two options:
 
 ## File Structure
 
-```
+```text
 apps/web/src/lib/personality/
 ├── types.ts                 # Type definitions
 ├── resolvePersonality.ts    # Personality database & resolver

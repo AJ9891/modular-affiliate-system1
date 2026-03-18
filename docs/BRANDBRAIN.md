@@ -6,7 +6,7 @@ BrandBrain is a centralized brand personality and compliance management system t
 
 **Formula:**
 
-```
+```text
 BrandBrain = PersonalityProfile 
            + AI Prompt Rules 
            + UI Behavior Constraints 
@@ -291,7 +291,7 @@ if (ui.microInteractions.glitchAllowed) {
   return <div>...</div>;
 }
 
-```
+```text
 
 ## BrandBrain Manager
 
@@ -362,7 +362,7 @@ const content = await generateContent({
 
 Access the BrandBrain admin interface at:
 
-```
+```text
 /admin/brand-brain
 ```
 
@@ -378,29 +378,29 @@ Features:
 
 The `UIExpressionProfile` controls how the brand personality expresses itself through UI elements:
 
-**Hero Section**
+### Hero Section
 
 - `variants`: Which hero styles are allowed (`meltdown`, `anti-guru`, `rocket`)
 - `motionIntensity`: How much animation (`none`, `low`, `medium`, `high`)
 - `visualNoise`: Level of visual complexity (`none`, `controlled`, `expressive`)
 
-**Typography**
+### Typography
 
 - `tone`: Overall text personality (`flat`, `confident`, `playful`, `fractured`)
 - `emphasisStyle`: How to emphasize text (`none`, `underline`, `highlight`, `strike`)
 
-**Surfaces**
+### Surfaces
 
 - `depth`: Card and surface styling (`flat`, `soft`, `layered`)
 - `borderStyle`: Border treatment (`sharp`, `rounded`, `mixed`)
 
-**Micro-interactions**
+### Micro-interactions
 
 - `hoverAllowed`: Enable hover effects
 - `glitchAllowed`: Allow glitch animations
 - `pulseAllowed`: Enable pulse animations
 
-**Sound**
+### Sound
 
 - `ambientProfiles`: Allowed sound profiles (`checklist`, `hum`, `glitch`)
 - `maxVolume`: Maximum sound volume (0-1)
@@ -548,7 +548,7 @@ supabase db push
 
 ## Context-Aware Personality System
 
-### Overview
+### Personality Context Overview
 
 The personality system now includes **route-based context awareness** that modulates visual expression, motion, and sound based on where the user is in the app.
 
@@ -650,7 +650,7 @@ function ManualExample() {
 
 ### Design Philosophy
 
-**Components ask "How should I behave?" not "Which color am I?"**
+### Components ask "How should I behave?" not "Which color am I?"
 
 This distinction keeps the system:
 

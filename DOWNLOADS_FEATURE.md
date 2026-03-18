@@ -146,14 +146,14 @@ View on `/downloads` page:
 
 ### Database Tables
 
-**downloads**
+### downloads
 
 - Stores file metadata
 - Links to user who uploaded
 - Tracks download count
 - Stores Supabase Storage URL
 
-**download_logs**
+### download_logs
 
 - One row per download
 - Links to download and email
@@ -182,25 +182,25 @@ Files stored in Supabase Storage bucket:
 
 ### 1. Ebook Lead Magnet
 
-```
+```text
 Landing Page → DownloadGate → Capture Email → Download PDF → Thank You
 ```
 
 ### 2. Free Resource Library
 
-```
+```text
 Member Login → Downloads Page → Browse Files → Click to Download
 ```
 
 ### 3. Course Bonus Materials
 
-```
+```text
 Purchase Course → Email with Link → DownloadGate → Get Bonus PDFs
 ```
 
 ### 4. Multi-Step Funnel
 
-```
+```text
 Ad → Landing → Email Capture → Download → Email Sequence → Upsell
 ```
 

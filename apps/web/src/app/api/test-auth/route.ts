@@ -1,10 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { NextResponse } from 'next/server'
+import { supabase } from '@/lib/supabase'
 
 export async function GET() {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
     if (!supabase) {
       return NextResponse.json({ 
         status: 'error',
@@ -13,7 +11,7 @@ export async function GET() {
     }
 
     // Test database connection
-    const { data, error } = await supabase
+    const { data: _data, error } = await supabase
       .from('users')
       .select('count')
       .limit(1)

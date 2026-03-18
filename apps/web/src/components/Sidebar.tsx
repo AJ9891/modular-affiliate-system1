@@ -22,7 +22,7 @@ const launchpadItem: NavigationItem = {
 const regularNavigation: NavigationItem[] = [
   { name: 'Home', href: '/', icon: '🏠' },
   { name: 'Dashboard', href: '/dashboard', icon: '📊' },
-  { name: 'Funnel Builder', href: '/builder', icon: '🎨' },
+  { name: 'Funnel Builder', href: '/builder-v2', icon: '🎨' },
   { name: 'Visual Builder', href: '/visual-builder', icon: '✨' },
   { name: 'AI Generator', href: '/ai-generator', icon: '🤖' },
   { name: 'Downloads', href: '/downloads', icon: '📥' },

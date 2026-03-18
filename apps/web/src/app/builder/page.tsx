@@ -3,8 +3,6 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { BrandModeProvider, useBrandMode } from '@/contexts/BrandModeContext'
-import { PersonalitySelector } from '@/components/PersonalitySelector'
 
 interface FunnelBlock {
   id: string
@@ -13,14 +11,12 @@ interface FunnelBlock {
   style: Record<string, any>
 }
 
-function BuilderContent() {
+export default function Builder() {
   const router = useRouter()
-  const { mode } = useBrandMode()
   const [funnelName, setFunnelName] = useState('')
   const [blocks, setBlocks] = useState<FunnelBlock[]>([])
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
-  const [showPersonalityPanel, setShowPersonalityPanel] = useState(false)
 
   const blockTypes = [
     { type: 'hero', label: 'Hero Section', icon: '🎯' },
@@ -105,21 +101,7 @@ function BuilderContent() {
             ← Back to Dashboard
           </Link>
           
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-600">Voice:</span>
-              <span className="text-lg font-semibold text-blue-600">
-                {mode === 'rocket' && '🚀 Rocket'}
-                {mode === 'meltdown' && '🤖 Meltdown'}
-                {mode === 'antiguru' && '⚡ Anti-Guru'}
-              </span>
-              <button
-                onClick={() => setShowPersonalityPanel(!showPersonalityPanel)}
-                className="ml-2 px-3 py-1 text-sm border rounded-lg hover:bg-gray-50"
-              >
-                Change
-              </button>
-            </div>
+          <div className="flex items-center gap-4">
             <input
               type="text"
               placeholder="Funnel Name"
@@ -136,16 +118,6 @@ function BuilderContent() {
             </button>
           </div>
         </div>
-
-        {/* Personality Selector Panel */}
-        {showPersonalityPanel && (
-          <div className="bg-gray-50 border-t p-6">
-            <PersonalitySelector 
-              compact={false} 
-              onSelectionComplete={() => setShowPersonalityPanel(false)}
-            />
-          </div>
-        )}
       </header>
 
       <div className="flex h-[calc(100vh-73px)]">
@@ -372,18 +344,10 @@ function getDefaultContent(type: string): Record<string, any> {
   return defaults[type] || {}
 }
 
-function getDefaultStyle(type: string): Record<string, any> {
+function getDefaultStyle(_type: string): Record<string, any> {
   return {
     background: 'white',
     padding: 'large',
     textAlign: 'center',
   }
-}
-
-export default function Builder() {
-  return (
-    <BrandModeProvider>
-      <BuilderContent />
-    </BrandModeProvider>
-  )
 }

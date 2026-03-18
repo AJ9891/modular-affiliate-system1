@@ -52,13 +52,13 @@ Complete affiliate link tracking and analytics system with click tracking, conve
 
 #### Tracking Links
 
-```
+```text
 https://yourdomain.com/api/redirect/[offer-id]?utm_source=facebook&utm_medium=cpc&utm_campaign=summer-sale
 ```
 
 #### Direct API Tracking
 
-```
+```text
 POST /api/track/click
 {
   "offer_id": "uuid",
@@ -71,7 +71,7 @@ POST /api/track/click
 
 #### Conversion Tracking
 
-```
+```text
 POST /api/track/conversion
 {
   "offer_id": "uuid",
@@ -277,19 +277,19 @@ Demo page showing tracking implementation
 
 ### Case 1: Facebook Ad Campaign
 
-```
+```text
 Link: /api/redirect/offer-123?utm_source=facebook&utm_medium=cpc&utm_campaign=summer-sale
 ```
 
 ### Case 2: Email Newsletter
 
-```
+```text
 Link: /api/redirect/offer-123?utm_source=newsletter&utm_medium=email&utm_campaign=weekly-digest
 ```
 
 ### Case 3: YouTube Video
 
-```
+```text
 Link: /api/redirect/offer-123?utm_source=youtube&utm_medium=video&utm_campaign=review-video
 ```
 

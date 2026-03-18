@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
  * Setup default automations
  * POST /api/email/automation/setup
  */
-export async function PUT(request: NextRequest) {
+export async function PUT(_request: NextRequest) {
   try {
     const automations = await sendshark.setupDefaultAutomations()
     

@@ -15,18 +15,16 @@ function getClient() {
   if (cachedClient) return cachedClient
 
   if (!supabaseUrl) {
-    const msg = 
+    const msg =
       '[CLIENT ERROR] NEXT_PUBLIC_SUPABASE_URL is not set.\n' +
       'Fix: Check .env.local has NEXT_PUBLIC_SUPABASE_URL=...'
-    console.error(msg)
     throw new Error(msg)
   }
 
   if (!supabaseAnonKey) {
-    const msg = 
+    const msg =
       '[CLIENT ERROR] NEXT_PUBLIC_SUPABASE_ANON_KEY is not set.\n' +
       'Fix: Check .env.local has NEXT_PUBLIC_SUPABASE_ANON_KEY=...'
-    console.error(msg)
     throw new Error(msg)
   }
 

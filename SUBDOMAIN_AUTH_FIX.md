@@ -85,7 +85,7 @@ if (subdomainMatch && subdomainMatch[1] !== 'www') {
 
 Add to your `/etc/hosts` file:
 
-```
+```text
 127.0.0.1 test.launchpad4success.pro
 127.0.0.1 demo.launchpad4success.pro
 ```
@@ -108,7 +108,7 @@ Add to your `/etc/hosts` file:
 
 Ensure wildcard subdomain is configured:
 
-```
+```text
 *.launchpad4success.pro → cname.vercel-dns.com
 ```
 

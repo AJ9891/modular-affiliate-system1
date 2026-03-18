@@ -95,17 +95,17 @@ npm run dev
 
 ## Troubleshooting
 
-**"Stripe not configured"**
+### "Stripe not configured"
 
 - Check `STRIPE_SECRET_KEY` in `.env.local`
 - Restart dev server
 
-**Webhook errors**
+### Webhook errors
 
 - Verify `STRIPE_WEBHOOK_SECRET` matches CLI output
 - Check webhook endpoint URL
 
-**"Plan not configured"**
+### "Plan not configured"
 
 - Add all three `STRIPE_*_PRICE_ID` variables
 - Ensure they start with `price_` not `prod_`

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { checkSupabase } from '@/lib/check-supabase'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createServiceRoleClient, createServerRouteClient } from '@/lib/supabase-server'
+import { canUseCustomDomain, fetchUserProfile, requireUser } from '@/lib/authz'
+import { validateDomain } from '@/lib/validators/domains'
+import { error, ok, readJson } from '@/lib/http'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,54 +31,25 @@ export async function GET(request: NextRequest) {
 
   try {
     validateEnv()
-    const supabase = createRouteHandlerClient({ cookies })
-    const accessToken = request.cookies.get('sb-access-token')?.value
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
-    }
+    const supabase = await createServerRouteClient()
+    const user = await requireUser(supabase)
 
-    const { data: { user } } = await supabase.auth.getUser(accessToken)
-    if (!user) {
-      return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
-    }
-
-    // Get user's custom domains from database
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-    
-    if (!supabaseUrl) throw new Error('[API/DOMAINS] NEXT_PUBLIC_SUPABASE_URL is required')
-    if (!serviceRoleKey) throw new Error('[API/DOMAINS] SUPABASE_SERVICE_ROLE_KEY is required')
-
-    const { createClient } = await import('@supabase/supabase-js')
-    const adminClient = createClient(
-      supabaseUrl,
-      serviceRoleKey,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
+    const adminClient = createServiceRoleClient()
+    const userData = await fetchUserProfile(
+      adminClient,
+      user.id,
+      'custom_domain, subdomain, subscription_plan, email, is_admin'
     )
 
-    const { data: userData } = await adminClient
-      .from('users')
-      .select('custom_domain, subdomain, subscription_plan, email, is_admin')
-      .eq('id', user.id)
-      .single()
-
-    return NextResponse.json({
+    return ok({
       subdomain: userData?.subdomain || null,
       customDomain: userData?.custom_domain || null,
       plan: userData?.subscription_plan || 'starter',
-      canAddCustomDomain: userData?.is_admin || userData?.subscription_plan === 'agency'
+      canAddCustomDomain: canUseCustomDomain(userData)
     })
   } catch (error: any) {
     console.error('Error fetching domains:', error)
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    )
+    return error(error)
   }
 }
 
@@ -87,46 +60,22 @@ export async function POST(request: NextRequest) {
 
   try {
     validateEnv()
-    const supabase = createRouteHandlerClient({ cookies })
-    const accessToken = request.cookies.get('sb-access-token')?.value
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
-    }
+    const supabase = await createServerRouteClient()
+    const user = await requireUser(supabase)
 
-    const { data: { user } } = await supabase.auth.getUser(accessToken)
-    if (!user) {
-      return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
-    }
-
-    const body = await request.json()
+    const body = validateDomain(await readJson(request))
     const { domain, type } = body // type: 'subdomain' or 'custom'
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-    
-    if (!supabaseUrl) throw new Error('[API/DOMAINS] NEXT_PUBLIC_SUPABASE_URL is required')
-    if (!serviceRoleKey) throw new Error('[API/DOMAINS] SUPABASE_SERVICE_ROLE_KEY is required')
-
-    const { createClient } = await import('@supabase/supabase-js')
-    const adminClient = createClient(
-      supabaseUrl,
-      serviceRoleKey,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+    const adminClient = createServiceRoleClient()
 
     // Get user's subscription plan
-    const { data: userData } = await adminClient
-      .from('users')
-      .select('subscription_plan, is_admin')
-      .eq('id', user.id)
-      .single()
+    const userData = await fetchUserProfile(
+      adminClient,
+      user.id,
+      'subscription_plan, is_admin'
+    )
 
-    if (type === 'custom' && !userData?.is_admin && userData?.subscription_plan !== 'agency') {
+    if (type === 'custom' && !canUseCustomDomain(userData)) {
       return NextResponse.json(
         { error: 'Custom domains are only available on Agency plan' },
         { status: 403 }
@@ -164,7 +113,7 @@ export async function POST(request: NextRequest) {
         .update({ subdomain: domain })
         .eq('id', user.id)
 
-      return NextResponse.json({
+      return ok({
         success: true,
         subdomain: domain,
         url: `https://${domain}.launchpad4success.pro`
@@ -209,7 +158,7 @@ export async function POST(request: NextRequest) {
         .update({ custom_domain: domain })
         .eq('id', user.id)
 
-      return NextResponse.json({
+      return ok({
         success: true,
         domain,
         vercelConfig: vercelData,
@@ -231,15 +180,9 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    return NextResponse.json(
-      { error: 'Invalid domain type' },
-      { status: 400 }
-    )
+    throw new Error('Invalid domain type')
   } catch (error: any) {
     console.error('Error managing domain:', error)
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    )
+    return error(error)
   }
 }

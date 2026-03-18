@@ -1,18 +1,13 @@
 import { NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { createServiceRoleClient } from '@/lib/supabase-server'
+import { validateAffiliateClick } from '@/lib/validators/affiliate'
+import { error, ok, readJson } from '@/lib/http'
 
 export async function POST(req: NextRequest) {
   try {
-    const { user_id, partner, source, metadata } = await req.json()
+    const supabase = createServiceRoleClient()
 
-    if (!partner) {
-      return Response.json({ error: 'Partner is required' }, { status: 400 })
-    }
+    const { user_id, partner, source, metadata } = validateAffiliateClick(await readJson(req))
 
     const { data, error } = await supabase
       .from('affiliate_clicks')
@@ -26,13 +21,12 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (error) {
-      console.error('Affiliate click tracking error:', error)
-      return Response.json({ error: error.message }, { status: 500 })
+      throw error
     }
 
-    return Response.json({ success: true, click: data })
-  } catch (error) {
-    console.error('Affiliate click tracking error:', error)
-    return Response.json({ error: 'Internal server error' }, { status: 500 })
+    return ok({ success: true, click: data })
+  } catch (err: any) {
+    console.error('Affiliate click tracking error:', err)
+    return error(err)
   }
 }

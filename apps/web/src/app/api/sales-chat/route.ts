@@ -1,13 +1,18 @@
 import { NextRequest } from 'next/server'
 import OpenAI from 'openai'
-import { createClient } from '@supabase/supabase-js'
 import { BrandBrainManager } from '@/lib/brand-brain/manager'
 import { extractActionFromResponse, isValidAction, formatActionJson } from '@/lib/chat-utils'
+import { createServiceRoleClient } from '@/lib/supabase-server'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // server-only
-)
+function getOpenAI() {
+  const apiKey = process.env.OPENAI_API_KEY
+  if (!apiKey) {
+    throw new Error('OPENAI_API_KEY is not set')
+  }
+  return new OpenAI({ apiKey })
+}
+
+const supabase = createServiceRoleClient()
 
 // Fallback system prompt if BrandBrain is not configured
 const FALLBACK_SYSTEM_PROMPT = `You are Launchpad 4 Success, an AI sales assistant for the Launchpad 4 Success platform.
@@ -215,11 +220,6 @@ export async function POST(req: NextRequest) {
       return new Response('Invalid payload', { status: 400 })
     }
 
-    // Initialize OpenAI client (lazy loading)
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY!,
-    })
-
     // Get BrandBrain system prompt dynamically
     let systemPrompt = FALLBACK_SYSTEM_PROMPT
     try {
@@ -246,7 +246,7 @@ export async function POST(req: NextRequest) {
       // Fail silently, use fallback
     }
 
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAI().chat.completions.create({
       model: 'gpt-4o-mini',
       temperature: 0.6,
       stream: true,

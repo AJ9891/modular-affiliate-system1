@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe, dollarsToCredits } from '@/lib/stripe'
 import { sendshark } from '@/lib/sendshark'
+import { log } from '@/lib/log'
 import { headers } from 'next/headers'
-import { createClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
+import { createServiceRoleClient } from '@/lib/supabase-server'
+import { PlanManager } from '@/lib/plan-manager'
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || ''
+const supabaseAdmin = createServiceRoleClient()
+const planManager = new PlanManager()
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
@@ -13,6 +17,7 @@ export const dynamic = 'force-dynamic'
 export async function POST(request: NextRequest) {
   try {
     if (!stripe) {
+      log.error('Stripe not configured')
       return NextResponse.json(
         { error: 'Stripe not configured' },
         { status: 503 }
@@ -35,7 +40,7 @@ export async function POST(request: NextRequest) {
     try {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
     } catch (err: any) {
-      console.error('Webhook signature verification failed:', err.message)
+      log.error('Webhook signature verification failed', { message: err?.message })
       return NextResponse.json(
         { error: `Webhook Error: ${err.message}` },
         { status: 400 }
@@ -69,12 +74,12 @@ export async function POST(request: NextRequest) {
         break
 
       default:
-        console.log(`Unhandled event type: ${event.type}`)
+        log.warn('Unhandled Stripe event', { type: event.type })
     }
 
     return NextResponse.json({ received: true })
   } catch (error: any) {
-    console.error('Webhook error:', error)
+    log.error('Webhook error', { error: error?.message })
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }
@@ -91,17 +96,7 @@ async function handleCreditTopup(session: Stripe.Checkout.Session) {
   if (!targetUserId) return
 
   try {
-    // Use service role client to bypass RLS
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+    const adminClient = supabaseAdmin
 
     // Get topup record
     const { data: topupData, error: topupErr } = await adminClient
@@ -191,17 +186,7 @@ async function handleCheckoutSessionCompleted(session: any) {
   if (!userId) return
 
   try {
-    // Use service role client to bypass RLS
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+    const adminClient = supabaseAdmin
 
     const { error } = await adminClient
       .from('users')
@@ -217,7 +202,7 @@ async function handleCheckoutSessionCompleted(session: any) {
     if (error) {
       console.error('Failed to update user subscription:', error)
     } else {
-      console.log(`Subscription activated for user ${userId}, plan: ${plan}`)
+      log.info(`Subscription activated for user ${userId}, plan: ${plan}`)
     }
 
     // Auto-provision Sendshark account for the user
@@ -254,16 +239,7 @@ async function provisionSendsharkAccount(userId: string, email: string, plan: st
       console.log(`✅ Sendshark account provisioned for ${email}`)
       
       // Update user record with Sendshark info
-      const adminClient = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false
-          }
-        }
-      )
+      const adminClient = supabaseAdmin
 
       await adminClient
         .from('users')
@@ -324,16 +300,7 @@ async function handleSubscriptionUpdated(subscription: any) {
   if (!customerId) return
 
   try {
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+    const adminClient = supabaseAdmin
 
     const { error } = await adminClient
       .from('users')
@@ -357,16 +324,7 @@ async function handleSubscriptionDeleted(subscription: any) {
   if (!customerId) return
 
   try {
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+    const adminClient = supabaseAdmin
 
     const { error } = await adminClient
       .from('users')
@@ -386,22 +344,12 @@ async function handleSubscriptionDeleted(subscription: any) {
 
 async function handleInvoicePaymentSucceeded(invoice: any) {
   const customerId = invoice.customer
-  const customerEmail = invoice.customer_email
+  const _customerEmail = invoice.customer_email
   
   if (!customerId) return
 
   try {
-    // Use service role client to bypass RLS
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+    const adminClient = supabaseAdmin
 
     // Get user info
     const { data: userData } = await adminClient
@@ -439,16 +387,7 @@ async function handleInvoicePaymentFailed(invoice: any) {
   if (!customerId) return
 
   try {
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+    const adminClient = supabaseAdmin
 
     const { error } = await adminClient
       .from('users')
@@ -465,3 +404,5 @@ async function handleInvoicePaymentFailed(invoice: any) {
     console.error('Error updating payment status:', error)
   }
 }
+
+

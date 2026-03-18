@@ -3,7 +3,7 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { checkSupabase } from '@/lib/check-supabase'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   const check = checkSupabase()
   if (check) return check
   
