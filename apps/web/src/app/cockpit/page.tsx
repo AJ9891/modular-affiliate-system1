@@ -108,15 +108,22 @@ function CockpitContent() {
         {/* Interactive modules map */}
         <div className="relative overflow-hidden rounded-xl border border-white/10 bg-black/30 p-4 backdrop-blur">
           <div
-            className="relative w-full"
+            className="relative w-full overflow-hidden"
             style={{
               aspectRatio: '16 / 9',
-              backgroundImage: "url('/Backgrounds/dashboard-dark.png')",
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
               borderRadius: '12px'
             }}
           >
+            <div
+              className="absolute inset-0 scale-105"
+              style={{
+                backgroundImage: "url('/Backgrounds/dashboard-dark.png')",
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                filter: 'blur(1.8px) brightness(0.62)',
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-slate-950/55 to-black/65" />
             <CockpitModules />
           </div>
         </div>

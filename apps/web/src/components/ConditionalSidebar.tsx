@@ -8,8 +8,8 @@ import { isExactPublicPath } from '@/config/publicPaths'
 export default function ConditionalSidebar({ children }: { children?: ReactNode }) {
   const pathname = usePathname()
 
-  // Don't show sidebar on public pages
-  const shouldHideSidebar = isExactPublicPath(pathname)
+  // Don't show sidebar on public pages or on Launchpad onboarding route.
+  const shouldHideSidebar = isExactPublicPath(pathname) || pathname === '/launchpad' || pathname === '/welcome'
 
   if (shouldHideSidebar) {
     return <>{children}</>

@@ -17,6 +17,8 @@ function isPublicPath(pathname: string) {
   if (pathname.startsWith('/_next')) return true
   if (pathname.startsWith('/favicon') || pathname.startsWith('/robots')) return true
   if (pathname.startsWith('/api/auth')) return true
+  // Let API routes handle auth/authorization themselves and return JSON errors.
+  if (pathname.startsWith('/api/')) return true
   return false
 }
 
@@ -82,9 +84,12 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  const isOnboardingPath = pathname.startsWith('/launchpad')
+  const isOnboardingPath = pathname.startsWith('/launchpad') || pathname.startsWith('/welcome')
+  const skipOnboarding =
+    req.nextUrl.searchParams.get('skip_onboarding') === '1' ||
+    req.cookies.get('lp_skip_onboarding')?.value === '1'
 
-  if (!isOnboardingPath) {
+  if (!isOnboardingPath && !skipOnboarding) {
     const step = await getOnboardingStep(session.user.id)
     if (step !== null && step < ONBOARDING_COMPLETE) {
       return NextResponse.redirect(new URL('/launchpad', req.url))

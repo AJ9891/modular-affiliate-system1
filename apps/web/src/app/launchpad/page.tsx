@@ -122,7 +122,7 @@ export default function LaunchpadPage() {
       title: 'Launch & Track',
       description: 'Go live and monitor your performance',
       icon: TrendingUp,
-      action: 'Launch Now'
+      action: 'Go to Cockpit'
     }
   ]
 
@@ -201,21 +201,12 @@ export default function LaunchpadPage() {
     }
     
     if (stepId === 'launch') {
-      console.log('Launch clicked - selectedTemplate:', selectedTemplate)
-      console.log('Launch clicked - selectedNiche:', selectedNiche)
-      
-      // Create the funnel when launching
-      const template = funnelTemplates.find(t => t.category === selectedTemplate)
-      console.log('Found template:', template)
-      
-      if (template) {
-        console.log('Creating funnel from template...')
-        await createFunnelFromTemplate(template, true)
-      } else {
-        console.log('No template found, completing setup')
-        setSetupComplete(true)
-        await loadUserData()
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('lp_skip_onboarding', '1')
+        document.cookie = 'lp_skip_onboarding=1; Path=/; Max-Age=2592000; SameSite=Lax'
       }
+      window.location.href = '/cockpit?skip_onboarding=1'
+      return
     } else {
       setCurrentStep(prev => prev + 1)
     }
@@ -313,6 +304,18 @@ export default function LaunchpadPage() {
   const copyFunnelUrl = () => {
     navigator.clipboard.writeText(getFunnelUrl())
     alert('Funnel URL copied to clipboard!')
+  }
+
+  const closeOnboarding = () => {
+    window.location.href = '/'
+  }
+
+  const skipOnboarding = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('lp_skip_onboarding', '1')
+      document.cookie = 'lp_skip_onboarding=1; Path=/; Max-Age=2592000; SameSite=Lax'
+    }
+    window.location.href = '/cockpit?skip_onboarding=1'
   }
 
   // Success screen after launch
@@ -540,7 +543,7 @@ export default function LaunchpadPage() {
   const StepIcon = step.icon
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-rose-50">
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Progress Bar */}
         <div className="mb-12">
@@ -550,7 +553,7 @@ export default function LaunchpadPage() {
                 key={s.id}
                 className={`
                   flex items-center justify-center w-10 h-10 rounded-full
-                  ${index <= currentStep ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'}
+                  ${index <= currentStep ? 'bg-orange-700 text-white' : 'bg-stone-200 text-stone-600'}
                   transition-all
                 `}
               >
@@ -564,7 +567,7 @@ export default function LaunchpadPage() {
           </div>
           <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-blue-600 to-purple-600 transition-all duration-500"
+              className="h-full bg-gradient-to-r from-orange-700 to-amber-600 transition-all duration-500"
               style={{ width: `${((currentStep + 1) / launchSteps.length) * 100}%` }}
             />
           </div>
@@ -572,31 +575,31 @@ export default function LaunchpadPage() {
 
         {/* Step Content */}
         <div className="bg-white rounded-2xl shadow-2xl p-12 text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 mb-6">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-orange-600 to-amber-600 mb-6">
             <StepIcon className="text-white" size={36} />
           </div>
 
-          <h1 className="text-4xl font-bold mb-4">{step.title}</h1>
-          <p className="text-xl text-gray-600 mb-8">{step.description}</p>
+          <h1 className="text-4xl font-bold mb-4 text-slate-900">{step.title}</h1>
+          <p className="text-xl text-slate-700 mb-8">{step.description}</p>
 
           {/* Step-specific content */}
           {step.id === 'welcome' && (
             <div className="space-y-6 mb-8">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-                <div className="p-4 bg-blue-50 rounded-lg">
-                  <Zap className="text-blue-600 mb-2" size={24} />
-                  <h3 className="font-bold mb-1">Lightning Fast</h3>
-                  <p className="text-sm text-gray-600">Launch in minutes, not days</p>
+                <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                  <Zap className="text-orange-700 mb-2" size={24} />
+                  <h3 className="font-bold mb-1 text-slate-900">Lightning Fast</h3>
+                  <p className="text-sm text-slate-700">Launch in minutes, not days</p>
                 </div>
-                <div className="p-4 bg-purple-50 rounded-lg">
+                <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
                   <Sparkles className="text-purple-600 mb-2" size={24} />
-                  <h3 className="font-bold mb-1">AI-Powered</h3>
-                  <p className="text-sm text-gray-600">Let AI create your content</p>
+                  <h3 className="font-bold mb-1 text-slate-900">AI-Powered</h3>
+                  <p className="text-sm text-slate-700">Let AI create your content</p>
                 </div>
-                <div className="p-4 bg-green-50 rounded-lg">
+                <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
                   <BarChart className="text-green-600 mb-2" size={24} />
-                  <h3 className="font-bold mb-1">Track Everything</h3>
-                  <p className="text-sm text-gray-600">Real-time analytics</p>
+                  <h3 className="font-bold mb-1 text-slate-900">Track Everything</h3>
+                  <p className="text-sm text-slate-700">Real-time analytics</p>
                 </div>
               </div>
             </div>
@@ -618,15 +621,15 @@ export default function LaunchpadPage() {
                   className={`
                     p-6 border-2 rounded-lg cursor-pointer transition-all text-center
                     ${selectedNiche === niche.id 
-                      ? 'border-blue-600 bg-blue-50 shadow-lg' 
-                      : 'border-gray-200 hover:border-blue-300'
+                      ? 'border-orange-700 bg-orange-50 shadow-lg' 
+                      : 'border-gray-200 hover:border-orange-300'
                     }
                   `}
                 >
                   <div className="text-4xl mb-2">{niche.emoji}</div>
-                  <h4 className="font-bold text-sm">{niche.name}</h4>
+                  <h4 className="font-bold text-sm text-orange-800">{niche.name}</h4>
                   {selectedNiche === niche.id && (
-                    <div className="mt-2 text-blue-600">
+                    <div className="mt-2 text-orange-700">
                       <CheckCircle size={20} className="mx-auto" />
                     </div>
                   )}
@@ -644,19 +647,19 @@ export default function LaunchpadPage() {
                   className={`
                     p-6 border-2 rounded-lg cursor-pointer transition-all
                     ${selectedTemplate === template.category
-                      ? 'border-blue-600 bg-blue-50 shadow-lg'
-                      : 'border-gray-200 hover:border-blue-300'
+                      ? 'border-orange-700 bg-orange-50 shadow-lg'
+                      : 'border-gray-200 hover:border-orange-300'
                     }
                   `}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <h4 className="font-bold">{template.name}</h4>
                     {selectedTemplate === template.category && (
-                      <CheckCircle size={20} className="text-blue-600" />
+                      <CheckCircle size={20} className="text-orange-700" />
                     )}
                   </div>
-                  <p className="text-sm text-gray-600 mb-3">{template.description}</p>
-                  <div className="flex justify-between text-xs text-gray-500">
+                  <p className="text-sm text-slate-700 mb-3">{template.description}</p>
+                  <div className="flex justify-between text-xs text-slate-600">
                     <span>{template.blocks} blocks</span>
                     <span className="text-green-600 font-semibold">{template.conversions} CVR</span>
                   </div>
@@ -706,57 +709,74 @@ export default function LaunchpadPage() {
           )}
 
           {step.id === 'launch' && (
-            <div className="mb-8 p-6 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg">
-              <p className="text-gray-700 mb-4 font-semibold">🎉 You&apos;re all set!</p>
+            <div className="mb-8 p-6 bg-gradient-to-br from-orange-50 to-amber-50 rounded-lg">
+              <p className="text-slate-800 mb-4 font-semibold">🎉 You&apos;re all set!</p>
               <div className="text-left space-y-2 mb-4">
-                <div className="flex items-center gap-2 text-sm text-gray-700">
+                <div className="flex items-center gap-2 text-sm text-slate-700">
                   <CheckCircle size={16} className="text-green-600" />
                   <span>Niche selected: <strong>{selectedNiche || 'General'}</strong></span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-700">
+                <div className="flex items-center gap-2 text-sm text-slate-700">
                   <CheckCircle size={16} className="text-green-600" />
                   <span>Template ready: <strong>{funnelTemplates.find(t => t.category === selectedTemplate)?.name || 'Custom'}</strong></span>
                 </div>
               </div>
-              <p className="text-sm text-gray-600">Click below to access your dashboard and start building!</p>
+              <p className="text-sm text-slate-700">Click below to access cockpit navigation.</p>
             </div>
           )}
 
-          <button
-            onClick={() => handleStepComplete(step.id)}
-            className="
-              px-12 py-4 bg-gradient-to-r from-blue-600 to-purple-600 
-              text-white text-lg font-bold rounded-full 
-              hover:shadow-2xl transform hover:scale-105 transition-all
-              flex items-center gap-3 mx-auto
-            "
-          >
-            {currentStep < launchSteps.length - 1 
-              ? `Next: ${launchSteps[currentStep + 1].title}` 
-              : step.action
-            }
-            <ArrowRight size={20} />
-          </button>
-
-          {currentStep > 0 && (
+          <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 pt-6">
             <button
-              onClick={() => setCurrentStep(prev => prev - 1)}
-              className="mt-4 text-gray-600 hover:text-gray-800"
+              type="button"
+              onClick={() => setCurrentStep(prev => Math.max(0, prev - 1))}
+              disabled={currentStep === 0}
+              className={`
+                rounded-lg border px-4 py-2 text-sm font-semibold transition
+                ${currentStep === 0
+                  ? 'cursor-not-allowed border-gray-200 text-gray-400'
+                  : 'border-gray-300 text-gray-700 hover:border-gray-400 hover:text-gray-900'
+                }
+              `}
             >
-              ← Back
+              Back
             </button>
-          )}
+
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={skipOnboarding}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 transition hover:border-gray-400 hover:text-gray-900"
+              >
+                Skip onboarding
+              </button>
+              <button
+                type="button"
+                onClick={closeOnboarding}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 transition hover:border-gray-400 hover:text-gray-900"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => handleStepComplete(step.id)}
+                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-orange-700 to-amber-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:shadow-lg"
+              >
+                {currentStep < launchSteps.length - 1 ? 'Next' : step.action}
+                <ArrowRight size={16} />
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Help Text */}
         <div className="mt-8 text-center">
           <p className="text-gray-600">
             Need help? Check out our{' '}
-            <a href="/docs" className="text-blue-600 hover:underline">
+            <a href="/docs" className="text-orange-700 hover:text-orange-800 hover:underline">
               documentation
             </a>{' '}
             or{' '}
-            <a href="/support" className="text-blue-600 hover:underline">
+            <a href="/support" className="text-orange-700 hover:text-orange-800 hover:underline">
               contact support
             </a>
           </p>

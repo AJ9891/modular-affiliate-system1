@@ -8,6 +8,15 @@ export default function OnboardingSlideshow({ userId }: { userId: string }) {
   const [index, setIndex] = useState(0)
 
   const slide = onboardingSlides[index]
+  const isLastSlide = index === onboardingSlides.length - 1
+
+  const goToCockpit = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('lp_skip_onboarding', '1')
+      document.cookie = 'lp_skip_onboarding=1; Path=/; Max-Age=2592000; SameSite=Lax'
+    }
+    window.location.href = '/cockpit?skip_onboarding=1'
+  }
 
   const completeOnboarding = async () => {
     await supabase
@@ -19,9 +28,9 @@ export default function OnboardingSlideshow({ userId }: { userId: string }) {
   }
 
   const next = async () => {
-    if (index === onboardingSlides.length - 1) {
+    if (isLastSlide) {
       await completeOnboarding()
-      window.location.href = '/launchpad'
+      goToCockpit()
     } else {
       setIndex(i => i + 1)
     }
@@ -29,12 +38,13 @@ export default function OnboardingSlideshow({ userId }: { userId: string }) {
 
   const skip = async () => {
     await completeOnboarding()
+    goToCockpit()
   }
 
   return (
     <div className="fixed inset-0 z-50 bg-black text-white flex flex-col justify-center items-center">
       <button
-        className="absolute top-4 right-4 text-sm opacity-70"
+        className="absolute top-4 right-4 text-sm text-orange-300 hover:text-orange-200 transition"
         onClick={skip}
       >
         Skip
@@ -46,9 +56,9 @@ export default function OnboardingSlideshow({ userId }: { userId: string }) {
       <div className="mt-10">
         <button
           onClick={next}
-          className="px-6 py-3 bg-brand-cyan text-black rounded-lg"
+          className="px-6 py-3 bg-orange-700 hover:bg-orange-600 text-white rounded-lg transition"
         >
-          {slide.cta ?? 'Next'}
+          {isLastSlide ? 'Go to Cockpit' : (slide.cta ?? 'Next')}
         </button>
       </div>
 
@@ -57,7 +67,7 @@ export default function OnboardingSlideshow({ userId }: { userId: string }) {
           <div
             key={i}
             className={`h-2 w-2 rounded-full ${
-              i === index ? 'bg-white' : 'bg-white/30'
+              i === index ? 'bg-orange-400' : 'bg-white/30'
             }`}
           />
         ))}
