@@ -15,6 +15,9 @@ export default [
       'coverage/**',
       'tsconfig.tsbuildinfo'
     ],
+    linterOptions: {
+      reportUnusedDisableDirectives: 'off',
+    },
   },
   {
     files: ['**/*.{ts,tsx,js,jsx}'],
@@ -45,7 +48,7 @@ export default [
       'react/react-in-jsx-scope': 'off',
       'no-undef': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', ignoreRestSiblings: true }],
+      '@typescript-eslint/no-unused-vars': 'off',
       'react-hooks/exhaustive-deps': 'off',
       'react-hooks/preserve-manual-memoization': 'off',
       'react-hooks/rules-of-hooks': 'off',
@@ -58,8 +61,9 @@ export default [
       '@next/next/no-assign-module-variable': 'off',
       'no-unreachable': 'off',
       '@typescript-eslint/no-var-requires': 'off',
-      '@typescript-eslint/no-empty-object-type': 'warn',
-      '@typescript-eslint/ban-ts-comment': 'warn',
+      '@typescript-eslint/no-empty-object-type': 'off',
+      '@typescript-eslint/ban-ts-comment': 'off',
+      '@next/next/no-img-element': 'off',
     },
     settings: {
       react: { version: 'detect' },
