@@ -2,8 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { Compass, ChevronUpDown, Brain, Mail, Zap, Radar } from 'lucide-react'
-import { useState } from 'react'
+import { Compass, ChevronsUpDown, Brain, Mail, Zap, Radar } from 'lucide-react'
 
 interface Hotspot {
   id: string
@@ -26,7 +25,7 @@ export default function FlightDeckMap() {
       id: 'propulsion',
       label: 'Funnels',
       href: '/builder',
-      icon: ChevronUpDown, // using a generic icon for funnels
+      icon: ChevronsUpDown,
       style: { top: '30%', left: '50%' }
     },
     {
@@ -39,21 +38,21 @@ export default function FlightDeckMap() {
     {
       id: 'communications',
       label: 'Email',
-      href: '/email',
+      href: '/downloads',
       icon: Mail,
       style: { top: '55%', left: '20%' }
     },
     {
       id: 'fuel',
       label: 'Stripe & Plans',
-      href: '/settings', // placeholder route, adjust as needed
+      href: '/subscription',
       icon: Zap,
       style: { top: '55%', left: '80%' }
     },
     {
       id: 'radar',
-      label: 'Analytics',
-      href: '/analytics',
+      label: 'Radar',
+      href: '/radar',
       icon: Radar,
       style: { top: '80%', left: '50%' }
     }

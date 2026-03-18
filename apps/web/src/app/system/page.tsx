@@ -20,7 +20,7 @@ interface Hotspot {
 
 // note: color property is now a base keyword, actual gradient is computed
 // based on the selected personality/voice. this allows the glow to change live.
-const hotspots: Omit<Hotspot, 'color'> & { baseColor: string }[] = [
+const hotspots: Hotspot[] = [
   // Vision – top right large
   {
     id: 'vision',
@@ -228,7 +228,7 @@ function Gauge({ hotspot, personality, isHovered, onHover }: GaugeProps) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 10 }}
             transition={{ duration: 0.2 }}
-            pointerEvents="none"
+            style={{ pointerEvents: 'none' }}
           >
             <div className="bg-black/90 backdrop-blur-sm border border-white/20 rounded-lg px-4 py-3 shadow-xl">
               <p className={`font-bold text-sm bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>

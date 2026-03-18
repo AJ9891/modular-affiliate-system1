@@ -1,0 +1,78 @@
+.map {
+  position: absolute;
+  inset: 0;
+}
+
+.hotspot {
+  position: absolute;
+  display: block;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+  transition: box-shadow 0.28s ease, transform 0.28s ease, filter 0.28s ease;
+}
+
+.hotspot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(145deg, rgba(18, 66, 92, 0.16), rgba(5, 13, 24, 0.12)),
+    radial-gradient(circle at 20% 20%, rgba(34, 211, 238, 0.18), transparent 65%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.hotspot:hover,
+.hotspot:focus-visible {
+  box-shadow: 0 0 26px rgba(34, 211, 238, 0.55);
+  transform: translateZ(0) scale(1.01);
+  filter: brightness(1.03);
+}
+
+.hotspot:hover::before,
+.hotspot:focus-visible::before {
+  opacity: 1;
+}
+
+.label {
+  position: absolute;
+  left: 50%;
+  bottom: -1.55rem;
+  transform: translateX(-50%);
+  font-size: 0.68rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: rgba(232, 248, 255, 0.95);
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.45);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.hotspot:hover .label,
+.hotspot:focus-visible .label {
+  opacity: 1;
+}
+
+.vision {
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.38);
+}
+
+.vision:hover,
+.vision:focus-visible {
+  box-shadow:
+    0 0 36px rgba(34, 211, 238, 0.72),
+    0 0 14px rgba(167, 139, 250, 0.5);
+}
+
+@media (max-width: 960px) {
+  .label {
+    font-size: 0.62rem;
+  }
+}

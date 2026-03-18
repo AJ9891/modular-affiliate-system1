@@ -77,7 +77,7 @@ function CockpitContent() {
           <p className="text-xs uppercase tracking-[0.3em] text-cyan-300/70">Cockpit</p>
           <h1 className="text-3xl font-semibold text-white">Flight Deck Overview</h1>
           <p className="text-sm text-slate-300">
-            Funnels, analytics, email, billing — all from one deck. Systems nominal.
+            Funnels, radar, email, billing — all from one deck. Systems nominal.
           </p>
           {needsOnboarding && (
             <div className="mt-3 rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-100 flex items-center justify-between">
@@ -111,7 +111,7 @@ function CockpitContent() {
             className="relative w-full"
             style={{
               aspectRatio: '16 / 9',
-              backgroundImage: "url('/dashboard-dark.png')",
+              backgroundImage: "url('/Backgrounds/dashboard-dark.png')",
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               borderRadius: '12px'
@@ -124,7 +124,7 @@ function CockpitContent() {
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Card title="Funnels" desc="Build and publish" href="/visual-builder" icon={Rocket} />
           <Card title="AI Generator" desc="Copy & pages" href="/ai-generator" icon={Sparkles} />
-          <Card title="Analytics" desc="Leads · revenue · conv." href="/analytics" icon={BarChart3} />
+          <Card title="Radar" desc="Leads · revenue · conv." href="/radar" icon={BarChart3} />
           <Card title="Optimizer" desc="A/B + guardrails" href="/ai-optimizer" icon={Brain} />
           <Card title="Billing" desc="Stripe & plans" href="/subscription" icon={ShieldCheck} />
           <Card title="Domains" desc="Routing & SSL" href="/domains" icon={Gauge} />

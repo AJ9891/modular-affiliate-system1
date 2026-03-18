@@ -57,7 +57,7 @@ export default function Home() {
       </section>
 
       {/* Sales Chat Widget */}
-      <AIChatWidget mode="sales" />
+      <AIChatWidget />
     </main>
   )
 }

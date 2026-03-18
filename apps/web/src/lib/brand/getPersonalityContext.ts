@@ -25,6 +25,7 @@ export function getPersonalityContext(pathname?: string): Personality {
 
   // Analytics and boost-related pages use boost
   if (pathname?.includes('/analytics') ||
+      pathname?.includes('/radar') ||
       pathname?.includes('/dashboard') ||
       pathname?.includes('/performance')) {
     return "boost"

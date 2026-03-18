@@ -35,9 +35,9 @@ const MODULES: CockpitModule[] = [
   {
     id: 'radar',
     title: 'RADAR',
-    label: 'REAL-TIME ANALYTICS',
+    label: 'REAL-TIME RADAR',
     description: 'Low-latency event monitoring, conversion tracking, and performance visualization.',
-    href: '/analytics',
+    href: '/radar',
     x: 15,
     y: 16,
     rgb: '248,113,113',

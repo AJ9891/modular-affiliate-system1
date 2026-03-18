@@ -9,6 +9,7 @@ interface Subscription {
   plan: string
   status: string
   currentPeriodEnd?: string
+  customer_id?: string
 }
 
 export default function SubscriptionPage() {

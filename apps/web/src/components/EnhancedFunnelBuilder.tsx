@@ -25,6 +25,7 @@ interface FunnelConfig {
 interface EnhancedFunnelBuilderProps {
   initialNiche?: string
   funnelId?: string | null
+  onSave?: (funnelId: string, slug: string) => void
 }
 
 const nicheData: Record<string, { name: string; emoji: string; color: string }> = {
@@ -142,7 +143,11 @@ const blockTemplates: Record<string, Omit<BlockConfig, 'id'>> = {
   }
 }
 
-export default function EnhancedFunnelBuilder({ initialNiche = 'general' }: EnhancedFunnelBuilderProps = {}) {
+export default function EnhancedFunnelBuilder({
+  initialNiche = 'general',
+  funnelId = null,
+  onSave,
+}: EnhancedFunnelBuilderProps = {}) {
   const [funnel, setFunnel] = useState<FunnelConfig>({
     name: 'New Funnel',
     niche: initialNiche,
@@ -222,6 +227,11 @@ export default function EnhancedFunnelBuilder({ initialNiche = 'general' }: Enha
       })
       const data = await response.json()
       if (data.success) {
+        const savedFunnelId = data.funnelId ?? data?.funnel?.funnel_id
+        const savedSlug = data?.funnel?.slug
+        if (typeof savedFunnelId === 'string' && typeof savedSlug === 'string') {
+          onSave?.(savedFunnelId, savedSlug)
+        }
         alert('Funnel saved successfully!')
       }
     } catch (error) {

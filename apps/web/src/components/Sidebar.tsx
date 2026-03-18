@@ -26,7 +26,7 @@ const regularNavigation: NavigationItem[] = [
   { name: 'Visual Builder', href: '/visual-builder', icon: '✨' },
   { name: 'AI Generator', href: '/ai-generator', icon: '🤖' },
   { name: 'Downloads', href: '/downloads', icon: '📥' },
-  { name: 'Analytics', href: '/analytics', icon: '📈' },
+  { name: 'Radar', href: '/radar', icon: '📈' },
   { name: 'Niches', href: '/niches', icon: '🎯' },
   { name: 'Offers', href: '/offers', icon: '💰' },
   { name: 'Domains', href: '/domains', icon: '🌐' },

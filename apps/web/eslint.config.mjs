@@ -1,4 +1,3 @@
-import js from "@eslint/js"
 import tsPlugin from "@typescript-eslint/eslint-plugin"
 import tsParser from "@typescript-eslint/parser"
 import reactPlugin from "eslint-plugin-react"
@@ -17,7 +16,6 @@ export default [
       'tsconfig.tsbuildinfo'
     ],
   },
-  js.configs.recommended,
   {
     files: ['**/*.{ts,tsx,js,jsx}'],
     languageOptions: {
@@ -60,6 +58,8 @@ export default [
       '@next/next/no-assign-module-variable': 'off',
       'no-unreachable': 'off',
       '@typescript-eslint/no-var-requires': 'off',
+      '@typescript-eslint/no-empty-object-type': 'warn',
+      '@typescript-eslint/ban-ts-comment': 'warn',
     },
     settings: {
       react: { version: 'detect' },

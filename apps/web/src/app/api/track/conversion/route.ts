@@ -3,8 +3,9 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 
 export async function POST(request: NextRequest) {
-  const cookieStore = cookies
-  const supabase = createRouteHandlerClient({ cookies: cookieStore })
+  const cookieStore = await cookies()
+  const cookieAdapter = (() => cookieStore) as unknown as () => ReturnType<typeof cookies>
+  const supabase = createRouteHandlerClient({ cookies: cookieAdapter })
   
   try {
     if (!supabase) {
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
     const { offer_id, amount, order_id } = body
 
     // Get click ID from cookie for attribution
-    const click_id = cookieStore().get('aff_click_id')?.value
+    const click_id = cookieStore.get('aff_click_id')?.value
 
     const { data, error } = await supabase
       .from('conversions')
