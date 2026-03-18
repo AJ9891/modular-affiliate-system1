@@ -4,10 +4,6 @@ import { createClient } from '@supabase/supabase-js'
 import { BrandBrainManager } from '@/lib/brand-brain/manager'
 import { extractActionFromResponse, isValidAction, formatActionJson } from '@/lib/chat-utils'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
-})
-
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY! // server-only
@@ -218,6 +214,11 @@ export async function POST(req: NextRequest) {
     if (!Array.isArray(messages)) {
       return new Response('Invalid payload', { status: 400 })
     }
+
+    // Initialize OpenAI client (lazy loading)
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY!,
+    })
 
     // Get BrandBrain system prompt dynamically
     let systemPrompt = FALLBACK_SYSTEM_PROMPT
