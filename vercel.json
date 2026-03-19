@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "cd apps/web && npm run build",
+  "installCommand": "npm install",
+  "buildCommand": "cd apps/web && npm run build && node scripts/ensure-middleware-nft.mjs",
   "outputDirectory": "apps/web/.next",
-  "framework": "nextjs",
-  "installCommand": "npm install"
+  "framework": "nextjs"
 }
