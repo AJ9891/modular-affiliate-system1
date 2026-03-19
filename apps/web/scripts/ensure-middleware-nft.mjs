@@ -1,4 +1,4 @@
-import { access, mkdir, writeFile } from 'node:fs/promises'
+import { access, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { constants } from 'node:fs'
 import path from 'node:path'
 
@@ -17,5 +17,17 @@ const ensureFile = async (target, content, label) => {
   }
 }
 
+const cleanupLegacyStub = async () => {
+  try {
+    const content = await readFile(middlewareTarget, 'utf8')
+    if (content.trim() === 'export {}') {
+      await rm(middlewareTarget, { force: true })
+      console.log('[build] removed legacy middleware.js stub')
+    }
+  } catch {
+    // No legacy stub present.
+  }
+}
+
 await ensureFile(nftTarget, `${JSON.stringify({ version: 1, files: [] }, null, 2)}\n`, 'middleware.js.nft.json')
-await ensureFile(middlewareTarget, 'export {}\n', 'middleware.js')
+await cleanupLegacyStub()
