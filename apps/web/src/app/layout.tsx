@@ -4,8 +4,6 @@ import { AuthProvider } from "@/contexts/AuthContext"
 import { BrandModeProvider } from "@/contexts/BrandModeContext"
 import { PersonalityThemeProvider } from "@/components/PersonalityThemeProvider"
 import { getPersonalityContext } from "@/lib/brand/getPersonalityContext"
-import ConditionalSidebar from "@/components/ConditionalSidebar"
-import ConditionalWrapper from "@/components/ConditionalWrapper"
 import AIChatWidget from "@/components/AIChatWidget"
 import Footer from "@/components/Footer"
 import { LaunchpadAmbientSound } from "@/components/LaunchpadAmbientSound"
@@ -74,10 +72,7 @@ export default function RootLayout({
         <PersonalityThemeProvider personality={personality}>
           <AuthProvider>
             <BrandModeProvider>
-              <ConditionalSidebar />
-              <ConditionalWrapper>
-                {children}
-              </ConditionalWrapper>
+              {children}
               <TelemetryObserver />
               <AIChatWidget />
               <LaunchpadAmbientSound />

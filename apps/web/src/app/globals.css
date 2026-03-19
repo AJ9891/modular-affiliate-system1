@@ -30,6 +30,10 @@
     --border-subtle: rgba(148, 163, 184, 0.08);
     --border-elevated: rgba(148, 163, 184, 0.12);
     --border-focus: rgba(46, 230, 194, 0.45);
+    --hud-shadow-panel: 0 0 0 1px rgba(255, 255, 255, 0.02), 0 8px 32px rgba(0, 0, 0, 0.35);
+    --hud-shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.02), 0 8px 26px rgba(0, 0, 0, 0.26);
+    --hud-tight-bg: rgba(14, 22, 30, 0.62);
+    --hud-input-bg: rgba(10, 16, 24, 0.55);
 
     /* Enhanced UI Variables */
     --radius-sm: 8px;
@@ -112,6 +116,10 @@
     --border-subtle: rgba(0, 0, 0, 0.08);
     --border-elevated: rgba(0, 0, 0, 0.12);
     --border-focus: rgba(31, 199, 167, 0.35);
+    --hud-shadow-panel: 0 0 0 1px rgba(0, 0, 0, 0.02), 0 8px 24px rgba(0, 0, 0, 0.12);
+    --hud-shadow-card: 0 0 0 1px rgba(0, 0, 0, 0.02), 0 8px 20px rgba(0, 0, 0, 0.1);
+    --hud-tight-bg: rgba(255, 255, 255, 0.72);
+    --hud-input-bg: rgba(255, 255, 255, 0.65);
 
     --accent-soft: rgba(31, 199, 167, 0.12);
     --accent-hover: rgba(31, 199, 167, 0.2);
@@ -194,6 +202,12 @@
       radial-gradient(circle at 20% 20%, rgba(46, 230, 194, 0.12), transparent 48%);
   }
 
+  .theme-light.page-flight-deck {
+    background:
+      linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.74)),
+      radial-gradient(circle at 20% 20%, rgba(31, 199, 167, 0.12), transparent 48%);
+  }
+
   .page-engineering-bay {
     background:
       linear-gradient(rgba(4, 8, 13, 0.7), rgba(4, 8, 13, 0.8)),
@@ -247,9 +261,7 @@
     border: 1px solid var(--border-elevated);
     background: var(--bg-surface-elevated);
     backdrop-filter: blur(18px);
-    box-shadow:
-      0 0 0 1px rgba(255, 255, 255, 0.02),
-      0 8px 32px rgba(0, 0, 0, 0.35);
+    box-shadow: var(--hud-shadow-panel);
     padding: 1.25rem;
   }
 
@@ -265,16 +277,14 @@
     border: 1px solid var(--border-elevated);
     background: var(--bg-surface-elevated);
     backdrop-filter: blur(18px);
-    box-shadow:
-      0 0 0 1px rgba(255, 255, 255, 0.02),
-      0 8px 26px rgba(0, 0, 0, 0.26);
+    box-shadow: var(--hud-shadow-card);
     padding: 1.25rem;
   }
 
   .hud-card-tight {
     border-radius: 10px;
     border: 1px solid var(--border-subtle);
-    background: rgba(14, 22, 30, 0.62);
+    background: var(--hud-tight-bg);
     backdrop-filter: blur(16px);
     padding: 0.85rem 1rem;
   }
@@ -314,7 +324,7 @@
     width: 100%;
     border-radius: 10px;
     border: 1px solid var(--border-elevated);
-    background: rgba(10, 16, 24, 0.55);
+    background: var(--hud-input-bg);
     color: var(--text-primary);
     padding: 0.7rem 0.85rem;
     transition: border-color var(--transition-normal), box-shadow var(--transition-normal);

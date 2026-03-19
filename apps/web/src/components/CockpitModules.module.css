@@ -1,6 +1,57 @@
 .map {
   position: absolute;
   inset: 0;
+  perspective: 1600px;
+}
+
+.editorControls {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+  z-index: 40;
+  display: flex;
+  gap: 0.4rem;
+}
+
+.editorButton {
+  min-height: 32px;
+  border: 1px solid rgba(46, 230, 194, 0.38);
+  border-radius: 8px;
+  background: rgba(6, 18, 28, 0.84);
+  color: rgba(234, 248, 255, 0.94);
+  padding: 0.35rem 0.55rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 200ms ease, background 200ms ease;
+}
+
+.editorButton:hover {
+  border-color: rgba(46, 230, 194, 0.62);
+  background: rgba(10, 24, 36, 0.92);
+}
+
+.editorOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 21;
+  pointer-events: none;
+}
+
+.editorPolygon {
+  fill: rgba(46, 230, 194, 0.08);
+  stroke: rgba(46, 230, 194, 0.48);
+  stroke-width: 0.28;
+  vector-effect: non-scaling-stroke;
+}
+
+.editorBox {
+  position: absolute;
+  z-index: 26;
+  border: 1px solid rgba(46, 230, 194, 0.55);
+  background: rgba(46, 230, 194, 0.1);
+  pointer-events: auto;
 }
 
 .hotspot {
@@ -11,7 +62,10 @@
   background: transparent;
   cursor: pointer;
   outline: none;
-  transition: box-shadow 0.28s ease, transform 0.28s ease, filter 0.28s ease;
+  transition:
+    box-shadow 220ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 220ms cubic-bezier(0.4, 0, 0.2, 1),
+    filter 220ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .hotspot::before {
@@ -23,15 +77,21 @@
     linear-gradient(145deg, rgba(18, 66, 92, 0.16), rgba(5, 13, 24, 0.12)),
     radial-gradient(circle at 20% 20%, rgba(34, 211, 238, 0.18), transparent 65%);
   opacity: 0;
-  transition: opacity 0.25s ease;
+  transition: opacity 220ms cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
 }
 
 .hotspot:hover,
 .hotspot:focus-visible {
   box-shadow: 0 0 26px rgba(34, 211, 238, 0.55);
-  transform: translateZ(0) scale(1.01);
+  transform: translateZ(0) scale(1.008);
   filter: brightness(1.03);
+}
+
+.hotspot:focus-visible {
+  box-shadow:
+    0 0 0 2px rgba(46, 230, 194, 0.4),
+    0 0 26px rgba(34, 211, 238, 0.48);
 }
 
 .hotspot:hover::before,
@@ -44,15 +104,15 @@
   left: 50%;
   bottom: -1.55rem;
   transform: translateX(-50%);
-  font-size: 0.68rem;
-  letter-spacing: 0.09em;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: rgba(232, 248, 255, 0.95);
   text-shadow: 0 0 10px rgba(56, 189, 248, 0.45);
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s ease;
+  transition: opacity 180ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .hotspot:hover .label,
@@ -71,8 +131,40 @@
     0 0 14px rgba(167, 139, 250, 0.5);
 }
 
+.cornerHandle {
+  position: absolute;
+  z-index: 45;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(7, 12, 18, 0.92);
+  background: rgba(46, 230, 194, 0.94);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 2px rgba(2, 12, 20, 0.7), 0 0 14px rgba(46, 230, 194, 0.55);
+  cursor: grab;
+  pointer-events: auto;
+}
+
+.cornerHandle:active {
+  cursor: grabbing;
+}
+
 @media (max-width: 960px) {
   .label {
-    font-size: 0.62rem;
+    font-size: 0.66rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hotspot,
+  .hotspot::before,
+  .label {
+    transition: none;
+  }
+
+  .hotspot:hover,
+  .hotspot:focus-visible {
+    transform: none;
+    filter: none;
   }
 }
