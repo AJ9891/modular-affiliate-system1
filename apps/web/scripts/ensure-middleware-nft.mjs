@@ -34,15 +34,23 @@ const createMiddlewareLoader = async () => {
 globalThis.self = globalThis.self || globalThis
 ${requireLines}
 
+const { NextResponse } = require('next/server')
 const entry = globalThis._ENTRIES?.middleware_middleware
 const resolvedHandler =
   entry && (entry.default || entry.middleware || (typeof entry === 'function' ? entry : null))
 
 async function middleware(...args) {
+  const request = args[0]
+  const pathname = request?.url ? new URL(request.url).pathname : ''
+
+  if (pathname.startsWith('/api/')) {
+    return NextResponse.next()
+  }
+
   if (typeof resolvedHandler === 'function') {
     return resolvedHandler(...args)
   }
-  return new Response(null, { headers: { 'x-middleware-next': '1' } })
+  return NextResponse.next()
 }
 
 module.exports = middleware
