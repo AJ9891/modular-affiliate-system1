@@ -40,6 +40,19 @@ const resolvedHandler =
 
 async function middleware(...args) {
   if (typeof resolvedHandler === 'function') {
+    const entryArg = args[0]
+    if (
+      entryArg &&
+      typeof entryArg === 'object' &&
+      entryArg.request &&
+      typeof entryArg.request === 'object' &&
+      entryArg.request.body
+    ) {
+      const sanitizedRequest = { ...entryArg.request }
+      delete sanitizedRequest.body
+      return resolvedHandler({ ...entryArg, request: sanitizedRequest })
+    }
+
     return resolvedHandler(...args)
   }
   return new Response(null, { headers: { 'x-middleware-next': '1' } })
