@@ -36,7 +36,7 @@ ${requireLines}
 
 const entry = globalThis._ENTRIES?.middleware_middleware
 const resolvedHandler =
-  entry && (entry.middleware || entry.default || (typeof entry === 'function' ? entry : null))
+  entry && (entry.default || entry.middleware || (typeof entry === 'function' ? entry : null))
 
 async function middleware(...args) {
   if (typeof resolvedHandler === 'function') {
