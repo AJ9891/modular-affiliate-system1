@@ -54,9 +54,13 @@
   pointer-events: auto;
 }
 
+.moduleLayer {
+  position: absolute;
+}
+
 .hotspot {
   position: absolute;
-  display: block;
+  inset: 0;
   border: 0;
   border-radius: 8px;
   background: transparent;
@@ -115,8 +119,8 @@
   transition: opacity 180ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.hotspot:hover .label,
-.hotspot:focus-visible .label {
+.moduleLayer:hover .label,
+.moduleLayer:focus-within .label {
   opacity: 1;
 }
 

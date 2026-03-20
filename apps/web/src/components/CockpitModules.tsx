@@ -316,22 +316,27 @@ export function CockpitModules() {
               />
             )}
 
-            <Link
-              href={module.route}
-              className={`${styles.hotspot} ${module.isVision ? styles.vision : ''}`}
+            <div
+              className={styles.moduleLayer}
               style={{
                 left: `${geometry.left}%`,
                 top: `${geometry.top}%`,
                 width: `${geometry.width}%`,
-                height: `${geometry.height}%`,
-                clipPath: geometry.clipPath,
-                pointerEvents: editMode ? 'none' : 'auto'
+                height: `${geometry.height}%`
               }}
-              aria-label={module.name}
-              tabIndex={editMode ? -1 : 0}
             >
+              <Link
+                href={module.route}
+                className={`${styles.hotspot} ${module.isVision ? styles.vision : ''}`}
+                style={{
+                  clipPath: geometry.clipPath,
+                  pointerEvents: editMode ? 'none' : 'auto'
+                }}
+                aria-label={module.name}
+                tabIndex={editMode ? -1 : 0}
+              />
               <span className={styles.label}>{module.name}</span>
-            </Link>
+            </div>
 
             {editMode &&
               corners.map((point, cornerIndex) => (
