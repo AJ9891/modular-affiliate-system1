@@ -1,20 +1,15 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createServerRouteClient, loadSupabaseEnv } from '@/lib/supabase-server'
 
 export async function GET() {
   try {
-    if (!supabase) {
-      return NextResponse.json({ 
-        status: 'error',
-        message: 'Supabase not configured' 
-      })
-    }
+    loadSupabaseEnv()
+    const supabase = await createServerRouteClient()
 
     // Test database connection
-    const { data: _data, error } = await supabase
+    const { error } = await supabase
       .from('users')
-      .select('count')
-      .limit(1)
+      .select('*', { count: 'exact', head: true })
 
     if (error) {
       return NextResponse.json({

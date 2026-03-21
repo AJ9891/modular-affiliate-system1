@@ -4,12 +4,12 @@ import { AuthProvider } from "@/contexts/AuthContext"
 import { BrandModeProvider } from "@/contexts/BrandModeContext"
 import { PersonalityThemeProvider } from "@/components/PersonalityThemeProvider"
 import { getPersonalityContext } from "@/lib/brand/getPersonalityContext"
-import ConditionalSidebar from "@/components/ConditionalSidebar"
-import ConditionalWrapper from "@/components/ConditionalWrapper"
 import AIChatWidget from "@/components/AIChatWidget"
 import Footer from "@/components/Footer"
 import { LaunchpadAmbientSound } from "@/components/LaunchpadAmbientSound"
 import { TelemetryObserver } from "@/components/TelemetryObserver"
+import { ShipRoomStyler } from "@/components/ShipRoomStyler"
+import { BrandModeGlowSync } from "@/components/BrandModeGlowSync"
 
 export const metadata: Metadata = {
   title: "Launchpad4Success - Build High-Converting Affiliate Funnels",
@@ -71,13 +71,12 @@ export default function RootLayout({
         />
       </head>
       <body className="flex flex-col min-h-screen">
+        <ShipRoomStyler />
         <PersonalityThemeProvider personality={personality}>
           <AuthProvider>
             <BrandModeProvider>
-              <ConditionalSidebar />
-              <ConditionalWrapper>
-                {children}
-              </ConditionalWrapper>
+              <BrandModeGlowSync />
+              {children}
               <TelemetryObserver />
               <AIChatWidget />
               <LaunchpadAmbientSound />

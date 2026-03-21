@@ -47,7 +47,7 @@ export async function fetchUserProfile(
     throw new Error(`Failed to load profile: ${error.message}`)
   }
 
-  return data as UserProfile
+  return data as unknown as UserProfile
 }
 
 export function canUseCustomDomain(profile?: UserProfile | null) {

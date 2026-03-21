@@ -25,6 +25,9 @@ export async function readJson<T>(request: Request): Promise<T> {
 }
 
 export function ok(data: unknown, init?: number | ResponseInit) {
+  if (typeof init === 'number') {
+    return NextResponse.json(data, { status: init })
+  }
   return NextResponse.json(data, init)
 }
 

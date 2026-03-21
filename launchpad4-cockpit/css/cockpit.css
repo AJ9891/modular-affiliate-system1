@@ -5,19 +5,12 @@
 
 body {
   background-color: #0a0f18;
+  background-image: url('../assets/dashboard-dark.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   color: #fff;
   overflow-x: hidden;
-}
-
-.edit-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 0.5rem 0 1rem;
-}
-
-.edit-toolbar button {
-  margin-left: 0.25rem;
 }
 
 .absolute-fill {
@@ -29,12 +22,9 @@ body {
 .cockpit {
   position: relative;
   width: 100%;
-  height: calc(100vh - 160px);
-  min-height: 520px;
-  background-image: url('../assets/dashboard-dark.png');
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center;
+  aspect-ratio: 16 / 9;
+  background: rgba(5, 10, 18, 0.55);
+  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.35);
   margin: auto;
   border-radius: 12px;
   overflow: hidden;
@@ -46,17 +36,36 @@ body {
   position: absolute;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.35s ease, box-shadow 0.2s ease, outline 0.2s ease;
+  transition: all 0.35s ease;
   border: 0;
   background: transparent;
   padding: 0;
 }
 
+/* Hotspot geometry aligned to cockpit panel coordinates (16:9 image map). */
+.module-communications { top: 11.1%; left: 4.2%; width: 21.9%; height: 20.4%; }
+.module-vision { top: 11.1%; left: 73.9%; width: 21.9%; height: 20.4%; }
+.module-fuel { top: 38.9%; left: 6.3%; width: 18.8%; height: 18.5%; }
+.module-radar { top: 38.9%; left: 75%; width: 16.7%; height: 24.1%; }
+.module-settings { top: 67.8%; left: 87.8%; width: 8.4%; height: 12.1%; }
+.module-navigation { top: 63.9%; left: 12.5%; width: 14.6%; height: 16.7%; }
+.module-propulsion { top: 39.8%; left: 28.1%; width: 15.6%; height: 16.7%; }
+.module-intelligence { top: 39.8%; left: 56.3%; width: 15.6%; height: 16.7%; }
+.module-domains { top: 60.2%; left: 44.3%; width: 11.5%; height: 15.7%; }
+
+.shape-wide-left { clip-path: polygon(4% 0, 100% 0, 96% 100%, 0 100%); }
+.shape-wide-right { clip-path: polygon(0 0, 96% 0, 100% 100%, 4% 100%); }
+.shape-mid-left { clip-path: polygon(7% 0, 100% 0, 93% 100%, 0 100%); }
+.shape-lower-left { clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%); }
+.shape-center-left { clip-path: polygon(6% 0, 100% 0, 94% 100%, 0 100%); }
+.shape-center-right { clip-path: polygon(0 0, 94% 0, 100% 100%, 6% 100%); }
+.shape-center-lower { clip-path: polygon(8% 0, 100% 0, 92% 100%, 0 100%); }
+.shape-tall-right { clip-path: polygon(0 0, 94% 0, 100% 100%, 6% 100%); }
+.shape-small-right { clip-path: polygon(0 0, 90% 0, 100% 100%, 10% 100%); }
+
 .module:hover,
 .hotspot:hover {
   box-shadow: 0 0 25px var(--glow-color);
-  outline: 2px solid color-mix(in srgb, var(--glow-color) 75%, transparent);
-  outline-offset: 0;
 }
 
 .module span,
@@ -75,62 +84,6 @@ body {
 .module:hover span,
 .hotspot:hover span {
   opacity: 1;
-}
-
-.module.edit-mode span {
-  opacity: 1;
-}
-
-/* Layout edit mode */
-.module.edit-mode {
-  outline: 1px dashed rgba(0, 255, 255, 0.6);
-  background: rgba(0, 255, 255, 0.05);
-}
-
-.module .resize-handle {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  background: rgba(0, 255, 255, 0.9);
-  border: 1px solid #fff;
-  border-radius: 2px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.15s ease;
-}
-
-.module.edit-mode .resize-handle {
-  opacity: 1;
-  pointer-events: all;
-}
-
-.resize-handle.nw { top: -6px; left: -6px; cursor: nwse-resize; }
-.resize-handle.ne { top: -6px; right: -6px; cursor: nesw-resize; }
-.resize-handle.sw { bottom: -6px; left: -6px; cursor: nesw-resize; }
-.resize-handle.se { bottom: -6px; right: -6px; cursor: nwse-resize; }
-.resize-handle { display: none !important; }
-
-.vertex-handle {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: rgba(0, 255, 255, 0.95);
-  border: 1px solid #fff;
-  transform: translate(-50%, -50%);
-  display: none;
-  cursor: move;
-  z-index: 10;
-}
-
-.module.edit-mode .vertex-handle {
-  display: block;
-}
-
-.module .label {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
 }
 
 .vision,

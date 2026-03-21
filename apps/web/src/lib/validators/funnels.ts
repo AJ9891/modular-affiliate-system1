@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { ValidationError } from '../http'
 
-const blockSchema = z.record(z.any())
+const blockSchema = z.record(z.string(), z.any())
 
 export const funnelSchema = z.object({
   name: z.string().trim().min(1),

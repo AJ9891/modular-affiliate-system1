@@ -60,7 +60,8 @@ export function getPersonalityContext(pathname: string): PersonalityContext {
   if (pathname.startsWith('/dashboard') || 
       pathname.startsWith('/admin') ||
       pathname.startsWith('/settings') ||
-      pathname.startsWith('/analytics')) {
+      pathname.startsWith('/analytics') ||
+      pathname.startsWith('/radar')) {
     return {
       visualWeight: 'low',
       motionAllowed: false,

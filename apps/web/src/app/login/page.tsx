@@ -5,6 +5,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
+const ONBOARDING_COMPLETE = 8
+
 export default function Login() {
   const router = useRouter()
   const [formData, setFormData] = useState({
@@ -48,7 +50,26 @@ export default function Login() {
         })
       }
 
-      router.push('/cockpit')
+      let destination = '/cockpit'
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (user) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('onboarding_seen, onboarding_step')
+          .eq('id', user.id)
+          .maybeSingle()
+
+        if (!profile?.onboarding_seen) {
+          destination = '/welcome'
+        } else if ((profile.onboarding_step ?? 0) < ONBOARDING_COMPLETE) {
+          destination = '/launchpad'
+        }
+      }
+
+      router.push(destination)
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred. Please try again.')
     } finally {

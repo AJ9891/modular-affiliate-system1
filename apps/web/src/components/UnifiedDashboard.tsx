@@ -283,10 +283,10 @@ export default function UnifiedDashboard() {
           <p className="text-purple-100">Find profitable affiliate products</p>
         </a>
         <a
-          href="/analytics"
+          href="/radar"
           className="p-6 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg hover:shadow-lg transition-shadow"
         >
-          <h3 className="font-bold text-lg mb-2">View Analytics</h3>
+          <h3 className="font-bold text-lg mb-2">View Radar</h3>
           <p className="text-green-100">Deep dive into your performance</p>
         </a>
       </div>

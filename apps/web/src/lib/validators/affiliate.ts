@@ -5,7 +5,7 @@ export const affiliateClickSchema = z.object({
   user_id: z.string().uuid().optional(),
   partner: z.string().trim().min(1),
   source: z.string().trim().optional(),
-  metadata: z.record(z.any()).optional()
+  metadata: z.record(z.string(), z.any()).optional()
 })
 
 export function validateAffiliateClick(body: unknown) {

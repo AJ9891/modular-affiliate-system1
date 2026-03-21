@@ -26,7 +26,7 @@ export async function proxy(req: NextRequest) {
       '/api/ai/optimize',
     ]
 
-    let bucket = RATE_LIMIT_CONFIGS.api
+    let bucket: (typeof RATE_LIMIT_CONFIGS)[keyof typeof RATE_LIMIT_CONFIGS] = RATE_LIMIT_CONFIGS.api
     if (AUTH_PATHS.some(p => pathname.startsWith(p))) {
       bucket = RATE_LIMIT_CONFIGS.auth
     } else if (PUBLIC_ABUSE_PATHS.some(p => pathname.startsWith(p))) {

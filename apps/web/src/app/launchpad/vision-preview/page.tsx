@@ -24,9 +24,9 @@ const mockActions = [
     accent: 'purple' as const,
   },
   {
-    title: 'Analytics',
+    title: 'Radar',
     description: 'Conversion, revenue, and email telemetry overlays.',
-    href: '/analytics',
+    href: '/radar',
     icon: BarChart3,
     accent: 'blue' as const,
   },

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 
@@ -20,13 +20,13 @@ const launchpadItem: NavigationItem = {
 }
 
 const regularNavigation: NavigationItem[] = [
-  { name: 'Home', href: '/', icon: '🏠' },
+  { name: 'Home', href: '/cockpit', icon: '🏠' },
   { name: 'Dashboard', href: '/dashboard', icon: '📊' },
   { name: 'Funnel Builder', href: '/builder-v2', icon: '🎨' },
   { name: 'Visual Builder', href: '/visual-builder', icon: '✨' },
   { name: 'AI Generator', href: '/ai-generator', icon: '🤖' },
   { name: 'Downloads', href: '/downloads', icon: '📥' },
-  { name: 'Analytics', href: '/analytics', icon: '📈' },
+  { name: 'Radar', href: '/radar', icon: '📈' },
   { name: 'Niches', href: '/niches', icon: '🎯' },
   { name: 'Offers', href: '/offers', icon: '💰' },
   { name: 'Domains', href: '/domains', icon: '🌐' },
@@ -36,10 +36,12 @@ const regularNavigation: NavigationItem[] = [
 ]
 
 export default function Sidebar() {
+  const router = useRouter()
   const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [onboardingComplete, setOnboardingComplete] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [isSigningOut, setIsSigningOut] = useState(false)
 
   // Load onboarding status
   useEffect(() => {
@@ -91,6 +93,17 @@ export default function Sidebar() {
     setOnboardingComplete(false)
   }
 
+  const handleSignOut = async () => {
+    if (isSigningOut) return
+    setIsSigningOut(true)
+    try {
+      await supabase.auth.signOut()
+    } finally {
+      router.push('/login')
+      setIsSigningOut(false)
+    }
+  }
+
   return (
     <>
       {/* Mobile menu button */}
@@ -110,7 +123,7 @@ export default function Sidebar() {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="p-4 border-b-2 border-brand-purple/20">
-            <Link href="/" className="flex items-center gap-2">
+            <Link href="/cockpit" className="flex items-center gap-2">
               {!isCollapsed && (
                 <span className="text-xl font-bold">
                   <span className="text-brand-purple">Launchpad</span><span className="text-brand-orange">4</span><span className="text-brand-purple">Success</span>
@@ -165,6 +178,19 @@ export default function Sidebar() {
               </div>
             )}
           </nav>
+
+          <div className="px-4 pb-3">
+            <button
+              type="button"
+              onClick={handleSignOut}
+              disabled={isSigningOut}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-brand-purple hover:bg-brand-purple/10 rounded-lg transition-colors font-semibold border border-brand-purple/20 disabled:opacity-60"
+              title={isCollapsed ? 'Sign out' : ''}
+            >
+              <span>↩</span>
+              {!isCollapsed && <span>{isSigningOut ? 'Signing out...' : 'Sign out'}</span>}
+            </button>
+          </div>
 
           {/* Collapse button (desktop) */}
           <div className="hidden lg:block p-4 border-t-2 border-brand-purple/20">

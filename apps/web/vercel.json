@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run build && node scripts/ensure-middleware-nft.mjs",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "nextjs",

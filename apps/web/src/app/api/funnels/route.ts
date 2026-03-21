@@ -61,7 +61,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse and validate request body
-    const { name, template, niche, blocks, theme, slug } = validateFunnel(await readJson(request))
+    const body = await readJson<Record<string, unknown>>(request)
+    const { name, template, niche, blocks, theme, slug } = validateFunnel(body)
 
     if (isDevelopment) {
       console.log('[FUNNELS API] Received funnel data:', { 

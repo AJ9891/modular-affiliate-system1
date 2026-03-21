@@ -2,23 +2,48 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { Check } from 'lucide-react'
 import { useUIExpression } from '@/lib/brand-brain/useUIExpression'
 
-const systems = [
+const tiers = [
   {
-    title: 'Structural Assembly',
-    description: 'Design conversion structures with controlled module composition.',
-    icon: 'S',
+    name: 'Starter',
+    price: '$30/mo',
+    description: 'For solo operators validating first offers.',
+    cta: '/checkout?plan=starter',
+    features: [
+      '1 Active Funnel',
+      'Basic Templates',
+      'Analytics Dashboard',
+      'Email Support',
+    ],
   },
   {
-    title: 'Core Intelligence',
-    description: 'Generate and refine messaging with onboard AI guidance.',
-    icon: 'A',
+    name: 'Pro',
+    price: '$45/mo',
+    description: 'For serious growth with AI workflows and velocity.',
+    cta: '/checkout?plan=pro',
+    featured: true,
+    features: [
+      'Unlimited Funnels',
+      'Premium Templates',
+      'AI Content Generation',
+      'Advanced Analytics',
+      'Priority Support',
+    ],
   },
   {
-    title: 'Flight Telemetry',
-    description: 'Track campaign health with precision performance signals.',
-    icon: 'T',
+    name: 'Agency',
+    price: '$60/mo',
+    description: 'For teams running multiple offers and client systems.',
+    cta: '/checkout?plan=agency',
+    features: [
+      'Everything in Pro',
+      'White Label Options',
+      'Team Collaboration',
+      'API Access',
+      'Dedicated Support',
+    ],
   },
 ]
 
@@ -53,18 +78,45 @@ export function HeroSection() {
         </motion.div>
 
         <motion.div
+          id="tiers"
           className="grid w-full max-w-5xl gap-4 md:grid-cols-3"
           initial={motionEnabled ? { opacity: 0 } : false}
           animate={motionEnabled ? { opacity: 1 } : false}
           transition={{ duration: 0.25, delay: 0.1, ease: [0.4, 0, 0.2, 1] }}
         >
-          {systems.map((system) => (
-            <article key={system.title} className="hud-panel">
-              <div className="mb-4 inline-flex h-9 w-9 items-center justify-center rounded-md border border-white/10 bg-black/20 text-xs font-semibold tracking-system text-text-secondary">
-                {system.icon}
+          {tiers.map((tier) => (
+            <article
+              key={tier.name}
+              className={`hud-panel flex h-full flex-col ${
+                tier.featured ? 'border border-brand-orange/60 shadow-[0_0_28px_rgba(249,115,22,0.22)]' : ''
+              }`}
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-text-secondary">{tier.name}</p>
+                {tier.featured ? (
+                  <span className="rounded-full border border-brand-orange/60 bg-brand-orange/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-orange-200">
+                    Popular
+                  </span>
+                ) : null}
               </div>
-              <h2 className="text-lg font-semibold text-text-primary">{system.title}</h2>
-              <p className="mt-2 text-[15px] leading-[1.6] text-text-secondary">{system.description}</p>
+              <h2 className="text-3xl font-semibold text-text-primary">{tier.price}</h2>
+              <p className="mt-2 text-[14px] leading-[1.6] text-text-secondary">{tier.description}</p>
+              <ul className="mt-5 space-y-2 text-[14px] text-text-secondary">
+                {tier.features.map((feature) => (
+                  <li key={feature} className="flex items-start gap-2">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-orange" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href={tier.cta}
+                className={`mt-6 inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
+                  tier.featured ? 'btn-launch-premium' : 'btn-secondary-premium'
+                }`}
+              >
+                Choose {tier.name}
+              </Link>
             </article>
           ))}
         </motion.div>

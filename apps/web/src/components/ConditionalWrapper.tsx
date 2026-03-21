@@ -8,8 +8,8 @@ export default function ConditionalWrapper({ children }: { children: ReactNode }
   const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = useState(false)
 
-  // Don't add margin on public pages
-  const shouldAddMargin = !isExactPublicPath(pathname)
+  // Don't add sidebar offset on public pages or Launchpad onboarding route.
+  const shouldAddMargin = !isExactPublicPath(pathname) && pathname !== '/launchpad' && pathname !== '/welcome'
 
   // Listen for sidebar collapse state changes
   useEffect(() => {

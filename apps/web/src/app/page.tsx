@@ -1,71 +1,78 @@
 import Link from 'next/link'
 import AIChatWidget from '@/components/AIChatWidget'
-
-const systems = [
-  { title: 'Structural Assembly', description: 'Visual builder for funnels.', icon: 'SA' },
-  { title: 'Core Intelligence', description: 'AI guidance for copy and flow.', icon: 'CI' },
-  { title: 'Flight Telemetry', description: 'Real-time analytics overlays.', icon: 'FT' }
-]
+import { HeroSection } from '@/components/HeroSection'
 
 export default function Home() {
   return (
-    <main className="mission-hero text-text-primary">
-      <nav className="mission-nav fixed left-0 right-0 top-0 z-50 px-6 py-4 md:px-10">
-        <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between px-2 md:px-4">
-          <Link href="/" className="text-lg font-semibold md:text-xl text-white/90">
-            Launchpad <span className="text-rocket-500">4</span> Success
-          </Link>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/login"
-              className="rounded-md px-3 py-2 text-sm text-white/80 transition hover:text-white"
-            >
-              Login
-            </Link>
-            <Link href="/signup" className="btn-launch-premium px-4 py-2 text-sm">
-              Sign up free
-            </Link>
+    <main className="relative min-h-screen overflow-hidden">
+      <div className="pointer-events-none absolute inset-0">
+        <div
+          className="absolute inset-0 scale-105"
+          style={{
+            backgroundImage: "url('/Backgrounds/dashboard-dark.png')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            filter: 'blur(2.4px) brightness(0.44)',
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#020913]/82 via-[#020913]/86 to-[#020913]/92" />
+      </div>
+      <div className="relative z-10">
+      {/* Navigation Bar */}
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[#060b14]/88 backdrop-blur-md shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <Link href="/" className="text-xl font-semibold tracking-[0.08em]">
+                <span className="text-white">Launchpad</span>
+                <span className="mx-1 text-brand-orange">4</span>
+                <span className="text-white">Success</span>
+              </Link>
+            </div>
+            <div className="flex items-center gap-4">
+              <Link
+                href="/login"
+                className="px-4 py-2 text-gray-300 hover:text-brand-cyan font-medium transition-colors"
+              >
+                Members Login
+              </Link>
+              <Link
+                href="/signup"
+                className="btn-launch"
+              >
+                Sign Up
+              </Link>
+            </div>
           </div>
         </div>
       </nav>
 
-      <section className="mission-console">
-        <div className="glass-console shadow-2xl">
-          <p className="system-ready text-xs uppercase tracking-[0.25em] text-teal-200/80">
-            System Ready • All Systems Nominal
-          </p>
-          <h1 className="mt-3 text-3xl font-semibold text-white">Launchpad 4 Success</h1>
-          <p className="mt-2 text-sm text-white/80">AI-native mission control before ignition.</p>
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/get-started" className="cta-primary px-6 py-3 rounded-lg text-sm font-semibold">
-              Initiate Launch
-            </Link>
-            <Link href="/signup" className="cta-secondary px-6 py-3 rounded-lg text-sm font-semibold">
-              Sign up free
+      {/* BrandBrain-aware Hero Section */}
+      <HeroSection />
+
+      {/* CTA Section */}
+      <section className="page-flight-deck relative overflow-hidden px-6 py-24">
+        <div className="absolute inset-0 bg-[#060b14]/52 backdrop-blur-sm" />
+        <div className="relative z-10 mx-auto max-w-7xl">
+          <div className="hud-panel mx-auto flex w-full flex-col items-center px-6 py-14 text-center md:px-10">
+            <p className="system-ready justify-center">Final Checkpoint</p>
+            <h2 className="mt-5 text-4xl font-semibold tracking-[-0.02em] text-text-primary md:text-5xl">
+              Ready to Launch Your Success?
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-text-secondary md:text-lg">
+              Join marketers building profitable funnels with{' '}
+              <span className="font-semibold text-brand-orange">Launchpad 4 Success</span>.
+            </p>
+            <Link href="/signup" className="btn-launch-premium mt-8 inline-flex items-center justify-center px-10 py-4 text-base">
+              3...2...1... LAUNCH!
             </Link>
           </div>
         </div>
       </section>
 
-      <section className="px-6 pb-8 md:px-10 relative z-10">
-        <div className="mx-auto grid max-w-5xl gap-4 md:grid-cols-3">
-          {systems.map((system) => (
-            <article key={system.title} className="glass-tile">
-              <div className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-white/10 bg-white/5 text-xs font-semibold text-teal-100">
-                {system.icon}
-              </div>
-              <h2 className="mt-2 text-base font-semibold text-white">{system.title}</h2>
-              <p className="text-sm text-white/75">{system.description}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="px-6 pb-10 text-center text-xs uppercase tracking-system text-white/60 md:px-10 relative z-10">
-        <p>Professional Flight Deck • Calm authority • AI-native</p>
-      </section>
-
-      <AIChatWidget mode="sales" />
+      {/* Sales Chat Widget */}
+      <AIChatWidget />
+      </div>
     </main>
   )
 }

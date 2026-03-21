@@ -1,17 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
 import { checkSupabase } from '@/lib/check-supabase'
+import { createServerRouteClient } from '@/lib/supabase-server'
 import { moduleLoader } from '@/lib/module-loader'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const check = checkSupabase()
   if (check) return check
   
   try {
-    const moduleId = params.id
+    const { params } = context
+    const { id } = await params
+    const moduleId = id
+    const supabase = await createServerRouteClient()
 
     // Load the module
     const module = await moduleLoader.loadModule(moduleId)
@@ -24,7 +27,7 @@ export async function POST(
     }
 
     // Save activation to database
-    const { data: _data, error } = await supabase!
+    const { data: _data, error } = await supabase
       .from('niches')
       .upsert({ 
         module_id: module.module_id,
