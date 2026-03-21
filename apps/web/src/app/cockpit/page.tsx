@@ -174,20 +174,6 @@ function CockpitContent() {
           <Card title="Domains" desc="Routing and SSL" href="/domains" icon={Gauge} theme={theme} />
         </section>
 
-        <section className="hud-panel">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-[12px] uppercase tracking-system text-text-secondary">Systems Note</p>
-              <h2 className="text-[28px] font-semibold text-text-primary">A quiet copilot is listening.</h2>
-              <p className="text-[15px] leading-[1.6] text-text-secondary">
-                Vision monitors the deck and can surface suggestions when you need them. Find it in the modules, not the spotlight.
-              </p>
-            </div>
-            <a href="/launchpad/vision-preview" className="hud-button-secondary mt-2 inline-flex min-h-[44px] items-center px-4 py-2 text-sm">
-              Open quietly
-            </a>
-          </div>
-        </section>
       </div>
     </main>
   )

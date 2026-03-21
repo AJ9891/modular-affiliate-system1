@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { usePathname } from 'next/navigation'
+import { isPublicPath } from '@/config/publicPaths'
 
 interface Message {
   id: string
@@ -10,6 +12,7 @@ interface Message {
 }
 
 export default function AIChatWidget() {
+  const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -17,10 +20,19 @@ export default function AIChatWidget() {
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const isLaunchpadPath = pathname === '/launchpad' || pathname.startsWith('/launchpad/')
+  const shouldShowVision = !isPublicPath(pathname) && !isLaunchpadPath
+  const suggestedPrompts = getVisionPrompts(pathname)
 
   useEffect(() => {
+    if (!shouldShowVision) {
+      setIsOpen(false)
+      setIsAuthenticated(false)
+      return
+    }
+
     checkAuth()
-  }, [])
+  }, [shouldShowVision])
 
   useEffect(() => {
     scrollToBottom()
@@ -147,7 +159,7 @@ export default function AIChatWidget() {
     }
   }
 
-  if (!isAuthenticated) {
+  if (!shouldShowVision || !isAuthenticated) {
     return null // Don't show chat for unauthenticated users
   }
 
@@ -158,9 +170,9 @@ export default function AIChatWidget() {
         <button
           onClick={() => setIsOpen(true)}
           className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 flex items-center justify-center z-50 hover:scale-110"
-          aria-label="Open AI support chat"
+          aria-label="Open Vision assistant"
         >
-          <span className="text-2xl">💬</span>
+          <span className="text-2xl">⚓</span>
         </button>
       )}
 
@@ -171,11 +183,11 @@ export default function AIChatWidget() {
           <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4 rounded-t-2xl flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                <span className="text-xl">🤖</span>
+                <span className="text-xl">⚓</span>
               </div>
               <div>
-                <h3 className="font-bold">AI Support</h3>
-                <p className="text-xs text-white/80">Always here to help</p>
+                <h3 className="font-bold">Vision (Beta)</h3>
+                <p className="text-xs text-white/80">20% mode: quick guidance</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -211,30 +223,21 @@ export default function AIChatWidget() {
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
             {messages.length === 0 && (
               <div className="text-center py-12">
-                <div className="text-6xl mb-4">👋</div>
-                <h4 className="font-bold text-gray-900 mb-2">Hi! How can I help?</h4>
+                <div className="text-6xl mb-4">🛰️</div>
+                <h4 className="font-bold text-gray-900 mb-2">Vision online. What should we optimize?</h4>
                 <p className="text-sm text-gray-600">
-                  Ask me anything about Launchpad4Success!
+                  Lightweight copilot across private pages (outside Launchpad).
                 </p>
                 <div className="mt-6 space-y-2">
-                  <button
-                    onClick={() => setInput('How do I create a funnel?')}
-                    className="block w-full text-left px-4 py-2 bg-white rounded-lg text-sm text-gray-700 hover:bg-purple-50 border border-gray-200"
-                  >
-                    How do I create a funnel?
-                  </button>
-                  <button
-                    onClick={() => setInput('What features are in each plan?')}
-                    className="block w-full text-left px-4 py-2 bg-white rounded-lg text-sm text-gray-700 hover:bg-purple-50 border border-gray-200"
-                  >
-                    What features are in each plan?
-                  </button>
-                  <button
-                    onClick={() => setInput('How do I set up my custom domain?')}
-                    className="block w-full text-left px-4 py-2 bg-white rounded-lg text-sm text-gray-700 hover:bg-purple-50 border border-gray-200"
-                  >
-                    How do I set up my custom domain?
-                  </button>
+                  {suggestedPrompts.map((prompt) => (
+                    <button
+                      key={prompt}
+                      onClick={() => setInput(prompt)}
+                      className="block w-full text-left px-4 py-2 bg-white rounded-lg text-sm text-gray-700 hover:bg-purple-50 border border-gray-200"
+                    >
+                      {prompt}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
@@ -279,7 +282,7 @@ export default function AIChatWidget() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Type your message..."
+                placeholder="Ask Vision..."
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
                 disabled={loading}
               />
@@ -293,7 +296,7 @@ export default function AIChatWidget() {
             </div>
             <div className="flex items-center justify-between mt-2">
               <p className="text-xs text-gray-500">
-                AI-powered support
+                Vision beta chat
               </p>
               {conversationId && (
                 <button
@@ -310,4 +313,44 @@ export default function AIChatWidget() {
       )}
     </>
   )
+}
+
+function getVisionPrompts(pathname: string): string[] {
+  if (pathname.startsWith('/cockpit')) {
+    return [
+      'Give me a quick cockpit system check.',
+      'Which module should I focus on right now?',
+      'What should I optimize first for conversions?',
+    ]
+  }
+
+  if (pathname.startsWith('/radar') || pathname.startsWith('/analytics')) {
+    return [
+      'Summarize what matters most in this data.',
+      'Where is conversion loss likely happening?',
+      'Give me 3 fast tests to run this week.',
+    ]
+  }
+
+  if (pathname.startsWith('/domains')) {
+    return [
+      'Give me a domain setup checklist.',
+      'How do I verify SSL and routing fast?',
+      'What can break tracking on domain changes?',
+    ]
+  }
+
+  if (pathname.startsWith('/subscription') || pathname.startsWith('/checkout')) {
+    return [
+      'Explain plan differences in plain language.',
+      'How do I reduce checkout drop-off?',
+      'What billing issue should I watch for first?',
+    ]
+  }
+
+  return [
+    'What should I do next on this page?',
+    'Give me a short optimization plan.',
+    'What is the highest-impact action right now?',
+  ]
 }
