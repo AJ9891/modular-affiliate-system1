@@ -66,7 +66,7 @@ const hotspots: Hotspot[] = [
     name: 'Intelligence',
     label: 'Personality / Voice',
     description: 'Select system voice and behaviour',
-    href: '/admin/brand-brain',
+    href: '/intelligence',
     x: 85,
     y: 50,
     rotation: 0,

@@ -9,6 +9,7 @@ import Footer from "@/components/Footer"
 import { LaunchpadAmbientSound } from "@/components/LaunchpadAmbientSound"
 import { TelemetryObserver } from "@/components/TelemetryObserver"
 import { ShipRoomStyler } from "@/components/ShipRoomStyler"
+import { BrandModeGlowSync } from "@/components/BrandModeGlowSync"
 
 export const metadata: Metadata = {
   title: "Launchpad4Success - Build High-Converting Affiliate Funnels",
@@ -74,6 +75,7 @@ export default function RootLayout({
         <PersonalityThemeProvider personality={personality}>
           <AuthProvider>
             <BrandModeProvider>
+              <BrandModeGlowSync />
               {children}
               <TelemetryObserver />
               <AIChatWidget />
