@@ -14,15 +14,27 @@ interface Message {
 export default function AIChatWidget() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
+  const [visionSize, setVisionSize] = useState<'compact' | 'expanded'>('compact')
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const isLaunchpadPath = pathname === '/launchpad' || pathname.startsWith('/launchpad/')
   const shouldShowVision = !isPublicPath(pathname) && !isLaunchpadPath
   const suggestedPrompts = getVisionPrompts(pathname)
+  const visionWindowStyle =
+    visionSize === 'expanded'
+      ? {
+          width: 'min(80vw, 1200px, calc(100vw - 3rem))',
+          height: 'min(80vh, 860px, calc(100vh - 3rem))',
+        }
+      : {
+          width: 'min(clamp(320px, 20vw, 440px), calc(100vw - 3rem))',
+          height: 'min(clamp(480px, 62vh, 700px), calc(100vh - 3rem))',
+        }
 
   useEffect(() => {
     if (!shouldShowVision) {
@@ -37,6 +49,20 @@ export default function AIChatWidget() {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  useEffect(() => {
+    const openFromCockpit = () => {
+      if (!shouldShowVision || !isAuthenticated) return
+      setVisionSize('compact')
+      setIsOpen(true)
+      window.setTimeout(() => {
+        inputRef.current?.focus()
+      }, 180)
+    }
+
+    window.addEventListener('vision:open', openFromCockpit)
+    return () => window.removeEventListener('vision:open', openFromCockpit)
+  }, [isAuthenticated, shouldShowVision])
 
   async function checkAuth() {
     try {
@@ -168,7 +194,10 @@ export default function AIChatWidget() {
       {/* Chat Toggle Button */}
       {!isOpen && (
         <button
-          onClick={() => setIsOpen(true)}
+          onClick={() => {
+            setVisionSize('compact')
+            setIsOpen(true)
+          }}
           className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 flex items-center justify-center z-50 hover:scale-110"
           aria-label="Open Vision assistant"
         >
@@ -178,7 +207,10 @@ export default function AIChatWidget() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 border border-gray-200">
+        <div
+          className="fixed bottom-6 right-6 bg-white rounded-2xl shadow-2xl flex flex-col z-50 border border-gray-200 transition-[width,height] duration-300"
+          style={visionWindowStyle}
+        >
           {/* Header */}
           <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4 rounded-t-2xl flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -191,6 +223,13 @@ export default function AIChatWidget() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setVisionSize((current) => (current === 'compact' ? 'expanded' : 'compact'))}
+                className="px-2 py-1 text-xs font-semibold rounded-md border border-white/30 hover:bg-white/10 transition-colors"
+                title={visionSize === 'compact' ? 'Expand Vision to 80%' : 'Collapse Vision to 20%'}
+              >
+                {visionSize === 'compact' ? '80%' : '20%'}
+              </button>
               {conversationId && (
                 <button
                   onClick={escalateToHumanSupport}
@@ -278,6 +317,7 @@ export default function AIChatWidget() {
           <div className="p-4 border-t border-gray-200 bg-white rounded-b-2xl">
             <div className="flex gap-2">
               <input
+                ref={inputRef}
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
