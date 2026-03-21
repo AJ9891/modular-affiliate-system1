@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
-import { useRouter } from 'next/navigation'
 import { COCKPIT_MODULES } from '@/config/cockpitModules'
 import styles from './CockpitModules.module.css'
 
@@ -109,7 +108,6 @@ const geometryFromCorners = (corners: ModuleCorners) => {
 }
 
 export function CockpitModules() {
-  const router = useRouter()
   const mapRef = useRef<HTMLDivElement | null>(null)
   const dragRef = useRef<DragState | null>(null)
   const visionTimeoutRef = useRef<number | null>(null)
@@ -297,7 +295,7 @@ export function CockpitModules() {
   }, [modulePoints])
 
   const handleVisionOpen = useCallback(
-    (route: string, geometry: { left: number; top: number; width: number; height: number; clipPath: string }) => {
+    (geometry: { left: number; top: number; width: number; height: number; clipPath: string }) => {
       if (editMode) return
 
       if (visionTimeoutRef.current) {
@@ -308,10 +306,19 @@ export function CockpitModules() {
 
       visionTimeoutRef.current = window.setTimeout(() => {
         setVisionDeployGeometry(null)
-        router.push(route)
+
+        // Vision opens in-place as an overlay, not a route transition.
+        window.dispatchEvent(
+          new CustomEvent('vision:open', {
+            detail: {
+              source: 'cockpit',
+              mode: 'docked'
+            }
+          })
+        )
       }, VISION_DEPLOY_DURATION_MS)
     },
-    [editMode, router]
+    [editMode]
   )
 
   return (
@@ -372,7 +379,7 @@ export function CockpitModules() {
                   }}
                   aria-label={module.name}
                   tabIndex={editMode ? -1 : 0}
-                  onClick={() => handleVisionOpen(module.route, geometry)}
+                  onClick={() => handleVisionOpen(geometry)}
                 />
               ) : (
                 <Link
