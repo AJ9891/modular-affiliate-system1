@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
+import { useRouter } from 'next/navigation'
 import { COCKPIT_MODULES } from '@/config/cockpitModules'
 import styles from './CockpitModules.module.css'
 
@@ -20,6 +21,7 @@ type DragState =
   | { type: 'module'; moduleId: string; start: Point; origin: ModuleCorners }
 
 const STORAGE_KEY = 'lp_cockpit_hotspot_points_v2'
+const VISION_DEPLOY_DURATION_MS = 760
 
 const clampPercent = (value: number) => Math.min(100, Math.max(0, value))
 
@@ -107,11 +109,20 @@ const geometryFromCorners = (corners: ModuleCorners) => {
 }
 
 export function CockpitModules() {
+  const router = useRouter()
   const mapRef = useRef<HTMLDivElement | null>(null)
   const dragRef = useRef<DragState | null>(null)
+  const visionTimeoutRef = useRef<number | null>(null)
   const [editMode, setEditMode] = useState(false)
   const [copied, setCopied] = useState(false)
   const [readyToPersist, setReadyToPersist] = useState(false)
+  const [visionDeployGeometry, setVisionDeployGeometry] = useState<{
+    left: number
+    top: number
+    width: number
+    height: number
+    clipPath: string
+  } | null>(null)
 
   const defaultPoints = useMemo<ModulePointMap>(() => {
     const entries = COCKPIT_MODULES.map((module) => [module.id, moduleToCorners(module)] as const)
@@ -193,6 +204,14 @@ export function CockpitModules() {
       window.removeEventListener('pointercancel', onWindowPointerUp)
     }
   }, [onWindowPointerMove, onWindowPointerUp])
+
+  useEffect(() => {
+    return () => {
+      if (visionTimeoutRef.current) {
+        window.clearTimeout(visionTimeoutRef.current)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -277,8 +296,26 @@ export function CockpitModules() {
     }
   }, [modulePoints])
 
+  const handleVisionOpen = useCallback(
+    (route: string, geometry: { left: number; top: number; width: number; height: number; clipPath: string }) => {
+      if (editMode) return
+
+      if (visionTimeoutRef.current) {
+        window.clearTimeout(visionTimeoutRef.current)
+      }
+
+      setVisionDeployGeometry(geometry)
+
+      visionTimeoutRef.current = window.setTimeout(() => {
+        setVisionDeployGeometry(null)
+        router.push(route)
+      }, VISION_DEPLOY_DURATION_MS)
+    },
+    [editMode, router]
+  )
+
   return (
-    <div ref={mapRef} className={styles.map}>
+    <div ref={mapRef} className={`${styles.map} ${visionDeployGeometry ? styles.mapVisionDeploying : ''}`}>
       <div className={styles.editorControls}>
         <button
           type="button"
@@ -325,16 +362,30 @@ export function CockpitModules() {
                 height: `${geometry.height}%`
               }}
             >
-              <Link
-                href={module.route}
-                className={`${styles.hotspot} ${module.isVision ? styles.vision : ''}`}
-                style={{
-                  clipPath: geometry.clipPath,
-                  pointerEvents: editMode ? 'none' : 'auto'
-                }}
-                aria-label={module.name}
-                tabIndex={editMode ? -1 : 0}
-              />
+              {module.isVision ? (
+                <button
+                  type="button"
+                  className={`${styles.hotspot} ${styles.vision}`}
+                  style={{
+                    clipPath: geometry.clipPath,
+                    pointerEvents: editMode || visionDeployGeometry ? 'none' : 'auto'
+                  }}
+                  aria-label={module.name}
+                  tabIndex={editMode ? -1 : 0}
+                  onClick={() => handleVisionOpen(module.route, geometry)}
+                />
+              ) : (
+                <Link
+                  href={module.route}
+                  className={styles.hotspot}
+                  style={{
+                    clipPath: geometry.clipPath,
+                    pointerEvents: editMode || visionDeployGeometry ? 'none' : 'auto'
+                  }}
+                  aria-label={module.name}
+                  tabIndex={editMode ? -1 : 0}
+                />
+              )}
               <span className={styles.label}>{module.name}</span>
             </div>
 
@@ -352,6 +403,21 @@ export function CockpitModules() {
           </div>
         )
       })}
+
+      {visionDeployGeometry && (
+        <div className={styles.visionDeployLayer} aria-hidden="true">
+          <div
+            className={styles.visionDeployScreen}
+            style={{
+              left: `${visionDeployGeometry.left}%`,
+              top: `${visionDeployGeometry.top}%`,
+              width: `${visionDeployGeometry.width}%`,
+              height: `${visionDeployGeometry.height}%`,
+              clipPath: visionDeployGeometry.clipPath
+            }}
+          />
+        </div>
+      )}
     </div>
   )
 }

@@ -4,6 +4,15 @@
   perspective: 1600px;
 }
 
+.mapVisionDeploying::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 84% 18%, rgba(94, 234, 212, 0.12), transparent 30%);
+  animation: cockpitBreath 760ms ease-out forwards;
+}
+
 .editorControls {
   position: absolute;
   top: 0.65rem;
@@ -135,6 +144,50 @@
     0 0 14px rgba(167, 139, 250, 0.5);
 }
 
+.visionDeployLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  perspective: 1800px;
+}
+
+.visionDeployScreen {
+  position: absolute;
+  border-radius: 8px;
+  background:
+    linear-gradient(145deg, rgba(24, 74, 102, 0.72), rgba(3, 12, 22, 0.84)),
+    radial-gradient(circle at 22% 20%, rgba(34, 211, 238, 0.34), transparent 55%);
+  border: 1px solid rgba(94, 234, 212, 0.48);
+  box-shadow:
+    0 0 30px rgba(34, 211, 238, 0.44),
+    0 18px 44px rgba(2, 8, 16, 0.62);
+  transform-style: preserve-3d;
+  transform-origin: 78% 56%;
+  will-change: transform, box-shadow, filter;
+  animation: visionDeploy 760ms cubic-bezier(0.24, 0.78, 0.2, 1) forwards;
+}
+
+.visionDeployScreen::before {
+  content: '';
+  position: absolute;
+  inset: 8% 10%;
+  border-radius: 6px;
+  border: 1px solid rgba(148, 232, 255, 0.28);
+  background: linear-gradient(180deg, rgba(20, 60, 86, 0.2), rgba(8, 18, 30, 0.5));
+  opacity: 0.9;
+}
+
+.visionDeployScreen::after {
+  content: '';
+  position: absolute;
+  inset: -10%;
+  border-radius: 12px;
+  border: 1px solid rgba(94, 234, 212, 0.22);
+  opacity: 0;
+  animation: visionDeployPulse 760ms ease-out forwards;
+}
+
 .cornerHandle {
   position: absolute;
   z-index: 45;
@@ -170,5 +223,66 @@
   .hotspot:focus-visible {
     transform: none;
     filter: none;
+  }
+
+  .mapVisionDeploying::after,
+  .visionDeployScreen,
+  .visionDeployScreen::after {
+    animation: none;
+  }
+}
+
+@keyframes cockpitBreath {
+  0% {
+    opacity: 0;
+  }
+
+  30% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes visionDeploy {
+  0% {
+    transform: translate3d(0, 0, 0) rotateX(0deg) rotateY(0deg) scale(1);
+    filter: brightness(1);
+  }
+
+  28% {
+    transform: translate3d(0, -1%, 34px) rotateX(0deg) rotateY(0deg) scale(1.03);
+    filter: brightness(1.06);
+  }
+
+  56% {
+    transform: translate3d(-2%, -2%, 56px) rotateX(8deg) rotateY(-18deg) scale(1.08);
+    filter: brightness(1.1);
+  }
+
+  100% {
+    transform: translate3d(-3%, -4%, 88px) rotateX(7deg) rotateY(-15deg) scale(1.2);
+    filter: brightness(1.12);
+    box-shadow:
+      0 0 42px rgba(34, 211, 238, 0.62),
+      0 24px 54px rgba(2, 8, 16, 0.7);
+  }
+}
+
+@keyframes visionDeployPulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+
+  50% {
+    opacity: 0.58;
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.14);
   }
 }
