@@ -8,6 +8,7 @@ import AIChatWidget from "@/components/AIChatWidget"
 import Footer from "@/components/Footer"
 import { LaunchpadAmbientSound } from "@/components/LaunchpadAmbientSound"
 import { TelemetryObserver } from "@/components/TelemetryObserver"
+import { ShipRoomStyler } from "@/components/ShipRoomStyler"
 
 export const metadata: Metadata = {
   title: "Launchpad4Success - Build High-Converting Affiliate Funnels",
@@ -69,6 +70,7 @@ export default function RootLayout({
         />
       </head>
       <body className="flex flex-col min-h-screen">
+        <ShipRoomStyler />
         <PersonalityThemeProvider personality={personality}>
           <AuthProvider>
             <BrandModeProvider>
