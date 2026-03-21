@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { isPublicPath } from '@/config/publicPaths'
+import { useBrandMode } from '@/contexts/BrandModeContext'
+import { getBrandModeTheme } from '@/lib/brand/brandModeTheme'
 
 interface Message {
   id: string
@@ -13,6 +15,7 @@ interface Message {
 
 export default function AIChatWidget() {
   const pathname = usePathname()
+  const { mode } = useBrandMode()
   const [isOpen, setIsOpen] = useState(false)
   const [visionSize, setVisionSize] = useState<'compact' | 'expanded'>('compact')
   const [messages, setMessages] = useState<Message[]>([])
@@ -25,6 +28,16 @@ export default function AIChatWidget() {
   const isLaunchpadPath = pathname === '/launchpad' || pathname.startsWith('/launchpad/')
   const shouldShowVision = !isPublicPath(pathname) && !isLaunchpadPath
   const suggestedPrompts = getVisionPrompts(pathname)
+  const brandTheme = getBrandModeTheme(mode)
+  const launcherStart = shiftHexColor(brandTheme.accent, -24)
+  const launcherEnd = '#1e293b'
+  const launcherTextColor = getReadableTextColor(launcherStart)
+  const headerStart = shiftHexColor(brandTheme.accent, -20)
+  const headerEnd = '#0f172a'
+  const headerTextColor = getReadableTextColor(headerStart)
+  const userBubbleColor = brandTheme.accent
+  const userBubbleTextColor = getReadableTextColor(userBubbleColor)
+  const sendButtonTextColor = getReadableTextColor(brandTheme.accent)
   const visionWindowStyle =
     visionSize === 'expanded'
       ? {
@@ -198,7 +211,11 @@ export default function AIChatWidget() {
             setVisionSize('compact')
             setIsOpen(true)
           }}
-          className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 flex items-center justify-center z-50 hover:scale-110"
+          className="fixed bottom-6 right-6 w-16 h-16 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 flex items-center justify-center z-50 hover:scale-110 border border-white/15"
+          style={{
+            background: `linear-gradient(135deg, ${launcherStart}, ${launcherEnd})`,
+            color: launcherTextColor,
+          }}
           aria-label="Open Vision assistant"
         >
           <span className="text-2xl">⚓</span>
@@ -212,20 +229,27 @@ export default function AIChatWidget() {
           style={visionWindowStyle}
         >
           {/* Header */}
-          <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4 rounded-t-2xl flex items-center justify-between">
+          <div
+            className="p-4 rounded-t-2xl flex items-center justify-between"
+            style={{
+              background: `linear-gradient(135deg, ${headerStart}, ${headerEnd})`,
+              color: headerTextColor,
+            }}
+          >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-black/20 rounded-full flex items-center justify-center">
                 <span className="text-xl">⚓</span>
               </div>
               <div>
                 <h3 className="font-bold">Vision (Beta)</h3>
-                <p className="text-xs text-white/80">20% mode: quick guidance</p>
+                <p className="text-xs opacity-80">20% mode: quick guidance</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setVisionSize((current) => (current === 'compact' ? 'expanded' : 'compact'))}
-                className="px-2 py-1 text-xs font-semibold rounded-md border border-white/30 hover:bg-white/10 transition-colors"
+                className="px-2 py-1 text-xs font-semibold rounded-md border hover:bg-white/10 transition-colors"
+                style={{ borderColor: 'rgba(255,255,255,0.35)' }}
                 title={visionSize === 'compact' ? 'Expand Vision to 80%' : 'Collapse Vision to 20%'}
               >
                 {visionSize === 'compact' ? '80%' : '20%'}
@@ -233,7 +257,7 @@ export default function AIChatWidget() {
               {conversationId && (
                 <button
                   onClick={escalateToHumanSupport}
-                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  className="p-2 rounded-lg transition-colors hover:bg-white/10"
                   title="Escalate to human support"
                 >
                   <span className="text-lg">🙋</span>
@@ -242,7 +266,8 @@ export default function AIChatWidget() {
               {conversationId && (
                 <button
                   onClick={startNewConversation}
-                  className="text-white/80 hover:text-white text-sm px-2 py-1 rounded hover:bg-white/10"
+                  className="text-sm px-2 py-1 rounded hover:bg-white/10"
+                  style={{ color: 'rgba(255,255,255,0.88)' }}
                   title="New conversation"
                 >
                   ➕
@@ -250,7 +275,8 @@ export default function AIChatWidget() {
               )}
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-white/80 hover:text-white text-xl"
+                className="text-xl"
+                style={{ color: 'rgba(255,255,255,0.88)' }}
                 aria-label="Close chat"
               >
                 ✕
@@ -289,9 +315,14 @@ export default function AIChatWidget() {
                 <div
                   className={`max-w-[80%] rounded-2xl px-4 py-2 ${
                     msg.role === 'user'
-                      ? 'bg-purple-600 text-white'
+                      ? ''
                       : 'bg-white text-gray-900 border border-gray-200'
                   }`}
+                  style={
+                    msg.role === 'user'
+                      ? { background: userBubbleColor, color: userBubbleTextColor }
+                      : undefined
+                  }
                 >
                   <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                 </div>
@@ -329,7 +360,11 @@ export default function AIChatWidget() {
               <button
                 onClick={sendMessage}
                 disabled={!input.trim() || loading}
-                className="px-6 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                className="px-6 py-2 rounded-full disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                style={{
+                  background: brandTheme.accent,
+                  color: sendButtonTextColor,
+                }}
               >
                 {loading ? '...' : '→'}
               </button>
@@ -393,4 +428,33 @@ function getVisionPrompts(pathname: string): string[] {
     'Give me a short optimization plan.',
     'What is the highest-impact action right now?',
   ]
+}
+
+function getReadableTextColor(hexColor: string): string {
+  const rgb = hexToRgb(hexColor)
+  if (!rgb) return '#ffffff'
+  const luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255
+  return luminance > 0.64 ? '#0b1220' : '#ffffff'
+}
+
+function shiftHexColor(hexColor: string, amount: number): string {
+  const rgb = hexToRgb(hexColor)
+  if (!rgb) return hexColor
+  const clamp = (value: number) => Math.max(0, Math.min(255, value))
+  return rgbToHex(clamp(rgb.r + amount), clamp(rgb.g + amount), clamp(rgb.b + amount))
+}
+
+function hexToRgb(hexColor: string): { r: number; g: number; b: number } | null {
+  const hex = hexColor.replace('#', '').trim()
+  if (hex.length !== 6) return null
+  const r = Number.parseInt(hex.slice(0, 2), 16)
+  const g = Number.parseInt(hex.slice(2, 4), 16)
+  const b = Number.parseInt(hex.slice(4, 6), 16)
+  if ([r, g, b].some((v) => Number.isNaN(v))) return null
+  return { r, g, b }
+}
+
+function rgbToHex(r: number, g: number, b: number): string {
+  const toHex = (value: number) => value.toString(16).padStart(2, '0')
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`
 }
