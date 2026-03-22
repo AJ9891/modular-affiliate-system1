@@ -1,11 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { ArrowLeft, Bot, Code2, Copy, Eye, Loader2, Palette, Save, Sparkles } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useBrandMode } from '@/contexts/BrandModeContext'
+import { getBrandModeTheme } from '@/lib/brand/brandModeTheme'
 
 export default function AIGeneratorPage() {
   const { loading: authLoading } = useAuth()
+  const { mode } = useBrandMode()
+  const activeTheme = getBrandModeTheme(mode)
   const [loading, setLoading] = useState(false)
   const [generatedContent, setGeneratedContent] = useState<string>('')
   const [viewMode, setViewMode] = useState<'code' | 'preview'>('preview')
@@ -22,8 +27,8 @@ export default function AIGeneratorPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-green-900 flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
+      <div className="page-ai-core min-h-screen flex items-center justify-center">
+        <div className="text-text-secondary text-xl">Loading generator...</div>
       </div>
     )
   }
@@ -94,7 +99,7 @@ export default function AIGeneratorPage() {
   }
 
   // Load saved content on mount
-  useState(() => {
+  useEffect(() => {
     try {
       const saved = localStorage.getItem('ai-saved-content')
       if (saved) {
@@ -103,7 +108,7 @@ export default function AIGeneratorPage() {
     } catch (e) {
       console.error('Failed to load saved content:', e)
     }
-  })
+  }, [])
 
   function renderPreview() {
     // Design variants for visual variety
@@ -421,181 +426,226 @@ export default function AIGeneratorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-green-900 py-12 px-4">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">
-            AI Content Generator
-          </h1>
-          <p className="text-blue-200">Create high-converting copy with AI</p>
-        </div>
+    <main className="page-ai-core min-h-screen">
+      <div className="cockpit-container max-w-7xl space-y-8 py-10">
+        <header className="hud-panel space-y-4">
+          <p className="text-[12px] uppercase tracking-system text-text-secondary">Intelligence Core</p>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h1 className="text-[34px] font-semibold tracking-[-0.02em] text-text-primary md:text-[44px]">
+                AI Content Generator
+              </h1>
+              <p className="mt-2 max-w-3xl text-[15px] leading-[1.65] text-text-secondary">
+                Build conversion-focused copy, preview it in multiple layouts, and keep your best outputs in favorites.
+              </p>
+            </div>
+            <span
+              className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs uppercase tracking-system"
+              style={{
+                borderColor: activeTheme.borderFocus,
+                color: activeTheme.accent,
+                background: activeTheme.accentSoft,
+              }}
+            >
+              <Sparkles size={14} />
+              {activeTheme.glowLabel}
+            </span>
+          </div>
+        </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Input Form */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-            <h2 className="text-2xl font-bold text-white mb-6">Generate Content</h2>
-            
+        <section className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+          <div className="hud-card">
+            <h2 className="mb-6 text-[24px] font-semibold text-text-primary">Generate Content</h2>
+
             <form onSubmit={handleGenerate} className="space-y-4">
-              {/* Content Type */}
               <div>
-                <label className="block text-white mb-2 font-semibold">Content Type</label>
+                <label className="mb-2 block text-xs uppercase tracking-system text-text-secondary">Content Type</label>
                 <select
                   value={contentType}
                   onChange={(e) => setContentType(e.target.value as any)}
-                  className="w-full px-4 py-3 rounded-lg bg-white/20 text-white border border-white/30 focus:border-yellow-400 focus:outline-none"
+                  className="hud-select"
                 >
-                  <option value="headline" className="bg-gray-800 text-white">Headline</option>
-                  <option value="subheadline" className="bg-gray-800 text-white">Subheadline</option>
-                  <option value="cta" className="bg-gray-800 text-white">Call-to-Action</option>
-                  <option value="bullet-points" className="bg-gray-800 text-white">Bullet Points</option>
-                  <option value="full-page" className="bg-gray-800 text-white">Full Landing Page</option>
-                  <option value="email" className="bg-gray-800 text-white">Email Copy</option>
+                  <option value="headline">Headline</option>
+                  <option value="subheadline">Subheadline</option>
+                  <option value="cta">Call-to-Action</option>
+                  <option value="bullet-points">Bullet Points</option>
+                  <option value="full-page">Full Landing Page</option>
+                  <option value="email">Email Copy</option>
                 </select>
               </div>
 
-              {/* Niche */}
               <div>
-                <label className="block text-white mb-2 font-semibold">Niche</label>
+                <label className="mb-2 block text-xs uppercase tracking-system text-text-secondary">Niche</label>
                 <input
                   type="text"
                   value={formData.niche}
                   onChange={(e) => setFormData({ ...formData, niche: e.target.value })}
                   placeholder="e.g., Health & Fitness, Finance, Tech"
-                  className="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:border-yellow-400 focus:outline-none"
+                  className="hud-input"
                   required
                 />
               </div>
 
-              {/* Product Name */}
               <div>
-                <label className="block text-white mb-2 font-semibold">Product/Offer Name</label>
+                <label className="mb-2 block text-xs uppercase tracking-system text-text-secondary">Product / Offer Name</label>
                 <input
                   type="text"
                   value={formData.productName}
                   onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
                   placeholder="e.g., Weight Loss Program, Trading Course"
-                  className="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:border-yellow-400 focus:outline-none"
+                  className="hud-input"
                   required
                 />
               </div>
 
-              {/* Target Audience */}
               <div>
-                <label className="block text-white mb-2 font-semibold">Target Audience</label>
+                <label className="mb-2 block text-xs uppercase tracking-system text-text-secondary">Target Audience</label>
                 <input
                   type="text"
                   value={formData.audience}
                   onChange={(e) => setFormData({ ...formData, audience: e.target.value })}
                   placeholder="e.g., Busy professionals, New moms, Beginners"
-                  className="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:border-yellow-400 focus:outline-none"
+                  className="hud-input"
                   required
                 />
               </div>
 
-              {/* Tone */}
               <div>
-                <label className="block text-white mb-2 font-semibold">Tone</label>
+                <label className="mb-2 block text-xs uppercase tracking-system text-text-secondary">Tone</label>
                 <select
                   value={formData.tone}
                   onChange={(e) => setFormData({ ...formData, tone: e.target.value as any })}
-                  className="w-full px-4 py-3 rounded-lg bg-white/20 text-white border border-white/30 focus:border-yellow-400 focus:outline-none"
+                  className="hud-select"
                 >
-                  <option value="professional" className="bg-gray-800 text-white">Professional</option>
-                  <option value="casual" className="bg-gray-800 text-white">Casual</option>
-                  <option value="urgent" className="bg-gray-800 text-white">Urgent</option>
-                  <option value="friendly" className="bg-gray-800 text-white">Friendly</option>
+                  <option value="professional">Professional</option>
+                  <option value="casual">Casual</option>
+                  <option value="urgent">Urgent</option>
+                  <option value="friendly">Friendly</option>
                 </select>
               </div>
 
-              {/* Additional Context */}
               <div>
-                <label className="block text-white mb-2 font-semibold">Additional Context (Optional)</label>
+                <label className="mb-2 block text-xs uppercase tracking-system text-text-secondary">Additional Context</label>
                 <textarea
                   value={formData.context}
                   onChange={(e) => setFormData({ ...formData, context: e.target.value })}
                   placeholder="Any additional details or specific angles..."
                   rows={3}
-                  className="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-blue-200 border border-white/30 focus:border-yellow-400 focus:outline-none"
+                  className="hud-textarea"
                 />
               </div>
 
-              {/* Generate Button */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full px-6 py-4 bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-lg font-bold transition disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-lg px-6 py-3.5 text-[15px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-55"
+                style={{
+                  color: '#06111c',
+                  background: `linear-gradient(120deg, ${activeTheme.accent}, rgba(${activeTheme.accentRgb}, 0.72))`,
+                  boxShadow: `0 10px 26px rgba(${activeTheme.accentRgb}, 0.35)`,
+                }}
               >
-                {loading ? '✨ Generating...' : '✨ Generate Content'}
+                {loading ? (
+                  <>
+                    <Loader2 size={17} className="animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={17} />
+                    Generate Content
+                  </>
+                )}
               </button>
             </form>
           </div>
 
-          {/* Output */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-white">Generated Content</h2>
-              <div className="flex items-center gap-2">
-                {generatedContent && (
-                  <>
-                    <div className="flex bg-white/20 rounded-lg p-1">
-                      <button
-                        onClick={() => setViewMode('preview')}
-                        className={`px-3 py-1 rounded transition ${
-                          viewMode === 'preview'
-                            ? 'bg-yellow-400 text-gray-900'
-                            : 'text-white hover:bg-white/10'
-                        }`}
-                      >
-                        👁️ Preview
-                      </button>
-                      <button
-                        onClick={() => setViewMode('code')}
-                        className={`px-3 py-1 rounded transition ${
-                          viewMode === 'code'
-                            ? 'bg-yellow-400 text-gray-900'
-                            : 'text-white hover:bg-white/10'
-                        }`}
-                      >
-                        💻 Code
-                      </button>
-                    </div>
+          <div className="hud-card">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-[24px] font-semibold text-text-primary">Generated Content</h2>
+              {generatedContent && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="hud-card-tight flex items-center gap-1 p-1">
                     <button
-                      onClick={saveContent}
-                      className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition"
+                      onClick={() => setViewMode('preview')}
+                      className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-semibold transition"
+                      style={
+                        viewMode === 'preview'
+                          ? {
+                              border: `1px solid ${activeTheme.borderFocus}`,
+                              background: activeTheme.accentSoft,
+                              color: activeTheme.accent,
+                            }
+                          : {}
+                      }
                     >
-                      ⭐ Save
+                      <Eye size={13} />
+                      Preview
                     </button>
                     <button
-                      onClick={() => setDesignVariant(Math.floor(Math.random() * 5))}
-                      className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold transition"
-                      title="Change visual design"
+                      onClick={() => setViewMode('code')}
+                      className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-semibold transition"
+                      style={
+                        viewMode === 'code'
+                          ? {
+                              border: `1px solid ${activeTheme.borderFocus}`,
+                              background: activeTheme.accentSoft,
+                              color: activeTheme.accent,
+                            }
+                          : {}
+                      }
                     >
-                      🎨 New Style
+                      <Code2 size={13} />
+                      Code
                     </button>
-                    <button
-                      onClick={copyToClipboard}
-                      className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg font-semibold transition"
-                    >
-                      📋 Copy
-                    </button>
-                  </>
-                )}
-              </div>
+                  </div>
+                  <button
+                    onClick={saveContent}
+                    className="hud-button-secondary inline-flex items-center gap-1 px-3 py-2 text-xs"
+                    style={{
+                      borderColor: activeTheme.borderFocus,
+                      background: activeTheme.accentSoft,
+                      color: activeTheme.accent,
+                    }}
+                  >
+                    <Save size={13} />
+                    Save
+                  </button>
+                  <button
+                    onClick={() => setDesignVariant(Math.floor(Math.random() * 5))}
+                    className="hud-button-secondary inline-flex items-center gap-1 px-3 py-2 text-xs"
+                    title="Change visual design"
+                  >
+                    <Palette size={13} />
+                    New Style
+                  </button>
+                  <button
+                    onClick={copyToClipboard}
+                    className="hud-button-secondary inline-flex items-center gap-1 px-3 py-2 text-xs"
+                  >
+                    <Copy size={13} />
+                    Copy
+                  </button>
+                </div>
+              )}
             </div>
 
             {loading ? (
               <div className="flex flex-col items-center justify-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mb-4"></div>
-                <p className="text-blue-200">AI is crafting your content...</p>
+                <Loader2
+                  className="mb-4 animate-spin"
+                  size={36}
+                  style={{ color: activeTheme.accent }}
+                />
+                <p className="text-text-secondary">AI is crafting your content...</p>
               </div>
             ) : generatedContent ? (
-              <div className="min-h-[400px]">
+              <div className="min-h-[420px] overflow-hidden rounded-xl border border-[var(--border-elevated)]">
                 {viewMode === 'preview' ? (
                   renderPreview()
                 ) : (
-                  <div className="bg-black/30 rounded-lg p-6">
-                    <pre className="text-white whitespace-pre-wrap font-mono text-sm overflow-x-auto">
+                  <div className="h-full bg-[rgba(5,10,16,0.66)] p-6">
+                    <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-sm text-text-primary">
                       {generatedContent}
                     </pre>
                   </div>
@@ -603,73 +653,68 @@ export default function AIGeneratorPage() {
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="text-6xl mb-4">🤖</div>
-                <p className="text-blue-200 text-lg">
-                  Fill out the form and click "Generate Content" to create AI-powered copy
+                <Bot className="mb-4 text-text-secondary" size={56} />
+                <p className="max-w-md text-[15px] text-text-secondary">
+                  Fill out the form and run generation to create AI-powered conversion copy.
                 </p>
               </div>
             )}
           </div>
-        </div>
+        </section>
 
-        {/* Saved Content */}
         {savedContent.length > 0 && (
-          <div className="mt-8 bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-            <h3 className="text-2xl font-bold text-white mb-4">⭐ Saved Favorites ({savedContent.length})</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <section className="hud-panel">
+            <h3 className="mb-4 text-[22px] font-semibold text-text-primary">Saved Favorites ({savedContent.length})</h3>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {savedContent.map((item) => (
-                <div key={item.id} className="bg-white/10 border border-white/20 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-blue-200 uppercase font-semibold">{item.type}</span>
-                    <span className="text-xs text-blue-300">
+                <div key={item.id} className="hud-card-tight space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] uppercase tracking-system text-text-secondary">{item.type}</span>
+                    <span className="text-[11px] uppercase tracking-system text-text-muted">
                       {new Date(item.timestamp).toLocaleDateString()}
                     </span>
                   </div>
-                  <div className="text-white text-sm mb-3 line-clamp-3 overflow-hidden">
-                    {item.content.substring(0, 100)}...
-                  </div>
+                  <p className="line-clamp-3 text-sm leading-6 text-text-primary">
+                    {item.content.substring(0, 120)}...
+                  </p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => loadSavedContent(item.id)}
-                      className="flex-1 px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded transition"
+                      className="hud-button-secondary flex-1 px-3 py-2 text-xs"
                     >
                       Load
                     </button>
                     <button
                       onClick={() => deleteSavedContent(item.id)}
-                      className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm rounded transition"
+                      className="hud-button-danger px-3 py-2 text-xs"
                     >
-                      🗑️
+                      Delete
                     </button>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
         )}
 
-        {/* Tips */}
-        <div className="mt-8 bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-          <h3 className="text-xl font-bold text-white mb-4">💡 Tips for Better Results</h3>
-          <ul className="space-y-2 text-blue-200">
-            <li>• Be specific about your niche and target audience</li>
-            <li>• Include key benefits or features in the context field</li>
-            <li>• Try different tones to see what resonates best</li>
-            <li>• Generate multiple versions and pick the best one</li>
-            <li>• Use "Full Landing Page" to get a complete set of copy</li>
+        <section className="hud-panel">
+          <h3 className="mb-3 text-[20px] font-semibold text-text-primary">Tips for Better Results</h3>
+          <ul className="space-y-2 text-[15px] leading-7 text-text-secondary">
+            <li>Be specific about your niche and target audience.</li>
+            <li>Include key benefits or differentiators in context.</li>
+            <li>Try different tones and compare the outputs.</li>
+            <li>Generate multiple variants and combine your best lines.</li>
+            <li>Use Full Landing Page for complete copy blocks in one pass.</li>
           </ul>
-        </div>
+        </section>
 
-        {/* Back Button */}
-        <div className="mt-8 text-center">
-          <Link
-            href="/dashboard"
-            className="inline-block px-8 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg font-semibold transition border border-white/20"
-          >
-            ← Back to Dashboard
+        <div className="pt-1">
+          <Link href="/dashboard" className="hud-button-secondary inline-flex items-center gap-2 px-5 py-2.5">
+            <ArrowLeft size={16} />
+            Back to Dashboard
           </Link>
         </div>
       </div>
-    </div>
+    </main>
   )
 }
