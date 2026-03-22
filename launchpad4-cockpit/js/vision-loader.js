@@ -4,7 +4,16 @@
     return;
   }
 
+  const VISION_DIM_CLASS = 'vision-screen-dimmed';
   const componentPaths = ['/components/vision.html', './components/vision.html', '../components/vision.html'];
+
+  function syncVisionBackdropState(isOpen) {
+    if (!document.body) {
+      return;
+    }
+
+    document.body.classList.toggle(VISION_DIM_CLASS, Boolean(isOpen));
+  }
 
   function openVision() {
     const consoleEl = document.getElementById('vision-console');
@@ -14,7 +23,10 @@
 
     const wasClosed = !consoleEl.classList.contains('vision-open');
     consoleEl.classList.add('vision-open');
+    consoleEl.classList.remove('vision-expanded');
     consoleEl.setAttribute('aria-hidden', 'false');
+    const syncBackdrop = window.__setVisionBackdropState || syncVisionBackdropState;
+    syncBackdrop(false);
 
     if (wasClosed && typeof window.visionGreeting === 'function') {
       window.visionGreeting();
@@ -31,6 +43,8 @@
     consoleEl.classList.add('vision-open');
     consoleEl.classList.add('vision-expanded');
     consoleEl.setAttribute('aria-hidden', 'false');
+    const syncBackdrop = window.__setVisionBackdropState || syncVisionBackdropState;
+    syncBackdrop(true);
 
     if (wasClosed && typeof window.visionGreeting === 'function') {
       window.visionGreeting();
@@ -46,6 +60,8 @@
     consoleEl.classList.remove('vision-open');
     consoleEl.classList.remove('vision-expanded');
     consoleEl.setAttribute('aria-hidden', 'true');
+    const syncBackdrop = window.__setVisionBackdropState || syncVisionBackdropState;
+    syncBackdrop(false);
   }
 
   window.openVision = window.openVision || openVision;

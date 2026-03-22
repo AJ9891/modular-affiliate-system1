@@ -390,6 +390,15 @@ body {
   z-index: 2400;
 }
 
+body:not(.system-page) .vision-launcher {
+  display: none;
+}
+
+.vision-screen-dimmed .vision-launcher {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .vision-launcher:hover {
   box-shadow: 0 0 30px rgba(0, 255, 255, 0.6);
 }
@@ -415,7 +424,7 @@ body {
   right: 24px;
   bottom: 100px;
   width: min(440px, calc(100vw - 32px));
-  height: min(62vh, 560px);
+  height: clamp(210px, 20vh, 320px);
   border-radius: 12px;
   border: 1px solid rgba(0, 255, 255, 0.3);
   background: linear-gradient(145deg, rgba(18, 28, 50, 0.92), rgba(5, 10, 20, 0.96));
@@ -426,7 +435,13 @@ body {
   opacity: 0;
   pointer-events: none;
   transform: translateY(14px) scale(0.98);
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease,
+    width 0.35s ease,
+    height 0.35s ease,
+    bottom 0.35s ease,
+    right 0.35s ease;
   z-index: 2500;
 }
 
@@ -438,10 +453,21 @@ body {
 
 #vision-console.vision-expanded {
   width: min(80vw, 1100px);
-  height: min(84vh, 860px);
+  height: 80vh;
   right: 50%;
   bottom: 8vh;
   transform: translateX(50%) translateY(0) scale(1);
+}
+
+body.vision-screen-dimmed::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 2450;
+  pointer-events: auto;
+  background: rgba(2, 8, 20, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .vision-header {
@@ -680,6 +706,21 @@ body {
 }
 
 @media (max-width: 960px) {
+  #vision-console {
+    right: 12px;
+    bottom: 88px;
+    width: calc(100vw - 24px);
+    height: clamp(200px, 24vh, 290px);
+  }
+
+  #vision-console.vision-expanded {
+    width: calc(100vw - 16px);
+    height: 80vh;
+    right: 8px;
+    bottom: 6vh;
+    transform: translateY(0) scale(1);
+  }
+
   .vision-open {
     width: 42%;
   }

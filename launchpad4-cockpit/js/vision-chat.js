@@ -39,6 +39,15 @@ const visionFollowUp = {
   intelligence: 'Need help tuning voice adaptation behavior?',
   settings: 'Need help calibrating notifications and AI behavior?'
 };
+const VISION_DIM_CLASS = 'vision-screen-dimmed';
+
+function syncVisionBackdropState(isOpen) {
+  if (!document.body) {
+    return;
+  }
+
+  document.body.classList.toggle(VISION_DIM_CLASS, Boolean(isOpen));
+}
 
 function inferVoice(text) {
   const lcText = text.toLowerCase();
@@ -356,7 +365,9 @@ export function openVision() {
 
   const wasClosed = !consoleEl.classList.contains('vision-open');
   consoleEl.classList.add('vision-open');
+  consoleEl.classList.remove('vision-expanded');
   consoleEl.setAttribute('aria-hidden', 'false');
+  syncVisionBackdropState(false);
 
   if (wasClosed) {
     visionGreeting();
@@ -373,10 +384,23 @@ export function expandVision() {
   consoleEl.classList.add('vision-open');
   consoleEl.classList.add('vision-expanded');
   consoleEl.setAttribute('aria-hidden', 'false');
+  syncVisionBackdropState(true);
 
   if (wasClosed) {
     visionGreeting();
   }
+}
+
+export function closeVisionOverlay() {
+  const consoleEl = document.getElementById('vision-console');
+  if (!consoleEl) {
+    return;
+  }
+
+  consoleEl.classList.remove('vision-open');
+  consoleEl.classList.remove('vision-expanded');
+  consoleEl.setAttribute('aria-hidden', 'true');
+  syncVisionBackdropState(false);
 }
 
 export function pulseVision() {
@@ -401,4 +425,6 @@ if (typeof window !== 'undefined') {
   window.pulseVision = pulseVision;
   window.openVision = openVision;
   window.expandVision = expandVision;
+  window.closeVisionOverlay = closeVisionOverlay;
+  window.__setVisionBackdropState = syncVisionBackdropState;
 }
