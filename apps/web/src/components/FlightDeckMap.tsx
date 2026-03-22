@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { Compass, ChevronsUpDown, Brain, Mail, Zap, Radar } from 'lucide-react'
+import { Compass, ChevronsUpDown, Brain, Mail, Zap } from 'lucide-react'
 
 interface Hotspot {
   id: string
@@ -48,13 +48,6 @@ export default function FlightDeckMap() {
       href: '/subscription',
       icon: Zap,
       style: { top: '55%', left: '80%' }
-    },
-    {
-      id: 'radar',
-      label: 'Radar',
-      href: '/radar',
-      icon: Radar,
-      style: { top: '80%', left: '50%' }
     }
   ]
 

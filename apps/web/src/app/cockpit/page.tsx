@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { Sparkles, Rocket, BarChart3, Brain, Gauge, ShieldCheck, SunMoon } from 'lucide-react'
+import { Sparkles, Rocket, Brain, Gauge, ShieldCheck, SunMoon } from 'lucide-react'
 import { CockpitModules } from '@/components/CockpitModules'
 
 const ONBOARDING_COMPLETE = 8
@@ -168,7 +168,6 @@ function CockpitContent() {
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Card title="Funnels" desc="Build and publish" href="/visual-builder" icon={Rocket} theme={theme} />
           <Card title="AI Generator" desc="Copy and pages" href="/ai-generator" icon={Sparkles} theme={theme} />
-          <Card title="Radar" desc="Leads, revenue, conversion" href="/radar" icon={BarChart3} theme={theme} />
           <Card title="Optimizer" desc="A/B and guardrails" href="/ai-optimizer" icon={Brain} theme={theme} />
           <Card title="Billing" desc="Stripe and plans" href="/subscription" icon={ShieldCheck} theme={theme} />
           <Card title="Domains" desc="Routing and SSL" href="/domains" icon={Gauge} theme={theme} />

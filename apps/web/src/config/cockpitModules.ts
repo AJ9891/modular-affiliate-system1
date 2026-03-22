@@ -107,7 +107,7 @@ export const COCKPIT_MODULES: CockpitModule[] = [
   {
     id: 'telemetry',
     name: 'Telemetry',
-    route: '/analytics',
+    route: '/dashboard',
     corners: [
       { x: 46.846846846846844, y: 50.392892892892895 },
       { x: 52.792792792792795, y: 50.553053053053056 },
