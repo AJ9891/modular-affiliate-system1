@@ -24,9 +24,9 @@ const mockActions = [
     accent: 'purple' as const,
   },
   {
-    title: 'Radar',
-    description: 'Conversion, revenue, and email telemetry overlays.',
-    href: '/radar',
+    title: 'Radar Module',
+    description: 'Open cockpit to access the radar module.',
+    href: '/cockpit',
     icon: BarChart3,
     accent: 'blue' as const,
   },

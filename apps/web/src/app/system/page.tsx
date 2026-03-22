@@ -34,13 +34,13 @@ const hotspots: Hotspot[] = [
     baseColor: 'cyan',
     icon: '🧠',
   },
-  // Radar – top left large
+  // Cockpit – top left large
   {
-    id: 'radar',
-    name: 'Radar',
-    label: 'Real‑Time Analytics',
-    description: 'Conversion tracking and insights',
-    href: '/dashboard',
+    id: 'cockpit',
+    name: 'Cockpit',
+    label: 'Module Access',
+    description: 'Open cockpit and use the radar module',
+    href: '/cockpit',
     x: 15,
     y: 15,
     rotation: 0,
