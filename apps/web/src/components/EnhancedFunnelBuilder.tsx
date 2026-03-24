@@ -259,7 +259,7 @@ export default function EnhancedFunnelBuilder({
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <GripVertical className="text-gray-400" size={20} />
-            <span className="font-semibold capitalize">{block.type}</span>
+            <span className="font-semibold capitalize text-slate-900">{block.type}</span>
           </div>
           <button
             onClick={(e) => {
@@ -319,7 +319,7 @@ export default function EnhancedFunnelBuilder({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 text-slate-900">
       {/* Top Bar */}
       <div className="bg-white border-b px-6 py-4">
         <div className="flex items-center justify-between">
@@ -328,7 +328,7 @@ export default function EnhancedFunnelBuilder({
               type="text"
               value={funnel.name}
               onChange={(e) => setFunnel(prev => ({ ...prev, name: e.target.value }))}
-              className="text-2xl font-bold border-none focus:outline-none"
+              className="text-2xl font-bold border-none bg-transparent text-slate-900 focus:outline-none"
             />
             {funnel.niche && nicheData[funnel.niche] && (
               <div className={`px-4 py-2 bg-${nicheData[funnel.niche].color}-100 text-${nicheData[funnel.niche].color}-800 rounded-full text-sm font-semibold flex items-center gap-2`}>
@@ -366,13 +366,13 @@ export default function EnhancedFunnelBuilder({
       <div className="flex">
         {/* Left Sidebar - Block Library */}
         <div className="w-64 bg-white border-r p-4">
-          <h3 className="font-bold mb-4">Add Blocks</h3>
+          <h3 className="font-bold mb-4 text-slate-900">Add Blocks</h3>
           <div className="space-y-2">
             {Object.keys(blockTemplates).map(type => (
               <button
                 key={type}
                 onClick={() => addBlock(type as keyof typeof blockTemplates)}
-                className="w-full px-4 py-3 bg-blue-50 hover:bg-blue-100 rounded-lg text-left capitalize flex items-center gap-2"
+                className="w-full px-4 py-3 bg-blue-50 hover:bg-blue-100 rounded-lg text-left capitalize text-slate-900 flex items-center gap-2"
               >
                 <Plus size={16} />
                 {type.replace('-', ' ')}
@@ -382,10 +382,10 @@ export default function EnhancedFunnelBuilder({
 
           {/* Theme Settings */}
           <div className="mt-8 pt-8 border-t">
-            <h3 className="font-bold mb-4">Theme</h3>
+            <h3 className="font-bold mb-4 text-slate-900">Theme</h3>
             <div className="space-y-3">
               <div>
-                <label className="text-sm text-gray-600">Primary Color</label>
+                <label className="text-sm text-gray-700">Primary Color</label>
                 <input
                   type="color"
                   value={funnel.theme.primaryColor}
@@ -397,7 +397,7 @@ export default function EnhancedFunnelBuilder({
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-600">Secondary Color</label>
+                <label className="text-sm text-gray-700">Secondary Color</label>
                 <input
                   type="color"
                   value={funnel.theme.secondaryColor}

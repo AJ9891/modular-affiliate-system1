@@ -20,13 +20,13 @@ export const COMPONENT_REGISTRY: ComponentRegistryItem[] = [
   },
   {
     type: 'hero-meltdown',
-    label: 'Hero — AI Meltdown',
+    label: 'Hero — Glitch',
     component: MeltdownHero,
     allowedBrand: 'meltdown',
   },
   {
     type: 'anti-guru',
-    label: 'Anti-Guru Comparison',
+    label: 'Anchor Comparison',
     component: AntiGuruSection,
     allowedBrand: 'antiguru',
   },

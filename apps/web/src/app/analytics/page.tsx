@@ -1,5 +1,5 @@
-import { permanentRedirect } from 'next/navigation'
+import AnalyticsWorkspace from '@/components/analytics/AnalyticsWorkspace'
 
-export default function AnalyticsRedirectPage() {
-  permanentRedirect('/radar')
+export default function AnalyticsPage() {
+  return <AnalyticsWorkspace />
 }

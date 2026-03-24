@@ -24,7 +24,7 @@ export const BRAND_MODE_THEMES: Record<BrandModeKey, BrandModeTheme> = {
     accentSoft: 'rgba(0, 229, 255, 0.14)',
     accentHover: 'rgba(0, 229, 255, 0.24)',
     borderFocus: 'rgba(0, 229, 255, 0.5)',
-    glowLabel: 'Meltdown Plasma',
+    glowLabel: 'Glitch Plasma',
   },
   antiguru: {
     accent: '#facc15',
@@ -32,7 +32,7 @@ export const BRAND_MODE_THEMES: Record<BrandModeKey, BrandModeTheme> = {
     accentSoft: 'rgba(250, 204, 21, 0.14)',
     accentHover: 'rgba(250, 204, 21, 0.24)',
     borderFocus: 'rgba(250, 204, 21, 0.5)',
-    glowLabel: 'Anti-Guru Gold',
+    glowLabel: 'Anchor Gold',
   },
 }
 

@@ -9,17 +9,17 @@ const PERSONALITY_ORDER: BrandModeKey[] = ['rocket', 'meltdown', 'antiguru']
 
 const PERSONA_META: Record<BrandModeKey, { title: string; icon: ElementType; summary: string }> = {
   rocket: {
-    title: 'Rocket Future',
+    title: 'Rocket',
     icon: Sparkles,
     summary: 'Optimistic momentum and launch-first execution.',
   },
   meltdown: {
-    title: 'AI Meltdown',
+    title: 'Glitch',
     icon: Brain,
     summary: 'Skeptical AI analyst with a sharper edge.',
   },
   antiguru: {
-    title: 'Anti-Guru',
+    title: 'Anchor',
     icon: Zap,
     summary: 'Direct, no-hype operator mode.',
   },
