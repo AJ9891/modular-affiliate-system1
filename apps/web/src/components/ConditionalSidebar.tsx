@@ -1,9 +1,9 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import Sidebar from './Sidebar'
 import { ReactNode } from 'react'
 import { isExactPublicPath } from '@/config/publicPaths'
+import CockpitLayout from '@/components/cockpit/CockpitLayout'
 
 export default function ConditionalSidebar({ children }: { children?: ReactNode }) {
   const pathname = usePathname()
@@ -15,9 +15,5 @@ export default function ConditionalSidebar({ children }: { children?: ReactNode 
     return <>{children}</>
   }
 
-  return (
-    <>
-      <Sidebar />
-    </>
-  )
+  return <CockpitLayout>{children}</CockpitLayout>
 }

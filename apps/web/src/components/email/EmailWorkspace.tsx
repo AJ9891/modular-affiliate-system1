@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { Mail, Users, Bot } from 'lucide-react'
 import {
   createAutomation,
   createCampaignDraft,
@@ -10,6 +11,9 @@ import {
   type EmailTemplate,
 } from '@/lib/api/email'
 import { listSubscribers, type SubscriberLead } from '@/lib/api/subscribers'
+import DashboardPanel from '@/components/cockpit/DashboardPanel'
+import WorkspacePanel from '@/components/cockpit/WorkspacePanel'
+import { CockpitEmptyState } from '@/components/ui/CockpitEmptyState'
 import { useBrandMode, type BrandModeKey } from '@/contexts/BrandModeContext'
 import EmailSkeleton from './EmailSkeleton'
 
@@ -177,101 +181,123 @@ export default function EmailWorkspace() {
 
   return (
     <main className="cockpit-shell page-crew py-8">
-      <div className="cockpit-container max-w-6xl space-y-6">
+      <div className="cockpit-container max-w-7xl space-y-6">
         <section className="hud-panel">
           <p className="text-xs uppercase tracking-system text-text-secondary">Email</p>
-          <h1 className="text-3xl font-semibold text-text-primary md:text-4xl">Campaigns and Automation</h1>
-          <p className="mt-2 text-sm text-text-secondary">Manage campaigns, automation sequences, and subscriber lists.</p>
+          <h1 className="text-3xl font-semibold text-text-primary md:text-4xl">Campaign and Automation Console</h1>
+          <p className="mt-2 text-sm text-text-secondary">Coordinate templates, audience segments, and automated sequences.</p>
         </section>
 
         {error && <section className="rounded-lg border border-red-400/35 bg-red-500/12 p-4 text-red-200">{error}</section>}
 
-        <section className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-          <article className="hud-card">
-            <p className="text-xs uppercase tracking-system text-text-secondary">Templates</p>
-            <p className="mt-3 text-3xl font-semibold text-text-primary">{selectedPersonalityTemplates.length}</p>
-            <p className="mt-1 text-sm text-text-secondary">
-              Showing {selectedPersonalityLabel} templates only
-            </p>
-          </article>
-          <article className="hud-card">
-            <p className="text-xs uppercase tracking-system text-text-secondary">Subscribers</p>
-            <p className="mt-3 text-3xl font-semibold text-text-primary">{uniqueSubscribers.length}</p>
-            <p className="mt-1 text-sm text-text-secondary">Distinct subscribers in your list.</p>
-          </article>
-          <article className="hud-card">
-            <p className="text-xs uppercase tracking-system text-text-secondary">Automation</p>
-            <p className="mt-3 text-3xl font-semibold text-text-primary">Active</p>
-            <p className="mt-1 text-sm text-text-secondary">Sequence controls are available below.</p>
-          </article>
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <DashboardPanel title="Templates" icon={<Mail size={16} />} value={selectedPersonalityTemplates.length} tone="info">
+            <p className="text-xs text-text-secondary">Showing {selectedPersonalityLabel} templates.</p>
+          </DashboardPanel>
+          <DashboardPanel title="Subscribers" icon={<Users size={16} />} value={uniqueSubscribers.length} tone="neutral">
+            <p className="text-xs text-text-secondary">Distinct contacts available for campaigns.</p>
+          </DashboardPanel>
+          <DashboardPanel title="Automation Engine" icon={<Bot size={16} />} value="Active" tone="success">
+            <p className="text-xs text-text-secondary">Sequencing controls ready for execution.</p>
+          </DashboardPanel>
         </section>
 
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <article className="hud-card space-y-4">
-            <h2 className="text-xl font-semibold text-text-primary">Automation Sequences</h2>
+          <WorkspacePanel
+            title="Automation Sequences"
+            description="Manage onboarding flows and recurring automation behavior."
+            actions={
+              <div className="flex gap-2">
+                <button type="button" onClick={handleSetupDefaultAutomations} disabled={savingAutomation} className="hud-button-secondary px-3 py-1.5 text-xs">
+                  {savingAutomation ? 'Working...' : 'Setup Default'}
+                </button>
+                <button type="button" onClick={handleCreateAutomation} disabled={savingAutomation} className="hud-button-primary px-3 py-1.5 text-xs">
+                  {savingAutomation ? 'Saving...' : 'Create'}
+                </button>
+              </div>
+            }
+            expandable
+          >
             <input
               className="hud-input"
               value={automationName}
               onChange={(event) => setAutomationName(event.target.value)}
               placeholder="Automation name"
             />
-            <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={handleSetupDefaultAutomations} disabled={savingAutomation} className="hud-button-secondary px-4 py-2">
-                {savingAutomation ? 'Working...' : 'Setup Default'}
-              </button>
-              <button type="button" onClick={handleCreateAutomation} disabled={savingAutomation} className="hud-button-primary px-4 py-2">
-                {savingAutomation ? 'Saving...' : 'Create Automation'}
-              </button>
-            </div>
-            <p className="text-xs text-text-secondary">Triggers signup-based automations using your first available template.</p>
-          </article>
+            <p className="mt-3 text-xs text-text-secondary">Triggers signup-based automations using the first available template in current personality.</p>
+          </WorkspacePanel>
 
-          <article className="hud-card space-y-4">
-            <h2 className="text-xl font-semibold text-text-primary">Campaign Draft</h2>
-            <input
-              className="hud-input"
-              value={campaignSubject}
-              onChange={(event) => setCampaignSubject(event.target.value)}
-              placeholder="Campaign subject"
-            />
-            <textarea
-              className="hud-input min-h-32"
-              value={campaignHtml}
-              onChange={(event) => setCampaignHtml(event.target.value)}
-            />
-            <button type="button" onClick={handleCreateCampaignDraft} disabled={savingCampaign} className="hud-button-primary px-4 py-2">
-              {savingCampaign ? 'Creating...' : 'Create Campaign Draft'}
-            </button>
-            <p className="text-xs text-text-secondary">Sends draft payload to the email API using up to 10 subscribers.</p>
-          </article>
+          <WorkspacePanel
+            title="Campaign Draft Composer"
+            description="Draft outbound campaign payload for selected subscribers."
+            actions={
+              <button type="button" onClick={handleCreateCampaignDraft} disabled={savingCampaign} className="hud-button-primary px-3 py-1.5 text-xs">
+                {savingCampaign ? 'Creating...' : 'Create Draft'}
+              </button>
+            }
+            expandable
+          >
+            <div className="space-y-3">
+              <input
+                className="hud-input"
+                value={campaignSubject}
+                onChange={(event) => setCampaignSubject(event.target.value)}
+                placeholder="Campaign subject"
+              />
+              <textarea className="hud-input min-h-32" value={campaignHtml} onChange={(event) => setCampaignHtml(event.target.value)} />
+              <p className="text-xs text-text-secondary">Draft payload uses up to 10 subscribers as recipients.</p>
+            </div>
+          </WorkspacePanel>
         </section>
 
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <article className="hud-card lg:col-span-2">
-            <h2 className="mb-3 text-xl font-semibold text-text-primary">{selectedPersonalityLabel} Template Library</h2>
-            {templates.length === 0 && <p className="text-sm text-text-secondary">No email templates returned yet.</p>}
-            <section className="rounded-lg border border-[var(--border-subtle)] p-3">
-              <h3 className="mb-2 text-sm font-semibold uppercase tracking-system text-text-secondary">
-                {selectedPersonalityLabel} ({selectedPersonalityTemplates.length})
-              </h3>
-              <div className="space-y-2">
-                {selectedPersonalityTemplates.map((template) => (
-                  <div key={template.id || template.name} className="rounded border border-[var(--border-subtle)] p-2">
-                    <p className="text-sm font-medium text-text-primary">{template.name}</p>
-                    <p className="text-xs text-text-secondary">{template.subject}</p>
-                  </div>
-                ))}
-                {selectedPersonalityTemplates.length === 0 && (
-                  <p className="text-xs text-text-secondary">No templates for {selectedPersonalityLabel} yet.</p>
-                )}
-              </div>
-            </section>
-          </article>
+          <WorkspacePanel
+            title={`${selectedPersonalityLabel} Template Library`}
+            description="Template inventory filtered by active brand personality."
+            className="lg:col-span-2"
+            expandable
+          >
+            {templates.length === 0 ? (
+              <CockpitEmptyState
+                compact
+                title="No templates returned yet"
+                description="Templates will appear here after your template API is configured."
+                secondaryAction={{ label: 'Open Settings', href: '/settings' }}
+              />
+            ) : (
+              <section className="rounded-lg border border-[var(--border-subtle)] p-3">
+                <h3 className="mb-2 text-sm font-semibold uppercase tracking-system text-text-secondary">
+                  {selectedPersonalityLabel} ({selectedPersonalityTemplates.length})
+                </h3>
+                <div className="space-y-2">
+                  {selectedPersonalityTemplates.map((template) => (
+                    <div key={template.id || template.name} className="rounded border border-[var(--border-subtle)] p-2">
+                      <p className="text-sm font-medium text-text-primary">{template.name}</p>
+                      <p className="text-xs text-text-secondary">{template.subject}</p>
+                    </div>
+                  ))}
+                  {selectedPersonalityTemplates.length === 0 && (
+                    <CockpitEmptyState
+                      compact
+                      title={`No ${selectedPersonalityLabel} templates`}
+                      description="Switch voice mode or create templates to continue automation setup."
+                    />
+                  )}
+                </div>
+              </section>
+            )}
+          </WorkspacePanel>
 
-          <article className="hud-card">
-            <h2 className="mb-3 text-xl font-semibold text-text-primary">Subscriber List</h2>
+          <WorkspacePanel title="Audience Snapshot" description="Latest subscribers available for campaign targeting." expandable>
             <div className="space-y-2">
-              {uniqueSubscribers.length === 0 && <p className="text-sm text-text-secondary">No subscribers captured yet.</p>}
+              {uniqueSubscribers.length === 0 && (
+                <CockpitEmptyState
+                  compact
+                  title="No subscribers captured yet"
+                  description="Publish a funnel and connect forms to start collecting subscribers."
+                  primaryAction={{ label: 'Go to Funnels', href: '/funnels' }}
+                />
+              )}
               {uniqueSubscribers.slice(0, 8).map((subscriber) => (
                 <div key={subscriber.email} className="rounded-lg border border-[var(--border-subtle)] p-3">
                   <p className="font-medium text-text-primary">{subscriber.email}</p>
@@ -281,7 +307,7 @@ export default function EmailWorkspace() {
                 </div>
               ))}
             </div>
-          </article>
+          </WorkspacePanel>
         </section>
       </div>
     </main>

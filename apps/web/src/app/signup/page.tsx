@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 
 export default function Signup() {
   const router = useRouter()
@@ -12,11 +13,13 @@ export default function Signup() {
     password: ''
   })
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setNotice('')
     setLoading(true)
 
     try {
@@ -36,8 +39,30 @@ export default function Signup() {
         throw new Error(data.error || 'Signup failed')
       }
 
-      // Success - redirect to dashboard
-      router.push('/dashboard')
+      // Attempt immediate login for a smooth onboarding handoff.
+      const loginResponse = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        })
+      })
+
+      if (loginResponse.ok) {
+        const loginData = await loginResponse.json()
+        if (loginData.session) {
+          await supabase.auth.setSession({
+            access_token: loginData.session.access_token,
+            refresh_token: loginData.session.refresh_token
+          })
+        }
+        router.push('/welcome')
+        return
+      }
+
+      setNotice('Account created. Log in to begin onboarding.')
+      router.push('/login?redirectTo=/welcome')
     } catch (err: any) {
       setError(err.message || 'Something went wrong')
     } finally {
@@ -63,6 +88,12 @@ export default function Signup() {
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
               {error}
+            </div>
+          )}
+
+          {notice && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+              {notice}
             </div>
           )}
           

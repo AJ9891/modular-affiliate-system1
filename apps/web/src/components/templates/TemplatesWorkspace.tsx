@@ -1,8 +1,12 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { Layers, Shapes, Mail } from 'lucide-react'
 import type { BrandVoice, TemplateCategory } from '@/config/funnelTemplates'
 import { getTemplateGallery } from '@/lib/api/templates'
+import DashboardPanel from '@/components/cockpit/DashboardPanel'
+import WorkspacePanel from '@/components/cockpit/WorkspacePanel'
+import { CockpitEmptyState } from '@/components/ui/CockpitEmptyState'
 import TemplatesSkeleton from './TemplatesSkeleton'
 
 const voiceOptions: Array<'all' | BrandVoice> = ['all', 'glitch', 'anchor', 'boost']
@@ -58,16 +62,28 @@ export default function TemplatesWorkspace() {
 
   return (
     <main className="cockpit-shell page-ai-core py-8">
-      <div className="cockpit-container max-w-6xl space-y-6">
+      <div className="cockpit-container max-w-7xl space-y-6">
         <section className="hud-panel">
           <p className="text-xs uppercase tracking-system text-text-secondary">Templates</p>
-          <h1 className="text-3xl font-semibold text-text-primary md:text-4xl">Landing and Email Templates</h1>
-          <p className="mt-2 text-sm text-text-secondary">Browse reusable landing page templates and email templates.</p>
+          <h1 className="text-3xl font-semibold text-text-primary md:text-4xl">Template Library Console</h1>
+          <p className="mt-2 text-sm text-text-secondary">Filter and inspect reusable landing and email templates for fast deployment.</p>
         </section>
 
         {error && <section className="rounded-lg border border-red-400/35 bg-red-500/12 p-4 text-red-200">{error}</section>}
 
-        <section className="hud-card space-y-4">
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <DashboardPanel title="Landing Templates" icon={<Layers size={16} />} value={(gallery?.landingTemplates || []).length} tone="info">
+            <p className="text-xs text-text-secondary">Total templates available from API.</p>
+          </DashboardPanel>
+          <DashboardPanel title="Filtered Results" icon={<Shapes size={16} />} value={filteredLanding.length} tone="neutral">
+            <p className="text-xs text-text-secondary">Matching active filter controls.</p>
+          </DashboardPanel>
+          <DashboardPanel title="Email Templates" icon={<Mail size={16} />} value={(gallery?.emailTemplates || []).length} tone="success">
+            <p className="text-xs text-text-secondary">Email template inventory status.</p>
+          </DashboardPanel>
+        </section>
+
+        <WorkspacePanel title="Template Filters" description="Select voice mode and category for focused browsing." expandable>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <select className="hud-select" value={voice} onChange={(event) => setVoice(event.target.value as 'all' | BrandVoice)}>
               {voiceOptions.map((option) => (
@@ -76,11 +92,7 @@ export default function TemplatesWorkspace() {
                 </option>
               ))}
             </select>
-            <select
-              className="hud-select"
-              value={category}
-              onChange={(event) => setCategory(event.target.value as 'all' | TemplateCategory)}
-            >
+            <select className="hud-select" value={category} onChange={(event) => setCategory(event.target.value as 'all' | TemplateCategory)}>
               {categoryOptions.map((option) => (
                 <option key={option} value={option}>
                   Category: {option}
@@ -88,25 +100,40 @@ export default function TemplatesWorkspace() {
               ))}
             </select>
           </div>
+        </WorkspacePanel>
 
+        <WorkspacePanel title="Landing Template Grid" description="Reusable landing modules for funnel composition." expandable>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {filteredLanding.slice(0, 18).map((template) => (
-              <article key={template.id} className="rounded-lg border border-[var(--border-subtle)] bg-[rgba(10,16,24,0.55)] p-4">
-                <p className="text-xs uppercase tracking-system text-text-secondary">
-                  {template.brandVoice} · {template.category}
-                </p>
-                <h3 className="mt-2 text-lg font-semibold text-text-primary">{template.name}</h3>
-                <p className="mt-1 text-sm text-text-secondary">{template.description}</p>
-                <p className="mt-3 text-xs text-text-secondary">{template.blocks.length} blocks</p>
-              </article>
-            ))}
+            {filteredLanding.length === 0 ? (
+              <div className="md:col-span-2 xl:col-span-3">
+                <CockpitEmptyState
+                  title="No templates match current filters"
+                  description="Adjust voice or category filters to see available landing templates."
+                />
+              </div>
+            ) : (
+              filteredLanding.slice(0, 18).map((template) => (
+                <article key={template.id} className="rounded-lg border border-[var(--border-subtle)] bg-[rgba(10,16,24,0.55)] p-4">
+                  <p className="text-xs uppercase tracking-system text-text-secondary">
+                    {template.brandVoice} · {template.category}
+                  </p>
+                  <h3 className="mt-2 text-lg font-semibold text-text-primary">{template.name}</h3>
+                  <p className="mt-1 text-sm text-text-secondary">{template.description}</p>
+                  <p className="mt-3 text-xs text-text-secondary">{template.blocks.length} blocks</p>
+                </article>
+              ))
+            )}
           </div>
-        </section>
+        </WorkspacePanel>
 
-        <section className="hud-card">
-          <h2 className="mb-3 text-xl font-semibold text-text-primary">Email Templates</h2>
+        <WorkspacePanel title="Email Template Library" description="Subject-line and content templates for campaigns." expandable>
           {(gallery?.emailTemplates || []).length === 0 ? (
-            <p className="text-sm text-text-secondary">No email templates available from the API.</p>
+            <CockpitEmptyState
+              compact
+              title="No email templates available"
+              description="Email templates appear here after API sync."
+              secondaryAction={{ label: 'Open Email Workspace', href: '/email' }}
+            />
           ) : (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {gallery?.emailTemplates.map((template) => (
@@ -117,7 +144,7 @@ export default function TemplatesWorkspace() {
               ))}
             </div>
           )}
-        </section>
+        </WorkspacePanel>
       </div>
     </main>
   )
