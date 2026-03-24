@@ -110,6 +110,35 @@ function resolveContext(pathname: string): { heading: string; sections: ContextS
     }
   }
 
+  if (pathname.startsWith('/ai-generator') || pathname.startsWith('/intelligence') || pathname.startsWith('/ai-optimizer')) {
+    return {
+      heading: 'AI Core Controls',
+      sections: [
+        {
+          title: 'Generation Inputs',
+          description: 'Tune brief quality, output format, and voice constraints.',
+          icon: Wrench,
+          controls: [
+            { label: 'Output Mode', value: 'Headline / Email / Full Page' },
+            { label: 'Audience Specificity', value: 'Required' },
+            { label: 'Compliance Notes', value: 'Recommended' },
+            { label: 'Open Personality', href: '/intelligence' },
+          ],
+        },
+        {
+          title: 'Dispatch Actions',
+          description: 'Move generated content into execution workflows.',
+          icon: SlidersHorizontal,
+          controls: [
+            { label: 'Template Library', href: '/templates' },
+            { label: 'Email Campaigns', href: '/email' },
+            { label: 'Funnels Workspace', href: '/funnels' },
+          ],
+        },
+      ],
+    }
+  }
+
   if (pathname.startsWith('/subscribers')) {
     return {
       heading: 'Audience Filters',
