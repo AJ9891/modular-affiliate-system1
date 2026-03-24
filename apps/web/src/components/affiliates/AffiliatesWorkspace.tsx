@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { buildTrackingLink, getAffiliateOverview, type AffiliateOverview } from '@/lib/api/affiliates'
+import { CockpitEmptyState } from '@/components/ui/CockpitEmptyState'
 import AffiliatesSkeleton from './AffiliatesSkeleton'
 
 function currency(value: number) {
@@ -146,7 +147,13 @@ export default function AffiliatesWorkspace() {
               </tbody>
             </table>
           ) : (
-            <p className="text-sm text-text-secondary">No offers available yet.</p>
+            <CockpitEmptyState
+              compact
+              title="No offers available yet"
+              description="Add affiliate offers to generate tracking links and commission reporting."
+              primaryAction={{ label: 'Manage Offers', href: '/offers' }}
+              secondaryAction={{ label: 'Open Launchpad', href: '/launchpad' }}
+            />
           )}
         </section>
       </div>

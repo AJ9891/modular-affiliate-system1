@@ -258,6 +258,25 @@
     padding-block: 2rem;
   }
 
+  .app-shell-with-sidebar {
+    min-height: 100vh;
+  }
+
+  .app-shell-content {
+    min-height: 100vh;
+    transition: padding-left var(--transition-normal);
+  }
+
+  @media (min-width: 1024px) {
+    .app-shell-with-sidebar .app-shell-content {
+      padding-left: 17rem;
+    }
+
+    body[data-sidebar-collapsed='true'] .app-shell-with-sidebar .app-shell-content {
+      padding-left: 5.5rem;
+    }
+  }
+
   .hud-panel {
     border-radius: 14px;
     border: 1px solid var(--border-elevated);

@@ -35,9 +35,14 @@ export default function LaunchpadPage() {
   const [currentStep, setCurrentStep] = useState(0)
   const [setupComplete, setSetupComplete] = useState(false)
   const [_userProfile, setUserProfile] = useState<any>(null)
+  const [loadingUserData, setLoadingUserData] = useState(true)
+  const [stepValidationError, setStepValidationError] = useState<string | null>(null)
+  const [operationNotice, setOperationNotice] = useState<string | null>(null)
   const [selectedNiche, setSelectedNiche] = useState<string>('')
   const [selectedTemplate, setSelectedTemplate] = useState<string>('')
   const [createdFunnel, setCreatedFunnel] = useState<any>(null)
+  const [creatingTemplate, setCreatingTemplate] = useState<string | null>(null)
+  const [copiedUrl, setCopiedUrl] = useState(false)
   const [showSuccessScreen, setShowSuccessScreen] = useState(false)
   const [stats, setStats] = useState({
     funnels: 0,
@@ -58,8 +63,13 @@ export default function LaunchpadPage() {
     }
   }, [searchParams])
 
+  useEffect(() => {
+    setStepValidationError(null)
+  }, [currentStep])
+
   const loadUserData = async () => {
     try {
+      setLoadingUserData(true)
       const response = await fetch('/api/auth/me')
       if (response.ok) {
         const data = await response.json()
@@ -78,6 +88,8 @@ export default function LaunchpadPage() {
       }
     } catch (error) {
       console.error('Failed to load user data:', error)
+    } finally {
+      setLoadingUserData(false)
     }
   }
 
@@ -191,16 +203,19 @@ export default function LaunchpadPage() {
   const handleStepComplete = async (stepId: string) => {
     // Validate step requirements before advancing
     if (stepId === 'niche' && !selectedNiche) {
-      alert('Please select a niche before continuing')
+      setStepValidationError('Select a niche before continuing.')
       return
     }
     
     if (stepId === 'funnel' && !selectedTemplate) {
-      alert('Please select a funnel template before continuing')
+      setStepValidationError('Choose a funnel template before continuing.')
       return
     }
+
+    setStepValidationError(null)
     
     if (stepId === 'launch') {
+      setOperationNotice('Routing you to cockpit...')
       if (typeof window !== 'undefined') {
         localStorage.setItem('lp_skip_onboarding', '1')
         document.cookie = 'lp_skip_onboarding=1; Path=/; Max-Age=2592000; SameSite=Lax'
@@ -213,15 +228,20 @@ export default function LaunchpadPage() {
   }
 
   const selectNiche = (nicheId: string) => {
+    setStepValidationError(null)
     setSelectedNiche(nicheId)
   }
 
   const selectTemplate = (template: any) => {
+    setStepValidationError(null)
     setSelectedTemplate(template.category)
   }
 
   const createFunnelFromTemplate = async (template: any, isLaunching = false) => {
     try {
+      setCreatingTemplate(template.category)
+      setOperationNotice(`Creating "${template.name}"...`)
+      setStepValidationError(null)
       console.log('Creating funnel...', { template, niche: selectedNiche })
       
       const response = await fetch('/api/funnels', {
@@ -241,6 +261,7 @@ export default function LaunchpadPage() {
         const data = await response.json()
         console.log('Funnel created:', data)
         setCreatedFunnel(data)
+        setOperationNotice(`"${template.name}" is ready.`)
         
         if (isLaunching) {
           setShowSuccessScreen(true)
@@ -257,9 +278,10 @@ export default function LaunchpadPage() {
             funnelId: 'demo-' + Date.now(),
             funnel: { name: template.name }
           })
+          setOperationNotice(`"${template.name}" is ready in preview mode.`)
           setShowSuccessScreen(true)
         } else {
-          alert('Error creating funnel: ' + (errorData.error || 'Unknown error'))
+          setStepValidationError(errorData.error || 'Failed to create funnel.')
         }
       }
     } catch (error: any) {
@@ -271,10 +293,13 @@ export default function LaunchpadPage() {
           funnelId: 'demo-' + Date.now(),
           funnel: { name: template.name }
         })
+        setOperationNotice(`"${template.name}" is ready in preview mode.`)
         setShowSuccessScreen(true)
       } else {
-        alert('Error: Request timed out or failed')
+        setStepValidationError('Request timed out or failed while creating your funnel.')
       }
+    } finally {
+      setCreatingTemplate(null)
     }
   }
 
@@ -301,13 +326,18 @@ export default function LaunchpadPage() {
     }
   }
 
-  const copyFunnelUrl = () => {
-    navigator.clipboard.writeText(getFunnelUrl())
-    alert('Funnel URL copied to clipboard!')
+  const copyFunnelUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(getFunnelUrl())
+      setCopiedUrl(true)
+      setTimeout(() => setCopiedUrl(false), 1800)
+    } catch {
+      setStepValidationError('Unable to copy URL. You can copy it manually from the field.')
+    }
   }
 
   const closeOnboarding = () => {
-    window.location.href = '/'
+    window.location.href = '/cockpit?skip_onboarding=1'
   }
 
   const skipOnboarding = () => {
@@ -316,6 +346,17 @@ export default function LaunchpadPage() {
       document.cookie = 'lp_skip_onboarding=1; Path=/; Max-Age=2592000; SameSite=Lax'
     }
     window.location.href = '/cockpit?skip_onboarding=1'
+  }
+
+  if (loadingUserData) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+        <div className="rounded-2xl border border-white/10 bg-black/25 px-8 py-7 text-center backdrop-blur-sm">
+          <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-b-2 border-orange-400" />
+          <p className="text-sm text-slate-200">Loading your launchpad...</p>
+        </div>
+      </div>
+    )
   }
 
   // Success screen after launch
@@ -383,7 +424,7 @@ export default function LaunchpadPage() {
                 onClick={copyFunnelUrl}
                 className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition"
               >
-                Copy
+                {copiedUrl ? 'Copied' : 'Copy'}
               </button>
             </div>
           </div>
@@ -448,6 +489,11 @@ export default function LaunchpadPage() {
             <p className="text-xl text-gray-600">
               Your affiliate empire is growing. Here&apos;s what&apos;s happening.
             </p>
+            {operationNotice && (
+              <p className="mt-3 inline-flex rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm text-emerald-700">
+                {operationNotice}
+              </p>
+            )}
           </div>
 
           {/* Stats Grid */}
@@ -518,7 +564,10 @@ export default function LaunchpadPage() {
                 <div
                   key={index}
                   className="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all cursor-pointer"
-                  onClick={() => createFunnelFromTemplate(template)}
+                  onClick={() => {
+                    if (creatingTemplate) return
+                    createFunnelFromTemplate(template)
+                  }}
                 >
                   <h3 className="font-bold text-lg mb-2">{template.name}</h3>
                   <p className="text-gray-600 text-sm mb-4">{template.description}</p>
@@ -526,8 +575,11 @@ export default function LaunchpadPage() {
                     <span className="text-gray-500">{template.blocks} blocks</span>
                     <span className="text-green-600 font-semibold">{template.conversions}</span>
                   </div>
-                  <button className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
-                    Use Template <ArrowRight size={16} />
+                  <button
+                    disabled={creatingTemplate !== null}
+                    className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 flex items-center justify-center gap-2"
+                  >
+                    {creatingTemplate === template.category ? 'Creating...' : 'Use Template'} <ArrowRight size={16} />
                   </button>
                 </div>
               ))}
@@ -547,6 +599,10 @@ export default function LaunchpadPage() {
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Progress Bar */}
         <div className="mb-12">
+          <div className="mb-4 flex items-center justify-between text-sm text-slate-600">
+            <span>Step {currentStep + 1} of {launchSteps.length}</span>
+            <span>{Math.round(((currentStep + 1) / launchSteps.length) * 100)}% complete</span>
+          </div>
           <div className="flex items-center justify-between mb-4">
             {launchSteps.map((s, index) => (
               <div
@@ -581,6 +637,18 @@ export default function LaunchpadPage() {
 
           <h1 className="text-4xl font-bold mb-4 text-slate-900">{step.title}</h1>
           <p className="text-xl text-slate-700 mb-8">{step.description}</p>
+
+          {operationNotice && (
+            <p className="mx-auto mb-5 max-w-xl rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
+              {operationNotice}
+            </p>
+          )}
+
+          {stepValidationError && (
+            <p className="mx-auto mb-5 max-w-xl rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+              {stepValidationError}
+            </p>
+          )}
 
           {/* Step-specific content */}
           {step.id === 'welcome' && (
@@ -759,9 +827,10 @@ export default function LaunchpadPage() {
               <button
                 type="button"
                 onClick={() => handleStepComplete(step.id)}
+                disabled={creatingTemplate !== null}
                 className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-orange-700 to-amber-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:shadow-lg"
               >
-                {currentStep < launchSteps.length - 1 ? 'Next' : step.action}
+                {creatingTemplate ? 'Working...' : currentStep < launchSteps.length - 1 ? 'Next' : step.action}
                 <ArrowRight size={16} />
               </button>
             </div>

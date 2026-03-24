@@ -1,12 +1,15 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { Activity, TrendingUp, MousePointerClick, DollarSign } from 'lucide-react'
 import { getAnalyticsSummary, getFunnelPerformance, type FunnelPerformance } from '@/lib/api/analytics'
 import { listFunnels, type FunnelRecord } from '@/lib/api/funnels'
+import DashboardPanel from '@/components/cockpit/DashboardPanel'
+import WorkspacePanel from '@/components/cockpit/WorkspacePanel'
+import { CockpitEmptyState } from '@/components/ui/CockpitEmptyState'
 import AnalyticsSkeleton from './AnalyticsSkeleton'
 
 const ranges = ['7d', '30d', '90d'] as const
-
 type Range = (typeof ranges)[number]
 
 type PerformanceRow = {
@@ -20,6 +23,7 @@ export default function AnalyticsWorkspace() {
   const [error, setError] = useState<string | null>(null)
   const [summary, setSummary] = useState<Awaited<ReturnType<typeof getAnalyticsSummary>> | null>(null)
   const [performanceRows, setPerformanceRows] = useState<PerformanceRow[]>([])
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     let active = true
@@ -30,7 +34,6 @@ export default function AnalyticsWorkspace() {
         setError(null)
 
         const [summaryData, funnels] = await Promise.all([getAnalyticsSummary(range), listFunnels()])
-
         const candidates = funnels.slice(0, 8)
 
         const performance = await Promise.all(
@@ -64,7 +67,7 @@ export default function AnalyticsWorkspace() {
     return () => {
       active = false
     }
-  }, [range])
+  }, [range, refreshKey])
 
   const topSources = useMemo(() => {
     return [...(summary?.clicksBySource || [])].sort((a, b) => b.count - a.count).slice(0, 6)
@@ -76,14 +79,14 @@ export default function AnalyticsWorkspace() {
 
   return (
     <main className="cockpit-shell page-telemetry py-8">
-      <div className="cockpit-container max-w-6xl space-y-6">
+      <div className="cockpit-container max-w-7xl space-y-6">
         <section className="hud-panel flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-xs uppercase tracking-system text-text-secondary">Analytics</p>
-            <h1 className="text-3xl font-semibold text-text-primary md:text-4xl">Traffic and Conversion Intelligence</h1>
-            <p className="mt-1 text-sm text-text-secondary">Traffic metrics, conversion charts, and funnel performance.</p>
+            <h1 className="text-3xl font-semibold text-text-primary md:text-4xl">Traffic and Conversion Command</h1>
+            <p className="mt-1 text-sm text-text-secondary">Inspect traffic quality, funnel conversion efficiency, and revenue movement.</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {ranges.map((value) => (
               <button
                 key={value}
@@ -98,6 +101,9 @@ export default function AnalyticsWorkspace() {
                 {value}
               </button>
             ))}
+            <button type="button" onClick={() => setRefreshKey((value) => value + 1)} className="hud-button-secondary px-3 py-2 text-sm">
+              Refresh
+            </button>
           </div>
         </section>
 
@@ -108,49 +114,61 @@ export default function AnalyticsWorkspace() {
         )}
 
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <article className="hud-card">
-            <p className="text-xs uppercase tracking-system text-text-secondary">Total Clicks</p>
-            <p className="mt-3 text-3xl font-semibold text-text-primary">{summary?.stats.totalClicks.toLocaleString() || 0}</p>
-          </article>
-          <article className="hud-card">
-            <p className="text-xs uppercase tracking-system text-text-secondary">Conversions</p>
-            <p className="mt-3 text-3xl font-semibold text-text-primary">{summary?.stats.totalConversions.toLocaleString() || 0}</p>
-          </article>
-          <article className="hud-card">
-            <p className="text-xs uppercase tracking-system text-text-secondary">Conversion Rate</p>
-            <p className="mt-3 text-3xl font-semibold text-text-primary">{(summary?.stats.conversionRate || 0).toFixed(2)}%</p>
-          </article>
-          <article className="hud-card">
-            <p className="text-xs uppercase tracking-system text-text-secondary">Revenue</p>
-            <p className="mt-3 text-3xl font-semibold text-text-primary">${(summary?.stats.totalRevenue || 0).toLocaleString()}</p>
-          </article>
+          <DashboardPanel
+            title="Total Clicks"
+            icon={<MousePointerClick size={16} />}
+            value={summary?.stats.totalClicks.toLocaleString() || 0}
+            tone="info"
+          >
+            <p className="text-xs text-text-secondary">Tracked sessions in selected range.</p>
+          </DashboardPanel>
+          <DashboardPanel title="Conversions" icon={<TrendingUp size={16} />} value={summary?.stats.totalConversions.toLocaleString() || 0} tone="success">
+            <p className="text-xs text-text-secondary">Completed conversion events.</p>
+          </DashboardPanel>
+          <DashboardPanel
+            title="Conversion Rate"
+            icon={<Activity size={16} />}
+            value={`${(summary?.stats.conversionRate || 0).toFixed(2)}%`}
+            tone="warning"
+          >
+            <p className="text-xs text-text-secondary">Click-to-conversion ratio.</p>
+          </DashboardPanel>
+          <DashboardPanel title="Revenue" icon={<DollarSign size={16} />} value={`$${(summary?.stats.totalRevenue || 0).toLocaleString()}`} tone="success">
+            <p className="text-xs text-text-secondary">Estimated tracked revenue.</p>
+          </DashboardPanel>
         </section>
 
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <article className="hud-card">
-            <h2 className="text-xl font-semibold text-text-primary">Traffic Sources</h2>
-            <div className="mt-4 space-y-3">
-              {topSources.length === 0 && <p className="text-sm text-text-secondary">No traffic source data.</p>}
-              {topSources.map((source) => {
-                const width = Math.min(100, source.count * 4)
-                return (
-                  <div key={source.source}>
-                    <div className="mb-1 flex items-center justify-between text-sm">
-                      <span className="text-text-primary">{source.source}</span>
-                      <span className="text-text-secondary">{source.count}</span>
+          <WorkspacePanel title="Traffic Sources" description="Source attribution and channel concentration." expandable>
+            <div className="space-y-3">
+              {topSources.length === 0 ? (
+                <CockpitEmptyState
+                  compact
+                  title="No source data yet"
+                  description="Source attribution appears here after tracked visits."
+                  primaryAction={{ label: 'Open Funnels', href: '/funnels' }}
+                />
+              ) : (
+                topSources.map((source) => {
+                  const width = Math.min(100, source.count * 4)
+                  return (
+                    <div key={source.source}>
+                      <div className="mb-1 flex items-center justify-between text-sm">
+                        <span className="text-text-primary">{source.source}</span>
+                        <span className="text-text-secondary">{source.count}</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-[rgba(10,16,24,0.65)]">
+                        <div className="h-2 rounded-full bg-gradient-to-r from-sky-500 to-cyan-300" style={{ width: `${width}%` }} />
+                      </div>
                     </div>
-                    <div className="h-2 rounded-full bg-[rgba(10,16,24,0.65)]">
-                      <div className="h-2 rounded-full bg-gradient-to-r from-sky-500 to-cyan-300" style={{ width: `${width}%` }} />
-                    </div>
-                  </div>
-                )
-              })}
+                  )
+                })
+              )}
             </div>
-          </article>
+          </WorkspacePanel>
 
-          <article className="hud-card">
-            <h2 className="text-xl font-semibold text-text-primary">Conversion Trend</h2>
-            <div className="mt-4 grid grid-cols-3 gap-3">
+          <WorkspacePanel title="Trend Modules" description="Secondary engagement indicators." expandable>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="rounded-lg border border-[var(--border-subtle)] bg-[rgba(10,16,24,0.55)] p-3">
                 <p className="text-xs uppercase tracking-system text-text-secondary">Leads</p>
                 <p className="mt-2 text-2xl font-semibold text-text-primary">{summary?.stats.totalLeads || 0}</p>
@@ -164,13 +182,17 @@ export default function AnalyticsWorkspace() {
                 <p className="mt-2 text-2xl font-semibold text-text-primary">{(summary?.stats.emailOpenRate || 0).toFixed(2)}%</p>
               </div>
             </div>
-          </article>
+          </WorkspacePanel>
         </section>
 
-        <section className="hud-card">
-          <h2 className="mb-4 text-xl font-semibold text-text-primary">Funnel Performance</h2>
+        <WorkspacePanel title="Funnel Performance Table" description="Comparative performance by funnel." expandable>
           {performanceRows.length === 0 ? (
-            <p className="text-sm text-text-secondary">No funnel performance data yet.</p>
+            <CockpitEmptyState
+              compact
+              title="No funnel performance data"
+              description="Create traffic to at least one funnel and performance rows will appear here."
+              primaryAction={{ label: 'Go to Funnels', href: '/funnels' }}
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
@@ -197,7 +219,7 @@ export default function AnalyticsWorkspace() {
               </table>
             </div>
           )}
-        </section>
+        </WorkspacePanel>
       </div>
     </main>
   )

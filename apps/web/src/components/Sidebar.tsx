@@ -2,219 +2,270 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import type { LucideIcon } from 'lucide-react'
+import {
+  LayoutDashboard,
+  Radar,
+  PenSquare,
+  Sparkles,
+  FileStack,
+  BarChart3,
+  Mail,
+  Users,
+  Link2,
+  Gift,
+  Download,
+  Globe,
+  UserCog,
+  Settings,
+  Shield,
+  Rocket,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  Menu,
+  X,
+} from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 interface NavigationItem {
   name: string
   href: string
-  icon: string
-  isLaunchpad?: boolean
+  icon: LucideIcon
+  requiresAdmin?: boolean
+  matchesPrefix?: boolean
 }
 
-const launchpadItem: NavigationItem = { 
-  name: 'Launchpad', 
-  href: '/launchpad', 
-  icon: '🚀',
-  isLaunchpad: true
+interface NavigationSection {
+  name: string
+  items: NavigationItem[]
 }
 
-const regularNavigation: NavigationItem[] = [
-  { name: 'Home', href: '/cockpit', icon: '🏠' },
-  { name: 'Dashboard', href: '/dashboard', icon: '📊' },
-  { name: 'Funnels', href: '/funnels', icon: '🎯' },
-  { name: 'Analytics', href: '/analytics', icon: '📈' },
-  { name: 'Email', href: '/email', icon: '📧' },
-  { name: 'Affiliates', href: '/affiliates', icon: '🤝' },
-  { name: 'Subscribers', href: '/subscribers', icon: '👥' },
-  { name: 'Templates', href: '/templates', icon: '🧩' },
-  { name: 'Visual Builder', href: '/visual-builder', icon: '✨' },
-  { name: 'AI Generator', href: '/ai-generator', icon: '🤖' },
-  { name: 'Downloads', href: '/downloads', icon: '📥' },
-  { name: 'Domains', href: '/domains', icon: '🌐' },
-  { name: 'Team', href: '/team', icon: '👥' },
-  { name: 'Settings', href: '/settings', icon: '⚙️' },
-  { name: 'Admin', href: '/admin', icon: '🛡️' },
+const ONBOARDING_COMPLETE = 8
+
+const sections: NavigationSection[] = [
+  {
+    name: 'Build',
+    items: [
+      { name: 'Cockpit', href: '/cockpit', icon: Radar },
+      { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+      { name: 'Funnels', href: '/funnels', icon: PenSquare },
+      { name: 'Visual Builder', href: '/visual-builder', icon: Sparkles },
+      { name: 'Templates', href: '/templates', icon: FileStack },
+    ],
+  },
+  {
+    name: 'Grow',
+    items: [
+      { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+      { name: 'Email', href: '/email', icon: Mail },
+      { name: 'Subscribers', href: '/subscribers', icon: Users },
+      { name: 'Affiliates', href: '/affiliates', icon: Link2 },
+      { name: 'Offers', href: '/offers', icon: Gift },
+      { name: 'Downloads', href: '/downloads', icon: Download },
+    ],
+  },
+  {
+    name: 'Operate',
+    items: [
+      { name: 'Domains', href: '/domains', icon: Globe },
+      { name: 'Team', href: '/team', icon: UserCog },
+      { name: 'Settings', href: '/settings', icon: Settings },
+      { name: 'Launchpad', href: '/launchpad', icon: Rocket, matchesPrefix: false },
+      { name: 'Admin', href: '/admin', icon: Shield, requiresAdmin: true },
+    ],
+  },
 ]
 
 export default function Sidebar() {
   const router = useRouter()
   const pathname = usePathname()
-  const [isCollapsed, setIsCollapsed] = useState(false)
+
+  const [desktopCollapsed, setDesktopCollapsed] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [loadingProfile, setLoadingProfile] = useState(true)
   const [onboardingComplete, setOnboardingComplete] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [onboardingStep, setOnboardingStep] = useState(0)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
 
-  // Load onboarding status
   useEffect(() => {
-    async function checkOnboardingStatus() {
+    const saved = localStorage.getItem('sidebarCollapsed')
+    if (saved !== null) {
+      setDesktopCollapsed(saved === 'true')
+    }
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem('sidebarCollapsed', String(desktopCollapsed))
+    document.body.setAttribute('data-sidebar-collapsed', String(desktopCollapsed))
+  }, [desktopCollapsed])
+
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [pathname])
+
+  useEffect(() => {
+    async function loadProfileState() {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+
         if (!user) {
-          setLoading(false)
+          setLoadingProfile(false)
           return
         }
 
         const { data: profile } = await supabase
           .from('users')
-          .select('onboarding_complete')
+          .select('onboarding_complete, onboarding_step, is_admin')
           .eq('id', user.id)
-          .single()
+          .maybeSingle()
 
-        setOnboardingComplete(profile?.onboarding_complete || false)
+        setOnboardingComplete(Boolean(profile?.onboarding_complete))
+        setOnboardingStep(Number(profile?.onboarding_step ?? 0))
+        setIsAdmin(Boolean(profile?.is_admin))
       } catch (error) {
-        console.error('Error checking onboarding status:', error)
+        console.error('Error checking profile state for sidebar:', error)
       } finally {
-        setLoading(false)
+        setLoadingProfile(false)
       }
     }
 
-    checkOnboardingStatus()
+    loadProfileState()
   }, [])
 
-  // Load collapse state from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('sidebarCollapsed')
-    if (saved !== null) {
-      setIsCollapsed(saved === 'true')
-    }
-  }, [])
+  const visibleSections = useMemo(() => {
+    return sections.map((section) => ({
+      ...section,
+      items: section.items.filter((item) => !item.requiresAdmin || isAdmin),
+    }))
+  }, [isAdmin])
 
-  // Update localStorage and body attribute when collapse state changes
-  useEffect(() => {
-    localStorage.setItem('sidebarCollapsed', String(isCollapsed))
-    document.body.setAttribute('data-sidebar-collapsed', String(isCollapsed))
-  }, [isCollapsed])
-
-  // Build navigation array based on onboarding status
-  const navigation = onboardingComplete
-    ? [...regularNavigation, launchpadItem] // Launchpad at bottom
-    : [launchpadItem, ...regularNavigation] // Launchpad at top
-
-  const handleReOnboard = () => {
-    setOnboardingComplete(false)
+  const isItemActive = (item: NavigationItem) => {
+    if (pathname === item.href) return true
+    if (item.matchesPrefix === false) return false
+    return pathname.startsWith(`${item.href}/`)
   }
 
   const handleSignOut = async () => {
     if (isSigningOut) return
+
     setIsSigningOut(true)
     try {
       await supabase.auth.signOut()
-    } finally {
       router.push('/login')
+    } finally {
       setIsSigningOut(false)
     }
   }
 
+  const onboardingProgress = Math.min(100, Math.round((onboardingStep / ONBOARDING_COMPLETE) * 100))
+
   return (
     <>
-      {/* Mobile menu button */}
       <button
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-brand-purple text-white rounded-lg shadow-lg"
+        type="button"
+        onClick={() => setMobileOpen((open) => !open)}
+        className="fixed left-4 top-4 z-50 rounded-lg border border-[var(--border-elevated)] bg-[rgba(8,14,21,0.88)] p-2 text-text-primary shadow-lg backdrop-blur lg:hidden"
+        aria-label={mobileOpen ? 'Close navigation' : 'Open navigation'}
       >
-        {isCollapsed ? '☰' : '✕'}
+        {mobileOpen ? <X size={18} /> : <Menu size={18} />}
       </button>
 
-      {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-full bg-white border-r-2 border-brand-purple/20 shadow-lg transition-all duration-300 z-40 ${
-          isCollapsed ? '-translate-x-full lg:translate-x-0 lg:w-20' : 'translate-x-0 w-64'
-        }`}
+        className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-[var(--border-elevated)] bg-[rgba(5,10,15,0.94)] text-text-primary shadow-2xl backdrop-blur-xl transition-[width,transform] duration-300 ease-smooth ${
+          mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        } ${desktopCollapsed ? 'lg:w-[5.5rem]' : 'lg:w-[17rem]'} w-[17rem]`}
       >
-        <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="p-4 border-b-2 border-brand-purple/20">
-            <Link href="/cockpit" className="flex items-center gap-2">
-              {!isCollapsed && (
-                <span className="text-xl font-bold">
-                  <span className="text-brand-purple">Launchpad</span><span className="text-brand-orange">4</span><span className="text-brand-purple">Success</span>
-                </span>
-              )}
-              {isCollapsed && <span className="text-2xl">🚀</span>}
-            </Link>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto py-4">
-            <ul className="space-y-1 px-2">
-              {navigation.map((item) => {
-                const isActive = pathname === item.href
-                const isLaunchpadAtBottom = onboardingComplete && item.isLaunchpad
-                
-                return (
-                  <li 
-                    key={item.name}
-                    className={`transition-all duration-500 ${
-                      isLaunchpadAtBottom ? 'opacity-40 hover:opacity-100' : ''
-                    }`}
-                  >
-                    <Link
-                      href={item.href}
-                      className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                        isActive
-                          ? 'bg-brand-purple/10 text-brand-purple font-semibold border-l-4 border-brand-orange'
-                          : 'text-brand-navy hover:bg-brand-cyan/10'
-                      }`}
-                      title={isCollapsed ? item.name : ''}
-                    >
-                      <span className="text-xl">{item.icon}</span>
-                      {!isCollapsed && <span>{item.name}</span>}
-                    </Link>
-                  </li>
-                )
-              })}
-            </ul>
-            
-            {/* Re-onboard Button (only show if onboarding is complete and sidebar is expanded) */}
-            {onboardingComplete && !isCollapsed && (
-              <div className="px-4 mt-4">
-                <button
-                  onClick={handleReOnboard}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-brand-purple/60 hover:text-brand-purple hover:bg-brand-purple/5 rounded-lg transition-colors border border-brand-purple/20"
-                  title="Re-start the onboarding experience"
-                >
-                  <span>🔄</span>
-                  <span>Re-onboard</span>
-                </button>
-              </div>
+        <div className="border-b border-[var(--border-subtle)] px-4 py-4">
+          <Link href="/cockpit" className="flex items-center gap-2">
+            <div className="rounded-lg border border-rocket-500/45 bg-[rgba(46,230,194,0.12)] p-1.5 text-rocket-500">
+              <Rocket size={16} />
+            </div>
+            {!desktopCollapsed && (
+              <span className="text-sm font-semibold tracking-wide text-text-primary">Launchpad 4 Success</span>
             )}
-          </nav>
+          </Link>
+        </div>
 
-          <div className="px-4 pb-3">
+        {!loadingProfile && !onboardingComplete && !desktopCollapsed && (
+          <div className="border-b border-[var(--border-subtle)] px-4 py-3">
+            <p className="text-xs uppercase tracking-system text-text-secondary">Onboarding</p>
+            <p className="mt-1 text-sm text-text-primary">Complete setup to unlock all systems.</p>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[rgba(10,16,24,0.72)]">
+              <div className="h-full bg-gradient-to-r from-rocket-600 to-rocket-500" style={{ width: `${onboardingProgress}%` }} />
+            </div>
             <button
               type="button"
-              onClick={handleSignOut}
-              disabled={isSigningOut}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-brand-purple hover:bg-brand-purple/10 rounded-lg transition-colors font-semibold border border-brand-purple/20 disabled:opacity-60"
-              title={isCollapsed ? 'Sign out' : ''}
+              onClick={() => router.push('/launchpad')}
+              className="mt-3 w-full rounded-lg border border-rocket-500/45 bg-[rgba(46,230,194,0.12)] px-3 py-2 text-sm font-medium text-rocket-500 transition hover:bg-[rgba(46,230,194,0.2)]"
             >
-              <span>↩</span>
-              {!isCollapsed && <span>{isSigningOut ? 'Signing out...' : 'Sign out'}</span>}
+              Resume Launchpad
             </button>
           </div>
+        )}
 
-          {/* Collapse button (desktop) */}
-          <div className="hidden lg:block p-4 border-t-2 border-brand-purple/20">
-            <button
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-brand-purple hover:bg-brand-purple/10 rounded-lg transition-colors font-semibold"
-              title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            >
-              <span>{isCollapsed ? '→' : '←'}</span>
-              {!isCollapsed && <span className="text-sm">Collapse</span>}
-            </button>
-          </div>
+        <nav className="flex-1 overflow-y-auto px-2 py-3">
+          {visibleSections.map((section) => (
+            <div key={section.name} className="mb-4">
+              {!desktopCollapsed && (
+                <p className="px-2 pb-1 text-[11px] uppercase tracking-system text-text-secondary/80">{section.name}</p>
+              )}
+              <ul className="space-y-1">
+                {section.items.map((item) => {
+                  const active = isItemActive(item)
+                  const Icon = item.icon
+
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        className={`flex min-h-[40px] items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                          active
+                            ? 'border border-rocket-500/45 bg-[rgba(46,230,194,0.14)] text-text-primary'
+                            : 'border border-transparent text-text-secondary hover:border-[var(--border-subtle)] hover:bg-[rgba(16,24,34,0.8)] hover:text-text-primary'
+                        }`}
+                        title={desktopCollapsed ? item.name : undefined}
+                      >
+                        <Icon size={16} />
+                        {!desktopCollapsed && <span>{item.name}</span>}
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          ))}
+        </nav>
+
+        <div className="border-t border-[var(--border-subtle)] p-3">
+          <button
+            type="button"
+            onClick={handleSignOut}
+            disabled={isSigningOut}
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--border-elevated)] px-3 py-2 text-sm text-text-secondary transition hover:border-[var(--border-focus)] hover:text-text-primary disabled:opacity-60"
+            title={desktopCollapsed ? 'Sign out' : undefined}
+          >
+            <LogOut size={16} />
+            {!desktopCollapsed && <span>{isSigningOut ? 'Signing out...' : 'Sign out'}</span>}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setDesktopCollapsed((collapsed) => !collapsed)}
+            className="mt-2 hidden w-full items-center justify-center gap-2 rounded-lg border border-transparent px-3 py-2 text-sm text-text-secondary transition hover:border-[var(--border-subtle)] hover:text-text-primary lg:flex"
+            title={desktopCollapsed ? 'Expand navigation' : 'Collapse navigation'}
+          >
+            {desktopCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+            {!desktopCollapsed && <span>Collapse</span>}
+          </button>
         </div>
       </aside>
 
-      {/* Mobile overlay */}
-      {!isCollapsed && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-30"
-          onClick={() => setIsCollapsed(true)}
-        />
-      )}
+      {mobileOpen && <div className="fixed inset-0 z-30 bg-black/55 lg:hidden" onClick={() => setMobileOpen(false)} />}
     </>
   )
 }

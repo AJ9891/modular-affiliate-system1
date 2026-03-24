@@ -10,6 +10,7 @@ import { LaunchpadAmbientSound } from "@/components/LaunchpadAmbientSound"
 import { TelemetryObserver } from "@/components/TelemetryObserver"
 import { ShipRoomStyler } from "@/components/ShipRoomStyler"
 import { BrandModeGlowSync } from "@/components/BrandModeGlowSync"
+import ConditionalSidebar from "@/components/ConditionalSidebar"
 
 export const metadata: Metadata = {
   title: "Launchpad4Success - Build High-Converting Affiliate Funnels",
@@ -76,7 +77,7 @@ export default function RootLayout({
           <AuthProvider>
             <BrandModeProvider>
               <BrandModeGlowSync />
-              {children}
+              <ConditionalSidebar>{children}</ConditionalSidebar>
               <TelemetryObserver />
               <AIChatWidget />
               <LaunchpadAmbientSound />
