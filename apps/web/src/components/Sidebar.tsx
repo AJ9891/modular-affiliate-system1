@@ -22,16 +22,19 @@ const launchpadItem: NavigationItem = {
 const regularNavigation: NavigationItem[] = [
   { name: 'Home', href: '/cockpit', icon: '🏠' },
   { name: 'Dashboard', href: '/dashboard', icon: '📊' },
-  { name: 'Funnel Builder', href: '/builder-v2', icon: '🎨' },
+  { name: 'Funnels', href: '/funnels', icon: '🎯' },
+  { name: 'Analytics', href: '/analytics', icon: '📈' },
+  { name: 'Email', href: '/email', icon: '📧' },
+  { name: 'Affiliates', href: '/affiliates', icon: '🤝' },
+  { name: 'Subscribers', href: '/subscribers', icon: '👥' },
+  { name: 'Templates', href: '/templates', icon: '🧩' },
   { name: 'Visual Builder', href: '/visual-builder', icon: '✨' },
   { name: 'AI Generator', href: '/ai-generator', icon: '🤖' },
   { name: 'Downloads', href: '/downloads', icon: '📥' },
-  { name: 'Niches', href: '/niches', icon: '🎯' },
-  { name: 'Offers', href: '/offers', icon: '💰' },
   { name: 'Domains', href: '/domains', icon: '🌐' },
   { name: 'Team', href: '/team', icon: '👥' },
-  { name: 'Pricing', href: '/pricing', icon: '💳' },
-  { name: 'Features', href: '/features', icon: '⭐' },
+  { name: 'Settings', href: '/settings', icon: '⚙️' },
+  { name: 'Admin', href: '/admin', icon: '🛡️' },
 ]
 
 export default function Sidebar() {

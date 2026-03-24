@@ -125,12 +125,12 @@ export default function DragDropBuilder({ initialBlocks = [], onSave }: DragDrop
   const selectedContract = selectedBlock ? COMPONENT_CONTRACTS[selectedBlock.type] : null
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="h-screen flex flex-col bg-gray-50 text-slate-900">
       {/* Top Toolbar */}
       <div className="bg-white border-b px-6 py-4 flex items-center justify-between">
         <div className="flex-1">
-          <h1 className="text-xl font-bold">Visual Funnel Builder</h1>
-          <p className="text-sm text-gray-500">Choose your voice. The AI will match it.</p>
+          <h1 className="text-xl font-bold text-slate-900">Visual Funnel Builder</h1>
+          <p className="text-sm text-slate-600">Choose your voice. The AI will match it.</p>
         </div>
         <div className="flex gap-3">
           <PersonalitySelector compact={true} />
@@ -152,19 +152,19 @@ export default function DragDropBuilder({ initialBlocks = [], onSave }: DragDrop
       <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar - Block Library */}
         <div className="w-64 bg-white border-r overflow-y-auto p-4">
-          <h2 className="font-semibold mb-4 text-gray-700">Add Blocks</h2>
+          <h2 className="font-semibold mb-4 text-slate-800">Add Blocks</h2>
           <div className="space-y-2">
             {blockTemplates.map((template) => (
               <button
                 key={template.type}
                 onClick={() => addBlock(template.type)}
-                className="w-full text-left p-3 rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50 transition-colors"
+                className="w-full text-left p-3 rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50 transition-colors text-slate-900"
               >
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-2xl">{template.icon}</span>
-                  <span className="font-medium text-sm">{template.label}</span>
+                  <span className="font-medium text-sm text-slate-900">{template.label}</span>
                 </div>
-                <p className="text-xs text-gray-500 ml-8">{template.description}</p>
+                <p className="text-xs text-slate-600 ml-8">{template.description}</p>
               </button>
             ))}
           </div>
@@ -196,13 +196,13 @@ export default function DragDropBuilder({ initialBlocks = [], onSave }: DragDrop
             {blocks.length === 0 ? (
               <div className="text-center py-20">
                 <div className="text-6xl mb-4">🎨</div>
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                  Start Building Your Funnel
-                </h3>
-                <p className="text-gray-500">
-                  Drag blocks from the left sidebar to create your funnel
-                </p>
-              </div>
+              <h3 className="text-xl font-semibold text-slate-800 mb-2">
+                Start Building Your Funnel
+              </h3>
+              <p className="text-slate-600">
+                Drag blocks from the left sidebar to create your funnel
+              </p>
+            </div>
             ) : (
               blocks.map((block) => (
                 <div
@@ -224,9 +224,9 @@ export default function DragDropBuilder({ initialBlocks = [], onSave }: DragDrop
                         <span className="text-xl">
                           {blockTemplates.find(t => t.type === block.type)?.icon}
                         </span>
-                        <span className="font-medium capitalize">{block.type}</span>
+                        <span className="font-medium capitalize text-slate-900">{block.type}</span>
                         {block.brandMode && (
-                          <span className="text-xs px-2 py-1 bg-gray-100 rounded">
+                          <span className="text-xs px-2 py-1 bg-gray-100 text-slate-700 rounded">
                             {block.brandMode}
                           </span>
                         )}
@@ -275,12 +275,12 @@ export default function DragDropBuilder({ initialBlocks = [], onSave }: DragDrop
               <h2 className="font-semibold mb-4">Block Properties</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Type</label>
+                  <label className="block text-sm font-medium mb-2 text-slate-800">Type</label>
                   <input
                     type="text"
                     value={selectedBlock.type}
                     disabled
-                    className="w-full px-3 py-2 border rounded-lg bg-gray-50 capitalize"
+                    className="w-full px-3 py-2 border rounded-lg bg-gray-50 text-slate-900 capitalize"
                   />
                 </div>
 
