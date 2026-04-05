@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
-import Stripe from 'stripe'
 import { checkSupabase } from '@/lib/check-supabase'
 import { payoutSchema } from '@/lib/validators/stripe'
 import { log } from '@/lib/log'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-12-15.clover',
-})
+import { getStripeServerClient } from '@/lib/stripe-server'
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
@@ -18,6 +14,7 @@ export async function POST(request: NextRequest) {
   if (check) return check
 
   try {
+    const stripe = getStripeServerClient()
     const supabase = createRouteHandlerClient({ cookies })
     const { data: { user } } = await supabase.auth.getUser()
 

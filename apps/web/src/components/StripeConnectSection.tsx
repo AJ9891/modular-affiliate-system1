@@ -10,6 +10,20 @@ interface StripeConnectStatus {
   accountId?: string
 }
 
+function parseErrorMessage(raw: string, fallback: string) {
+  if (!raw) return fallback
+
+  try {
+    const parsed = JSON.parse(raw)
+    if (typeof parsed?.error === 'string' && parsed.error.trim()) return parsed.error
+    if (typeof parsed?.message === 'string' && parsed.message.trim()) return parsed.message
+  } catch {
+    // Ignore parse errors and fall back to raw text
+  }
+
+  return raw.trim() || fallback
+}
+
 export default function StripeConnectSection() {
   const [status, setStatus] = useState<StripeConnectStatus | null>(null)
   const [loading, setLoading] = useState(true)
@@ -45,8 +59,9 @@ export default function StripeConnectSection() {
         // Redirect to Stripe onboarding
         window.location.href = data.url
       } else {
-        const error = await response.json()
-        alert('Error: ' + error.error)
+        const raw = await response.text()
+        const message = parseErrorMessage(raw, `Request failed (${response.status})`)
+        alert('Error: ' + message)
       }
     } catch (error) {
       console.error('Error connecting to Stripe:', error)

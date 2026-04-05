@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
-import Stripe from 'stripe'
 import { checkSupabase } from '@/lib/check-supabase'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-12-15.clover',
-})
+import { getStripeServerClient, resolveAppBaseUrl } from '@/lib/stripe-server'
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
@@ -16,6 +12,8 @@ export async function POST(request: NextRequest) {
   if (check) return check
 
   try {
+    const stripe = getStripeServerClient()
+    const appBaseUrl = resolveAppBaseUrl(request)
     const supabase = createRouteHandlerClient({ cookies })
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -24,11 +22,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already has a Stripe Connect account
-    const { data: userData } = await supabase
+    const { data: userData, error: userQueryError } = await supabase
       .from('users')
       .select('stripe_connect_account_id, stripe_connect_onboarding_complete')
       .eq('id', user.id)
       .single()
+
+    if (userQueryError) {
+      throw new Error(`Unable to load user profile: ${userQueryError.message}`)
+    }
 
     let accountId = userData?.stripe_connect_account_id
 
@@ -47,20 +49,24 @@ export async function POST(request: NextRequest) {
       accountId = account.id
 
       // Save the account ID to the database
-      await supabase
+      const { error: saveError } = await supabase
         .from('users')
         .update({
           stripe_connect_account_id: accountId,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id)
+
+      if (saveError) {
+        throw new Error(`Unable to save Stripe account: ${saveError.message}`)
+      }
     }
 
     // Create an account link for onboarding
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
-      refresh_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+      refresh_url: `${appBaseUrl}/dashboard`,
+      return_url: `${appBaseUrl}/dashboard`,
       type: 'account_onboarding',
     })
 
