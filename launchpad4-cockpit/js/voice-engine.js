@@ -1,47 +1,58 @@
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-export function initVoiceEngine(options = {}) {
-  const { onCommand, onStatus } = options;
-
-  if (!SpeechRecognition) {
-    onStatus?.('Voice standby: unsupported in this browser.');
-    return {
-      isSupported: false,
-      start() {},
-      stop() {}
-    };
+const voiceMap = {
+  anchor: {
+    label: '⚓ Anchor',
+    icon: '⚓',
+    speed: 34,
+    pulseClass: 'pulse-anchor',
+    tone: (input) => `Direct read: ${input.includes('help') ? 'Focus on your bottleneck first.' : 'Be specific, then execute with discipline.'}`
+  },
+  rocket: {
+    label: '🚀 Rocket',
+    icon: '🚀',
+    speed: 14,
+    pulseClass: 'pulse-rocket',
+    tone: () => 'You have momentum. Let’s turn this into a measurable win this week.'
+  },
+  glitch: {
+    label: '⚡ Glitch',
+    icon: '⚡',
+    speed: 22,
+    pulseClass: 'pulse-glitch',
+    tone: () => 'Chaos report: your funnel is spicy, but we can still make it print.'
   }
+};
 
-  const recognition = new SpeechRecognition();
-  recognition.continuous = false;
-  recognition.lang = 'en-US';
-  recognition.interimResults = false;
+let activeVoice = 'anchor';
+let autoAdapt = false;
 
-  recognition.onstart = () => {
-    onStatus?.('Listening for cockpit commands...');
-  };
+export function setVoice(voice) {
+  if (voiceMap[voice]) activeVoice = voice;
+}
 
-  recognition.onresult = (event) => {
-    const transcript = event.results[0][0].transcript.toLowerCase();
-    onStatus?.(`Heard: "${transcript}"`);
-    onCommand?.(transcript);
-  };
+export function getVoice() {
+  return { key: activeVoice, ...voiceMap[activeVoice] };
+}
 
-  recognition.onerror = (event) => {
-    onStatus?.(`Voice error: ${event.error}`);
-  };
+export function setAutoAdapt(value) {
+  autoAdapt = Boolean(value);
+}
 
-  recognition.onend = () => {
-    onStatus?.('Voice standby: ready.');
-  };
+export function pickVoiceForMessage(message) {
+  if (!autoAdapt) return activeVoice;
+  const m = message.toLowerCase();
+  if (/(stuck|discouraged|overwhelmed|tired)/.test(m)) return 'rocket';
+  if (/(truth|brutal|honest|reality)/.test(m)) return 'anchor';
+  if (/(lol|joke|funny|meme)/.test(m)) return 'glitch';
+  return activeVoice;
+}
 
+export function buildReply(input, forcedVoice) {
+  const v = voiceMap[forcedVoice || activeVoice];
   return {
-    isSupported: true,
-    start() {
-      recognition.start();
-    },
-    stop() {
-      recognition.stop();
-    }
+    text: v.tone(input),
+    speed: v.speed,
+    pulseClass: v.pulseClass,
+    voiceLabel: v.label,
+    icon: v.icon
   };
 }

@@ -1,430 +1,72 @@
-const cannedReplies = {
-  radar: {
-    text: 'Radar confirms traffic vectors are stable. Real-time conversion flow remains within target limits.'
-  },
-  funnel: {
-    text: 'Funnel pressure point detected at mid-stage. Tighten the transition and simplify offer framing.'
-  },
-  optimization: {
-    text: 'Optimization pass ready: prioritize headline clarity, then test CTA contrast and checkout pacing.'
-  },
-  image: {
-    text: 'Visual snapshot loaded from cockpit feed.',
-    imageSrc: 'assets/dashboard-dark.png',
-    imageAlt: 'Cockpit dashboard snapshot'
-  }
-};
+import { buildReply, pickVoiceForMessage, setVoice, getVoice } from './voice-engine.js';
+import { timelineByMessage, renderTimeline } from './mission-timeline.js';
 
-const pageContext =
-  typeof window !== 'undefined'
-    ? window.location.pathname.split('/').pop().replace('.html', '')
-    : '';
+function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
-const visionContext = {
-  navigation: "You're managing domains and routing.",
-  propulsion: 'Funnels control how customers move through your system.',
-  communications: 'Email communications are active.',
-  fuel: 'Subscription and billing systems are online.',
-  radar: 'Real-time analytics radar is active.',
-  intelligence: 'AI configuration and voice systems are available.',
-  settings: 'System settings and mission controls are available.'
-};
-
-const visionFollowUp = {
-  navigation: 'Need help validating routing and SSL readiness?',
-  propulsion: 'Need help diagnosing a funnel break point?',
-  communications: 'Need help planning your next broadcast sequence?',
-  fuel: 'Want help reviewing revenue flow?',
-  radar: 'Need help interpreting traffic signals?',
-  intelligence: 'Need help tuning voice adaptation behavior?',
-  settings: 'Need help calibrating notifications and AI behavior?'
-};
-const VISION_DIM_CLASS = 'vision-screen-dimmed';
-
-function syncVisionBackdropState(isOpen) {
-  if (!document.body) {
-    return;
-  }
-
-  document.body.classList.toggle(VISION_DIM_CLASS, Boolean(isOpen));
-}
-
-function inferVoice(text) {
-  const lcText = text.toLowerCase();
-
-  if (/(discouraged|stuck|overwhelmed|can\'t|demotivated)/.test(lcText)) {
-    return 'rocket';
-  }
-
-  if (/(brutal|truth|direct|honest|straight)/.test(lcText)) {
-    return 'anchor';
-  }
-
-  if (/(joke|funny|meme|chaos|lol|haha)/.test(lcText)) {
-    return 'glitch';
-  }
-
-  if (/(urgent|fast|now|boost|launch)/.test(lcText)) {
-    return 'rocket';
-  }
-
-  return null;
-}
-
-function irregularDelay() {
-  const bursts = [120, 180, 260, 430, 520];
-  return bursts[Math.floor(Math.random() * bursts.length)];
-}
-
-function resolveTypingDelay(voiceId, typingSpeed) {
-  if (voiceId === 'glitch') {
-    return irregularDelay();
-  }
-
-  const map = { slow: 860, normal: 420, fast: 170 };
-  return map[typingSpeed] || map.normal;
-}
-
-function buildReply(message) {
-  const lower = message.toLowerCase();
-
-  if (/(image|visual|screenshot|dashboard)/.test(lower)) {
-    return cannedReplies.image;
-  }
-
-  if (/(funnel|landing|page|route)/.test(lower)) {
-    return cannedReplies.funnel;
-  }
-
-  if (/(optimi|conversion|scale|improve)/.test(lower)) {
-    return cannedReplies.optimization;
-  }
-
-  if (/(radar|traffic|analytics)/.test(lower)) {
-    return cannedReplies.radar;
-  }
-
-  return {
-    text: 'Vision acknowledges. Mission model updated with your latest operator input.'
-  };
-}
-
-function styleByTone(text, tone) {
-  if (tone === 'encouraging') {
-    return `You have this. ${text}`;
-  }
-
-  if (tone === 'playful') {
-    return `Chaotic-friendly note: ${text}`;
-  }
-
-  if (tone === 'direct') {
-    return `Direct read: ${text}`;
-  }
-
-  return `Analysis: ${text}`;
-}
-
-export function initVisionChat(rootEl, options = {}) {
-  if (!rootEl) {
-    throw new Error('Vision chat root element is required.');
-  }
-
-  const {
-    onChatActivity,
-    onAutoVoiceSwitch,
-    onTopicDetected,
-    getActiveVoice,
-    getVoiceConfig,
-    isAutoAdaptationEnabled
-  } = options;
-
-  const logEl = document.createElement('div');
-  logEl.className = 'chat-log';
-
-  const formEl = document.createElement('form');
-  formEl.className = 'chat-form';
-
-  const inputEl = document.createElement('input');
-  inputEl.type = 'text';
-  inputEl.placeholder = 'Ask Vision...';
-  inputEl.setAttribute('aria-label', 'Ask Launchpad 4 Vision');
-
-  const submitEl = document.createElement('button');
-  submitEl.type = 'submit';
-  submitEl.textContent = 'Send';
-
-  formEl.appendChild(inputEl);
-  formEl.appendChild(submitEl);
-  rootEl.appendChild(logEl);
-  rootEl.appendChild(formEl);
-
-  function pushMessage(role, payload, meta = {}) {
-    const message = typeof payload === 'string' ? { text: payload } : payload;
-    const row = document.createElement('article');
-    row.className = 'chat-item';
-
-    row.innerHTML = `<strong>${role}:</strong> ${message.text}`;
-
-    if (message.imageSrc) {
-      const image = document.createElement('img');
-      image.src = message.imageSrc;
-      image.alt = message.imageAlt || 'Vision response image';
-      row.appendChild(image);
+export function createVisionChat({ chatEl, timelineEl, onVoiceChange, onPulse, dock }) {
+  const appendMessage = (kind, content, extraImage) => {
+    const node = document.createElement('article');
+    node.className = `msg ${kind}`;
+    node.innerHTML = content;
+    if (extraImage) {
+      const img = document.createElement('img');
+      img.src = extraImage;
+      img.alt = 'AI generated visual suggestion';
+      node.appendChild(img);
     }
-
-    logEl.appendChild(row);
-    logEl.scrollTop = logEl.scrollHeight;
-
-    onChatActivity?.(role, message, meta);
-  }
-
-  function addTypingLine() {
-    const typing = document.createElement('p');
-    typing.className = 'typing-line';
-    typing.innerHTML = 'Vision typing <span class="dots"><span></span><span></span><span></span></span>';
-    logEl.appendChild(typing);
-    logEl.scrollTop = logEl.scrollHeight;
-    return typing;
-  }
-
-  pushMessage('Vision', 'Cockpit interface online. Awaiting your objective.', {
-    isAi: true,
-    voiceId: 'anchor'
-  });
-
-  formEl.addEventListener('submit', (event) => {
-    event.preventDefault();
-
-    const messageText = inputEl.value.trim();
-    if (!messageText) {
-      return;
-    }
-
-    pushMessage('You', messageText, { isAi: false });
-    inputEl.value = '';
-
-    onTopicDetected?.(messageText);
-
-    const inferredVoice = inferVoice(messageText);
-    if (isAutoAdaptationEnabled?.() && inferredVoice && inferredVoice !== getActiveVoice?.()) {
-      onAutoVoiceSwitch?.(inferredVoice);
-    }
-
-    const voiceId = getActiveVoice?.() || 'anchor';
-    const config = getVoiceConfig?.() || { tone: 'direct', typingSpeed: 'normal' };
-
-    const typingLine = addTypingLine();
-    const delay = resolveTypingDelay(voiceId, config.typingSpeed);
-
-    window.setTimeout(() => {
-      typingLine.remove();
-
-      const reply = buildReply(messageText);
-      pushMessage(
-        'Vision',
-        {
-          ...reply,
-          text: styleByTone(reply.text, config.tone)
-        },
-        {
-          isAi: true,
-          voiceId
-        }
-      );
-    }, delay);
-  });
-
-  return {
-    pushSystemMessage(text) {
-      const voiceId = getActiveVoice?.() || 'anchor';
-      pushMessage('Vision', text, { isAi: true, voiceId });
-    }
-  };
-}
-
-export function openNavigation() {
-  window.location.href = '/pages/navigation.html';
-}
-
-export function openFunnels() {
-  window.location.href = '/pages/propulsion.html';
-}
-
-export function openRadar() {
-  window.location.href = '/pages/radar.html';
-}
-
-export function openFuel() {
-  window.location.href = '/pages/fuel.html';
-}
-
-export function addVisionMessage(voice, text, actions = []) {
-  const chat = document.getElementById('chat-log');
-  if (!chat || !text) {
-    return;
-  }
-
-  const msg = document.createElement('div');
-  msg.className = 'vision-message';
-
-  msg.innerHTML = `
-    <div class="vision-voice">${voice}</div>
-    <div class="vision-text">${text}</div>
-  `;
-
-  if (Array.isArray(actions) && actions.length) {
-    const actionBar = document.createElement('div');
-    actionBar.className = 'vision-actions';
-
-    actions.forEach((action) => {
-      const btn = document.createElement('button');
-      btn.innerText = action.label;
-      btn.onclick = action.handler;
-      actionBar.appendChild(btn);
-    });
-
-    msg.appendChild(actionBar);
-  }
-
-  chat.appendChild(msg);
-  chat.scrollTop = chat.scrollHeight;
-}
-
-function getContextActions(context) {
-  const map = {
-    navigation: [
-      { label: 'Open Navigation', handler: openNavigation },
-      { label: 'Analyze Funnel', handler: openFunnels }
-    ],
-    propulsion: [
-      { label: 'Analyze Funnel', handler: openFunnels },
-      { label: 'View Traffic Radar', handler: openRadar },
-      { label: 'Review Pricing', handler: openFuel }
-    ],
-    communications: [
-      { label: 'Analyze Funnel', handler: openFunnels },
-      { label: 'View Traffic Radar', handler: openRadar }
-    ],
-    fuel: [
-      { label: 'Analyze Funnel', handler: openFunnels },
-      { label: 'View Traffic Radar', handler: openRadar },
-      { label: 'Review Pricing', handler: openFuel }
-    ],
-    radar: [
-      { label: 'Open Funnels', handler: openFunnels },
-      { label: 'Review Conversions', handler: openRadar }
-    ],
-    intelligence: [
-      { label: 'Analyze Funnel', handler: openFunnels },
-      { label: 'View Traffic Radar', handler: openRadar }
-    ]
+    chatEl.appendChild(node);
+    chatEl.scrollTop = chatEl.scrollHeight;
   };
 
-  return map[context] || [];
-}
+  const typeMessage = async (text, speed, withImage) => {
+    const typing = document.createElement('article');
+    typing.className = 'msg ai';
+    chatEl.appendChild(typing);
 
-export function visionGreeting() {
-  const consoleEl = document.getElementById('vision-console');
-  if (!consoleEl) {
-    return;
-  }
+    for (let i = 0; i < text.length; i += 1) {
+      typing.textContent += text[i];
+      chatEl.scrollTop = chatEl.scrollHeight;
+      await sleep(speed);
+    }
 
-  const contextMessage = visionContext[pageContext];
-  if (!contextMessage) {
-    return;
-  }
+    if (withImage) {
+      const img = document.createElement('img');
+      img.src = '../assets/dashboard-dark.png';
+      img.alt = 'Inline tactical visual';
+      typing.appendChild(img);
+    }
 
-  // Avoid repeating the same greeting every time the panel is toggled.
-  if (consoleEl.dataset.greetingContext === pageContext) {
-    return;
-  }
+    onPulse();
+  };
 
-  const contextActions = getContextActions(pageContext);
-  addVisionMessage('⚓ Anchor', contextMessage, contextActions);
+  const addDockNote = (bucket, text) => {
+    const li = document.createElement('li');
+    li.textContent = text;
+    dock[bucket].prepend(li);
+  };
 
-  if (visionFollowUp[pageContext]) {
-    addVisionMessage('⚓ Anchor', visionFollowUp[pageContext]);
-  }
+  const onUserMessage = async (input) => {
+    appendMessage('user', input);
 
-  if (pageContext === 'radar') {
-    addVisionMessage('⚓ Anchor', 'Traffic spike detected in the last 2 hours.', [
-      { label: 'Open Funnels', handler: openFunnels },
-      { label: 'Review Conversions', handler: openRadar }
-    ]);
-  }
+    const chosen = pickVoiceForMessage(input);
+    setVoice(chosen);
+    const voice = getVoice();
+    onVoiceChange(voice);
 
-  consoleEl.dataset.greetingContext = pageContext;
-}
+    renderTimeline(timelineEl, timelineByMessage(input));
 
-export function openVision() {
-  const consoleEl = document.getElementById('vision-console');
-  if (!consoleEl) {
-    return;
-  }
+    const reply = buildReply(input, chosen);
+    const includeImage = /(dashboard|visual|mockup|design)/i.test(input);
+    await typeMessage(reply.text, reply.speed, includeImage);
 
-  const wasClosed = !consoleEl.classList.contains('vision-open');
-  consoleEl.classList.add('vision-open');
-  consoleEl.classList.remove('vision-expanded');
-  consoleEl.setAttribute('aria-hidden', 'false');
-  syncVisionBackdropState(false);
+    addDockNote('insights', `Voice ${reply.voiceLabel.split(' ')[1]}: ${reply.text.slice(0, 52)}...`);
+    if (/idea|concept|build/i.test(input)) addDockNote('ideas', input);
+    if (/risk|issue|problem|stuck/i.test(input)) addDockNote('alerts', 'Potential friction detected in mission flow.');
+    addDockNote('strategy', timelineEl.textContent.replace('Mission Context', '').trim());
+  };
 
-  if (wasClosed) {
-    visionGreeting();
-  }
-}
+  renderTimeline(timelineEl, { track: ['Launch', 'Funnel', 'Optimization'], current: 0 });
+  appendMessage('ai', 'Welcome aboard. I am Vision. State mission priority.');
 
-export function expandVision() {
-  const consoleEl = document.getElementById('vision-console');
-  if (!consoleEl) {
-    return;
-  }
-
-  const wasClosed = !consoleEl.classList.contains('vision-open');
-  consoleEl.classList.add('vision-open');
-  consoleEl.classList.add('vision-expanded');
-  consoleEl.setAttribute('aria-hidden', 'false');
-  syncVisionBackdropState(true);
-
-  if (wasClosed) {
-    visionGreeting();
-  }
-}
-
-export function closeVisionOverlay() {
-  const consoleEl = document.getElementById('vision-console');
-  if (!consoleEl) {
-    return;
-  }
-
-  consoleEl.classList.remove('vision-open');
-  consoleEl.classList.remove('vision-expanded');
-  consoleEl.setAttribute('aria-hidden', 'true');
-  syncVisionBackdropState(false);
-}
-
-export function pulseVision() {
-  const launcher = document.querySelector('.vision-launcher');
-  if (!launcher) {
-    return;
-  }
-
-  launcher.classList.add('vision-pulse');
-  window.setTimeout(() => {
-    launcher.classList.remove('vision-pulse');
-  }, 2000);
-}
-
-if (typeof window !== 'undefined') {
-  window.addVisionMessage = addVisionMessage;
-  window.visionGreeting = visionGreeting;
-  window.openNavigation = openNavigation;
-  window.openFunnels = openFunnels;
-  window.openRadar = openRadar;
-  window.openFuel = openFuel;
-  window.pulseVision = pulseVision;
-  window.openVision = openVision;
-  window.expandVision = expandVision;
-  window.closeVisionOverlay = closeVisionOverlay;
-  window.__setVisionBackdropState = syncVisionBackdropState;
+  return { onUserMessage };
 }

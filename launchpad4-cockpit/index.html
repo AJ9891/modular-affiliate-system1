@@ -1,233 +1,97 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Launchpad 4 Cockpit</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
-    <link rel="stylesheet" href="./css/cockpit.css" />
+    <link rel="stylesheet" href="css/cockpit.css" />
   </head>
   <body>
-    <nav class="container-fluid">
-      <ul>
-        <li><strong>Launchpad 4</strong></li>
-      </ul>
-      <ul>
-        <li><a href="/pages/navigation.html">Navigation</a></li>
-        <li><a href="/pages/propulsion.html">Propulsion</a></li>
-        <li><a href="/pages/settings.html" role="button">Settings</a></li>
-      </ul>
-    </nav>
+    <main class="cockpit-app theme-dark" id="cockpitApp">
+      <div class="cockpit-bg"></div>
+      <div class="cockpit-overlay" id="cockpitOverlay"></div>
 
-    <main class="container">
-      <div class="grid">
-        <section>
-          <hgroup>
-            <h2>Launchpad 4 Cockpit</h2>
-            <h3>Command Interface</h3>
-          </hgroup>
+      <section class="hotspot-layer" aria-label="Cockpit Modules">
+        <button class="module hotspot vision-module" data-module="vision" style="--x:76%;--y:16%;--w:18%;--h:18%;" aria-label="Launchpad 4 Vision">
+          <span class="module-name"><span id="visionIcon">⚓</span> Launchpad 4 Vision</span>
+        </button>
 
-          <div class="cockpit" id="cockpit">
-            <button
-              class="module module-vision shape-wide-right vision vision-module"
-              data-action="vision"
-              type="button"
-            >
-              <span id="visionModuleLabel">⚓ Launchpad 4 Vision</span>
-            </button>
+        <button class="module hotspot" data-module="radar" data-route="/radar" style="--x:76%;--y:67%;--w:19%;--h:24%;">
+          <span class="module-name">Radar</span>
+        </button>
+        <button class="module hotspot" data-module="settings" style="--x:86%;--y:86%;--w:10%;--h:10%;">
+          <span class="module-name">Settings</span>
+        </button>
 
-            <button
-              class="module module-radar shape-tall-right"
-              data-route="radar"
-              type="button"
-            >
-              <span>Radar</span>
-            </button>
+        <button class="module hotspot" data-module="communications" data-route="/communications" style="--x:12%;--y:18%;--w:16%;--h:14%;">
+          <span class="module-name">Communications</span>
+        </button>
+        <button class="module hotspot" data-module="fuel" data-route="/fuel" style="--x:12%;--y:44%;--w:16%;--h:16%;">
+          <span class="module-name">Fuel</span>
+        </button>
+        <button class="module hotspot" data-module="navigation" data-route="/navigation" style="--x:12%;--y:70%;--w:16%;--h:16%;">
+          <span class="module-name">Navigation</span>
+        </button>
 
-            <button
-              class="module module-settings shape-small-right"
-              data-route="settings"
-              type="button"
-            >
-              <span>Settings</span>
-            </button>
+        <button class="module hotspot" data-module="propulsion" data-route="/propulsion" style="--x:39%;--y:42%;--w:16%;--h:14%;">
+          <span class="module-name">Propulsion</span>
+        </button>
+        <button class="module hotspot" data-module="intelligence" style="--x:61%;--y:42%;--w:16%;--h:14%;">
+          <span class="module-name">Intelligence</span>
+        </button>
+        <button class="module hotspot" data-module="resources" data-route="/resources" style="--x:50%;--y:66%;--w:20%;--h:13%;">
+          <span class="module-name">Resources</span>
+        </button>
+      </section>
 
-            <button
-              class="module module-communications shape-wide-left"
-              data-route="communications"
-              type="button"
-            >
-              <span>Communications</span>
-            </button>
+      <aside class="side-panel hidden" id="settingsPanel">
+        <h3>Settings</h3>
+        <label><input type="checkbox" id="themeToggle" /> Light Theme</label>
+        <label><input type="checkbox" checked /> Notifications</label>
+      </aside>
 
-            <button
-              class="module module-fuel shape-mid-left"
-              data-route="fuel"
-              type="button"
-            >
-              <span>Fuel</span>
-            </button>
+      <aside class="side-panel hidden" id="intelligencePanel">
+        <h3>Intelligence</h3>
+        <label for="voiceSelect">Select voice</label>
+        <select id="voiceSelect">
+          <option value="anchor">Anchor</option>
+          <option value="rocket">Rocket</option>
+          <option value="glitch">Glitch</option>
+        </select>
+        <label class="toggle-row">
+          <input type="checkbox" id="autoAdaptToggle" />
+          Auto Voice Adaptation
+        </label>
+      </aside>
 
-            <button
-              class="module module-navigation shape-lower-left"
-              data-route="navigation"
-              type="button"
-            >
-              <span>Navigation</span>
-            </button>
-
-            <button
-              class="module module-propulsion shape-center-left"
-              data-route="propulsion"
-              type="button"
-            >
-              <span>Propulsion</span>
-            </button>
-
-            <button
-              class="module module-intelligence shape-center-right"
-              data-route="intelligence"
-              type="button"
-            >
-              <span>Intelligence</span>
-            </button>
-
-            <button
-              class="module module-domains shape-center-lower"
-              data-route="navigation"
-              type="button"
-            >
-              <span>Domains &amp; Routing</span>
-            </button>
-
-            <aside class="vision-panel" id="visionPanel" aria-hidden="true">
-              <header class="vision-header">
-                <strong>Launchpad 4 Vision</strong><br />
-                <strong id="visionVoiceHeader">⚓ Anchor</strong><br />
-                <small id="visionVoiceSubhead">System Analysis</small>
-              </header>
-
-              <div class="crew-status-bar" id="crewStatusBar" aria-label="AI crew status">
-                <div class="crew-member active" data-crew="anchor">
-                  <strong>⚓ Anchor</strong>
-                  <small>Standby</small>
-                </div>
-                <div class="crew-member" data-crew="rocket">
-                  <strong>🚀 Rocket</strong>
-                  <small>Available</small>
-                </div>
-                <div class="crew-member" data-crew="glitch">
-                  <strong>⚡ Glitch</strong>
-                  <small>Mischief Ready</small>
-                </div>
-              </div>
-
-              <div class="mission-timeline">
-                <div class="mission-title">Mission Context</div>
-                <div class="timeline-track">
-                  <span class="timeline-node active">Launch</span>
-                  <span class="timeline-arrow">→</span>
-                  <span class="timeline-node">Funnel</span>
-                  <span class="timeline-arrow">→</span>
-                  <span class="timeline-node">Optimization</span>
-                </div>
-              </div>
-
-              <div class="vision-main">
-                <div class="chat-area" id="chatArea">
-                  <p><strong>AI:</strong> Welcome Commander.</p>
-                  <p><strong>AI:</strong> Here is a visual strategy model:</p>
-                  <img id="strategyImage" src="./assets/dashboard-dark.png" alt="Strategy model" />
-                </div>
-
-                <aside class="vision-dock" id="visionDock" aria-label="Vision Dock">
-                  <section class="dock-section">
-                    <h6>Insights</h6>
-                    <ul id="dockInsights">
-                      <li>Conversion drop linked to colder traffic.</li>
-                    </ul>
-                  </section>
-
-                  <section class="dock-section">
-                    <h6>Saved Ideas</h6>
-                    <ul id="dockSavedIdeas">
-                      <li>Test shorter checkout flow.</li>
-                    </ul>
-                  </section>
-
-                  <section class="dock-section">
-                    <h6>Alerts</h6>
-                    <ul id="dockAlerts">
-                      <li>Traffic quality decreased 22%.</li>
-                    </ul>
-                  </section>
-
-                  <section class="dock-section">
-                    <h6>Strategy</h6>
-                    <ul id="dockStrategy">
-                      <li>Phase 1: Diagnose funnel.</li>
-                    </ul>
-                  </section>
-                </aside>
-              </div>
-
-              <div class="chat-input">
-                <input id="chatInput" type="text" placeholder="Ask Vision..." />
-                <button id="sendMessage" type="button">Send</button>
-                <button id="expandVision" type="button">Expand</button>
-                <button id="closeVision" type="button">Close</button>
-              </div>
-            </aside>
+      <section class="vision-console" id="visionConsole" aria-live="polite">
+        <header class="vision-header">
+          <h2 id="visionVoiceLabel">⚓ Anchor</h2>
+          <div class="vision-header-actions">
+            <button id="voicePing" class="icon-btn" title="Voice status">🎙️</button>
+            <button id="visionExpand" class="icon-btn" title="Expand">⤢</button>
+            <button id="visionClose" class="icon-btn" title="Close">✕</button>
           </div>
+        </header>
 
-          <h3>Mission</h3>
-          <p>Engage your modules and operate Launchpad 4 with intelligent assistance.</p>
+        <div class="mission-timeline" id="missionTimeline"></div>
 
-          <h3>System</h3>
-          <p>Vision module supports text and image rendering with storage routing.</p>
-        </section>
-      </div>
+        <div class="vision-chat" id="visionChat"></div>
+
+        <form class="vision-input-row" id="visionForm">
+          <input type="text" id="visionInput" placeholder="Ask Vision for guidance..." />
+          <button type="submit">Send</button>
+        </form>
+      </section>
+
+      <aside class="vision-dock hidden" id="visionDock">
+        <section><h4>Insights</h4><ul id="dockInsights"></ul></section>
+        <section><h4>Saved Ideas</h4><ul id="dockIdeas"></ul></section>
+        <section><h4>Alerts</h4><ul id="dockAlerts"></ul></section>
+        <section><h4>Strategy</h4><ul id="dockStrategy"></ul></section>
+      </aside>
     </main>
 
-    <section aria-label="Subscribe example">
-      <div class="container">
-        <article>
-          <hgroup>
-            <h2>Stay Updated</h2>
-            <h3>Receive strategic upgrades</h3>
-          </hgroup>
-          <form class="grid">
-            <input
-              type="text"
-              id="firstname"
-              name="firstname"
-              placeholder="First Name"
-              aria-label="First Name"
-              required
-            />
-            <input
-              type="email"
-              id="email"
-              name="email"
-              placeholder="Email"
-              aria-label="Email"
-              required
-            />
-            <button type="submit">Subscribe</button>
-          </form>
-        </article>
-      </div>
-    </section>
-
-    <footer class="container">
-      <small><a href="#">Privacy</a> • <a href="#">Terms</a></small>
-    </footer>
-
-    <div id="vision-root"></div>
-    <script src="js/vision-memory.js"></script>
-    <script type="module" src="js/vision-chat.js"></script>
-    <script src="js/vision-events.js"></script>
-    <script src="js/vision-loader.js"></script>
-    <script type="module" src="./js/cockpit-core.js"></script>
+    <script type="module" src="js/cockpit-core.js"></script>
   </body>
 </html>
