@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
 import { checkSupabase } from '@/lib/check-supabase'
 
 export async function GET(_request: NextRequest) {
@@ -8,7 +7,7 @@ export async function GET(_request: NextRequest) {
   if (check) return check
   
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createRouteHandlerClientCompat()
     const { data: modules, error } = await supabase!
       .from('niches')
       .select('*')

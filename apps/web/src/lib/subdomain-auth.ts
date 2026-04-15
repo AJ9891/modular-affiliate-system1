@@ -44,6 +44,14 @@ export async function createSubdomainRouteHandlerClient(req: NextRequest) {
   return createRouteHandlerClient({ cookies: cookieAdapter })
 }
 
+// Next.js 16-compatible route handler client for routes that previously used
+// createRouteHandlerClient({ cookies }) directly.
+export async function createRouteHandlerClientCompat() {
+  const cookieStore = await cookies()
+  const cookieAdapter = (() => cookieStore) as unknown as () => ReturnType<typeof cookies>
+  return createRouteHandlerClient({ cookies: cookieAdapter })
+}
+
 export async function validateSubdomainAccess(
   subdomain: string,
   userId?: string

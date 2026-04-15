@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe, dollarsToCredits } from '@/lib/stripe'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
 import { log } from '@/lib/log'
 import { validateCheckout } from '@/lib/validators/stripe'
 import { error, ok } from '@/lib/http'
@@ -10,7 +9,7 @@ import { error, ok } from '@/lib/http'
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabase = await createRouteHandlerClientCompat()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

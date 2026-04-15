@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
 import { checkSupabase } from '@/lib/check-supabase'
 import { payoutSchema } from '@/lib/validators/stripe'
 import { log } from '@/lib/log'
@@ -15,7 +14,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const stripe = getStripeServerClient()
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createRouteHandlerClientCompat()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {

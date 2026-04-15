@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
 
 // PATCH /api/team/[memberId] - Update team member role
 export async function PATCH(
@@ -8,7 +7,7 @@ export async function PATCH(
   context: { params: Promise<{ memberId: string }> }
 ) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createRouteHandlerClientCompat()
     const accessToken = request.cookies.get('sb-access-token')?.value
     
     if (!accessToken) {

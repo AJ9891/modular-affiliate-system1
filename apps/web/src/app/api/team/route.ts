@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
 
 // GET /api/team - List team members
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createRouteHandlerClientCompat()
     const accessToken = request.cookies.get('sb-access-token')?.value
     
     if (!accessToken) {
@@ -54,7 +53,7 @@ export async function GET(request: NextRequest) {
 // POST /api/team - Invite team member
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createRouteHandlerClientCompat()
     const accessToken = request.cookies.get('sb-access-token')?.value
     
     if (!accessToken) {
@@ -198,7 +197,7 @@ export async function POST(request: NextRequest) {
 // DELETE /api/team?memberId=xxx - Remove team member
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createRouteHandlerClientCompat()
     const accessToken = request.cookies.get('sb-access-token')?.value
     
     if (!accessToken) {
