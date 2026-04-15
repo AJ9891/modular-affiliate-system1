@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sendshark } from '@/lib/sendshark'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { emailService } from '@/lib/email/service'
+import { createSubdomainRouteHandlerClient } from '@/lib/subdomain-auth'
 
 /**
  * Email Reports API Endpoint
@@ -10,7 +9,7 @@ import { cookies } from 'next/headers'
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createSubdomainRouteHandlerClient(request)
     const { recipientEmail, funnelId, dateRange } = await request.json()
 
     // Get funnel analytics from database
@@ -51,7 +50,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Send report
-    const result = await sendshark.sendAnalyticsReport({
+    const result = await emailService.sendAnalyticsReport({
       recipientEmail,
       funnelId,
       stats,
@@ -78,7 +77,6 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
     const url = new URL(request.url)
     const campaignId = url.searchParams.get('campaignId')
 
@@ -89,7 +87,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const stats = await sendshark.getCampaignStats(campaignId)
+    const stats = await emailService.getCampaignStats(campaignId)
     
     return NextResponse.json({ success: true, stats })
   } catch (error) {

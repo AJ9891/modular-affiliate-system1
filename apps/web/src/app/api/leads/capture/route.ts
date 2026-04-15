@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
 import { withRateLimit, withValidation, withErrorHandling } from '@/lib/api-middleware'
 import { leadCaptureSchema } from '@/lib/security'
-import { sendshark } from '@/lib/sendshark'
+import { emailService } from '@/lib/email/service'
+import { createSubdomainRouteHandlerClient } from '@/lib/subdomain-auth'
 
 /**
  * Lead Capture API Endpoint
@@ -12,7 +11,7 @@ import { sendshark } from '@/lib/sendshark'
 export const POST = withRateLimit(
   withErrorHandling(
     withValidation(async (req: NextRequest, validatedData: any) => {
-      const supabase = createRouteHandlerClient({ cookies })
+      const supabase = await createSubdomainRouteHandlerClient(req)
       
       const { 
         email, 
@@ -61,11 +60,11 @@ export const POST = withRateLimit(
         throw new Error('Failed to save lead')
       }
 
-      // Add to Sendshark with funnel name as list
+      // Add subscriber to configured email provider with funnel name as list
       try {
-        console.log(`Adding subscriber to Sendshark list: "${funnelName}"`)
+        console.log(`Adding subscriber to provider list: "${funnelName}"`)
         
-        await sendshark.addSubscriber({
+        await emailService.addSubscriber({
           email,
           listName: funnelName,
           customFields: {
@@ -82,7 +81,7 @@ export const POST = withRateLimit(
         
         console.log(`✅ Subscriber added to "${funnelName}" list`)
       } catch (emailError) {
-        console.error('Sendshark add subscriber error:', emailError)
+        console.error('Email provider add subscriber error:', emailError)
         // Continue even if email service fails
       }
 
@@ -102,7 +101,7 @@ export const POST = withRateLimit(
  */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createSubdomainRouteHandlerClient(request)
     const url = new URL(request.url)
     const funnelId = url.searchParams.get('funnelId')
     const limit = parseInt(url.searchParams.get('limit') || '50')

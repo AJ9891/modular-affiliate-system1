@@ -65,6 +65,41 @@ class SendsharkService {
     this.baseUrl = SENDSHARK_API_URL
   }
 
+  private parseResponsePayload(bodyText: string, contentType: string): unknown {
+    if (!bodyText.trim()) {
+      return {}
+    }
+
+    const isJsonContentType =
+      contentType.includes('application/json') || contentType.includes('+json')
+    const looksLikeJson = /^[\s\n\r]*[\[{]/.test(bodyText)
+
+    if (isJsonContentType || looksLikeJson) {
+      try {
+        return JSON.parse(bodyText)
+      } catch (error) {
+        throw new Error(
+          `Sendshark API returned invalid JSON payload (${error instanceof Error ? error.message : 'parse error'})`
+        )
+      }
+    }
+
+    return bodyText
+  }
+
+  private summarizeBody(body: unknown): string {
+    if (typeof body === 'string') {
+      return body.replace(/\s+/g, ' ').trim().slice(0, 180)
+    }
+    if (body && typeof body === 'object') {
+      const message = (body as { message?: unknown }).message
+      if (typeof message === 'string') {
+        return message
+      }
+    }
+    return 'No response body'
+  }
+
   private async request(endpoint: string, options: RequestInit = {}) {
     const url = `${this.baseUrl}${endpoint}`
     const headers = {
@@ -78,12 +113,24 @@ class SendsharkService {
       headers,
     })
 
+    const contentType = (response.headers.get('content-type') || '').toLowerCase()
+    const bodyText = await response.text()
+    const parsedBody = this.parseResponsePayload(bodyText, contentType)
+
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: response.statusText }))
-      throw new Error(`Sendshark API Error: ${error.message || response.statusText}`)
+      const details = this.summarizeBody(parsedBody)
+      throw new Error(
+        `Sendshark API Error (${response.status} ${response.statusText}): ${details}`
+      )
     }
 
-    return response.json()
+    if (typeof parsedBody === 'string') {
+      throw new Error(
+        `Sendshark API returned non-JSON response (content-type: ${contentType || 'unknown'})`
+      )
+    }
+
+    return parsedBody
   }
 
   /**

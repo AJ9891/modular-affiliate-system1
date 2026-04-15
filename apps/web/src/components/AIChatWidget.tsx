@@ -113,10 +113,27 @@ export default function AIChatWidget() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to send message')
+        const errorPayload = await response
+          .json()
+          .catch(() => null) as { error?: string } | null
+        const errorMessage =
+          errorPayload?.error ||
+          `${response.status} ${response.statusText}` ||
+          'Failed to send message'
+        throw new Error(errorMessage)
       }
 
-      const data = await response.json()
+      const responseClone = response.clone()
+      let data: { conversationId: string; message: Message }
+      try {
+        data = await response.json()
+      } catch {
+        const responseText = await responseClone.text().catch(() => '')
+        const snippet = responseText.replace(/\s+/g, ' ').trim().slice(0, 120)
+        throw new Error(
+          `Invalid server response format${snippet ? `: ${snippet}` : ''}`
+        )
+      }
       
       // Update conversation ID if new
       if (!conversationId) {
@@ -130,11 +147,19 @@ export default function AIChatWidget() {
       ])
     } catch (error) {
       console.error('Failed to send message:', error)
+      const errorMessage =
+        error instanceof Error && error.message
+          ? error.message
+          : 'Please try again.'
+      const isAuthError = /unauthorized|auth/i.test(errorMessage)
+
       // Add error message
       setMessages(prev => [...prev, {
         id: `error-${Date.now()}`,
         role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
+        content: isAuthError
+          ? 'Your session appears to have expired. Please refresh the page and sign in again.'
+          : `Sorry, I encountered an error: ${errorMessage}`,
         created_at: new Date().toISOString()
       }])
     } finally {

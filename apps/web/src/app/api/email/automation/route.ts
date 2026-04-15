@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sendshark } from '@/lib/sendshark'
+import { emailService } from '@/lib/email/service'
 
 /**
  * Email Automation API Endpoint
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     if (action === 'trigger') {
       // Trigger automation for a user
       const { automationId, recipient } = data
-      const result = await sendshark.triggerAutomation(automationId, recipient)
+      const result = await emailService.triggerAutomation(automationId, recipient)
       
       return NextResponse.json({ 
         success: true, 
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new automation
-    const automation = await sendshark.createAutomation(data)
+    const automation = await emailService.createAutomation(data)
     
     return NextResponse.json({ 
       success: true, 
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
  */
 export async function PUT(_request: NextRequest) {
   try {
-    const automations = await sendshark.setupDefaultAutomations()
+    const automations = await emailService.setupDefaultAutomations()
     
     return NextResponse.json({ 
       success: true, 

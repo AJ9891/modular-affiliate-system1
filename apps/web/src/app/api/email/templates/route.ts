@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sendshark } from '@/lib/sendshark'
+import { emailService } from '@/lib/email/service'
 import { PERSONALITY_EMAIL_TEMPLATES, type EmailPersonality } from '@/config/emailTemplates'
 
 type TemplateRecord = {
@@ -65,7 +65,7 @@ export async function GET() {
   }))
 
   try {
-    const remotePayload = await sendshark.getTemplates()
+    const remotePayload = await emailService.getTemplates()
     const remoteTemplates = normalizeRemoteTemplates(remotePayload).map((template) => ({
       ...template,
       source: 'remote' as const,
@@ -98,7 +98,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const template = await request.json()
-    const result = await sendshark.saveTemplate(template)
+    const result = await emailService.saveTemplate(template)
     
     return NextResponse.json({ 
       success: true, 
