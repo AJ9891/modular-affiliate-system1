@@ -46,6 +46,17 @@ export function error(err: unknown, fallbackMessage = 'Internal server error') {
     )
   }
 
+  if (
+    err instanceof Error &&
+    'status' in err &&
+    typeof (err as { status?: unknown }).status === 'number'
+  ) {
+    return NextResponse.json(
+      { error: err.message },
+      { status: (err as { status: number }).status }
+    )
+  }
+
   const message = err instanceof Error ? err.message : fallbackMessage
   return NextResponse.json({ error: message }, { status: 500 })
 }

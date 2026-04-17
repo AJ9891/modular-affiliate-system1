@@ -16,6 +16,8 @@ export const POST = withRateLimit(
       const { 
         email, 
         funnel_id,
+        generation_id,
+        variant_id,
         source,
         utm_source,
         utm_medium,
@@ -24,17 +26,26 @@ export const POST = withRateLimit(
         utm_term
       } = validatedData
 
+      const {
+        data: { user: sessionUser },
+      } = await supabase.auth.getUser()
+
       // Get funnel details to use funnel name as list name
       let funnelName = 'Launchpad List'
+      let ownerUserId: string | null = sessionUser?.id || null
       if (funnel_id) {
         const { data: funnel } = await supabase
           .from('funnels')
-          .select('name')
+          .select('name,user_id')
           .eq('funnel_id', funnel_id)
           .single()
         
         if (funnel?.name) {
           funnelName = funnel.name
+        }
+
+        if (funnel?.user_id) {
+          ownerUserId = funnel.user_id
         }
       }
 
@@ -43,7 +54,10 @@ export const POST = withRateLimit(
         .from('leads')
         .insert({
           email,
+          user_id: ownerUserId,
           funnel_id,
+          generation_id: generation_id || null,
+          variant_id: variant_id || null,
           source,
           utm_source,
           utm_medium,
@@ -68,7 +82,10 @@ export const POST = withRateLimit(
           email,
           listName: funnelName,
           customFields: {
+            user_id: ownerUserId,
             funnel_id,
+            generation_id: generation_id || null,
+            variant_id: variant_id || null,
             funnelName,
             source,
             utm_source,
@@ -76,7 +93,7 @@ export const POST = withRateLimit(
             utm_campaign,
             signupDate: new Date().toISOString()
           },
-          tags: [source || 'funnel', `funnel-${funnel_id}`, funnelName]
+          tags: [source || 'funnel', funnel_id ? `funnel-${funnel_id}` : 'funnel-unknown', funnelName]
         })
         
         console.log(`✅ Subscriber added to "${funnelName}" list`)
@@ -105,10 +122,25 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url)
     const funnelId = url.searchParams.get('funnelId')
     const limit = parseInt(url.searchParams.get('limit') || '50')
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Authentication required',
+        },
+        { status: 401 }
+      )
+    }
 
     let query = supabase
       .from('leads')
       .select('*')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(limit)
 

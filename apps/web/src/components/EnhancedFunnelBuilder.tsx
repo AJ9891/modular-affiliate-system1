@@ -1,11 +1,11 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Plus, Trash2, GripVertical, Eye, Code, Save } from 'lucide-react'
 
 interface BlockConfig {
   id: string
-  type: 'hero' | 'features' | 'cta' | 'testimonial' | 'pricing' | 'faq' | 'email-capture'
+  type: 'hero' | 'features' | 'cta' | 'testimonial' | 'pricing' | 'faq' | 'email-capture' | 'countdown' | 'comparison'
   content: Record<string, any>
   style: Record<string, any>
 }
@@ -13,6 +13,7 @@ interface BlockConfig {
 interface FunnelConfig {
   id?: string
   name: string
+  template?: string
   niche?: string
   blocks: BlockConfig[]
   theme: {
@@ -22,8 +23,17 @@ interface FunnelConfig {
   }
 }
 
+interface TemplateHydrationInput {
+  id?: string
+  name?: string
+  category?: string
+  blocks?: Array<Partial<BlockConfig>>
+  theme?: Partial<FunnelConfig['theme']>
+}
+
 interface EnhancedFunnelBuilderProps {
   initialNiche?: string
+  initialTemplate?: string | TemplateHydrationInput | null
   funnelId?: string | null
   onSave?: (funnelId: string, slug: string) => void
 }
@@ -143,8 +153,28 @@ const blockTemplates: Record<string, Omit<BlockConfig, 'id'>> = {
   }
 }
 
+function cloneValue<T>(value: T): T {
+  if (typeof structuredClone === 'function') {
+    return structuredClone(value)
+  }
+
+  return JSON.parse(JSON.stringify(value)) as T
+}
+
+function normalizeTemplateBlocks(blocks: Array<Partial<BlockConfig>> | undefined): BlockConfig[] {
+  if (!Array.isArray(blocks)) return []
+
+  return blocks.map((block, index) => ({
+    id: typeof block.id === 'string' && block.id.length > 0 ? block.id : `block-template-${Date.now()}-${index}`,
+    type: (block.type || 'hero') as BlockConfig['type'],
+    content: cloneValue((block.content as Record<string, any>) || {}),
+    style: cloneValue((block.style as Record<string, any>) || {}),
+  }))
+}
+
 export default function EnhancedFunnelBuilder({
   initialNiche = 'general',
+  initialTemplate = null,
   funnelId = null,
   onSave,
 }: EnhancedFunnelBuilderProps = {}) {
@@ -161,6 +191,7 @@ export default function EnhancedFunnelBuilder({
   const [selectedBlock, setSelectedBlock] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'builder' | 'preview' | 'code'>('builder')
   const [draggedBlock, setDraggedBlock] = useState<number | null>(null)
+  const hydratedTemplateKey = useRef<string | null>(null)
 
   useEffect(() => {
     if (initialNiche) {
@@ -168,13 +199,71 @@ export default function EnhancedFunnelBuilder({
     }
   }, [initialNiche])
 
+  useEffect(() => {
+    if (!initialTemplate) return
+
+    const templateKey = typeof initialTemplate === 'string'
+      ? `id:${initialTemplate}`
+      : `obj:${initialTemplate.id || initialTemplate.name || ''}`
+
+    if (!templateKey || hydratedTemplateKey.current === templateKey) return
+
+    let active = true
+
+    const applyTemplate = (template: TemplateHydrationInput) => {
+      if (!active) return
+
+      const hydratedBlocks = normalizeTemplateBlocks(template.blocks)
+      if (hydratedBlocks.length === 0) return
+
+      setFunnel((prev) => ({
+        ...prev,
+        name: template.name || prev.name,
+        template: template.id || prev.template,
+        blocks: hydratedBlocks,
+        theme: {
+          primaryColor: template.theme?.primaryColor || prev.theme.primaryColor,
+          secondaryColor: template.theme?.secondaryColor || prev.theme.secondaryColor,
+          fontFamily: template.theme?.fontFamily || prev.theme.fontFamily,
+        },
+      }))
+      setSelectedBlock(null)
+      hydratedTemplateKey.current = templateKey
+    }
+
+    async function hydrateFromApi(templateId: string) {
+      try {
+        const response = await fetch(`/api/funnels/templates?id=${encodeURIComponent(templateId)}`, {
+          cache: 'no-store',
+        })
+        const payload = await response.json() as { templates?: TemplateHydrationInput[] }
+        const template = Array.isArray(payload.templates) ? payload.templates[0] : null
+        if (template) {
+          applyTemplate(template)
+        }
+      } catch (error) {
+        console.error('Failed to hydrate template:', error)
+      }
+    }
+
+    if (typeof initialTemplate === 'string') {
+      hydrateFromApi(initialTemplate)
+    } else {
+      applyTemplate(initialTemplate)
+    }
+
+    return () => {
+      active = false
+    }
+  }, [initialTemplate])
+
   const addBlock = (type: keyof typeof blockTemplates) => {
     const template = blockTemplates[type]
     const newBlock: BlockConfig = {
       id: `block-${Date.now()}`,
       type: template.type,
-      content: template.content,
-      style: template.style
+      content: cloneValue(template.content),
+      style: cloneValue(template.style)
     }
     setFunnel(prev => ({
       ...prev,

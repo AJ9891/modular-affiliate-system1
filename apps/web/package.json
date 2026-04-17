@@ -17,6 +17,7 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
+    "verify:platform": "node scripts/verify-platform-integrity.mjs",
     "analyze": "ANALYZE=true npm run build",
     "type-check": "tsc --noEmit",
     "prepare": "husky"
