@@ -1,14 +1,27 @@
 'use client'
 
+import Link from 'next/link'
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { Sparkles, Rocket, Brain, Gauge, ShieldCheck, SunMoon } from 'lucide-react'
-import { CockpitModules } from '@/components/CockpitModules'
+import { Sparkles, Rocket, Brain, SunMoon, Radar, Settings2, MessageSquare, Flame, Compass, BarChart3 } from 'lucide-react'
+import { COCKPIT_MODULES } from '@/config/cockpitModules'
 
 const ONBOARDING_COMPLETE = 8
 const COCKPIT_THEME_STORAGE_KEY = 'lp_cockpit_theme'
 type CockpitTheme = 'dark' | 'light'
+
+const MODULE_META: Record<string, { description: string; icon: React.ElementType }> = {
+  vision: { description: 'Strategic view and system intent.', icon: Sparkles },
+  radar: { description: 'Signal tracking and performance scans.', icon: Radar },
+  settings: { description: 'Core system preferences and controls.', icon: Settings2 },
+  communications: { description: 'Messages and campaign communication.', icon: MessageSquare },
+  fuel: { description: 'Plans, billing, and monetization systems.', icon: Flame },
+  navigation: { description: 'Routing and direction across the stack.', icon: Compass },
+  propulsion: { description: 'Funnels and launch execution engine.', icon: Rocket },
+  intelligence: { description: 'AI workflows and reasoning controls.', icon: Brain },
+  telemetry: { description: 'Live metrics and operational telemetry.', icon: BarChart3 },
+}
 
 export default function CockpitHome() {
   return (
@@ -47,11 +60,15 @@ function CockpitContent() {
 
       const { data, error } = await supabase
         .from('users')
-        .select('onboarding_step')
+        .select('onboarding_step, onboarding_complete, is_admin')
         .eq('id', user.id)
         .maybeSingle()
 
-      if (!error && data && (data.onboarding_step ?? 0) < ONBOARDING_COMPLETE) {
+      const isAdmin = Boolean(data?.is_admin)
+      const onboardingStep = Number(data?.onboarding_step ?? 0)
+      const onboardingComplete = Boolean(data?.onboarding_complete) || onboardingStep >= ONBOARDING_COMPLETE
+
+      if (!error && data && !isAdmin && !onboardingComplete) {
         if (!skipFlag) {
           router.replace('/launchpad')
           return
@@ -90,17 +107,6 @@ function CockpitContent() {
       return next
     })
   }
-
-  const cockpitBackdropImage =
-    theme === 'light' ? '/Backgrounds/dashboard-light.png' : '/Backgrounds/dashboard-dark.png'
-  const cockpitBackdropFilter =
-    theme === 'light'
-      ? 'blur(1.4px) saturate(1.02) brightness(0.95)'
-      : 'blur(1.8px) brightness(0.62)'
-  const cockpitOverlay =
-    theme === 'light'
-      ? 'linear-gradient(to bottom, rgba(255, 255, 255, 0.18), rgba(244, 247, 250, 0.7), rgba(235, 241, 246, 0.84))'
-      : 'linear-gradient(to bottom, rgba(0, 0, 0, 0.45), rgba(2, 6, 23, 0.55), rgba(0, 0, 0, 0.66))'
 
   return (
     <main className={`${theme === 'light' ? 'theme-light' : 'theme-dark'} cockpit-shell page-flight-deck`}>
@@ -148,29 +154,20 @@ function CockpitContent() {
           )}
         </header>
 
-        <section className="hud-panel">
-          <p className="mb-3 text-[12px] uppercase tracking-system text-text-secondary">Interactive Modules</p>
-          <div className="relative w-full overflow-hidden rounded-[12px]" style={{ aspectRatio: '16 / 9' }}>
-            <div
-              className="absolute inset-0 scale-105"
-              style={{
-                backgroundImage: `url('${cockpitBackdropImage}')`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                filter: cockpitBackdropFilter,
-              }}
-            />
-            <div className="absolute inset-0" style={{ background: cockpitOverlay }} />
-            <CockpitModules />
-          </div>
-        </section>
-
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Card title="Funnels" desc="Build and publish" href="/visual-builder" icon={Rocket} theme={theme} />
-          <Card title="AI Generator" desc="Copy and pages" href="/ai-generator" icon={Sparkles} theme={theme} />
-          <Card title="Optimizer" desc="A/B and guardrails" href="/ai-optimizer" icon={Brain} theme={theme} />
-          <Card title="Billing" desc="Stripe and plans" href="/subscription" icon={ShieldCheck} theme={theme} />
-          <Card title="Domains" desc="Routing and SSL" href="/domains" icon={Gauge} theme={theme} />
+          {COCKPIT_MODULES.map((module) => {
+            const meta = MODULE_META[module.id] || { description: 'Module access panel.', icon: Sparkles }
+            return (
+              <Card
+                key={module.id}
+                title={module.name}
+                desc={meta.description}
+                href={module.route}
+                icon={meta.icon}
+                theme={theme}
+              />
+            )
+          })}
         </section>
 
       </div>
@@ -207,20 +204,23 @@ function Card({
   const iconBackground = theme === 'light' ? 'rgba(31, 199, 167, 0.08)' : 'rgba(6, 12, 18, 0.62)'
 
   return (
-    <a
+    <Link
       href={href}
-      className="hud-card group relative min-h-[44px] overflow-hidden transition-[border-color,box-shadow,transform] duration-200 ease-smooth hover:-translate-y-0.5 hover:border-[rgba(46,230,194,0.35)]"
+      className="glass-tile group relative min-h-[44px] overflow-hidden border-white/12 bg-white/[0.045] backdrop-blur-xl transition-[border-color,box-shadow,transform] duration-200 ease-smooth hover:-translate-y-0.5 hover:border-[rgba(46,230,194,0.35)] hover:shadow-[0_14px_38px_rgba(0,0,0,0.28)]"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(46,230,194,0.08),transparent_32%),radial-gradient(circle_at_80%_0%,rgba(31,199,167,0.08),transparent_32%)] opacity-0 transition duration-200 ease-smooth group-hover:opacity-100" />
-      <div className="relative flex items-center justify-between">
-        <div className="flex flex-col gap-1">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(46,230,194,0.08),transparent_34%),radial-gradient(circle_at_80%_0%,rgba(31,199,167,0.08),transparent_34%)] opacity-0 transition duration-200 ease-smooth group-hover:opacity-100" />
+      <div className="relative flex items-center justify-between gap-4">
+        <div className="flex min-w-0 flex-col gap-1">
           <span className="text-[18px] font-medium text-text-primary">{title}</span>
-          <span className="text-[15px] leading-[1.6] text-text-secondary">{desc}</span>
+          <span className="text-[14px] leading-[1.5] text-text-secondary">{desc}</span>
         </div>
-        <div className="rounded-full p-2" style={{ border: `1px solid ${iconBorder}`, color: iconText, background: iconBackground }}>
-          <Icon size={18} />
+        <div
+          className="rounded-full p-2.5"
+          style={{ border: `1px solid ${iconBorder}`, color: iconText, background: iconBackground }}
+        >
+          <Icon size={17} />
         </div>
       </div>
-    </a>
+    </Link>
   )
 }
