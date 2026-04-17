@@ -411,7 +411,49 @@
   }
 
   .mission-console {
+    position: relative;
+    overflow: hidden;
     width: min(520px, calc(100vw - 3rem));
+    border-color: rgb(var(--accent) / 0.26);
+    background:
+      linear-gradient(155deg, rgb(255 255 255 / 0.08) 0%, rgb(255 255 255 / 0.02) 35%, rgb(6 12 18 / 0.62) 100%),
+      var(--bg-surface-elevated);
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 0.04),
+      0 10px 30px rgb(0 0 0 / 0.42),
+      0 0 26px rgb(var(--accent) / 0.22),
+      inset 0 1px 0 rgb(255 255 255 / 0.2);
+  }
+
+  .mission-console::before,
+  .mission-console::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .mission-console::before {
+    background-image:
+      linear-gradient(rgb(159 180 200 / 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(159 180 200 / 0.06) 1px, transparent 1px);
+    background-size: 26px 26px;
+    opacity: 0.32;
+    mix-blend-mode: screen;
+  }
+
+  .mission-console::after {
+    background:
+      linear-gradient(
+        180deg,
+        transparent 0%,
+        rgb(var(--accent) / 0.03) 38%,
+        rgb(var(--accent) / 0.18) 50%,
+        rgb(var(--accent) / 0.03) 62%,
+        transparent 100%
+      );
+    transform: translateY(-110%);
+    animation: console-scan-sweep 7s ease-in-out infinite;
   }
 
   .system-ready {
@@ -693,5 +735,24 @@
   @keyframes telemetry-pulse {
     0%, 100% { opacity: 0.5; }
     50% { opacity: 0.95; }
+  }
+
+  @keyframes console-scan-sweep {
+    0%,
+    16% {
+      transform: translateY(-110%);
+      opacity: 0;
+    }
+    28% {
+      opacity: 0.5;
+    }
+    58% {
+      transform: translateY(110%);
+      opacity: 0.24;
+    }
+    100% {
+      transform: translateY(110%);
+      opacity: 0;
+    }
   }
 }
