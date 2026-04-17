@@ -1,12 +1,15 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
+const ONBOARDING_COMPLETE = 8
+
 export default function Signup() {
   const router = useRouter()
+  const [mounted, setMounted] = useState(false)
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -15,6 +18,10 @@ export default function Signup() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -57,7 +64,31 @@ export default function Signup() {
             refresh_token: loginData.session.refresh_token
           })
         }
-        router.push('/welcome')
+
+        let destination = '/welcome'
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+
+        if (user) {
+          const { data: profile } = await supabase
+            .from('users')
+            .select('onboarding_seen, onboarding_step, onboarding_complete, is_admin')
+            .eq('id', user.id)
+            .maybeSingle()
+
+          const isAdmin = Boolean(profile?.is_admin)
+          const onboardingStep = Number(profile?.onboarding_step ?? 0)
+          const onboardingComplete = Boolean(profile?.onboarding_complete) || onboardingStep >= ONBOARDING_COMPLETE
+
+          if (isAdmin || onboardingComplete) {
+            destination = '/cockpit'
+          } else if (profile?.onboarding_seen) {
+            destination = '/launchpad'
+          }
+        }
+
+        router.push(destination)
         return
       }
 
@@ -70,18 +101,31 @@ export default function Signup() {
     }
   }
 
+  if (!mounted) {
+    return (
+      <main className="min-h-screen theme-crew flex items-center justify-center p-8">
+        <div className="max-w-md w-full">
+          <div className="card-premium rounded-2xl border-2 border-[var(--border-elevated)] p-10 text-center">
+            <h1 className="mb-2 text-3xl font-bold text-text-primary">Create Your Account</h1>
+            <p className="text-text-secondary">Preparing secure signup…</p>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
   return (
-    <main className="min-h-screen bg-brand-gradient launch-pad flex items-center justify-center p-8">
+    <main className="min-h-screen theme-crew flex items-center justify-center p-8">
       <div className="max-w-md w-full">
-        <Link href="/" className="text-white hover:text-brand-cyan mb-8 inline-block transition-colors">
+        <Link href="/" className="mb-8 inline-block text-text-secondary transition-colors hover:text-rocket-500">
           ← Back to Home
         </Link>
         
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-10 border-2 border-brand-purple/20">
-          <h1 className="text-3xl font-bold mb-2 text-center text-brand-navy">
+        <div className="card-premium rounded-2xl border-2 border-[var(--border-elevated)] p-10">
+          <h1 className="mb-2 text-center text-3xl font-bold text-text-primary">
             Create Your Account
           </h1>
-          <p className="text-brand-purple text-center mb-8">
+          <p className="mb-8 text-center text-text-secondary">
             Start building funnels in minutes
           </p>
           
@@ -99,31 +143,31 @@ export default function Signup() {
           
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-semibold mb-2 text-brand-purple">Full Name</label>
+              <label className="mb-2 block text-sm font-semibold text-text-secondary">Full Name</label>
               <input
                 type="text"
                 placeholder="John Doe"
                 value={formData.fullName}
                 onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                 required
-                className="w-full px-4 py-3 border-2 border-brand-purple/30 rounded-lg focus:border-brand-cyan focus:outline-none"
+                className="hud-input"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-semibold mb-2 text-brand-purple">Email Address</label>
+              <label className="mb-2 block text-sm font-semibold text-text-secondary">Email Address</label>
               <input
                 type="email"
                 placeholder="you@example.com"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
-                className="w-full px-4 py-3 border-2 border-brand-purple/30 rounded-lg focus:border-brand-cyan focus:outline-none"
+                className="hud-input"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-semibold mb-2 text-brand-purple">Password</label>
+              <label className="mb-2 block text-sm font-semibold text-text-secondary">Password</label>
               <input
                 type="password"
                 placeholder="••••••••"
@@ -131,23 +175,23 @@ export default function Signup() {
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
                 minLength={6}
-                className="w-full px-4 py-3 border-2 border-brand-purple/30 rounded-lg focus:border-brand-cyan focus:outline-none"
+                className="hud-input"
               />
-              <p className="text-xs text-brand-purple mt-1">Minimum 6 characters</p>
+              <p className="mt-1 text-xs text-text-muted">Minimum 6 characters</p>
             </div>
             
             <button
               type="submit"
               disabled={loading}
-              className="w-full btn-launch py-4 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-launch-premium w-full py-4 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? 'Creating Account...' : '3...2...1... LAUNCH! 🚀'}
             </button>
           </form>
           
-          <p className="text-center text-sm text-brand-purple mt-6">
+          <p className="mt-6 text-center text-sm text-text-secondary">
             Already have an account?{' '}
-            <Link href="/login" className="text-brand-cyan font-semibold hover:text-brand-orange transition-colors">
+            <Link href="/login" className="font-semibold text-rocket-500 transition-colors hover:text-text-primary">
               Log in
             </Link>
           </p>

@@ -100,7 +100,7 @@ export async function proxy(req: NextRequest) {
   }
 
   // Protect authenticated routes
-  const protectedPaths = ['/launchpad', '/dashboard', '/admin', '/builder', '/domains']
+  const protectedPaths = ['/launchpad', '/dashboard', '/admin', '/builder', '/domains', '/link-funnel']
   const isProtectedPath = protectedPaths.some((path) => req.nextUrl.pathname.startsWith(path))
 
   if (isProtectedPath && !session) {

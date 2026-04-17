@@ -42,6 +42,22 @@ function getSupabaseAdminClient() {
   }
 }
 
+function getAdminEmailAllowlist(): Set<string> {
+  const raw = process.env.ADMIN_EMAILS || ''
+  return new Set(
+    raw
+      .split(',')
+      .map((value) => value.trim().toLowerCase())
+      .filter((value) => value.length > 0)
+  )
+}
+
+function shouldAutoGrantAdmin(email?: string | null): boolean {
+  if (!email) return false
+  const allowlist = getAdminEmailAllowlist()
+  return allowlist.has(email.trim().toLowerCase())
+}
+
 export async function POST(request: NextRequest) {
   const check = checkSupabase()
   if (check) return check
@@ -107,6 +123,35 @@ export async function POST(request: NextRequest) {
         
         if (upsertError) {
           log.error('Failed to upsert user in public.users', { error: upsertError?.message })
+        }
+
+        const autoAdmin = shouldAutoGrantAdmin(data.user.email || email)
+        if (autoAdmin) {
+          const { error: adminError } = await adminClient
+            .from('users')
+            .update({ is_admin: true })
+            .eq('id', data.user.id)
+
+          if (adminError) {
+            log.error('Failed to auto-grant admin role', { error: adminError.message, email: data.user.email })
+          }
+
+          // Best effort: mark onboarding complete for admin users.
+          const { error: onboardingError } = await adminClient
+            .from('users')
+            .update({
+              onboarding_seen: true,
+              onboarding_complete: true,
+              onboarding_step: 99,
+            })
+            .eq('id', data.user.id)
+
+          if (onboardingError) {
+            log.warn('Unable to mark onboarding complete for admin user', {
+              error: onboardingError.message,
+              email: data.user.email,
+            })
+          }
         }
       } catch (err) {
         log.error('Error upserting user', { error: String(err) })

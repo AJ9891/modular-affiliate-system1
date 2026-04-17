@@ -1,4 +1,5 @@
 import Stripe from 'stripe'
+import { PLAN_MONTHLY_PRICE_USD } from '@/lib/billing/plans'
 
 if (!process.env.STRIPE_SECRET_KEY) {
   console.warn('Warning: STRIPE_SECRET_KEY not set. Stripe features will be disabled.')
@@ -20,7 +21,7 @@ export const STRIPE_PLANS = {
   starter: {
     name: 'Starter',
     priceId: process.env.STRIPE_STARTER_PRICE_ID || '',
-    price: 30,
+    price: PLAN_MONTHLY_PRICE_USD.starter,
     features: [
       '1 Active Funnel',
       'Basic Templates',
@@ -31,7 +32,7 @@ export const STRIPE_PLANS = {
   pro: {
     name: 'Pro',
     priceId: process.env.STRIPE_PRO_PRICE_ID || '',
-    price: 45,
+    price: PLAN_MONTHLY_PRICE_USD.pro,
     features: [
       'Unlimited Funnels',
       'Premium Templates',
@@ -43,7 +44,7 @@ export const STRIPE_PLANS = {
   agency: {
     name: 'Agency',
     priceId: process.env.STRIPE_AGENCY_PRICE_ID || '',
-    price: 60,
+    price: PLAN_MONTHLY_PRICE_USD.agency,
     features: [
       'Everything in Pro',
       'White Label Options',

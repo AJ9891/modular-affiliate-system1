@@ -37,21 +37,21 @@ export default function ReactErrorDebugPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h1 className="text-2xl font-bold mb-4">🔧 React Error Debug Page</h1>
+    <div className="cockpit-container min-h-screen py-8">
+      <div className="mx-auto max-w-4xl">
+        <div className="card-premium rounded-lg p-6">
+          <h1 className="mb-4 text-2xl font-bold text-text-primary">🔧 React Error Debug Page</h1>
           
           <div className="space-y-4">
-            <div className="bg-blue-50 p-4 rounded">
-              <h2 className="font-semibold mb-2">Development Environment Status</h2>
+            <div className="rounded border border-sky-400/30 bg-sky-500/10 p-4">
+              <h2 className="mb-2 font-semibold text-sky-100">Development Environment Status</h2>
               <p><strong>NODE_ENV:</strong> {process.env.NODE_ENV}</p>
               <p><strong>Development Mode:</strong> {process.env.NODE_ENV === 'development' ? '✅ Active' : '❌ Not Active'}</p>
               <p><strong>Timestamp:</strong> {new Date().toISOString()}</p>
             </div>
             
-            <div className="bg-green-50 p-4 rounded">
-              <h2 className="font-semibold mb-2">✅ What's Working</h2>
+            <div className="rounded border border-emerald-400/30 bg-emerald-500/10 p-4">
+              <h2 className="mb-2 font-semibold text-emerald-100">✅ What's Working</h2>
               <ul className="list-disc list-inside space-y-1">
                 <li>This page loaded successfully</li>
                 <li>React hooks are working here (useEffect called)</li>
@@ -60,8 +60,8 @@ export default function ReactErrorDebugPage() {
               </ul>
             </div>
             
-            <div className="bg-yellow-50 p-4 rounded">
-              <h2 className="font-semibold mb-2">🔍 Instructions</h2>
+            <div className="rounded border border-amber-400/30 bg-amber-500/10 p-4">
+              <h2 className="mb-2 font-semibold text-amber-100">🔍 Instructions</h2>
               <ol className="list-decimal list-inside space-y-2">
                 <li><strong>Open your browser's Developer Tools</strong> (F12 or right-click → Inspect)</li>
                 <li><strong>Go to the Console tab</strong></li>
@@ -71,8 +71,8 @@ export default function ReactErrorDebugPage() {
               </ol>
             </div>
             
-            <div className="bg-red-50 p-4 rounded">
-              <h2 className="font-semibold mb-2">🚨 If React Error #310 Occurs</h2>
+            <div className="rounded border border-red-400/30 bg-red-500/10 p-4">
+              <h2 className="mb-2 font-semibold text-red-100">🚨 If React Error #310 Occurs</h2>
               <p className="mb-2">You'll see detailed debugging info in the console. The error typically means:</p>
               <ul className="list-disc list-inside space-y-1">
                 <li><strong>Conditional Hooks:</strong> useState, useEffect, etc. called inside if statements</li>
@@ -81,12 +81,12 @@ export default function ReactErrorDebugPage() {
               </ul>
             </div>
 
-            <div className="bg-gray-50 p-4 rounded">
-              <h2 className="font-semibold mb-2">🛠️ Quick Actions</h2>
+            <div className="rounded border border-[var(--border-elevated)] bg-[rgba(255,255,255,0.03)] p-4">
+              <h2 className="mb-2 font-semibold text-text-primary">🛠️ Quick Actions</h2>
               <div className="space-x-2">
                 <button 
                   onClick={() => window.location.reload()}
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  className="hud-button-secondary px-4 py-2"
                 >
                   Reload Page
                 </button>
@@ -96,7 +96,7 @@ export default function ReactErrorDebugPage() {
                     sessionStorage.clear()
                     window.location.reload()
                   }}
-                  className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                  className="hud-button-danger px-4 py-2"
                 >
                   Clear Cache & Reload
                 </button>
@@ -105,7 +105,7 @@ export default function ReactErrorDebugPage() {
                     console.clear()
                     console.log('🧹 Console cleared. Navigate to error page now.')
                   }}
-                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                  className="btn-launch-premium px-4 py-2"
                 >
                   Clear Console
                 </button>

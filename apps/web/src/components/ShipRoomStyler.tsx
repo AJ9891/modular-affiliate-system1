@@ -26,65 +26,35 @@ const ROOM_CLASSES: RoomClass[] = [
   'page-command-authority',
 ]
 
+const ROOM_PREFIXES: Record<RoomClass, string[]> = {
+  'page-flight-deck': ['/cockpit', '/navigation', '/communications', '/system', '/launchpad'],
+  'page-engineering-bay': ['/propulsion', '/fuel', '/builder', '/builder-v2', '/visual-builder', '/funnels'],
+  'page-telemetry': ['/radar', '/analytics', '/dashboard'],
+  'page-ai-core': ['/ai-generator', '/link-funnel', '/ai-optimizer', '/intelligence'],
+  'page-fuel-management': ['/subscription', '/checkout', '/offers', '/pricing', '/monetization'],
+  'page-cargo-bay': ['/domains', '/downloads', '/example-download', '/f', '/p', '/subdomain', '/affiliates', '/subscribers', '/email'],
+  'page-crew': ['/team', '/welcome', '/login', '/signup', '/support', '/docs'],
+  'page-command-authority': ['/admin', '/settings', '/debug', '/check-downloads', '/do_not_click'],
+  'page-mission-control': ['/about', '/features', '/get-started', '/niches'],
+}
+
+function matchesPrefix(pathname: string, prefix: string): boolean {
+  return pathname === prefix || pathname.startsWith(`${prefix}/`)
+}
+
 function getRoomClass(pathname: string): RoomClass {
-  if (
-    pathname.startsWith('/cockpit') ||
-    pathname.startsWith('/navigation') ||
-    pathname.startsWith('/communications') ||
-    pathname.startsWith('/system')
-  ) {
-    return 'page-flight-deck'
-  }
-
-  if (
-    pathname.startsWith('/propulsion') ||
-    pathname.startsWith('/fuel') ||
-    pathname.startsWith('/builder') ||
-    pathname.startsWith('/visual-builder')
-  ) {
-    return 'page-engineering-bay'
-  }
-
-  if (
-    pathname.startsWith('/radar') ||
-    pathname.startsWith('/analytics') ||
-    pathname.startsWith('/dashboard')
-  ) {
-    return 'page-telemetry'
-  }
-
-  if (
-    pathname.startsWith('/ai-generator') ||
-    pathname.startsWith('/ai-optimizer') ||
-    pathname.startsWith('/intelligence')
-  ) {
-    return 'page-ai-core'
-  }
-
-  if (pathname.startsWith('/subscription') || pathname.startsWith('/checkout') || pathname.startsWith('/offers')) {
-    return 'page-fuel-management'
-  }
-
-  if (
-    pathname.startsWith('/domains') ||
-    pathname.startsWith('/downloads') ||
-    pathname.startsWith('/example-download') ||
-    pathname.startsWith('/f/') ||
-    pathname.startsWith('/p/') ||
-    pathname.startsWith('/subdomain/')
-  ) {
-    return 'page-cargo-bay'
-  }
-
-  if (pathname.startsWith('/team') || pathname.startsWith('/welcome')) {
-    return 'page-crew'
-  }
-
-  if (pathname.startsWith('/admin') || pathname.startsWith('/settings') || pathname.startsWith('/monetization')) {
-    return 'page-command-authority'
+  for (const room of ROOM_CLASSES) {
+    const prefixes = ROOM_PREFIXES[room]
+    if (prefixes.some((prefix) => matchesPrefix(pathname, prefix))) {
+      return room
+    }
   }
 
   return 'page-mission-control'
+}
+
+function roomClassToKey(roomClass: RoomClass): string {
+  return roomClass.replace('page-', '')
 }
 
 export function ShipRoomStyler() {
@@ -92,18 +62,15 @@ export function ShipRoomStyler() {
 
   useLayoutEffect(() => {
     const body = document.body
-    const isLaunchpadRoute = pathname === '/launchpad' || pathname.startsWith('/launchpad/')
+    const roomClass = getRoomClass(pathname)
 
     body.classList.remove('cockpit-shell', ...ROOM_CLASSES)
-
-    if (isLaunchpadRoute) {
-      return
-    }
-
-    body.classList.add('cockpit-shell', getRoomClass(pathname))
+    body.classList.add('cockpit-shell', roomClass)
+    body.dataset.shipRoom = roomClassToKey(roomClass)
 
     return () => {
       body.classList.remove('cockpit-shell', ...ROOM_CLASSES)
+      delete body.dataset.shipRoom
     }
   }, [pathname])
 

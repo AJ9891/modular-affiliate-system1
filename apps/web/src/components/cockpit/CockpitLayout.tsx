@@ -61,8 +61,9 @@ export default function CockpitLayout({ children }: { children: ReactNode }) {
           .eq('id', user.id)
           .maybeSingle()
 
-        setIsAdmin(Boolean(profile?.is_admin))
-        setOnboardingComplete(Boolean(profile?.onboarding_complete))
+        const admin = Boolean(profile?.is_admin)
+        setIsAdmin(admin)
+        setOnboardingComplete(Boolean(profile?.onboarding_complete) || admin)
       } catch (error) {
         console.error('Failed loading cockpit role state:', error)
       }

@@ -269,7 +269,7 @@ export default function UnifiedDashboard() {
       {/* Quick Actions */}
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
         <a
-          href="/builder"
+          href="/link-funnel"
           className="p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:shadow-lg transition-shadow"
         >
           <h3 className="font-bold text-lg mb-2">Create New Funnel</h3>

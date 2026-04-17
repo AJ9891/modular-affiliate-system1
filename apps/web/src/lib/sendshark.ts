@@ -100,7 +100,7 @@ class SendsharkService {
     return 'No response body'
   }
 
-  private async request(endpoint: string, options: RequestInit = {}) {
+  private async request<T = Record<string, unknown>>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`
     const headers = {
       'Content-Type': 'application/json',
@@ -130,7 +130,7 @@ class SendsharkService {
       )
     }
 
-    return parsedBody
+    return parsedBody as T
   }
 
   /**
@@ -144,8 +144,8 @@ class SendsharkService {
     text?: string
     trackOpens?: boolean
     trackClicks?: boolean
-  }) {
-    return this.request('/emails/send', {
+  }): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>('/emails/send', {
       method: 'POST',
       body: JSON.stringify(params),
     })
@@ -154,11 +154,11 @@ class SendsharkService {
   /**
    * Create or update an email template
    */
-  async saveTemplate(template: EmailTemplate) {
+  async saveTemplate(template: EmailTemplate): Promise<EmailTemplate> {
     const endpoint = template.id ? `/templates/${template.id}` : '/templates'
     const method = template.id ? 'PUT' : 'POST'
     
-    return this.request(endpoint, {
+    return this.request<EmailTemplate>(endpoint, {
       method,
       body: JSON.stringify(template),
     })
@@ -168,14 +168,24 @@ class SendsharkService {
    * Get all templates
    */
   async getTemplates(): Promise<EmailTemplate[]> {
-    return this.request('/templates')
+    const payload = await this.request<EmailTemplate[] | { data?: EmailTemplate[] }>('/templates')
+
+    if (Array.isArray(payload)) {
+      return payload
+    }
+
+    if (payload && Array.isArray(payload.data)) {
+      return payload.data
+    }
+
+    return []
   }
 
   /**
    * Create an email campaign
    */
-  async createCampaign(campaign: EmailCampaign) {
-    return this.request('/campaigns', {
+  async createCampaign(campaign: EmailCampaign): Promise<{ id?: string; status?: EmailCampaign['status'] }> {
+    return this.request<{ id?: string; status?: EmailCampaign['status'] }>('/campaigns', {
       method: 'POST',
       body: JSON.stringify(campaign),
     })
@@ -185,14 +195,28 @@ class SendsharkService {
    * Get campaign statistics
    */
   async getCampaignStats(campaignId: string): Promise<EmailStats> {
-    return this.request(`/campaigns/${campaignId}/stats`)
+    const payload = await this.request<Partial<EmailStats> | { data?: Partial<EmailStats> }>(`/campaigns/${campaignId}/stats`)
+    const payloadContainer = payload as { data?: Partial<EmailStats> }
+    const stats: Partial<EmailStats> = payloadContainer.data ?? (payload as Partial<EmailStats>)
+
+    return {
+      sent: Number(stats.sent || 0),
+      delivered: Number(stats.delivered || 0),
+      opened: Number(stats.opened || 0),
+      clicked: Number(stats.clicked || 0),
+      bounced: Number(stats.bounced || 0),
+      unsubscribed: Number(stats.unsubscribed || 0),
+      openRate: Number(stats.openRate || 0),
+      clickRate: Number(stats.clickRate || 0),
+      conversionRate: stats.conversionRate === undefined ? undefined : Number(stats.conversionRate),
+    }
   }
 
   /**
    * Create an automation sequence
    */
-  async createAutomation(sequence: AutomationSequence) {
-    return this.request('/automations', {
+  async createAutomation(sequence: AutomationSequence): Promise<AutomationSequence> {
+    return this.request<AutomationSequence>('/automations', {
       method: 'POST',
       body: JSON.stringify(sequence),
     })
@@ -201,8 +225,8 @@ class SendsharkService {
   /**
    * Trigger an automation for a specific user
    */
-  async triggerAutomation(automationId: string, recipient: EmailRecipient) {
-    return this.request(`/automations/${automationId}/trigger`, {
+  async triggerAutomation(automationId: string, recipient: EmailRecipient): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>(`/automations/${automationId}/trigger`, {
       method: 'POST',
       body: JSON.stringify({ recipient }),
     })
@@ -218,25 +242,25 @@ class SendsharkService {
     listName?: string // NEW: Can specify list by name instead of ID
     customFields?: Record<string, any>
     tags?: string[]
-  }) {
+  }): Promise<Record<string, unknown>> {
     let finalListId = params.listId
     
     // If listName is provided, find or create the list
     if (params.listName && !params.listId) {
       try {
         // Try to find existing list by name
-        const lists = await this.request('/lists', { method: 'GET' })
-        const existingList = lists?.data?.find((list: any) => list.name === params.listName)
+        const lists = await this.request<{ data?: Array<{ id?: string; name?: string }> }>('/lists', { method: 'GET' })
+        const existingList = lists.data?.find((list) => list.name === params.listName)
         
         if (existingList) {
           finalListId = existingList.id
         } else {
           // Create new list with this name
-          const newList = await this.request('/lists', {
+          const newList = await this.request<{ data?: { id?: string } }>('/lists', {
             method: 'POST',
             body: JSON.stringify({ name: params.listName }),
           })
-          finalListId = newList?.data?.id
+          finalListId = newList.data?.id
         }
       } catch (error) {
         // Log error only in development
@@ -247,7 +271,7 @@ class SendsharkService {
       }
     }
     
-    return this.request('/subscribers', {
+    return this.request<Record<string, unknown>>('/subscribers', {
       method: 'POST',
       body: JSON.stringify({
         ...params,
@@ -274,7 +298,7 @@ class SendsharkService {
       start: Date
       end: Date
     }
-  }) {
+  }): Promise<Record<string, unknown>> {
     const { recipientEmail, funnelId: _funnelId, stats, dateRange } = params
 
     const html = `
@@ -341,7 +365,7 @@ class SendsharkService {
   /**
    * Create default automation sequences for affiliate funnels
    */
-  async setupDefaultAutomations() {
+  async setupDefaultAutomations(): Promise<AutomationSequence[]> {
     // Welcome sequence for new subscribers
     const welcomeSequence: AutomationSequence = {
       name: 'Welcome Sequence',
@@ -401,7 +425,7 @@ class SendsharkService {
     }
 
     const sequences = [welcomeSequence, abandonedCartSequence]
-    const results = []
+    const results: AutomationSequence[] = []
 
     for (const sequence of sequences) {
       const result = await this.createAutomation(sequence)

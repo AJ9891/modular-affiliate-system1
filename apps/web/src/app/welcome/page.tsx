@@ -26,13 +26,25 @@ export default function WelcomePage() {
 
         const { data: profile, error } = await supabase
           .from('users')
-          .select('onboarding_seen, onboarding_step')
+          .select('onboarding_seen, onboarding_step, onboarding_complete, is_admin')
           .eq('id', user.id)
           .maybeSingle()
 
-        if (!error && profile?.onboarding_seen) {
-          const step = profile.onboarding_step ?? 0
-          router.replace(step < ONBOARDING_COMPLETE ? '/launchpad' : '/cockpit')
+        if (!error && profile) {
+          const isAdmin = Boolean(profile.is_admin)
+          const step = Number(profile.onboarding_step ?? 0)
+          const onboardingComplete = Boolean(profile.onboarding_complete) || step >= ONBOARDING_COMPLETE
+
+          if (isAdmin || onboardingComplete) {
+            router.replace('/cockpit')
+            return
+          }
+
+          if (profile.onboarding_seen) {
+            router.replace('/launchpad')
+            return
+          }
+
           return
         }
 

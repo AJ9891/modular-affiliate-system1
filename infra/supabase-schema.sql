@@ -53,6 +53,28 @@ create table if not exists public.funnels (
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- Funnel generation lifecycle
+create table if not exists public.funnel_generations (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.users(id) on delete cascade not null,
+  funnel_id uuid references public.funnels(funnel_id) on delete set null,
+  source_url text not null,
+  status text not null check (status in ('running', 'completed', 'failed')) default 'running',
+  started_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  completed_at timestamp with time zone,
+  error_message text
+);
+
+-- Generated assets per generation run
+create table if not exists public.generated_assets (
+  id uuid default gen_random_uuid() primary key,
+  generation_id uuid references public.funnel_generations(id) on delete cascade not null,
+  asset_type text not null check (asset_type in ('landing', 'email_sequence', 'offer_signals', 'raw')),
+  content_json jsonb,
+  content_text text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
 -- Pages (individual funnel pages)
 create table if not exists public.pages (
   id uuid default gen_random_uuid() primary key,
@@ -207,6 +229,8 @@ alter table public.users enable row level security;
 alter table public.niches enable row level security;
 alter table public.offers enable row level security;
 alter table public.funnels enable row level security;
+alter table public.funnel_generations enable row level security;
+alter table public.generated_assets enable row level security;
 alter table public.pages enable row level security;
 alter table public.clicks enable row level security;
 alter table public.conversions enable row level security;
@@ -232,6 +256,34 @@ begin
   if not exists (select 1 from pg_policies where tablename = 'funnels' and policyname = 'Users can manage their own funnels') then
     create policy "Users can manage their own funnels" on public.funnels for all using (auth.uid() = user_id);
   end if;
+
+  if not exists (select 1 from pg_policies where tablename = 'funnel_generations' and policyname = 'Users can manage their own funnel generations') then
+    create policy "Users can manage their own funnel generations"
+      on public.funnel_generations
+      for all
+      using (auth.uid() = user_id)
+      with check (auth.uid() = user_id);
+  end if;
+
+  if not exists (select 1 from pg_policies where tablename = 'generated_assets' and policyname = 'Users can manage generated assets for own generations') then
+    create policy "Users can manage generated assets for own generations"
+      on public.generated_assets
+      for all
+      using (
+        exists (
+          select 1 from public.funnel_generations
+          where funnel_generations.id = generated_assets.generation_id
+            and funnel_generations.user_id = auth.uid()
+        )
+      )
+      with check (
+        exists (
+          select 1 from public.funnel_generations
+          where funnel_generations.id = generated_assets.generation_id
+            and funnel_generations.user_id = auth.uid()
+        )
+      );
+  end if;
   
   if not exists (select 1 from pg_policies where tablename = 'offers' and policyname = 'Anyone can view active offers') then
     create policy "Anyone can view active offers" on public.offers for select using (active = true);
@@ -256,6 +308,12 @@ create index if not exists idx_conversions_click_id on public.conversions(click_
 create index if not exists idx_conversions_converted_at on public.conversions(converted_at);
 create index if not exists idx_funnels_user_id on public.funnels(user_id);
 create index if not exists idx_funnels_niche_id on public.funnels(niche_id);
+create index if not exists idx_funnel_generations_user_id on public.funnel_generations(user_id);
+create index if not exists idx_funnel_generations_funnel_id on public.funnel_generations(funnel_id);
+create index if not exists idx_funnel_generations_status on public.funnel_generations(status);
+create index if not exists idx_funnel_generations_started_at on public.funnel_generations(started_at desc);
+create index if not exists idx_generated_assets_generation_id on public.generated_assets(generation_id);
+create index if not exists idx_generated_assets_type on public.generated_assets(asset_type);
 create index if not exists idx_leads_email on public.leads(email);
 create index if not exists idx_leads_funnel_id on public.leads(funnel_id);
 create index if not exists idx_leads_created_at on public.leads(created_at);

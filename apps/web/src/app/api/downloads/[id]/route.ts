@@ -30,6 +30,8 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const email = searchParams.get('email');
     const funnelId = searchParams.get('funnelId');
+    const generationId = searchParams.get('generationId');
+    const variantId = searchParams.get('variantId');
 
     // If email is required and not provided, return error
     if (download.require_email && !email) {
@@ -70,7 +72,10 @@ export async function GET(
       try {
         await supabase.from('leads').insert({
           email: email,
+          user_id: download.user_id || null,
           funnel_id: funnelId || null,
+          generation_id: generationId || null,
+          variant_id: variantId || null,
           source: 'download',
           metadata: {
             download_id: id,

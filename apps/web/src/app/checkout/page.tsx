@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { PLAN_MONTHLY_PRICE_USD } from '@/lib/billing/plans'
 
 export const runtime = 'edge'
 
@@ -21,7 +22,7 @@ export default function CheckoutPage() {
   const plans = {
     starter: {
       name: 'Starter',
-      price: 30,
+      price: PLAN_MONTHLY_PRICE_USD.starter,
       features: [
         '1 Active Funnel',
         'Basic Templates',
@@ -32,7 +33,7 @@ export default function CheckoutPage() {
     },
     pro: {
       name: 'Pro',
-      price: 45,
+      price: PLAN_MONTHLY_PRICE_USD.pro,
       features: [
         'Unlimited Funnels',
         'Premium Templates',
@@ -44,7 +45,7 @@ export default function CheckoutPage() {
     },
     agency: {
       name: 'Agency',
-      price: 60,
+      price: PLAN_MONTHLY_PRICE_USD.agency,
       features: [
         'Everything in Pro',
         'White Label Options',

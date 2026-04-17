@@ -13,9 +13,9 @@ export default function Footer() {
   }
 
   return (
-    <footer className="bg-gray-900 text-gray-300 py-6 mt-auto">
-      <div className="container mx-auto px-4 text-center">
-        <p className="text-sm">
+    <footer className="relative mt-auto border-t border-[var(--border-subtle)] bg-[linear-gradient(180deg,rgba(4,8,14,0.15),rgba(4,8,14,0.55))] py-6 text-text-secondary backdrop-blur-xl">
+      <div className="cockpit-container text-center">
+        <p className="text-sm tracking-wide">
           © 2025 Launchpad 4 Success · An independent marketing platform by Abbigal Jurek
         </p>
       </div>

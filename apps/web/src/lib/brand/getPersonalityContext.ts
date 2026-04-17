@@ -18,6 +18,7 @@ export function getPersonalityContext(pathname?: string): Personality {
 
   // AI-related pages use glitch
   if (pathname?.includes('/ai-generator') ||
+      pathname?.includes('/link-funnel') ||
       pathname?.includes('/chat') ||
       pathname?.includes('/ai-')) {
     return "glitch"

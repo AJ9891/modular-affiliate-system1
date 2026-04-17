@@ -20,6 +20,8 @@ export async function GET(
     
     // Extract tracking parameters
     const funnelId = searchParams.get('aff_funnel')
+    const generationId = searchParams.get('aff_generation')
+    const variantId = searchParams.get('aff_variant')
     const utmSource = searchParams.get('utm_source')
     const utmMedium = searchParams.get('utm_medium')
     const utmCampaign = searchParams.get('utm_campaign')
@@ -40,17 +42,33 @@ export async function GET(
 
     // Generate unique click ID
     const clickId = crypto.randomUUID()
+    let ownerUserId: string | null = null
+    if (funnelId) {
+      const { data: funnelOwner } = await supabase
+        .from('funnels')
+        .select('user_id')
+        .eq('funnel_id', funnelId)
+        .maybeSingle()
+      ownerUserId = funnelOwner?.user_id || null
+    }
+    const forwarded = request.headers.get('x-forwarded-for')
+    const ipAddress = forwarded ? forwarded.split(',')[0]?.trim() : request.headers.get('x-real-ip')
 
     // Track the click
     const { error: clickError } = await supabase!
       .from('clicks')
       .insert({
         click_id: clickId,
+        user_id: ownerUserId,
         offer_id: offerId,
         funnel_id: funnelId,
+        generation_id: generationId || null,
+        variant_id: variantId || null,
         utm_source: utmSource,
         utm_medium: utmMedium,
         utm_campaign: utmCampaign,
+        user_agent: request.headers.get('user-agent') || null,
+        ip_address: ipAddress || null,
         clicked_at: new Date().toISOString(),
       })
 

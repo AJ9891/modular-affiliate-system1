@@ -24,14 +24,14 @@ export default function FlightDeckMap() {
     {
       id: 'propulsion',
       label: 'Funnels',
-      href: '/builder',
+      href: '/link-funnel',
       icon: ChevronsUpDown,
       style: { top: '30%', left: '50%' }
     },
     {
       id: 'intelligence',
       label: 'BrandBrain + Vision',
-      href: '/ai-generator',
+      href: '/link-funnel',
       icon: Brain,
       style: { top: '20%', left: '85%' }
     },

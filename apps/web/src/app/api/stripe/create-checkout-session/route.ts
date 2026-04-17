@@ -1,5 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe, STRIPE_PLANS, PlanType } from '@/lib/stripe'
+import { getExpectedPlanAmountCents } from '@/lib/billing/plans'
+
+const verifiedPlanPrices = new Set<string>()
+
+async function assertPlanPriceMatchesLanding(plan: PlanType, priceId: string) {
+  if (!stripe) {
+    throw new Error('Stripe not configured')
+  }
+
+  const cacheKey = `${plan}:${priceId}`
+  if (verifiedPlanPrices.has(cacheKey)) return
+
+  const expectedAmountCents = getExpectedPlanAmountCents(plan)
+  const price = await stripe.prices.retrieve(priceId)
+
+  const isExpectedPrice =
+    price.active &&
+    price.currency === 'usd' &&
+    price.type === 'recurring' &&
+    price.recurring?.interval === 'month' &&
+    price.unit_amount === expectedAmountCents
+
+  if (!isExpectedPrice) {
+    throw new Error(
+      `Configured Stripe price for ${plan} does not match landing-page pricing ($${expectedAmountCents / 100}/mo).`
+    )
+  }
+
+  verifiedPlanPrices.add(cacheKey)
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,7 +50,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const planConfig = STRIPE_PLANS[plan as PlanType]
+    const selectedPlan = plan as PlanType
+    const planConfig = STRIPE_PLANS[selectedPlan]
 
     if (!planConfig.priceId) {
       return NextResponse.json(
@@ -28,6 +59,8 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
+
+    await assertPlanPriceMatchesLanding(selectedPlan, planConfig.priceId)
 
     // Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
@@ -45,12 +78,12 @@ export async function POST(request: NextRequest) {
       customer_email: email,
       metadata: {
         userId,
-        plan,
+        plan: selectedPlan,
       },
       subscription_data: {
         metadata: {
           userId,
-          plan,
+          plan: selectedPlan,
         },
       },
     })

@@ -4,11 +4,12 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Check } from 'lucide-react'
 import { useUIExpression } from '@/lib/brand-brain/useUIExpression'
+import { PLAN_MONTHLY_PRICE_USD } from '@/lib/billing/plans'
 
 const tiers = [
   {
     name: 'Starter',
-    price: '$30/mo',
+    monthlyPriceUsd: PLAN_MONTHLY_PRICE_USD.starter,
     description: 'For solo operators validating first offers.',
     cta: '/checkout?plan=starter',
     features: [
@@ -20,7 +21,7 @@ const tiers = [
   },
   {
     name: 'Pro',
-    price: '$45/mo',
+    monthlyPriceUsd: PLAN_MONTHLY_PRICE_USD.pro,
     description: 'For serious growth with AI workflows and velocity.',
     cta: '/checkout?plan=pro',
     featured: true,
@@ -34,7 +35,7 @@ const tiers = [
   },
   {
     name: 'Agency',
-    price: '$60/mo',
+    monthlyPriceUsd: PLAN_MONTHLY_PRICE_USD.agency,
     description: 'For teams running multiple offers and client systems.',
     cta: '/checkout?plan=agency',
     features: [
@@ -71,8 +72,8 @@ export function HeroSection() {
             <Link href="/get-started" className="btn-launch-premium px-7 py-3 text-sm">
               Initiate Launch
             </Link>
-            <Link href="/builder-v2" className="btn-secondary-premium px-7 py-3 text-sm">
-              View Demo
+            <Link href="/ai-generator" className="btn-secondary-premium px-7 py-3 text-sm">
+              Open AI Builder
             </Link>
           </div>
         </motion.div>
@@ -99,7 +100,7 @@ export function HeroSection() {
                   </span>
                 ) : null}
               </div>
-              <h2 className="text-3xl font-semibold text-text-primary">{tier.price}</h2>
+              <h2 className="text-3xl font-semibold text-text-primary">${tier.monthlyPriceUsd}/mo</h2>
               <p className="mt-2 text-[14px] leading-[1.6] text-text-secondary">{tier.description}</p>
               <ul className="mt-5 space-y-2 text-[14px] text-text-secondary">
                 {tier.features.map((feature) => (

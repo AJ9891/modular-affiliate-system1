@@ -51,7 +51,7 @@ const sections: NavigationSection[] = [
       { name: 'Cockpit', href: '/cockpit', icon: Radar },
       { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
       { name: 'Funnels', href: '/funnels', icon: PenSquare },
-      { name: 'Visual Builder', href: '/visual-builder', icon: Sparkles },
+      { name: 'AI Link Builder', href: '/link-funnel', icon: Sparkles },
       { name: 'Templates', href: '/templates', icon: FileStack },
     ],
   },
@@ -124,9 +124,10 @@ export default function Sidebar() {
           .eq('id', user.id)
           .maybeSingle()
 
-        setOnboardingComplete(Boolean(profile?.onboarding_complete))
-        setOnboardingStep(Number(profile?.onboarding_step ?? 0))
-        setIsAdmin(Boolean(profile?.is_admin))
+        const admin = Boolean(profile?.is_admin)
+        setOnboardingComplete(Boolean(profile?.onboarding_complete) || admin)
+        setOnboardingStep(admin ? ONBOARDING_COMPLETE : Number(profile?.onboarding_step ?? 0))
+        setIsAdmin(admin)
       } catch (error) {
         console.error('Error checking profile state for sidebar:', error)
       } finally {
