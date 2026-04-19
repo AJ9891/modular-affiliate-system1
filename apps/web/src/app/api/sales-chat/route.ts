@@ -12,7 +12,13 @@ function getOpenAI() {
   return new OpenAI({ apiKey })
 }
 
-const supabase = createServiceRoleClient()
+function getSupabase() {
+  try {
+    return createServiceRoleClient()
+  } catch {
+    return null
+  }
+}
 
 // Fallback system prompt if BrandBrain is not configured
 const FALLBACK_SYSTEM_PROMPT = `You are Launchpad 4 Success, an AI sales assistant for the Launchpad 4 Success platform.
@@ -214,6 +220,7 @@ Trust builds conversions.`
 export async function POST(req: NextRequest) {
   try {
     const { messages, sessionId, userId } = await req.json()
+    const supabase = getSupabase()
 
     // Minimal validation
     if (!Array.isArray(messages)) {
@@ -223,7 +230,7 @@ export async function POST(req: NextRequest) {
     // Get BrandBrain system prompt dynamically
     let systemPrompt = FALLBACK_SYSTEM_PROMPT
     try {
-      if (userId) {
+      if (userId && supabase) {
         // Get active brand profile from database
         const { data: brandProfile, error: profileError } = await supabase
           .from('brand_profiles')
@@ -299,13 +306,15 @@ export async function POST(req: NextRequest) {
 
           // Log conversation for analytics / training
           try {
-            await supabase.from('chat_messages').insert({
-              session_id: sessionId,
-              user_id: userId ?? null,
-              role: 'assistant',
-              content: cleanContent || fullResponse,
-              type: 'sales',
-            })
+            if (supabase) {
+              await supabase.from('chat_messages').insert({
+                session_id: sessionId,
+                user_id: userId ?? null,
+                role: 'assistant',
+                content: cleanContent || fullResponse,
+                type: 'sales',
+              })
+            }
           } catch (logError) {
             console.warn('Failed to log sales chat message:', logError)
           }

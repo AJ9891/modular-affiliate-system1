@@ -5,11 +5,8 @@ import { log } from '@/lib/log'
 import { headers } from 'next/headers'
 import Stripe from 'stripe'
 import { createServiceRoleClient } from '@/lib/supabase-server'
-import { PlanManager } from '@/lib/plan-manager'
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || ''
-const supabaseAdmin = createServiceRoleClient()
-const planManager = new PlanManager()
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
@@ -96,7 +93,7 @@ async function handleCreditTopup(session: Stripe.Checkout.Session) {
   if (!targetUserId) return
 
   try {
-    const adminClient = supabaseAdmin
+    const adminClient = createServiceRoleClient()
 
     // Get topup record
     const { data: topupData, error: topupErr } = await adminClient
@@ -186,7 +183,7 @@ async function handleCheckoutSessionCompleted(session: any) {
   if (!userId) return
 
   try {
-    const adminClient = supabaseAdmin
+    const adminClient = createServiceRoleClient()
 
     const { error } = await adminClient
       .from('users')
@@ -239,7 +236,7 @@ async function provisionEmailAutomation(userId: string, email: string, plan: str
       console.log(`✅ Email profile provisioned for ${email}`)
       
       // Keep legacy columns for backward compatibility with existing dashboards.
-      const adminClient = supabaseAdmin
+      const adminClient = createServiceRoleClient()
 
       await adminClient
         .from('users')
@@ -297,7 +294,7 @@ async function handleSubscriptionUpdated(subscription: any) {
   if (!customerId) return
 
   try {
-    const adminClient = supabaseAdmin
+    const adminClient = createServiceRoleClient()
 
     const { error } = await adminClient
       .from('users')
@@ -321,7 +318,7 @@ async function handleSubscriptionDeleted(subscription: any) {
   if (!customerId) return
 
   try {
-    const adminClient = supabaseAdmin
+    const adminClient = createServiceRoleClient()
 
     const { error } = await adminClient
       .from('users')
@@ -346,7 +343,7 @@ async function handleInvoicePaymentSucceeded(invoice: any) {
   if (!customerId) return
 
   try {
-    const adminClient = supabaseAdmin
+    const adminClient = createServiceRoleClient()
 
     // Get user info
     const { data: userData } = await adminClient
@@ -384,7 +381,7 @@ async function handleInvoicePaymentFailed(invoice: any) {
   if (!customerId) return
 
   try {
-    const adminClient = supabaseAdmin
+    const adminClient = createServiceRoleClient()
 
     const { error } = await adminClient
       .from('users')
