@@ -4,6 +4,21 @@ import { leadCaptureSchema } from '@/lib/security'
 import { emailService } from '@/lib/email/service'
 import { createSubdomainRouteHandlerClient } from '@/lib/subdomain-auth'
 
+function isRecoverableDbError(issue: unknown): boolean {
+  if (!issue || typeof issue !== 'object') return false
+  const candidate = issue as { code?: string; message?: string }
+  const code = candidate.code || ''
+  const message = (candidate.message || '').toLowerCase()
+  return (
+    code === '42P01' ||
+    code === 'PGRST205' ||
+    code === '42703' ||
+    message.includes('could not find the table') ||
+    message.includes('schema cache') ||
+    message.includes('column')
+  )
+}
+
 /**
  * Lead Capture API Endpoint
  * POST /api/leads/capture - Capture a new lead and trigger automations
@@ -16,6 +31,7 @@ export const POST = withRateLimit(
       const { 
         email, 
         funnel_id,
+        page_path,
         generation_id,
         variant_id,
         source,
@@ -72,6 +88,43 @@ export const POST = withRateLimit(
       if (leadError) {
         console.error('Lead save error:', leadError)
         throw new Error('Failed to save lead')
+      }
+
+      const sessionId = req.cookies.get('lp_session_id')?.value || null
+      const refererPath = (() => {
+        const fromBody = typeof page_path === 'string' ? page_path.trim() : ''
+        if (fromBody) return fromBody
+        const ref = req.headers.get('referer')
+        if (!ref) return null
+        try {
+          return new URL(ref).pathname
+        } catch {
+          return null
+        }
+      })()
+
+      const { error: analyticsError } = await supabase
+        .from('analytics_events')
+        .insert({
+          user_id: ownerUserId,
+          funnel_id,
+          session_id: sessionId,
+          event_type: 'lead_submit',
+          path: refererPath,
+          metadata: {
+            lead_id: lead.id,
+            source: source || null,
+            utm_source: utm_source || null,
+            utm_medium: utm_medium || null,
+            utm_campaign: utm_campaign || null,
+            generation_id: generation_id || null,
+            variant_id: variant_id || null,
+          },
+          occurred_at: new Date().toISOString(),
+        })
+
+      if (analyticsError && !isRecoverableDbError(analyticsError)) {
+        console.warn('Failed to log analytics lead event:', analyticsError)
       }
 
       // Add subscriber to configured email provider with funnel name as list

@@ -2,6 +2,21 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 
+function isRecoverableDbError(issue: unknown): boolean {
+  if (!issue || typeof issue !== 'object') return false
+  const candidate = issue as { code?: string; message?: string }
+  const code = candidate.code || ''
+  const message = (candidate.message || '').toLowerCase()
+  return (
+    code === '42P01' ||
+    code === 'PGRST205' ||
+    code === '42703' ||
+    message.includes('could not find the table') ||
+    message.includes('schema cache') ||
+    message.includes('column')
+  )
+}
+
 export async function POST(request: NextRequest) {
   const cookieStore = await cookies()
   const cookieAdapter = (() => cookieStore) as unknown as () => ReturnType<typeof cookies>
@@ -62,6 +77,29 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 })
+    }
+
+    const sessionId = cookieStore.get('lp_session_id')?.value || null
+    const { error: analyticsError } = await supabase
+      .from('analytics_events')
+      .insert({
+        user_id: ownerUserId,
+        funnel_id: ownerFunnelId,
+        session_id: sessionId,
+        event_type: 'conversion',
+        metadata: {
+          click_id: click_id || null,
+          offer_id: offer_id || null,
+          order_id: order_id || null,
+          amount: amount || null,
+          generation_id: ownerGenerationId || null,
+          variant_id: ownerVariantId || null,
+        },
+        occurred_at: new Date().toISOString(),
+      })
+
+    if (analyticsError && !isRecoverableDbError(analyticsError)) {
+      console.warn('Failed to log analytics conversion event:', analyticsError)
     }
 
     return NextResponse.json({ 

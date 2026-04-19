@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { getDashboardData, type DashboardData } from '@/lib/api/dashboard'
+import { getAlerts, getGrowthSnapshot, getRecommendations } from '@/lib/api/growth-assistant'
+import type { FunnelPerformanceScore, GrowthAlert, GrowthInsight, GrowthRecommendation } from '@/lib/growth-assistant/types'
 import DashboardSkeleton from './DashboardSkeleton'
 import {
   VisitorsPanel,
@@ -11,9 +13,12 @@ import {
   SubscribersPanel,
   TrafficChartPanel,
   FunnelPerformancePanel,
+  PerformanceScorePanel,
   AffiliateEarningsPanel,
   RecentActivityPanel,
-  NotificationsPanel,
+  InsightsPanel,
+  RecommendationsFeedPanel,
+  AlertsPanel,
   QuickActionsPanel,
 } from './panels'
 
@@ -32,6 +37,10 @@ export default function DashboardControlCenter() {
   const [error, setError] = useState<string | null>(null)
   const [refreshSeed, setRefreshSeed] = useState(0)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [funnelScores, setFunnelScores] = useState<FunnelPerformanceScore[]>([])
+  const [insights, setInsights] = useState<GrowthInsight[]>([])
+  const [recommendations, setRecommendations] = useState<GrowthRecommendation[]>([])
+  const [alerts, setAlerts] = useState<GrowthAlert[]>([])
 
   useEffect(() => {
     let active = true
@@ -40,9 +49,40 @@ export default function DashboardControlCenter() {
       try {
         setLoading(true)
         setError(null)
-        const next = await getDashboardData(range)
+        const [dashboardResult, snapshotResult, recommendationsResult, alertsResult] = await Promise.allSettled([
+          getDashboardData(range),
+          getGrowthSnapshot({ range, limit: 30 }),
+          getRecommendations({ range, limit: 30, status: 'open' }),
+          getAlerts({ range, limit: 30, state: 'active' }),
+        ])
         if (!active) return
-        setData(next)
+
+        if (dashboardResult.status === 'rejected') {
+          throw dashboardResult.reason
+        }
+
+        setData(dashboardResult.value)
+
+        if (snapshotResult.status === 'fulfilled') {
+          setInsights(snapshotResult.value.insights)
+          setFunnelScores(snapshotResult.value.funnelScores)
+        } else {
+          setInsights([])
+          setFunnelScores([])
+        }
+
+        if (recommendationsResult.status === 'fulfilled') {
+          setRecommendations(recommendationsResult.value)
+        } else {
+          setRecommendations([])
+        }
+
+        if (alertsResult.status === 'fulfilled') {
+          setAlerts(alertsResult.value)
+        } else {
+          setAlerts([])
+        }
+
         setLastUpdated(new Date())
       } catch (err) {
         if (!active) return
@@ -81,8 +121,12 @@ export default function DashboardControlCenter() {
       items.push({ level: 'info', message: 'No recent events. Verify traffic sources and funnel publishing status.' })
     }
 
+    if (alerts.length > 0) {
+      items.push({ level: 'warning', message: `${alerts.length} active growth alert(s) need review.` })
+    }
+
     return items
-  }, [data])
+  }, [data, alerts.length])
 
   if (loading && !data) {
     return <DashboardSkeleton />
@@ -136,7 +180,7 @@ export default function DashboardControlCenter() {
           <SubscribersPanel subscribers={data?.totals.leads || 0} />
         </section>
 
-        <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-4">
           <TrafficChartPanel sources={data?.sourceBreakdown || []} />
           <FunnelPerformancePanel
             funnels={data?.totals.funnels || 0}
@@ -144,13 +188,32 @@ export default function DashboardControlCenter() {
             conversions={data?.totals.conversions || 0}
             conversionRate={data?.totals.conversionRate || 0}
           />
+          <PerformanceScorePanel scores={funnelScores} />
           <AffiliateEarningsPanel revenue={data?.totals.revenue || 0} conversionRate={data?.totals.conversionRate || 0} />
         </section>
 
-        <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-4">
           <RecentActivityPanel items={data?.recentActivity || []} />
-          <NotificationsPanel notifications={notifications} />
+          <InsightsPanel insights={insights} />
+          <RecommendationsFeedPanel recommendations={recommendations} />
+          <AlertsPanel alerts={alerts} />
+        </section>
+
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <QuickActionsPanel />
+          <div className="min-h-[1px]">
+            {/* Keep existing notice stream for compatibility while Alerts panel handles critical signals. */}
+            <div className="h-full rounded-lg border border-[var(--border-subtle)] p-4">
+              <p className="mb-2 text-sm font-semibold text-text-primary">System Notices</p>
+              <div className="space-y-2">
+                {notifications.map((notification, index) => (
+                  <div key={`${notification.message}-${index}`} className="rounded-lg border border-[var(--border-subtle)] px-3 py-2 text-xs text-text-secondary">
+                    {notification.message}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </section>
       </div>
     </main>

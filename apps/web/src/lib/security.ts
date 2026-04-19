@@ -25,6 +25,7 @@ export const funnelSchema = z.object({
 export const leadCaptureSchema = z.object({
   email: emailSchema,
   funnel_id: uuidSchema.optional(),
+  page_path: z.string().max(500).optional(),
   generation_id: uuidSchema.optional(),
   variant_id: z.string().max(100).optional(),
   source: z.string().max(50).optional(),
