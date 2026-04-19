@@ -1,55 +1,52 @@
-# Modular Affiliate System - Vercel Deployment
+# Deployment (Guarded)
 
-This project is configured for deployment to Vercel.
+This repository is locked to a single Vercel target:
 
-## Domain
+- Team scope: `aj9891s-projects`
+- Org ID: `team_S1WvHxaHSkDlH8DJ0HOT61Ab`
+- Project name: `modular-affiliate-system1`
+- Project ID: `prj_j1izlrAzNKk3KX5NJlRDjQ8R84SJ`
 
-- Production: <https://launchpad4sucess.pro>
+## Canonical commands
 
-## Deploy Steps
-
-1. **Install Vercel CLI** (if not already installed):
-
-   ```bash
-   npm i -g vercel
-   ```
-
-2. **Login to Vercel**:
+1. Validate local Vercel link context:
 
    ```bash
-   vercel login
+   npm run deploy:check
    ```
 
-3. **Link to your project**:
+2. Deploy preview:
 
    ```bash
-   cd apps/web
-   vercel link
+   npm run deploy:preview
    ```
 
-   - Select your team/account
-   - Link to existing project or create new one
-   - Set the domain to: launchpad4sucess.pro
-
-4. **Add Environment Variables** in Vercel Dashboard:
-   - Go to: <https://vercel.com/your-project/settings/environment-variables>
-   - Add:
-     - `NEXT_PUBLIC_SUPABASE_URL` = <https://urwrbjejcozbzgknbuhn.supabase.co>
-     - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = (your anon key)
-     - `NEXT_PUBLIC_APP_URL` = <https://launchpad4sucess.pro>
-
-5. **Deploy**:
+3. Deploy production:
 
    ```bash
-   vercel --prod
+   npm run deploy
    ```
 
-## Auto-Deploy from GitHub
+## How the guard works
 
-The GitHub Actions workflow in `.github/workflows/ci-cd.yml` will automatically deploy on push to main branch once you add these secrets to your GitHub repository:
+`scripts/vercel-safe-deploy.sh` reads `.vercel/project.json` and exits with an error if any of these differ from expected values:
 
-- `VERCEL_TOKEN`
-- `VERCEL_ORG_ID`
-- `VERCEL_PROJECT_ID`
+- `orgId`
+- `projectId`
+- `projectName`
 
-Get these from: <https://vercel.com/account/tokens>
+If they do not match, deploy is blocked and it prints the exact `vercel link` command to fix the link.
+
+## If link check fails
+
+Run:
+
+```bash
+vercel link --yes --scope "aj9891s-projects" --project "modular-affiliate-system1"
+```
+
+Then rerun:
+
+```bash
+npm run deploy:check
+```
