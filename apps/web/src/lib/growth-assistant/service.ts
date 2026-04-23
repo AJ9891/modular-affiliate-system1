@@ -500,11 +500,13 @@ export async function generateGrowthAssistantResult(
       reader = createServiceRoleClient()
     } catch {
       const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-      const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-      if (!url || !anonKey) {
+      const publicKey =
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      if (!url || !publicKey) {
         throw new Error('Supabase credentials not configured')
       }
-      reader = createClient(url, anonKey, {
+      reader = createClient(url, publicKey, {
         auth: {
           autoRefreshToken: false,
           persistSession: false,

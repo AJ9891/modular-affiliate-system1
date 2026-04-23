@@ -5,7 +5,9 @@
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabasePublicKey =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 // Fail fast: throw BEFORE React tries to render
 if (!supabaseUrl) {
@@ -16,15 +18,15 @@ if (!supabaseUrl) {
   )
 }
 
-if (!supabaseAnonKey) {
+if (!supabasePublicKey) {
   throw new Error(
-    '[CLIENT INIT FAILED] NEXT_PUBLIC_SUPABASE_ANON_KEY not set.\n' +
-    'Check: .env.local exists and has NEXT_PUBLIC_SUPABASE_ANON_KEY=...\n' +
+    '[CLIENT INIT FAILED] Supabase public key not set.\n' +
+    'Check: .env.local has NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=... or NEXT_PUBLIC_SUPABASE_ANON_KEY=...\n' +
     'This is NOT a browser/server issue - your config is missing.'
   )
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient(supabaseUrl, supabasePublicKey, {
   auth: {
     flowType: 'pkce',
     autoRefreshToken: true,

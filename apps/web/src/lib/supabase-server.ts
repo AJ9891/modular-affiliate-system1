@@ -1,41 +1,44 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { createClient } from '@supabase/supabase-js'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
+import { createClient as createSsrServerClient } from '@/utils/supabase/server'
 
 type SupabaseEnv = {
   url: string
-  anonKey: string
+  publicKey: string
   serviceKey?: string
 }
 
 function loadSupabaseEnv(requireServiceRole = false): SupabaseEnv {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const publicKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  if (!url || !anonKey) {
-    throw new Error('[Supabase] NEXT_PUBLIC_SUPABASE_URL/ANON_KEY missing')
+  if (!url || !publicKey) {
+    throw new Error(
+      '[Supabase] NEXT_PUBLIC_SUPABASE_URL/public key missing (set PUBLISHABLE_KEY or ANON_KEY)'
+    )
   }
 
   if (requireServiceRole && !serviceKey) {
     throw new Error('[Supabase] SUPABASE_SERVICE_ROLE_KEY missing')
   }
 
-  return { url, anonKey, serviceKey }
+  return { url, publicKey, serviceKey }
 }
 
 // Server-side helper for route handlers (uses Next cookies)
 export async function createServerRouteClient() {
   const cookieStore = await cookies()
-  const cookieAdapter = (() => cookieStore) as unknown as () => ReturnType<typeof cookies>
-  return createRouteHandlerClient({ cookies: cookieAdapter })
+  return createSsrServerClient(cookieStore)
 }
 
 // Service-role client (never exposed to the browser)
 export function createServiceRoleClient() {
   const { url, serviceKey } = loadSupabaseEnv(true)
 
-  return createClient(url, serviceKey!, {
+  return createSupabaseClient(url, serviceKey!, {
     auth: {
       autoRefreshToken: false,
       persistSession: false
@@ -45,18 +48,7 @@ export function createServiceRoleClient() {
 
 // Backward compatible server client that stores session in cookies
 export async function createServerClient() {
-  const { url, anonKey } = loadSupabaseEnv()
-  const cookieStore = await cookies()
-
-  return createClient(url, anonKey, {
-    auth: {
-      storage: {
-        getItem: (key: string) => cookieStore.get(key)?.value ?? null,
-        setItem: (key: string, value: string) => { cookieStore.set(key, value) },
-        removeItem: (key: string) => { cookieStore.delete(key) },
-      },
-    },
-  })
+  return createServerRouteClient()
 }
 
 export { loadSupabaseEnv }

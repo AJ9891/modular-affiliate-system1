@@ -20,8 +20,8 @@ const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Migration order (explicit for safety)
-const MIGRATION_ORDER = [
+// Legacy migrations that must run first in this order.
+const LEGACY_MIGRATION_ORDER = [
   'add_admin_flag.sql',
   'add_domain_fields.sql',
   'add_onboarding_fields.sql',
@@ -34,11 +34,11 @@ const MIGRATION_ORDER = [
   'add_ai_chat_only.sql',
   'add_ai_support_chat.sql',
   'add_brand_modes.sql',
-  'add_brand_brain_tables.sql',
+  '001_add_brand_brain_tables.sql',
   'optimize_rls_and_performance.sql',
   'add_funnel_rls_policies.sql',
   'update_brand_modes_voice_tone.sql',
-  'fix_rls_warnings.sql'  // Comprehensive RLS fix
+  'fix_rls_warnings.sql',
 ];
 
 // Colors for terminal output
@@ -70,6 +70,33 @@ function validateEnvironment() {
   }
 
   log('✓ Environment variables validated', 'green');
+}
+
+function resolveMigrationOrder() {
+  const files = fs
+    .readdirSync(MIGRATIONS_DIR, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.sql'))
+    .map((entry) => entry.name)
+    .sort((a, b) => a.localeCompare(b));
+
+  const seen = new Set();
+  const ordered = [];
+
+  for (const migration of LEGACY_MIGRATION_ORDER) {
+    if (files.includes(migration) && !seen.has(migration)) {
+      ordered.push(migration);
+      seen.add(migration);
+    }
+  }
+
+  for (const migration of files) {
+    if (!seen.has(migration)) {
+      ordered.push(migration);
+      seen.add(migration);
+    }
+  }
+
+  return ordered;
 }
 
 async function executeSQL(sql, migrationName) {
@@ -132,9 +159,6 @@ async function executeSQLDirect(sql, migrationName) {
       return;
     }
 
-    // Use the SQL endpoint
-    const apiUrl = `https://${projectRef}.supabase.co/rest/v1/rpc`;
-    
     // We need to create a helper function in Supabase first
     // For now, let's just log the SQL
     log(`  → Executing ${sql.split('\n').length} lines of SQL...`, 'cyan');
@@ -197,6 +221,8 @@ async function createMigrationTable() {
 }
 
 async function main() {
+  const migrationOrder = resolveMigrationOrder();
+
   log('\n' + '='.repeat(60), 'cyan');
   log('  Supabase Migration Runner', 'bright');
   log('='.repeat(60), 'cyan');
@@ -205,7 +231,7 @@ async function main() {
   
   log(`\n📍 Supabase URL: ${SUPABASE_URL}`, 'blue');
   log(`📂 Migrations directory: ${MIGRATIONS_DIR}`, 'blue');
-  log(`📋 Total migrations: ${MIGRATION_ORDER.length}`, 'blue');
+  log(`📋 Total migrations: ${migrationOrder.length}`, 'blue');
 
   await createMigrationTable();
 
@@ -215,7 +241,7 @@ async function main() {
   let failCount = 0;
   let skipCount = 0;
 
-  for (const migration of MIGRATION_ORDER) {
+  for (const migration of migrationOrder) {
     const result = await applyMigration(migration);
     
     if (result) {

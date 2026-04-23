@@ -64,20 +64,15 @@ node apply-migrations.js
 
 ## Migration Order
 
-Migrations must be applied in this exact order:
+Migration runners now build the execution plan automatically:
 
-1. `add_admin_flag.sql` - Adds admin flag to users
-2. `add_domain_fields.sql` - Adds subdomain, custom domain, Stripe fields
-3. `add_onboarding_fields.sql` - Adds onboarding tracking fields
-4. `add_slug_fields.sql` - Adds slug fields to funnels/pages
-5. `add_max_launchpads.sql` - Adds max launchpads limit
-6. `add_affiliate_clicks.sql` - Adds affiliate click tracking
-7. `add_stripe_connect.sql` - Adds Stripe Connect support
-8. `add_team_collaboration.sql` - Adds team collaboration tables
-9. `add_downloads_tables.sql` - Adds download/lead magnet support
-10. `add_ai_chat_only.sql` - Adds AI chat tables (if needed)
-11. `add_ai_support_chat.sql` - Adds AI support chat (if needed)
-12. `optimize_rls_and_performance.sql` - **Run Last** - Optimizes RLS policies and indexes
+1. Run the legacy core migrations in fixed dependency order:
+   `add_admin_flag.sql` → `add_domain_fields.sql` → `add_onboarding_fields.sql` → `add_slug_fields.sql` → `add_max_launchpads.sql` → `add_affiliate_clicks.sql` → `add_stripe_connect.sql` → `add_team_collaboration.sql` → `add_downloads_tables.sql` → `add_ai_chat_only.sql` → `add_ai_support_chat.sql` → `add_brand_modes.sql` → `001_add_brand_brain_tables.sql` → `optimize_rls_and_performance.sql` → `add_funnel_rls_policies.sql` → `update_brand_modes_voice_tone.sql` → `fix_rls_warnings.sql`
+2. Append all remaining `infra/migrations/*.sql` files in lexicographic order.
+
+This allows timestamped files such as `20260211_*` and `20260419_*` to be picked up automatically without editing runner scripts each time.
+
+If you apply manually in SQL Editor, follow the same rule: legacy core first, then the remaining files by filename order.
 
 ## What Each Migration Does
 
