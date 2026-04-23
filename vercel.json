@@ -3,5 +3,11 @@
   "installCommand": "npm install",
   "buildCommand": "cd apps/web && npm run build && node scripts/ensure-middleware-nft.mjs",
   "outputDirectory": "apps/web/.next",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/email/autoresponder/run",
+      "schedule": "*/5 * * * *"
+    }
+  ]
 }

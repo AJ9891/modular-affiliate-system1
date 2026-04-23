@@ -27,8 +27,8 @@
 │  │                   SERVICES LAYER                          │  │
 │  │                                                            │  │
 │  │  ┌────────────┐ ┌────────────┐ ┌────────────┐           │  │
-│  │  │ Supabase   │ │ Sendshark  │ │  Stripe    │           │  │
-│  │  │  Service   │ │  Service   │ │  Service   │           │  │
+│  │  │ Supabase   │ │Autoresponder│ │  Stripe    │           │  │
+│  │  │  Service   │ │ + SES      │ │  Service   │           │  │
 │  │  └────────────┘ └────────────┘ └────────────┘           │  │
 │  │  ┌────────────┐ ┌────────────┐                           │  │
 │  │  │  OpenAI    │ │  Tracking  │                           │  │
@@ -39,8 +39,8 @@
                 │           │           │           │
                 ▼           ▼           ▼           ▼
      ┌──────────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐
-     │   Supabase   │ │Sendshark│ │ Stripe  │ │ OpenAI  │
-     │  (Database)  │ │  (Email)│ │(Payment)│ │  (AI)   │
+     │   Supabase   │ │Autoresp.│ │ Stripe  │ │ OpenAI  │
+     │  (Database)  │ │ + SES   │ │(Payment)│ │  (AI)   │
      └──────────────┘ └─────────┘ └─────────┘ └─────────┘
 ```
 
@@ -64,7 +64,7 @@
 │   POST /api/leads/capture            │
 │                                      │
 │   1. Save to 'leads' table           │
-│   2. Add to Sendshark subscribers    │
+│   2. Add to email subscribers table  │
 │   3. Tag with funnel & source        │
 │   4. Trigger welcome automation      │
 └──────┬───────────────────────────────┘
@@ -73,7 +73,7 @@
        │               │
        ▼               ▼
 ┌─────────────┐  ┌──────────────┐
-│  Supabase   │  │  Sendshark   │
+│  Supabase   │  │Autoresponder │
 │   Database  │  │              │
 │             │  │  • Subscriber│
 │  • Lead     │  │    Added     │
@@ -190,10 +190,10 @@
          │
          ▼
 ┌──────────────────────────────┐
-│  Sendshark Service           │
+│  Email Service               │
 │                              │
 │  1. Create campaign          │
-│  2. Upload recipients        │
+│  2. Queue/send recipients    │
 │  3. Schedule/Send            │
 │  4. Return campaign ID       │
 └────────┬─────────────────────┘
@@ -303,8 +303,8 @@
     │              │              │                  │
     ▼              ▼              ▼                  ▼
 ┌─────────┐  ┌──────────┐  ┌─────────┐      ┌──────────┐
-│Supabase │  │Sendshark │  │ Stripe  │      │  OpenAI  │
-│(Database│  │  (Email) │  │(Payment)│      │   (AI)   │
+│Supabase │  │Autoresp. │  │ Stripe  │      │  OpenAI  │
+│(Database│  │ + SES    │  │(Payment)│      │   (AI)   │
 └─────────┘  └──────────┘  └─────────┘      └──────────┘
 ```
 
@@ -314,7 +314,7 @@
 |-----------|-----------|---------|
 | Frontend | Next.js 14 | UI & Routing |
 | Database | Supabase | Data Storage & Auth |
-| Email | Sendshark | Campaigns & Automation |
+| Email | Built-in autoresponder + SES | Campaigns & Automation |
 | Payments | Stripe | Subscriptions |
 | AI | OpenAI | Content Generation |
 | Hosting | Vercel | Deployment |

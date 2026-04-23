@@ -192,7 +192,7 @@ The database RLS policies automatically enforce permissions:
 
 ### Potential Features
 
-1. **Sendshark Integration** - Actual email delivery
+1. **Email Integration** - Built-in autoresponder with SES delivery
 2. **Team Analytics** - Per-member performance
 3. **Granular Permissions** - Funnel-level access control
 4. **Team Workspaces** - Separate environments

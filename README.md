@@ -13,7 +13,7 @@ A complete, production-ready affiliate marketing platform combining powerful fun
 - **AI Content Generation** - Powered by OpenAI for headlines, copy, and full pages
 - **Lead Magnets** - Upload ebooks, PDFs, and digital downloads with email capture
 
-### Email Marketing (Sendshark Integration)
+### Email Marketing (Built-In Autoresponder + SES)
 
 - **Automated Sequences** - Welcome series, abandoned cart recovery
 - **Campaign Management** - One-off broadcasts and scheduled campaigns
@@ -79,6 +79,7 @@ OPENAI_API_KEY=sk-xxx
 # Email
 EMAIL_PROVIDER=autoresponder
 AUTORESPONDER_CRON_SECRET=replace_with_strong_secret
+CRON_SECRET=replace_with_same_strong_secret
 ```
 
 ### 3. Database Setup
@@ -124,6 +125,7 @@ Visit:
 - `GET /api/email/templates` - List email templates
 - `POST /api/email/automation` - Create automation sequences
 - `POST /api/email/reports` - Send analytics reports
+- `GET/POST /api/email/autoresponder/run` - Run queued autoresponder jobs (cron/secured)
 
 ### Lead Management
 
@@ -147,7 +149,7 @@ Visit:
 - **UI**: Tailwind CSS + Lucide Icons
 - **Backend**: Supabase (PostgreSQL + Auth)
 - **Payments**: Stripe
-- **Email**: Sendshark
+- **Email**: Built-in autoresponder + AWS SES transport
 - **AI**: OpenAI GPT-4
 - **Deployment**: Vercel
 
@@ -199,7 +201,7 @@ npm run start
 ## 📈 Roadmap
 
 - [x] Visual funnel builder
-- [x] Sendshark email integration
+- [x] Built-in autoresponder email integration
 - [x] Lead capture automation
 - [x] Analytics dashboard
 - [x] AI content generation

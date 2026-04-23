@@ -154,7 +154,7 @@ export default function SettingsWorkspace() {
               <p>Stripe: configured via `STRIPE_SECRET_KEY`</p>
               <p>Email provider: `EMAIL_PROVIDER` (`autoresponder` or `ses`)</p>
               <p>SES: `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`</p>
-              <p>Autoresponder queue auth: `AUTORESPONDER_CRON_SECRET`</p>
+              <p>Autoresponder queue auth: `AUTORESPONDER_CRON_SECRET` or `CRON_SECRET`</p>
             </div>
           </div>
         </WorkspacePanel>

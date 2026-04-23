@@ -1,41 +1,62 @@
-# Sendshark Email Integration Guide
+# Email Integration Guide
 
-## Setup
+Note: This file keeps its historical filename for compatibility, but the active implementation is now the built-in autoresponder with optional AWS SES transport.
 
-1. Get your Sendshark API key from [Sendshark Dashboard](https://sendshark.com/dashboard)
-2. Add to your environment variables:
+## Provider Modes
+
+- `EMAIL_PROVIDER=autoresponder` (default):
+  - Uses the built-in automation engine.
+  - Persists subscribers, automations, campaigns, and queued jobs in Supabase.
+  - Uses SES transport under the hood for delivery, with queue fallback.
+- `EMAIL_PROVIDER=ses`:
+  - Uses direct SES sending with in-memory template/automation stores.
+
+Legacy compatibility:
+
+- `EMAIL_PROVIDER=sendshark` is accepted and mapped to `autoresponder`.
+
+## Required Environment Variables
 
 ```env
-SENDSHARK_API_KEY=your_api_key_here
-SENDSHARK_API_URL=https://api.sendshark.com/v1
+EMAIL_PROVIDER=autoresponder
+EMAIL_DEFAULT_FROM=user@launchpad4success.pro
+EMAIL_DEFAULT_FROM_NAME=Launchpad4Success
+AUTORESPONDER_CRON_SECRET=replace_with_strong_secret
+CRON_SECRET=replace_with_same_strong_secret
 ```
 
-## Features
+SES settings (required for SES delivery):
 
-### Email Campaigns
+```env
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=your_aws_access_key_id
+AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
+SES_CONFIGURATION_SET=launchpad-prod
+```
 
-- Create and send email campaigns
-- Schedule emails for future delivery
-- Track opens, clicks, and conversions
+## Queue Runner
 
-### Automation Sequences
+- Endpoint: `GET/POST /api/email/autoresponder/run`
+- Auth accepted via:
+  - `Authorization: Bearer <AUTORESPONDER_CRON_SECRET|CRON_SECRET>`
+  - `x-autoresponder-secret: <AUTORESPONDER_CRON_SECRET|CRON_SECRET>`
+- Optional limit:
+  - Query: `?limit=100`
+  - POST body: `{ "limit": 100 }`
 
-- Welcome email series for new leads
-- Abandoned cart recovery
-- Custom trigger-based automations
-
-### Analytics & Reporting
-
-- Automated weekly performance reports
-- Campaign statistics and metrics
-- Email engagement tracking
+Vercel cron configuration is set to run this endpoint every 5 minutes.
 
 ## API Endpoints
 
 ### Send Email
 
-```typescript
+```http
 POST /api/email/send
+```
+
+Body:
+
+```json
 {
   "to": "user@example.com",
   "subject": "Your Subject",
@@ -47,25 +68,36 @@ POST /api/email/send
 
 ### Create Campaign
 
-```typescript
+```http
 POST /api/email/send
+```
+
+Body:
+
+```json
 {
   "type": "campaign",
   "name": "My Campaign",
   "subject": "Campaign Subject",
+  "html": "<p>Campaign content</p>",
   "recipients": [
     { "email": "user1@example.com", "name": "User 1" }
   ]
 }
 ```
 
-### Trigger Automation
+### Create or Trigger Automation
 
-```typescript
+```http
 POST /api/email/automation
+```
+
+Trigger body:
+
+```json
 {
   "action": "trigger",
-  "automationId": "auto_123",
+  "automationId": "automation-uuid",
   "recipient": {
     "email": "user@example.com",
     "name": "User Name"
@@ -73,92 +105,56 @@ POST /api/email/automation
 }
 ```
 
+### Setup Default Automations
+
+```http
+PUT /api/email/automation
+```
+
 ### Send Weekly Report
 
-```typescript
+```http
 POST /api/email/reports
+```
+
+Body:
+
+```json
 {
   "recipientEmail": "admin@example.com",
   "funnelId": "funnel_123",
   "dateRange": {
-    "start": "2025-01-01",
-    "end": "2025-01-07"
+    "start": "2026-01-01",
+    "end": "2026-01-07"
   }
 }
 ```
 
 ## Lead Capture Integration
 
-When a lead is captured through a funnel, the system automatically:
+When a lead is captured via `POST /api/leads/capture`, the system:
 
-1. Saves the lead to the database
-2. Adds them to Sendshark subscriber list
-3. Triggers welcome automation sequence
-4. Tags them with funnel and source information
-
-Example:
-
-```typescript
-POST /api/leads/capture
-{
-  "email": "newlead@example.com",
-  "name": "New Lead",
-  "funnelId": "funnel_123",
-  "source": "facebook-ads",
-  "customFields": {
-    "interest": "weight-loss"
-  }
-}
-```
-
-## Default Automations
-
-The system includes pre-configured automation sequences:
-
-1. **Welcome Sequence** (3 emails)
-   - Immediate: Welcome + exclusive offer
-   - Day 1: Value delivery email
-   - Day 3: Follow-up and engagement
-
-2. **Abandoned Cart Recovery** (2 emails)
-   - 1 hour: Reminder with 10% discount
-   - 24 hours: Last chance offer
-
-Setup default automations:
-
-```typescript
-PUT /api/email/automation
-```
-
-## Best Practices
-
-1. **Segment Your Audience**: Use tags and custom fields to personalize campaigns
-2. **Test Before Sending**: Use the preview feature to test emails
-3. **Monitor Metrics**: Track open rates and adjust subject lines accordingly
-4. **Respect Privacy**: Include unsubscribe links in all campaigns
-5. **Timing Matters**: Schedule emails during peak engagement hours
+1. Saves the lead to the `leads` table.
+2. Adds/updates subscriber in `email_subscribers`.
+3. Triggers active signup automations.
+4. Queues delayed autoresponder emails in `email_autoresponder_jobs`.
 
 ## Troubleshooting
 
+### Queue Not Processing
+
+- Verify `AUTORESPONDER_CRON_SECRET` and/or `CRON_SECRET` are set.
+- Confirm Vercel cron is active for `/api/email/autoresponder/run`.
+- Check `email_autoresponder_jobs` rows are in `queued` state with past `scheduled_for`.
+
 ### Email Not Sending
 
-- Verify SENDSHARK_API_KEY is set correctly
-- Check API quota limits
-- Review email content for spam triggers
-
-### Low Open Rates
-
-- Improve subject lines
-- Clean subscriber list
-- Send at optimal times
+- Verify `EMAIL_PROVIDER` and provider credentials.
+- For SES: confirm sender identity/domain is verified in AWS SES.
+- Check API logs for upstream provider/network errors (returned as `502`).
 
 ### Automation Not Triggering
 
-- Verify automation is active
-- Check trigger conditions
-- Review automation configuration
-
-## Support
-
-For Sendshark-specific issues, contact <support@sendshark.com>
-For integration issues, check the application logs or contact your development team.
+- Verify automation is `active=true`.
+- Confirm trigger type matches (`signup`, `abandoned_cart`, etc.).
+- Ensure lead capture is occurring with valid subscriber email.

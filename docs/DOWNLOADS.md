@@ -358,7 +358,7 @@ Download File (tracked)
     ↓
 Thank You Page
     ↓
-Email Sequence (Sendshark)
+Email Sequence (Autoresponder)
 ```
 
 ## 📧 Email Integration
