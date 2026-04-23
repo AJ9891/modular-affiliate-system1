@@ -14,6 +14,12 @@ export async function POST(request: NextRequest) {
     if (action === 'trigger') {
       // Trigger automation for a user
       const { automationId, recipient } = data
+      if (!automationId || !recipient?.email) {
+        return NextResponse.json(
+          { success: false, error: 'automationId and recipient.email are required' },
+          { status: 400 }
+        )
+      }
       const result = await emailService.triggerAutomation(automationId, recipient)
       
       return NextResponse.json({ 
@@ -21,6 +27,16 @@ export async function POST(request: NextRequest) {
         message: 'Automation triggered successfully',
         result 
       })
+    }
+
+    if (!data?.name || !data?.trigger || !Array.isArray(data?.emails)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Automation payload must include name, trigger, and emails[]',
+        },
+        { status: 400 }
+      )
     }
 
     // Create new automation
@@ -31,14 +47,16 @@ export async function POST(request: NextRequest) {
       automation,
       message: 'Automation created successfully' 
     })
-  } catch (error) {
-    console.error('Automation error:', error)
+  } catch (err) {
+    console.error('Automation error:', err)
+    const message = err instanceof Error ? err.message : 'Automation operation failed'
+    const status = message.includes('Sendshark API') ? 502 : 500
     return NextResponse.json(
       { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Automation operation failed' 
+        error: message
       },
-      { status: 500 }
+      { status }
     )
   }
 }

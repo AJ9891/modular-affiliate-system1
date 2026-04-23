@@ -13,6 +13,20 @@ export async function POST(request: NextRequest) {
     const defaultFromName = process.env.EMAIL_DEFAULT_FROM_NAME || 'Launchpad4Success'
 
     if (type === 'campaign') {
+      if (!subject || typeof subject !== 'string') {
+        return NextResponse.json(
+          { success: false, error: 'subject is required for campaigns' },
+          { status: 400 }
+        )
+      }
+
+      if (!template && (!html || typeof html !== 'string')) {
+        return NextResponse.json(
+          { success: false, error: 'template or html is required for campaigns' },
+          { status: 400 }
+        )
+      }
+
       // Send campaign
       const campaign = await emailService.createCampaign({
         name: body.name || `Campaign ${Date.now()}`,
@@ -29,6 +43,13 @@ export async function POST(request: NextRequest) {
         campaignId: campaign.id,
         message: 'Campaign created successfully' 
       })
+    }
+
+    if (!to || !subject || !html) {
+      return NextResponse.json(
+        { success: false, error: 'to, subject, and html are required' },
+        { status: 400 }
+      )
     }
 
     // Send single email
@@ -50,14 +71,16 @@ export async function POST(request: NextRequest) {
       messageId: result.id,
       message: 'Email sent successfully' 
     })
-  } catch (error) {
-    console.error('Send email error:', error)
+  } catch (err) {
+    console.error('Send email error:', err)
+    const message = err instanceof Error ? err.message : 'Failed to send email'
+    const status = message.includes('Sendshark API') ? 502 : 500
     return NextResponse.json(
       { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Failed to send email' 
+        error: message
       },
-      { status: 500 }
+      { status }
     )
   }
 }

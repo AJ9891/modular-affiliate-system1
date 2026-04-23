@@ -98,6 +98,23 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const template = await request.json()
+
+    if (
+      !template ||
+      typeof template !== 'object' ||
+      typeof template.name !== 'string' ||
+      typeof template.subject !== 'string' ||
+      typeof template.html !== 'string'
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Template payload must include name, subject, and html',
+        },
+        { status: 400 }
+      )
+    }
+
     const result = await emailService.saveTemplate(template)
     
     return NextResponse.json({ 
@@ -105,14 +122,16 @@ export async function POST(request: NextRequest) {
       template: result,
       message: 'Template saved successfully' 
     })
-  } catch (error) {
-    console.error('Save template error:', error)
+  } catch (err) {
+    console.error('Save template error:', err)
+    const message = err instanceof Error ? err.message : 'Failed to save template'
+    const status = message.includes('Sendshark API') ? 502 : 500
     return NextResponse.json(
       { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Failed to save template' 
+        error: message
       },
-      { status: 500 }
+      { status }
     )
   }
 }

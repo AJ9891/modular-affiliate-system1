@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { checkSupabase } from '@/lib/check-supabase'
-import { createSubdomainRouteHandlerClient } from '@/lib/subdomain-auth'
+import { createSubdomainRouteHandlerClientWithResponse } from '@/lib/subdomain-auth'
 import { createServiceRoleClient, loadSupabaseEnv } from '@/lib/supabase-server'
 import { log } from '@/lib/log'
 
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
   const check = checkSupabase()
   if (check) return check
   
-  const supabase = await createSubdomainRouteHandlerClient(request)
+  const { supabase, applyCookies } = createSubdomainRouteHandlerClientWithResponse(request)
   
   try {
     const { email, password } = await request.json()
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       log.warn('Signup error', { error: error.message })
-      return NextResponse.json({ error: error.message }, { status: 400 })
+      return applyCookies(NextResponse.json({ error: error.message }, { status: 400 }))
     }
 
     // Best effort: create user in public.users table if service key is configured.
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       try {
         const adminClient = getSupabaseAdminClient()
         if (!adminClient) {
-          return NextResponse.json({ user: data.user }, { status: 201 })
+          return applyCookies(NextResponse.json({ user: data.user }, { status: 201 }))
         }
 
         const { error: insertError } = await adminClient.from('users').upsert({
@@ -101,12 +101,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ user: data.user }, { status: 201 })
+    return applyCookies(NextResponse.json({ user: data.user }, { status: 201 }))
   } catch (error: any) {
     log.error('Signup handler failed', { error: error?.message })
-    return NextResponse.json(
+    return applyCookies(NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: error.status ?? 500 }
-    )
+    ))
   }
 }

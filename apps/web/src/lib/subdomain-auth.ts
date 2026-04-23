@@ -54,6 +54,50 @@ export function createSubdomainMiddlewareClient(req: NextRequest, res: NextRespo
   })
 }
 
+function createSubdomainRouteHandlerClientWithCookieWriter(request: NextRequest) {
+  const supabasePublicKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+
+  if (!supabaseUrl || !supabasePublicKey) {
+    throw new Error('[Supabase] NEXT_PUBLIC_SUPABASE_URL and public key missing')
+  }
+
+  const pendingCookies = new Map<string, { value: string; options?: Record<string, unknown> }>()
+
+  const supabase = createServerClient(supabaseUrl, supabasePublicKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll()
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value, options }) => {
+          try {
+            request.cookies.set(name, value)
+          } catch {
+            // Ignore writes in contexts where request cookies are immutable.
+          }
+
+          pendingCookies.set(name, {
+            value,
+            options: options as unknown as Record<string, unknown> | undefined,
+          })
+        })
+      },
+    },
+  })
+
+  const applyCookies = (response: NextResponse) => {
+    pendingCookies.forEach(({ value, options }, name) => {
+      response.cookies.set(name, value, options)
+    })
+    return response
+  }
+
+  return { supabase, applyCookies }
+}
+
 export async function createSubdomainRouteHandlerClient(_req: NextRequest) {
   const supabasePublicKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
@@ -79,6 +123,10 @@ export async function createSubdomainRouteHandlerClient(_req: NextRequest) {
       },
     },
   })
+}
+
+export function createSubdomainRouteHandlerClientWithResponse(request: NextRequest) {
+  return createSubdomainRouteHandlerClientWithCookieWriter(request)
 }
 
 // Next.js 16-compatible route handler client for routes that previously used

@@ -81,8 +81,8 @@ export async function POST(req: NextRequest) {
     })
 
     return ok({ url: session.url })
-  } catch (error: any) {
-    log.error('Create subscription checkout failed', { error: error?.message })
-    return error(error)
+  } catch (err: any) {
+    log.error('Create subscription checkout failed', { error: err?.message })
+    return error(err)
   }
 }

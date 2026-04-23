@@ -12,9 +12,36 @@ export async function POST(request: NextRequest) {
     const supabase = await createSubdomainRouteHandlerClient(request)
     const { recipientEmail, funnelId, dateRange } = await request.json()
 
+    if (!recipientEmail || typeof recipientEmail !== 'string' || !recipientEmail.includes('@')) {
+      return NextResponse.json(
+        { success: false, error: 'Valid recipientEmail is required' },
+        { status: 400 }
+      )
+    }
+
+    if (!funnelId || typeof funnelId !== 'string') {
+      return NextResponse.json(
+        { success: false, error: 'funnelId is required' },
+        { status: 400 }
+      )
+    }
+
+    if (!dateRange?.start || !dateRange?.end) {
+      return NextResponse.json(
+        { success: false, error: 'dateRange.start and dateRange.end are required' },
+        { status: 400 }
+      )
+    }
+
     // Get funnel analytics from database
     const startDate = new Date(dateRange.start)
     const endDate = new Date(dateRange.end)
+    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid dateRange values' },
+        { status: 400 }
+      )
+    }
 
     // Fetch clicks data
     const { data: clicks, error: clicksError } = await supabase
@@ -63,14 +90,16 @@ export async function POST(request: NextRequest) {
       stats,
       message: 'Weekly report sent successfully' 
     })
-  } catch (error) {
-    console.error('Send report error:', error)
+  } catch (err) {
+    console.error('Send report error:', err)
+    const message = err instanceof Error ? err.message : 'Failed to send report'
+    const status = message.includes('Sendshark API') ? 502 : 500
     return NextResponse.json(
       { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Failed to send report' 
+        error: message
       },
-      { status: 500 }
+      { status }
     )
   }
 }
