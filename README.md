@@ -43,7 +43,7 @@ A complete, production-ready affiliate marketing platform combining powerful fun
 - **[Downloads Documentation](./docs/DOWNLOADS.md)** - Complete downloads guide
 - **[Integration Summary](./INTEGRATION_SUMMARY.md)** - What's new and how to use it
 - **[Full Documentation](./docs/INTEGRATION.md)** - Complete feature guide
-- **[Sendshark Setup](./docs/SENDSHARK.md)** - Email integration instructions
+- **[Email Setup](./apps/web/.env.example)** - Built-in autoresponder + SES configuration
 - **[Deployment Guide](./DEPLOYMENT.md)** - Production deployment steps
 
 ## 🏃 Getting Started
@@ -76,8 +76,9 @@ STRIPE_SECRET_KEY=sk_test_xxx
 # OpenAI
 OPENAI_API_KEY=sk-xxx
 
-# Sendshark (NEW!)
-SENDSHARK_API_KEY=your_sendshark_api_key
+# Email
+EMAIL_PROVIDER=autoresponder
+AUTORESPONDER_CRON_SECRET=replace_with_strong_secret
 ```
 
 ### 3. Database Setup
@@ -157,7 +158,7 @@ Visit:
 │   Next.js App   │
 ├─────────────────┤
 │  Visual Builder │  ←→  Supabase DB
-│  Code Builder   │  ←→  Sendshark API
+│  Code Builder   │  ←→  Built-in autoresponder / SES
 │  Dashboard      │  ←→  Stripe API
 │  Analytics      │  ←→  OpenAI API
 └─────────────────┘
@@ -167,7 +168,7 @@ Visit:
 
 - **AI Features**: [docs/AI.md](./docs/AI.md)
 - **Tracking**: [docs/TRACKING.md](./docs/TRACKING.md)
-- **Email Setup**: [docs/SENDSHARK.md](./docs/SENDSHARK.md)
+- **Email Setup**: [apps/web/.env.example](./apps/web/.env.example)
 - **Integration**: [docs/INTEGRATION.md](./docs/INTEGRATION.md)
 
 ## 🚢 Deployment
