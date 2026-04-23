@@ -93,7 +93,7 @@ Primary migration for autoresponder objects:
 - Auth:
   - `Authorization: Bearer <AUTORESPONDER_CRON_SECRET|CRON_SECRET>`
   - or header `x-autoresponder-secret`
-- Vercel cron schedule: every 5 minutes.
+- Vercel cron schedule: daily (`0 0 * * *`) for Hobby plan compatibility.
 
 ## Core Workflows
 

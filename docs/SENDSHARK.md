@@ -44,7 +44,7 @@ SES_CONFIGURATION_SET=launchpad-prod
   - Query: `?limit=100`
   - POST body: `{ "limit": 100 }`
 
-Vercel cron configuration is set to run this endpoint every 5 minutes.
+Vercel cron configuration is set to run this endpoint daily (`0 0 * * *`) for Hobby plan compatibility.
 
 ## API Endpoints
 

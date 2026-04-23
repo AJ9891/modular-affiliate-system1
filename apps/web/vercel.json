@@ -7,7 +7,7 @@
   "crons": [
     {
       "path": "/api/email/autoresponder/run",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 0 * * *"
     }
   ],
   "headers": [
