@@ -219,7 +219,8 @@ export class SesEmailProvider implements EmailProvider {
   }
 
   async addSubscriber(params: AddSubscriberParams): Promise<Record<string, any>> {
-    subscriberStore.set(params.email, params)
+    const key = `${params.userId || 'global'}:${params.email}:${params.listName || params.listId || 'default'}`
+    subscriberStore.set(key, params)
     return {
       id: generateId('sub'),
       email: params.email,
@@ -239,9 +240,10 @@ export class SesEmailProvider implements EmailProvider {
     })
   }
 
-  async setupDefaultAutomations(): Promise<AutomationSequence[]> {
+  async setupDefaultAutomations(userId?: string | null): Promise<AutomationSequence[]> {
     const sequences: AutomationSequence[] = [
       {
+        userId: userId || null,
         name: 'Welcome Sequence',
         trigger: 'signup',
         active: true,
@@ -265,6 +267,7 @@ export class SesEmailProvider implements EmailProvider {
         ],
       },
       {
+        userId: userId || null,
         name: 'Abandoned Cart Recovery',
         trigger: 'abandoned_cart',
         active: true,

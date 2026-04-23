@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { emailService } from '@/lib/email/service'
 import { PERSONALITY_EMAIL_TEMPLATES, type EmailPersonality } from '@/config/emailTemplates'
+import { resolveEmailErrorStatus } from '@/lib/email/route-utils'
 
 type TemplateRecord = {
   id?: string
@@ -125,7 +126,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error('Save template error:', err)
     const message = err instanceof Error ? err.message : 'Failed to save template'
-    const status = message.includes('Sendshark API') ? 502 : 500
+    const status = resolveEmailErrorStatus(message)
     return NextResponse.json(
       { 
         success: false, 

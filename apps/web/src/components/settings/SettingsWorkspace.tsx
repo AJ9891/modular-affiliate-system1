@@ -152,9 +152,9 @@ export default function SettingsWorkspace() {
             <div className="rounded-lg border border-[var(--border-subtle)] bg-[rgba(10,16,24,0.55)] p-3">
               <p>OpenAI: configured via `OPENAI_API_KEY`</p>
               <p>Stripe: configured via `STRIPE_SECRET_KEY`</p>
-              <p>Email provider: `EMAIL_PROVIDER` (`ses` or `sendshark`)</p>
+              <p>Email provider: `EMAIL_PROVIDER` (`autoresponder` or `ses`)</p>
               <p>SES: `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`</p>
-              <p>Sendshark fallback: `SENDSHARK_API_KEY`</p>
+              <p>Autoresponder queue auth: `AUTORESPONDER_CRON_SECRET`</p>
             </div>
           </div>
         </WorkspacePanel>

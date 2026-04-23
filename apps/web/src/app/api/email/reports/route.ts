@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { emailService } from '@/lib/email/service'
 import { createSubdomainRouteHandlerClient } from '@/lib/subdomain-auth'
+import { resolveEmailErrorStatus } from '@/lib/email/route-utils'
 
 /**
  * Email Reports API Endpoint
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error('Send report error:', err)
     const message = err instanceof Error ? err.message : 'Failed to send report'
-    const status = message.includes('Sendshark API') ? 502 : 500
+    const status = resolveEmailErrorStatus(message)
     return NextResponse.json(
       { 
         success: false, 

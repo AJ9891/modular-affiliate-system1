@@ -1,24 +1,23 @@
-import { SendsharkEmailProvider } from '@/lib/email/providers/sendshark'
+import { AutoresponderEmailProvider } from '@/lib/email/providers/autoresponder'
 import { SesEmailProvider } from '@/lib/email/providers/ses'
 import type { EmailProvider } from '@/lib/email/types'
 
-type ProviderKey = 'sendshark' | 'ses'
+type ProviderKey = 'autoresponder' | 'ses'
 
 function resolveProviderKey(): ProviderKey {
   const configured = (process.env.EMAIL_PROVIDER || '').trim().toLowerCase()
-  if (configured === 'ses' || configured === 'sendshark') {
+  if (configured === 'ses' || configured === 'autoresponder') {
     return configured
   }
 
-  const hasSesRegion = !!(process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION)
-  const hasStaticSesCredentials =
-    !!process.env.AWS_ACCESS_KEY_ID && !!process.env.AWS_SECRET_ACCESS_KEY
-
-  if (hasSesRegion && hasStaticSesCredentials) {
-    return 'ses'
+  if (configured === 'sendshark') {
+    console.warn(
+      '[Email] EMAIL_PROVIDER=sendshark is deprecated. Falling back to built-in autoresponder.'
+    )
+    return 'autoresponder'
   }
 
-  return 'sendshark'
+  return 'autoresponder'
 }
 
 function createEmailProvider(): EmailProvider {
@@ -28,8 +27,20 @@ function createEmailProvider(): EmailProvider {
     return new SesEmailProvider()
   }
 
-  return new SendsharkEmailProvider()
+  return new AutoresponderEmailProvider()
 }
 
 export const emailProviderName = resolveProviderKey()
 export const emailService = createEmailProvider()
+
+export async function runEmailAutoresponderQueue(limit?: number) {
+  if (emailService instanceof AutoresponderEmailProvider) {
+    return emailService.runDueJobs(limit)
+  }
+
+  return {
+    processed: 0,
+    sent: 0,
+    failed: 0,
+  }
+}

@@ -15,6 +15,7 @@ export interface EmailRecipient {
 
 export interface EmailCampaign {
   id?: string
+  userId?: string | null
   name: string
   fromEmail: string
   fromName: string
@@ -27,6 +28,7 @@ export interface EmailCampaign {
 
 export interface AutomationSequence {
   id?: string
+  userId?: string | null
   name: string
   trigger: 'signup' | 'purchase' | 'abandoned_cart' | 'funnel_entry' | 'custom'
   emails: Array<{
@@ -49,6 +51,7 @@ export interface EmailStats {
 }
 
 export interface AddSubscriberParams {
+  userId?: string | null
   email: string
   name?: string
   listId?: string
@@ -94,5 +97,5 @@ export interface EmailProvider {
   triggerAutomation(automationId: string, recipient: EmailRecipient): Promise<Record<string, any>>
   addSubscriber(params: AddSubscriberParams): Promise<Record<string, any>>
   sendAnalyticsReport(params: SendAnalyticsReportParams): Promise<{ id: string }>
-  setupDefaultAutomations(): Promise<AutomationSequence[]>
+  setupDefaultAutomations(userId?: string | null): Promise<AutomationSequence[]>
 }

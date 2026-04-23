@@ -220,6 +220,7 @@ async function provisionEmailAutomation(userId: string, email: string, plan: str
     
     // Add user to configured provider with launch tags.
     const subscriber = await emailService.addSubscriber({
+      userId,
       listName,
       email,
       name: email.split('@')[0],
@@ -238,10 +239,24 @@ async function provisionEmailAutomation(userId: string, email: string, plan: str
       // Keep legacy columns for backward compatibility with existing dashboards.
       const adminClient = createServiceRoleClient()
 
+      const { error: updateError } = await adminClient
+        .from('users')
+        .update({
+          email_automation_provisioned: true,
+          email_automation_email: email,
+          sendshark_provisioned: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId)
+
+      if (updateError) {
+        console.warn('Failed to persist email provisioning status:', updateError)
+      }
+
+      // Best-effort legacy field update for environments where this column still exists.
       await adminClient
         .from('users')
         .update({
-          sendshark_provisioned: true,
           sendshark_email: email,
           updated_at: new Date().toISOString(),
         })
@@ -348,7 +363,7 @@ async function handleInvoicePaymentSucceeded(invoice: any) {
     // Get user info
     const { data: userData } = await adminClient
       .from('users')
-      .select('id, email, subscription_plan, sendshark_provisioned')
+      .select('id, email, subscription_plan, email_automation_provisioned, sendshark_provisioned')
       .eq('stripe_customer_id', customerId)
       .single()
 
@@ -366,7 +381,10 @@ async function handleInvoicePaymentSucceeded(invoice: any) {
       console.log(`Payment succeeded for customer ${customerId}`)
       
       // If email provisioning has not run yet, run it now.
-      if (userData && !userData.sendshark_provisioned && userData.email) {
+      const alreadyProvisioned = Boolean(
+        userData?.email_automation_provisioned || userData?.sendshark_provisioned
+      )
+      if (userData && !alreadyProvisioned && userData.email) {
         await provisionEmailAutomation(userData.id, userData.email, userData.subscription_plan)
       }
     }

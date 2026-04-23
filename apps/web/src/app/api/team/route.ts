@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Send invite email via Sendshark
+    // Send invite email via internal email service route
     try {
       const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/team/accept?token=${inviteToken}`
       

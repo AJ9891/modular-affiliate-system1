@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { emailService } from '@/lib/email/service'
+import { getOptionalAuthenticatedUserId, resolveEmailErrorStatus } from '@/lib/email/route-utils'
 
 /**
  * Send Email API Endpoint
@@ -7,6 +8,7 @@ import { emailService } from '@/lib/email/service'
  */
 export async function POST(request: NextRequest) {
   try {
+    const userId = await getOptionalAuthenticatedUserId(request)
     const body = await request.json()
     const { to, subject, html, text, template, type = 'single' } = body
     const defaultFromEmail = process.env.EMAIL_DEFAULT_FROM || 'user@launchpad4success.pro'
@@ -29,6 +31,7 @@ export async function POST(request: NextRequest) {
 
       // Send campaign
       const campaign = await emailService.createCampaign({
+        userId,
         name: body.name || `Campaign ${Date.now()}`,
         fromEmail: body.fromEmail || defaultFromEmail,
         fromName: body.fromName || defaultFromName,
@@ -74,7 +77,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error('Send email error:', err)
     const message = err instanceof Error ? err.message : 'Failed to send email'
-    const status = message.includes('Sendshark API') ? 502 : 500
+    const status = resolveEmailErrorStatus(message)
     return NextResponse.json(
       { 
         success: false, 

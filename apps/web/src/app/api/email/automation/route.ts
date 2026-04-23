@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { emailService } from '@/lib/email/service'
+import { getOptionalAuthenticatedUserId, resolveEmailErrorStatus } from '@/lib/email/route-utils'
 
 /**
  * Email Automation API Endpoint
@@ -8,6 +9,7 @@ import { emailService } from '@/lib/email/service'
  */
 export async function POST(request: NextRequest) {
   try {
+    const userId = await getOptionalAuthenticatedUserId(request)
     const body = await request.json()
     const { action, ...data } = body
 
@@ -40,7 +42,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new automation
-    const automation = await emailService.createAutomation(data)
+    const automation = await emailService.createAutomation({
+      ...data,
+      userId,
+    })
     
     return NextResponse.json({ 
       success: true, 
@@ -50,7 +55,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error('Automation error:', err)
     const message = err instanceof Error ? err.message : 'Automation operation failed'
-    const status = message.includes('Sendshark API') ? 502 : 500
+    const status = resolveEmailErrorStatus(message)
     return NextResponse.json(
       { 
         success: false, 
@@ -67,7 +72,8 @@ export async function POST(request: NextRequest) {
  */
 export async function PUT(_request: NextRequest) {
   try {
-    const automations = await emailService.setupDefaultAutomations()
+    const userId = await getOptionalAuthenticatedUserId(_request)
+    const automations = await emailService.setupDefaultAutomations(userId)
     
     return NextResponse.json({ 
       success: true, 

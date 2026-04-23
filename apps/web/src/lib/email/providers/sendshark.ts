@@ -54,7 +54,7 @@ export class SendsharkEmailProvider implements EmailProvider {
     return { id: String((result as { id?: string }).id || crypto.randomUUID()) }
   }
 
-  async setupDefaultAutomations(): Promise<AutomationSequence[]> {
+  async setupDefaultAutomations(_userId?: string | null): Promise<AutomationSequence[]> {
     return sendshark.setupDefaultAutomations()
   }
 }

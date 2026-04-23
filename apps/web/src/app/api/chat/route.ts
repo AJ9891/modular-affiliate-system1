@@ -221,7 +221,7 @@ Help users with all platform features, troubleshooting, and best practices. Be f
 → Check /api/leads/capture endpoint, verify Supabase connection, check RLS policies
 
 **"Emails not sending"**
-→ Verify EMAIL_PROVIDER and provider credentials (SES or Sendshark), check /api/email/send logs
+→ Verify EMAIL_PROVIDER and provider credentials (autoresponder or SES), check /api/email/send logs
 
 **"Can't invite team members"**
 → Confirm user has Agency plan, check email invitation endpoint, verify invite token
@@ -238,7 +238,7 @@ Help users with all platform features, troubleshooting, and best practices. Be f
 ## TECH STACK
 - Frontend: Next.js 14 + React 18 + TypeScript + Tailwind CSS
 - Backend: Supabase (PostgreSQL + Auth + Storage)
-- Email: In-house provider layer (SES or Sendshark fallback)
+- Email: In-house provider layer (autoresponder + SES transport)
 - Payments: Stripe
 - AI: OpenAI GPT-3.5/4
 - Deployment: Vercel
