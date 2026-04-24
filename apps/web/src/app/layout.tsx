@@ -13,8 +13,51 @@ import { BrandModeGlowSync } from "@/components/BrandModeGlowSync"
 import ConditionalSidebar from "@/components/ConditionalSidebar"
 
 export const metadata: Metadata = {
-  title: "Launchpad4Success - Build High-Converting Affiliate Funnels",
-  description: "The modular system for creating, launching, and scaling profitable affiliate marketing campaigns without technical headaches",
+  metadataBase: new URL("https://www.launchpad4success.pro"),
+  title: {
+    default: "Launchpad4Success.pro | Build High-Converting Affiliate Funnels",
+    template: "%s | Launchpad4Success.pro",
+  },
+  description:
+    "Launchpad4Success.pro helps creators and affiliate marketers build, launch, and scale conversion-focused funnels, email systems, and monetization workflows.",
+  applicationName: "Launchpad4Success.pro",
+  keywords: [
+    "Launchpad4Success",
+    "Launchpad4Success.pro",
+    "affiliate marketing funnels",
+    "high-converting funnels",
+    "email automation",
+    "digital marketing system",
+  ],
+  alternates: {
+    canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  openGraph: {
+    type: "website",
+    url: "https://www.launchpad4success.pro",
+    siteName: "Launchpad4Success.pro",
+    title: "Launchpad4Success.pro | Build High-Converting Affiliate Funnels",
+    description:
+      "Launchpad4Success.pro helps creators and affiliate marketers launch conversion-focused funnels and scalable marketing workflows.",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Launchpad4Success.pro | Build High-Converting Affiliate Funnels",
+    description:
+      "Build, launch, and scale affiliate funnels with Launchpad4Success.pro.",
+  },
 }
 
 export default function RootLayout({
@@ -62,6 +105,10 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+        <meta name="author" content="Abbigal Jurek" />
+        <meta name="publisher" content="Launchpad4Success.pro" />
+        <meta name="creator" content="Launchpad4Success.pro" />
+        <meta name="format-detection" content="telephone=no, address=no, email=no" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
