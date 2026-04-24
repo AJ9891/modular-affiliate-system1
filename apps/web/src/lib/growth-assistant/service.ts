@@ -1,5 +1,13 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { createServiceRoleClient } from '@/lib/supabase-server'
+import {
+  buildABTestSuggestions,
+  buildForecasts,
+  buildOptimizationIdeas,
+  buildPlainEnglishInsights,
+  buildWeeklySummary,
+  type FunnelForecastSeed,
+} from './enhancements'
 import type {
   FunnelDropoffPoint,
   FunnelPerformanceScore,
@@ -555,10 +563,11 @@ export async function generateGrowthAssistantResult(
   }
 
   if (funnelIds.length === 0) {
+    const generatedAt = new Date().toISOString()
     return {
       userId,
       range,
-      generatedAt: new Date().toISOString(),
+      generatedAt,
       periodStart: startIso,
       periodEnd: endIso,
       funnelScores: [],
@@ -567,6 +576,19 @@ export async function generateGrowthAssistantResult(
       insights: [],
       recommendations: [],
       alerts: [],
+      abTestSuggestions: [],
+      optimizationIdeas: [],
+      plainEnglishInsights: [],
+      weeklySummary: buildWeeklySummary({
+        userId,
+        range,
+        generatedAt,
+        funnelScores: [],
+        seeds: [],
+        alerts: [],
+        recommendations: [],
+      }),
+      forecasts: [],
     }
   }
 
@@ -715,6 +737,7 @@ export async function generateGrowthAssistantResult(
   const insights: GrowthInsight[] = []
   const recommendations: GrowthRecommendation[] = []
   const alerts: GrowthAlert[] = []
+  const forecastSeeds: FunnelForecastSeed[] = []
   const recommendationKeys = new Set<string>()
 
   const nowIso = new Date().toISOString()
@@ -745,6 +768,7 @@ export async function generateGrowthAssistantResult(
 
     const conversionRate = bucket.current.clicks > 0 ? (bucket.current.conversions / bucket.current.clicks) * 100 : 0
     const previousConversionRate = bucket.previous.clicks > 0 ? (bucket.previous.conversions / bucket.previous.clicks) * 100 : 0
+    const previousCtr = bucket.previous.views > 0 ? (bucket.previous.ctaClicks / bucket.previous.views) * 100 : 0
     const conversionRateDeltaPct =
       previousConversionRate > 0
         ? ((conversionRate - previousConversionRate) / previousConversionRate) * 100
@@ -777,6 +801,20 @@ export async function generateGrowthAssistantResult(
       conversionRateDeltaPct: Number(conversionRateDeltaPct.toFixed(2)),
     }
     funnelScores.push(funnelScore)
+    forecastSeeds.push({
+      funnelId,
+      funnelName: bucket.funnelName,
+      currentClicks: bucket.current.clicks,
+      previousClicks: bucket.previous.clicks,
+      currentConversions: bucket.current.conversions,
+      previousConversions: bucket.previous.conversions,
+      currentRevenue: bucket.current.revenue,
+      previousRevenue: bucket.previous.revenue,
+      currentConversionRate: conversionRate,
+      previousConversionRate,
+      currentCtr: ctr,
+      previousCtr,
+    })
 
     if (bucket.previous.clicks >= 20 && conversionRateDeltaPct <= -15) {
       const severity = normalizeSeverity(Math.abs(conversionRateDeltaPct))
@@ -1140,6 +1178,45 @@ export async function generateGrowthAssistantResult(
     return order[b.severity] - order[a.severity]
   })
 
+  const forecasts = buildForecasts({
+    range,
+    generatedAt: nowIso,
+    seeds: forecastSeeds,
+  })
+
+  const optimizationIdeas = buildOptimizationIdeas({
+    userId,
+    generatedAt: nowIso,
+    recommendations,
+    forecasts,
+  })
+
+  const plainEnglishInsights = buildPlainEnglishInsights({
+    userId,
+    generatedAt: nowIso,
+    insights,
+    recommendations,
+    alerts,
+  })
+
+  const weeklySummary = buildWeeklySummary({
+    userId,
+    range,
+    generatedAt: nowIso,
+    funnelScores,
+    seeds: forecastSeeds,
+    alerts,
+    recommendations,
+  })
+
+  const abTestSuggestions = await buildABTestSuggestions({
+    userId,
+    generatedAt: nowIso,
+    funnelScores,
+    insights,
+    recommendations,
+  })
+
   const result: GrowthAssistantResult = {
     userId,
     range,
@@ -1152,6 +1229,11 @@ export async function generateGrowthAssistantResult(
     insights,
     recommendations,
     alerts,
+    abTestSuggestions,
+    optimizationIdeas,
+    plainEnglishInsights,
+    weeklySummary,
+    forecasts,
   }
 
   if (options.persist) {

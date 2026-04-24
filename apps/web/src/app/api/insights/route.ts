@@ -36,6 +36,11 @@ export async function GET(request: NextRequest) {
       pageDiagnostics: result.pageDiagnostics,
       dropoffPoints: result.dropoffPoints,
       insights: result.insights.slice(0, limit),
+      plainEnglishInsights: result.plainEnglishInsights.slice(0, limit),
+      abTestSuggestions: result.abTestSuggestions.slice(0, limit),
+      optimizationIdeas: result.optimizationIdeas.slice(0, limit),
+      weeklySummary: result.weeklySummary,
+      forecasts: result.forecasts.slice(0, limit),
       total: result.insights.length,
     })
   } catch (err) {

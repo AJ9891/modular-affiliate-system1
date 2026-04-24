@@ -38,7 +38,15 @@ export default function AnalyticsWorkspace() {
         const [summaryData, funnels, growthSnapshot] = await Promise.all([
           getAnalyticsSummary(range),
           listFunnels(),
-          getGrowthSnapshot({ range, limit: 200 }).catch(() => ({ insights: [], funnelScores: [] })),
+          getGrowthSnapshot({ range, limit: 200 }).catch(() => ({
+            insights: [],
+            plainEnglishInsights: [],
+            funnelScores: [],
+            abTestSuggestions: [],
+            optimizationIdeas: [],
+            weeklySummary: null,
+            forecasts: [],
+          })),
         ])
         const candidates = funnels.slice(0, 8)
 

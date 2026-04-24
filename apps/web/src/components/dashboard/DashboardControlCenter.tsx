@@ -4,7 +4,16 @@ import { useEffect, useMemo, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { getDashboardData, type DashboardData } from '@/lib/api/dashboard'
 import { getAlerts, getGrowthSnapshot, getRecommendations } from '@/lib/api/growth-assistant'
-import type { FunnelPerformanceScore, GrowthAlert, GrowthInsight, GrowthRecommendation } from '@/lib/growth-assistant/types'
+import type {
+  ABTestSuggestion,
+  FunnelOptimizationIdea,
+  FunnelPerformanceScore,
+  GrowthAlert,
+  GrowthInsight,
+  GrowthRecommendation,
+  PerformanceForecast,
+  WeeklyPerformanceSummary,
+} from '@/lib/growth-assistant/types'
 import DashboardSkeleton from './DashboardSkeleton'
 import {
   VisitorsPanel,
@@ -41,6 +50,10 @@ export default function DashboardControlCenter() {
   const [insights, setInsights] = useState<GrowthInsight[]>([])
   const [recommendations, setRecommendations] = useState<GrowthRecommendation[]>([])
   const [alerts, setAlerts] = useState<GrowthAlert[]>([])
+  const [weeklySummary, setWeeklySummary] = useState<WeeklyPerformanceSummary | null>(null)
+  const [forecasts, setForecasts] = useState<PerformanceForecast[]>([])
+  const [abTestSuggestions, setAbTestSuggestions] = useState<ABTestSuggestion[]>([])
+  const [optimizationIdeas, setOptimizationIdeas] = useState<FunnelOptimizationIdea[]>([])
 
   useEffect(() => {
     let active = true
@@ -63,18 +76,88 @@ export default function DashboardControlCenter() {
 
         setData(dashboardResult.value)
 
-        if (snapshotResult.status === 'fulfilled') {
-          setInsights(snapshotResult.value.insights)
-          setFunnelScores(snapshotResult.value.funnelScores)
+        const snapshotPayload = snapshotResult.status === 'fulfilled' ? snapshotResult.value : null
+
+        if (snapshotPayload) {
+          const naturalInsights: GrowthInsight[] = snapshotPayload.plainEnglishInsights.map((item) => ({
+            id: item.id,
+            userId: item.userId,
+            funnelId: item.funnelId,
+            insightType: 'plain_english',
+            title: item.title,
+            description: item.explanation,
+            severity: item.severity,
+            confidence: 0.8,
+            metrics: {
+              whyItMatters: item.whyItMatters,
+              nextStep: item.nextStep,
+            },
+            periodStart: snapshotPayload.weeklySummary?.weekStart || new Date().toISOString(),
+            periodEnd: snapshotPayload.weeklySummary?.weekEnd || new Date().toISOString(),
+            createdAt: item.createdAt,
+          }))
+
+          setInsights(naturalInsights.length > 0 ? naturalInsights : snapshotPayload.insights)
+          setFunnelScores(snapshotPayload.funnelScores)
+          setWeeklySummary(snapshotPayload.weeklySummary)
+          setForecasts(snapshotPayload.forecasts)
+          setAbTestSuggestions(snapshotPayload.abTestSuggestions)
+          setOptimizationIdeas(snapshotPayload.optimizationIdeas)
         } else {
           setInsights([])
           setFunnelScores([])
+          setWeeklySummary(null)
+          setForecasts([])
+          setAbTestSuggestions([])
+          setOptimizationIdeas([])
         }
 
+        const snapshotRecommendations: GrowthRecommendation[] = [
+          ...(snapshotPayload?.optimizationIdeas || []).map((item) => ({
+            id: item.id,
+            userId: item.userId,
+            funnelId: item.funnelId,
+            recommendationType: 'auto_funnel_optimization',
+            title: item.title,
+            description: item.description,
+            rationale: item.actions.join(' • '),
+            priority: item.priority,
+            confidence: 0.76,
+            expectedLiftMin: item.expectedLiftMin,
+            expectedLiftMax: item.expectedLiftMax,
+            effort: item.effort,
+            metadata: { source: item.source, actions: item.actions },
+            status: 'open' as const,
+            createdAt: item.createdAt,
+          })),
+          ...(snapshotPayload?.abTestSuggestions || []).map((item) => ({
+            id: item.id,
+            userId: item.userId,
+            funnelId: item.funnelId,
+            recommendationType: 'ab_test_suggestion',
+            title: item.title,
+            description: item.hypothesis,
+            rationale: `${item.variantA.name} vs ${item.variantB.name}`,
+            priority: 'high' as const,
+            confidence: item.confidence,
+            expectedLiftMin: item.expectedLiftMin,
+            expectedLiftMax: item.expectedLiftMax,
+            effort: 'medium' as const,
+            metadata: {
+              source: item.source,
+              objective: item.objective,
+              variantA: item.variantA,
+              variantB: item.variantB,
+            },
+            status: 'open' as const,
+            createdAt: item.createdAt,
+          })),
+        ]
+
         if (recommendationsResult.status === 'fulfilled') {
-          setRecommendations(recommendationsResult.value)
+          setRecommendations([...recommendationsResult.value, ...snapshotRecommendations].slice(0, 30))
         } else {
-          setRecommendations([])
+          setRecommendations(snapshotRecommendations)
         }
 
         if (alertsResult.status === 'fulfilled') {
@@ -125,8 +208,30 @@ export default function DashboardControlCenter() {
       items.push({ level: 'warning', message: `${alerts.length} active growth alert(s) need review.` })
     }
 
+    if (weeklySummary?.headline) {
+      items.push({ level: 'info', message: weeklySummary.headline })
+    }
+
+    if (forecasts.length > 0) {
+      const atRisk = forecasts.find((item) => item.predictedConversionRate < item.baselineConversionRate * 0.9)
+      if (atRisk) {
+        items.push({
+          level: 'warning',
+          message: `Forecast risk: ${atRisk.funnelName} may decline from ${atRisk.baselineConversionRate.toFixed(2)}% to ${atRisk.predictedConversionRate.toFixed(2)}% conversion.`,
+        })
+      }
+    }
+
+    if (abTestSuggestions.length > 0) {
+      items.push({ level: 'info', message: `${abTestSuggestions.length} new A/B test idea(s) generated.` })
+    }
+
+    if (optimizationIdeas.length > 0) {
+      items.push({ level: 'info', message: `${optimizationIdeas.length} automatic optimization idea(s) queued.` })
+    }
+
     return items
-  }, [data, alerts.length])
+  }, [data, alerts.length, weeklySummary, forecasts, abTestSuggestions.length, optimizationIdeas.length])
 
   if (loading && !data) {
     return <DashboardSkeleton />
@@ -205,6 +310,11 @@ export default function DashboardControlCenter() {
             {/* Keep existing notice stream for compatibility while Alerts panel handles critical signals. */}
             <div className="h-full rounded-lg border border-[var(--border-subtle)] p-4">
               <p className="mb-2 text-sm font-semibold text-text-primary">System Notices</p>
+              {weeklySummary && (
+                <p className="mb-2 text-xs text-text-secondary">
+                  {weeklySummary.summary}
+                </p>
+              )}
               <div className="space-y-2">
                 {notifications.map((notification, index) => (
                   <div key={`${notification.message}-${index}`} className="rounded-lg border border-[var(--border-subtle)] px-3 py-2 text-xs text-text-secondary">

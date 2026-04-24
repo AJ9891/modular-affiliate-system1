@@ -41,6 +41,10 @@ export async function POST(request: NextRequest) {
         insights: result.insights.length,
         recommendations: result.recommendations.length,
         alerts: result.alerts.length,
+        abTestSuggestions: result.abTestSuggestions.length,
+        optimizationIdeas: result.optimizationIdeas.length,
+        plainEnglishInsights: result.plainEnglishInsights.length,
+        forecasts: result.forecasts.length,
       },
     })
   } catch (err) {

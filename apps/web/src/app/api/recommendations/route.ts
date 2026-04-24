@@ -33,6 +33,8 @@ export async function GET(request: NextRequest) {
       range: result.range,
       generatedAt: result.generatedAt,
       recommendations,
+      optimizationIdeas: result.optimizationIdeas.slice(0, limit),
+      abTestSuggestions: result.abTestSuggestions.slice(0, limit),
       total: recommendations.length,
     })
   } catch (err) {

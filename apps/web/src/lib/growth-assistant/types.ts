@@ -91,6 +91,109 @@ export interface FunnelDropoffPoint {
   dropoffRate: number
 }
 
+export interface ABTestVariantSuggestion {
+  name: string
+  changes: string[]
+}
+
+export interface ABTestSuggestion {
+  id: string
+  userId: string
+  funnelId: string | null
+  title: string
+  objective: 'ctr' | 'conversion_rate' | 'lead_rate' | 'bounce_rate'
+  hypothesis: string
+  variantA: ABTestVariantSuggestion
+  variantB: ABTestVariantSuggestion
+  expectedLiftMin: number | null
+  expectedLiftMax: number | null
+  confidence: number
+  source: 'ai' | 'rule_engine'
+  createdAt: string
+}
+
+export interface FunnelOptimizationIdea {
+  id: string
+  userId: string
+  funnelId: string | null
+  title: string
+  description: string
+  priority: Priority
+  effort: 'low' | 'medium' | 'high'
+  expectedLiftMin: number | null
+  expectedLiftMax: number | null
+  actions: string[]
+  source: 'forecast' | 'rule_engine'
+  createdAt: string
+}
+
+export interface PlainEnglishInsight {
+  id: string
+  insightId: string | null
+  userId: string
+  funnelId: string | null
+  severity: Severity
+  title: string
+  explanation: string
+  whyItMatters: string
+  nextStep: string
+  createdAt: string
+}
+
+export interface WeeklyPerformanceSummary {
+  id: string
+  userId: string
+  weekStart: string
+  weekEnd: string
+  sourceRangeDays: number
+  projectedFromRange: boolean
+  headline: string
+  summary: string
+  keyWins: string[]
+  watchouts: string[]
+  recommendedFocus: string[]
+  totals: {
+    views: number
+    clicks: number
+    leads: number
+    conversions: number
+    revenue: number
+    conversionRate: number
+    ctr: number
+    engagementRate: number
+    bounceRate: number
+  }
+  topFunnels: Array<{
+    funnelId: string
+    funnelName: string
+    score: number
+    conversionRate: number
+    revenue: number
+  }>
+  createdAt: string
+}
+
+export interface PerformanceForecast {
+  id: string
+  funnelId: string
+  funnelName: string
+  baselineClicks: number
+  baselineConversions: number
+  baselineRevenue: number
+  baselineConversionRate: number
+  baselineCtr: number
+  predictedClicks: number
+  predictedConversions: number
+  predictedRevenue: number
+  predictedConversionRate: number
+  predictedCtr: number
+  horizon: '7d'
+  model: 'weighted_trend'
+  confidence: number
+  assumptions: string[]
+  generatedAt: string
+}
+
 export interface GrowthAssistantResult {
   userId: string
   range: GrowthRange
@@ -103,6 +206,11 @@ export interface GrowthAssistantResult {
   insights: GrowthInsight[]
   recommendations: GrowthRecommendation[]
   alerts: GrowthAlert[]
+  abTestSuggestions: ABTestSuggestion[]
+  optimizationIdeas: FunnelOptimizationIdea[]
+  plainEnglishInsights: PlainEnglishInsight[]
+  weeklySummary: WeeklyPerformanceSummary
+  forecasts: PerformanceForecast[]
 }
 
 export interface GrowthAssistantOptions {

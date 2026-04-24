@@ -1,19 +1,31 @@
 import { api } from './client'
 import type {
+  ABTestSuggestion,
   FunnelPerformanceScore,
+  FunnelOptimizationIdea,
   GrowthAlert,
   GrowthInsight,
   GrowthRange,
   GrowthRecommendation,
+  PerformanceForecast,
+  PlainEnglishInsight,
+  WeeklyPerformanceSummary,
 } from '@/lib/growth-assistant/types'
 
 type InsightsResponse = {
   insights?: GrowthInsight[]
+  plainEnglishInsights?: PlainEnglishInsight[]
   funnelScores?: FunnelPerformanceScore[]
+  abTestSuggestions?: ABTestSuggestion[]
+  optimizationIdeas?: FunnelOptimizationIdea[]
+  weeklySummary?: WeeklyPerformanceSummary
+  forecasts?: PerformanceForecast[]
 }
 
 type RecommendationsResponse = {
   recommendations?: GrowthRecommendation[]
+  optimizationIdeas?: FunnelOptimizationIdea[]
+  abTestSuggestions?: ABTestSuggestion[]
 }
 
 type AlertsResponse = {
@@ -38,7 +50,15 @@ export async function getGrowthSnapshot(params?: {
   range?: GrowthRange
   funnelId?: string
   limit?: number
-}): Promise<{ insights: GrowthInsight[]; funnelScores: FunnelPerformanceScore[] }> {
+}): Promise<{
+  insights: GrowthInsight[]
+  plainEnglishInsights: PlainEnglishInsight[]
+  funnelScores: FunnelPerformanceScore[]
+  abTestSuggestions: ABTestSuggestion[]
+  optimizationIdeas: FunnelOptimizationIdea[]
+  weeklySummary: WeeklyPerformanceSummary | null
+  forecasts: PerformanceForecast[]
+}> {
   const search = new URLSearchParams()
   if (params?.range) search.set('range', params.range)
   if (params?.funnelId) search.set('funnelId', params.funnelId)
@@ -47,7 +67,12 @@ export async function getGrowthSnapshot(params?: {
   const payload = await api.get<InsightsResponse>(`/api/insights${suffix}`)
   return {
     insights: payload.insights || [],
+    plainEnglishInsights: payload.plainEnglishInsights || [],
     funnelScores: payload.funnelScores || [],
+    abTestSuggestions: payload.abTestSuggestions || [],
+    optimizationIdeas: payload.optimizationIdeas || [],
+    weeklySummary: payload.weeklySummary || null,
+    forecasts: payload.forecasts || [],
   }
 }
 
