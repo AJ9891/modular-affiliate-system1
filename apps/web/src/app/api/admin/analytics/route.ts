@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
+import { hasAdminAccess } from '@/lib/admin-access'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,11 +14,11 @@ export async function GET(req: NextRequest) {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('is_admin')
+    .select('is_admin, role')
     .eq('id', user.id)
     .single()
   
-  if (!profile?.is_admin) {
+  if (!hasAdminAccess(profile)) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 })
   }
 

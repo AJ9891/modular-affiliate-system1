@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { hasAdminAccess } from '@/lib/admin-access'
 
 const ONBOARDING_COMPLETE = 8
 
@@ -63,11 +64,11 @@ export default function Login() {
       if (user) {
         const { data: profile } = await supabase
           .from('users')
-          .select('onboarding_seen, onboarding_step, onboarding_complete, is_admin')
+          .select('onboarding_seen, onboarding_step, onboarding_complete, is_admin, role')
           .eq('id', user.id)
           .maybeSingle()
 
-        const isAdmin = Boolean(profile?.is_admin)
+        const isAdmin = hasAdminAccess(profile)
         const onboardingStep = Number(profile?.onboarding_step ?? 0)
         const onboardingComplete = Boolean(profile?.onboarding_complete) || onboardingStep >= ONBOARDING_COMPLETE
 

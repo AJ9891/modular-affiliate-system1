@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { hasAdminAccess } from '@/lib/admin-access'
 import { Sparkles, Rocket, Brain, SunMoon, Radar, Settings2, MessageSquare, Flame, Compass, BarChart3, ExternalLink, X } from 'lucide-react'
 import { COCKPIT_MODULES, type CockpitModule } from '@/config/cockpitModules'
 
@@ -66,11 +67,11 @@ function CockpitContent() {
 
       const { data, error } = await supabase
         .from('users')
-        .select('onboarding_step, onboarding_complete, is_admin')
+        .select('onboarding_step, onboarding_complete, is_admin, role')
         .eq('id', user.id)
         .maybeSingle()
 
-      const isAdmin = Boolean(data?.is_admin)
+      const isAdmin = hasAdminAccess(data)
       const onboardingStep = Number(data?.onboarding_step ?? 0)
       const onboardingComplete = Boolean(data?.onboarding_complete) || onboardingStep >= ONBOARDING_COMPLETE
 

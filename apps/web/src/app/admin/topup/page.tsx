@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { hasAdminAccess } from '@/lib/admin-access'
 
 function TopUpContent() {
   const supabase = createClientComponentClient()
@@ -41,7 +42,7 @@ function TopUpContent() {
         .eq('id', user.id)
         .single()
 
-      const allowed = profile?.is_admin || profile?.role === 'admin' || profile?.role === 'owner'
+      const allowed = hasAdminAccess(profile)
 
       if (!allowed) {
         router.push('/dashboard')

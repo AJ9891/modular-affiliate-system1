@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     const userData = await fetchUserProfile(
       adminClient,
       user.id,
-      'custom_domain, subdomain, subscription_plan, email, is_admin'
+      'custom_domain, subdomain, subscription_plan, email, is_admin, role'
     )
 
     return ok({
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     const userData = await fetchUserProfile(
       adminClient,
       user.id,
-      'subscription_plan, is_admin'
+      'subscription_plan, is_admin, role'
     )
 
     if (type === 'custom' && !canUseCustomDomain(userData)) {

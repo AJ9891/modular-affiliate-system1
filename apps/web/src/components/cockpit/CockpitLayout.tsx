@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import SidebarNavigation from './SidebarNavigation'
 import ContextPanel from './ContextPanel'
 import { cn } from '@/lib/utils'
+import { hasAdminAccess } from '@/lib/admin-access'
 
 const SIDEBAR_COLLAPSE_KEY = 'cockpit_sidebar_collapsed'
 const CONTEXT_COLLAPSE_KEY = 'cockpit_context_collapsed'
@@ -57,11 +58,11 @@ export default function CockpitLayout({ children }: { children: ReactNode }) {
 
         const { data: profile } = await supabase
           .from('users')
-          .select('is_admin, onboarding_complete')
+          .select('is_admin, role, onboarding_complete')
           .eq('id', user.id)
           .maybeSingle()
 
-        const admin = Boolean(profile?.is_admin)
+        const admin = hasAdminAccess(profile)
         setIsAdmin(admin)
         setOnboardingComplete(Boolean(profile?.onboarding_complete) || admin)
       } catch (error) {

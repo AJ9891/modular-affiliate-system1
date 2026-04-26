@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import OnboardingSlideshow from '@/components/OnboardingSlides'
 import { supabase } from '@/lib/supabase'
+import { hasAdminAccess } from '@/lib/admin-access'
 
 const ONBOARDING_COMPLETE = 8
 
@@ -26,12 +27,12 @@ export default function WelcomePage() {
 
         const { data: profile, error } = await supabase
           .from('users')
-          .select('onboarding_seen, onboarding_step, onboarding_complete, is_admin')
+          .select('onboarding_seen, onboarding_step, onboarding_complete, is_admin, role')
           .eq('id', user.id)
           .maybeSingle()
 
         if (!error && profile) {
-          const isAdmin = Boolean(profile.is_admin)
+          const isAdmin = hasAdminAccess(profile)
           const step = Number(profile.onboarding_step ?? 0)
           const onboardingComplete = Boolean(profile.onboarding_complete) || step >= ONBOARDING_COMPLETE
 

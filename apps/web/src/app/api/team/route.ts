@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
+import { hasAdminAccess } from '@/lib/admin-access'
 
 // GET /api/team - List team members
 export async function GET(request: NextRequest) {
@@ -69,11 +70,11 @@ export async function POST(request: NextRequest) {
     // Check if user has Agency plan
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('plan, is_admin')
+      .select('plan, is_admin, role')
       .eq('id', user.id)
       .single()
 
-    if (userError || (!userData?.is_admin && userData?.plan !== 'agency')) {
+    if (userError || (!hasAdminAccess(userData) && userData?.plan !== 'agency')) {
       return NextResponse.json({ 
         error: 'Team collaboration is only available on the Agency plan' 
       }, { status: 403 })

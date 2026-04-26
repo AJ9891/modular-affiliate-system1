@@ -28,6 +28,7 @@ import {
   X,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { hasAdminAccess } from '@/lib/admin-access'
 
 interface NavigationItem {
   name: string
@@ -120,11 +121,11 @@ export default function Sidebar() {
 
         const { data: profile } = await supabase
           .from('users')
-          .select('onboarding_complete, onboarding_step, is_admin')
+          .select('onboarding_complete, onboarding_step, is_admin, role')
           .eq('id', user.id)
           .maybeSingle()
 
-        const admin = Boolean(profile?.is_admin)
+        const admin = hasAdminAccess(profile)
         setOnboardingComplete(Boolean(profile?.onboarding_complete) || admin)
         setOnboardingStep(admin ? ONBOARDING_COMPLETE : Number(profile?.onboarding_step ?? 0))
         setIsAdmin(admin)

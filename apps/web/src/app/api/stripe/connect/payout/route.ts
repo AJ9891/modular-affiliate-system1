@@ -4,6 +4,7 @@ import { checkSupabase } from '@/lib/check-supabase'
 import { payoutSchema } from '@/lib/validators/stripe'
 import { log } from '@/lib/log'
 import { getStripeServerClient } from '@/lib/stripe-server'
+import { hasAdminAccess } from '@/lib/admin-access'
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
@@ -24,11 +25,11 @@ export async function POST(request: NextRequest) {
     // Only admins can process payouts
     const { data: userData } = await supabase
       .from('users')
-      .select('is_admin')
+      .select('is_admin, role')
       .eq('id', user.id)
       .single()
 
-    if (!userData?.is_admin) {
+    if (!hasAdminAccess(userData)) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
