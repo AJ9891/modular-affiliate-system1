@@ -1,3 +1,5 @@
+'use client'
+
 import { LaunchpadVision } from '@/components/LaunchpadVision'
 import { Sparkles, Rocket, BarChart3, ShieldCheck, Brain, Terminal } from 'lucide-react'
 
