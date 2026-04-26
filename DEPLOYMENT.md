@@ -37,6 +37,23 @@ This repository is locked to a single Vercel target:
 
 If they do not match, deploy is blocked and it prints the exact `vercel link` command to fix the link.
 
+For production deploys (`npm run deploy`), the script also performs post-deploy domain sync:
+
+- Ensures project custom domains exist via `vercel domains add`
+- Refreshes wildcard/domain aliases to the current production alias
+
+Default synced targets:
+
+- `launchpad4success.pro`
+- `www.launchpad4success.pro`
+- `*.launchpad4success.pro`
+
+Override targets (optional):
+
+- `PROD_BASE_ALIAS` (default: `modular-affiliate-system1.vercel.app`)
+- `PROD_CUSTOM_DOMAINS` (comma-separated)
+- `PROD_CUSTOM_ALIASES` (comma-separated)
+
 ## If link check fails
 
 Run:
