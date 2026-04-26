@@ -65,8 +65,60 @@ const MODE_LABEL: Record<BrandModeKey, string> = {
   meltdown: 'AI Meltdown',
 }
 
+const VISION_CHAT_STORAGE_KEY = 'launchpad_vision_chat_memory_v1'
+const MAX_STORED_MESSAGES = 120
+
 function makeId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`
+}
+
+function isChatMessage(value: unknown): value is ChatMessage {
+  if (!value || typeof value !== 'object') return false
+  const candidate = value as Record<string, unknown>
+  if (typeof candidate.id !== 'string') return false
+  if (candidate.role !== 'user' && candidate.role !== 'system') return false
+  if (typeof candidate.content !== 'string') return false
+  if (candidate.actionLabel != null && typeof candidate.actionLabel !== 'string') return false
+  if (candidate.actionHref != null && typeof candidate.actionHref !== 'string') return false
+  return true
+}
+
+function trimMessages(messages: ChatMessage[]): ChatMessage[] {
+  if (messages.length <= MAX_STORED_MESSAGES) return messages
+  return messages.slice(messages.length - MAX_STORED_MESSAGES)
+}
+
+function appendMessages(current: ChatMessage[], next: ChatMessage[]): ChatMessage[] {
+  return trimMessages([...current, ...next])
+}
+
+function loadStoredMessages(): ChatMessage[] | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = window.localStorage.getItem(VISION_CHAT_STORAGE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return null
+    const messages = parsed.filter(isChatMessage)
+    return messages.length > 0 ? trimMessages(messages) : null
+  } catch {
+    return null
+  }
+}
+
+function persistMessages(messages: ChatMessage[]) {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(VISION_CHAT_STORAGE_KEY, JSON.stringify(trimMessages(messages)))
+  } catch {
+    // Ignore storage write failures (quota/privacy mode)
+  }
+}
+
+function truncateText(text: string, maxLength = 80): string {
+  const compact = text.replace(/\s+/g, ' ').trim()
+  if (compact.length <= maxLength) return compact
+  return `${compact.slice(0, maxLength - 1)}…`
 }
 
 function hashSeed(seed: string): number {
@@ -117,17 +169,49 @@ function resolveActionFromPrompt(prompt: string, actions: Action[]): Action | nu
   return null
 }
 
-function buildSystemReply(prompt: string, stats: Stat[], actions: Action[], mode: BrandModeKey): ChatMessage {
+function getPreviousPrompt(history: ChatMessage[]): string | null {
+  const userPrompts = history.filter((message) => message.role === 'user')
+  if (userPrompts.length < 2) return null
+  return userPrompts[userPrompts.length - 2]?.content ?? null
+}
+
+function countPriorMatches(history: ChatMessage[], actions: Action[], title: string): number {
+  let count = 0
+  for (const message of history) {
+    if (message.role !== 'user') continue
+    const matched = resolveActionFromPrompt(message.content, actions)
+    if (matched?.title === title) count += 1
+  }
+  return count
+}
+
+function buildSystemReply(
+  prompt: string,
+  stats: Stat[],
+  actions: Action[],
+  mode: BrandModeKey,
+  history: ChatMessage[]
+): ChatMessage {
   const personality = MODE_TO_PERSONALITY[mode]
   const transition = pickPhrase(personality.language.transitions, `${mode}-transition-${prompt}`, 'Recommended module:')
   const emphasis = pickPhrase(personality.language.emphasis, `${mode}-emphasis-${prompt}`, 'Focus on execution.')
   const closing = pickPhrase(personality.language.closings, `${mode}-closing-${prompt}`, 'Continue when ready.')
   const matchedAction = resolveActionFromPrompt(prompt, actions)
+  const previousPrompt = getPreviousPrompt(history)
+
   if (matchedAction) {
+    const totalMatches = countPriorMatches(history, actions, matchedAction.title)
+    const repeatLineByMode: Record<BrandModeKey, string> = {
+      rocket: "You asked about this before, and it's still the highest-leverage next move.",
+      antiguru: 'You asked this before. Same answer because the fundamentals did not change.',
+      meltdown: 'Yes, this again. Same module still wins. Allegedly shocking.',
+    }
+    const repeatLine = totalMatches > 1 ? ` ${repeatLineByMode[mode]}` : ''
+
     const contentByMode: Record<BrandModeKey, string> = {
-      rocket: `${transition} ${matchedAction.title}. ${matchedAction.description} ${emphasis}. ${closing}`,
-      antiguru: `${transition}. ${matchedAction.title} is the right move. ${matchedAction.description} ${emphasis}.`,
-      meltdown: `${transition} ${matchedAction.title}. ${matchedAction.description} ${emphasis}. ${closing}`,
+      rocket: `${transition} ${matchedAction.title}. ${matchedAction.description} ${emphasis}. ${closing}${repeatLine}`,
+      antiguru: `${transition}. ${matchedAction.title} is the right move. ${matchedAction.description} ${emphasis}.${repeatLine}`,
+      meltdown: `${transition} ${matchedAction.title}. ${matchedAction.description} ${emphasis}. ${closing}${repeatLine}`,
     }
 
     return {
@@ -140,10 +224,16 @@ function buildSystemReply(prompt: string, stats: Stat[], actions: Action[], mode
   }
 
   const bestStat = getBestStat(stats)
+  const memoryByMode: Record<BrandModeKey, string> = {
+    rocket: previousPrompt ? `Recent ask I remember: "${truncateText(previousPrompt)}".` : '',
+    antiguru: previousPrompt ? `Previous request on file: "${truncateText(previousPrompt)}".` : '',
+    meltdown: previousPrompt ? `From chat memory: "${truncateText(previousPrompt)}".` : '',
+  }
+
   const fallbackByMode: Record<BrandModeKey, string> = {
-    rocket: `${transition} I did not find a direct module match yet. Strongest signal is ${bestStat}. ${emphasis}. Tell me your target outcome (build, traffic, conversion, affiliate, or admin).`,
-    antiguru: `${transition}. No direct module match from that prompt. Strongest signal is ${bestStat}. ${emphasis}. Give me one concrete target: build, traffic, conversion, affiliate, or admin.`,
-    meltdown: `${transition} I did not find a direct module match. Strongest signal is ${bestStat}. ${emphasis}. Pick one target outcome: build, traffic, conversion, affiliate, or admin.`,
+    rocket: `${transition} I did not find a direct module match yet. Strongest signal is ${bestStat}. ${memoryByMode.rocket} ${emphasis}. Tell me your target outcome (build, traffic, conversion, affiliate, or admin).`,
+    antiguru: `${transition}. No direct module match from that prompt. Strongest signal is ${bestStat}. ${memoryByMode.antiguru} ${emphasis}. Give me one concrete target: build, traffic, conversion, affiliate, or admin.`,
+    meltdown: `${transition} I did not find a direct module match. Strongest signal is ${bestStat}. ${memoryByMode.meltdown} ${emphasis}. Pick one target outcome: build, traffic, conversion, affiliate, or admin.`,
   }
 
   return {
@@ -182,7 +272,11 @@ function GlowCard({
 
 export function LaunchpadVision({ stats, actions, userPlan }: LaunchpadVisionProps) {
   const { mode } = useBrandMode()
-  const [messages, setMessages] = useState<ChatMessage[]>(() => [createInitialMessage(stats, mode, userPlan)])
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    const storedMessages = loadStoredMessages()
+    if (storedMessages && storedMessages.length > 0) return storedMessages
+    return [createInitialMessage(stats, mode, userPlan)]
+  })
   const [draft, setDraft] = useState('')
   const [isThinking, setIsThinking] = useState(false)
   const endRef = useRef<HTMLDivElement | null>(null)
@@ -196,18 +290,24 @@ export function LaunchpadVision({ stats, actions, userPlan }: LaunchpadVisionPro
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isThinking])
 
+  useEffect(() => {
+    persistMessages(messages)
+  }, [messages])
+
   const submitPrompt = (rawPrompt: string) => {
     const prompt = rawPrompt.trim()
     if (!prompt || isThinking) return
 
     const userMessage: ChatMessage = { id: makeId(), role: 'user', content: prompt }
-    setMessages((current) => [...current, userMessage])
+    setMessages((current) => appendMessages(current, [userMessage]))
     setDraft('')
     setIsThinking(true)
 
     window.setTimeout(() => {
-      const systemReply = buildSystemReply(prompt, stats, actions, mode)
-      setMessages((current) => [...current, systemReply])
+      setMessages((current) => {
+        const systemReply = buildSystemReply(prompt, stats, actions, mode, current)
+        return appendMessages(current, [systemReply])
+      })
       setIsThinking(false)
     }, 220)
   }
