@@ -12,6 +12,7 @@ import type {
   GrowthInsight,
   GrowthRecommendation,
   PerformanceForecast,
+  PlainEnglishInsight,
   WeeklyPerformanceSummary,
 } from '@/lib/growth-assistant/types'
 import DashboardSkeleton from './DashboardSkeleton'
@@ -29,6 +30,11 @@ import {
   RecommendationsFeedPanel,
   AlertsPanel,
   QuickActionsPanel,
+  ABTestSuggestionsPanel,
+  OptimizationIdeasPanel,
+  PlainEnglishInsightsPanel,
+  WeeklySummaryReportPanel,
+  PerformanceForecastPanel,
 } from './panels'
 
 const ranges = [
@@ -50,6 +56,7 @@ export default function DashboardControlCenter() {
   const [insights, setInsights] = useState<GrowthInsight[]>([])
   const [recommendations, setRecommendations] = useState<GrowthRecommendation[]>([])
   const [alerts, setAlerts] = useState<GrowthAlert[]>([])
+  const [plainEnglishInsights, setPlainEnglishInsights] = useState<PlainEnglishInsight[]>([])
   const [weeklySummary, setWeeklySummary] = useState<WeeklyPerformanceSummary | null>(null)
   const [forecasts, setForecasts] = useState<PerformanceForecast[]>([])
   const [abTestSuggestions, setAbTestSuggestions] = useState<ABTestSuggestion[]>([])
@@ -79,25 +86,8 @@ export default function DashboardControlCenter() {
         const snapshotPayload = snapshotResult.status === 'fulfilled' ? snapshotResult.value : null
 
         if (snapshotPayload) {
-          const naturalInsights: GrowthInsight[] = snapshotPayload.plainEnglishInsights.map((item) => ({
-            id: item.id,
-            userId: item.userId,
-            funnelId: item.funnelId,
-            insightType: 'plain_english',
-            title: item.title,
-            description: item.explanation,
-            severity: item.severity,
-            confidence: 0.8,
-            metrics: {
-              whyItMatters: item.whyItMatters,
-              nextStep: item.nextStep,
-            },
-            periodStart: snapshotPayload.weeklySummary?.weekStart || new Date().toISOString(),
-            periodEnd: snapshotPayload.weeklySummary?.weekEnd || new Date().toISOString(),
-            createdAt: item.createdAt,
-          }))
-
-          setInsights(naturalInsights.length > 0 ? naturalInsights : snapshotPayload.insights)
+          setInsights(snapshotPayload.insights)
+          setPlainEnglishInsights(snapshotPayload.plainEnglishInsights)
           setFunnelScores(snapshotPayload.funnelScores)
           setWeeklySummary(snapshotPayload.weeklySummary)
           setForecasts(snapshotPayload.forecasts)
@@ -105,6 +95,7 @@ export default function DashboardControlCenter() {
           setOptimizationIdeas(snapshotPayload.optimizationIdeas)
         } else {
           setInsights([])
+          setPlainEnglishInsights([])
           setFunnelScores([])
           setWeeklySummary(null)
           setForecasts([])
@@ -302,6 +293,17 @@ export default function DashboardControlCenter() {
           <InsightsPanel insights={insights} />
           <RecommendationsFeedPanel recommendations={recommendations} />
           <AlertsPanel alerts={alerts} />
+        </section>
+
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <PlainEnglishInsightsPanel insights={plainEnglishInsights} />
+          <ABTestSuggestionsPanel suggestions={abTestSuggestions} />
+          <OptimizationIdeasPanel ideas={optimizationIdeas} />
+        </section>
+
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <WeeklySummaryReportPanel summary={weeklySummary} />
+          <PerformanceForecastPanel forecasts={forecasts} />
         </section>
 
         <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
