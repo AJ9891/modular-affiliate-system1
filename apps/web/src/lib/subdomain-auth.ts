@@ -1,4 +1,4 @@
-import { createMiddlewareClient, createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
@@ -30,18 +30,132 @@ export function parseSubdomain(request: NextRequest): SubdomainInfo {
 }
 
 export function createSubdomainMiddlewareClient(req: NextRequest, res: NextResponse) {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  const supabasePublicKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  if (!supabaseUrl || !supabasePublicKey) {
     // Returning null allows callers to bypass auth when env is not configured (e.g., local preview)
     // Callers must check for null before using the client.
     return null
   }
-  return createMiddlewareClient({ req, res })
+
+  return createServerClient(supabaseUrl, supabasePublicKey, {
+    cookies: {
+      getAll() {
+        return req.cookies.getAll()
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value))
+        cookiesToSet.forEach(({ name, value, options }) => res.cookies.set(name, value, options))
+      },
+    },
+  })
 }
 
-export async function createSubdomainRouteHandlerClient(req: NextRequest) {
+function createSubdomainRouteHandlerClientWithCookieWriter(request: NextRequest) {
+  const supabasePublicKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+
+  if (!supabaseUrl || !supabasePublicKey) {
+    throw new Error('[Supabase] NEXT_PUBLIC_SUPABASE_URL and public key missing')
+  }
+
+  const pendingCookies = new Map<string, { value: string; options?: Record<string, unknown> }>()
+
+  const supabase = createServerClient(supabaseUrl, supabasePublicKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll()
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value, options }) => {
+          try {
+            request.cookies.set(name, value)
+          } catch {
+            // Ignore writes in contexts where request cookies are immutable.
+          }
+
+          pendingCookies.set(name, {
+            value,
+            options: options as unknown as Record<string, unknown> | undefined,
+          })
+        })
+      },
+    },
+  })
+
+  const applyCookies = (response: NextResponse) => {
+    pendingCookies.forEach(({ value, options }, name) => {
+      response.cookies.set(name, value, options)
+    })
+    return response
+  }
+
+  return { supabase, applyCookies }
+}
+
+export async function createSubdomainRouteHandlerClient(_req: NextRequest) {
+  const supabasePublicKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+
+  if (!supabaseUrl || !supabasePublicKey) {
+    throw new Error('[Supabase] NEXT_PUBLIC_SUPABASE_URL and public key missing')
+  }
+
   const cookieStore = await cookies()
-  const cookieAdapter = (() => cookieStore) as unknown as () => ReturnType<typeof cookies>
-  return createRouteHandlerClient({ cookies: cookieAdapter })
+  return createServerClient(supabaseUrl, supabasePublicKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll()
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+        } catch {
+          // Ignore writes in contexts that disallow cookie mutation.
+        }
+      },
+    },
+  })
+}
+
+export function createSubdomainRouteHandlerClientWithResponse(request: NextRequest) {
+  return createSubdomainRouteHandlerClientWithCookieWriter(request)
+}
+
+// Next.js 16-compatible route handler client for routes that previously used
+// createRouteHandlerClient({ cookies }) directly.
+export async function createRouteHandlerClientCompat() {
+  const supabasePublicKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+
+  if (!supabaseUrl || !supabasePublicKey) {
+    throw new Error('[Supabase] NEXT_PUBLIC_SUPABASE_URL and public key missing')
+  }
+
+  const cookieStore = await cookies()
+  return createServerClient(supabaseUrl, supabasePublicKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll()
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+        } catch {
+          // Ignore writes in contexts that disallow cookie mutation.
+        }
+      },
+    },
+  })
 }
 
 export async function validateSubdomainAccess(

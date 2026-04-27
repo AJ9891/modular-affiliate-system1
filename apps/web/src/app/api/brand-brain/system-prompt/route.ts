@@ -1,17 +1,10 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { BrandBrainManager } from '@/lib/brand-brain/manager';
-
-async function getSupabaseRouteClient() {
-  const cookieStore = await cookies();
-  const cookieAdapter = (() => cookieStore) as unknown as () => ReturnType<typeof cookies>;
-  return createRouteHandlerClient({ cookies: cookieAdapter });
-}
+import { createServerRouteClient } from '@/lib/supabase-server';
 
 export async function POST(request: Request) {
   try {
-    const supabase = await getSupabaseRouteClient();
+    const supabase = await createServerRouteClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {

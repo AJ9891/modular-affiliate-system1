@@ -60,7 +60,7 @@ Run this migration in your Supabase SQL Editor:
 -- Add domain and subscription fields to users table
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS subdomain text unique;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS custom_domain text unique;
-ALTER TABLE public.users ADD COLUMN IF NOT EXISTS sendshark_provisioned boolean default false;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS email_automation_provisioned boolean default false;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS stripe_customer_id text;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS stripe_subscription_id text;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS plan text check (plan in ('starter', 'pro', 'agency'));

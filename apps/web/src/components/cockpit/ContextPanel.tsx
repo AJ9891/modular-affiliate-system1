@@ -22,7 +22,7 @@ interface ContextSection {
 }
 
 function resolveContext(pathname: string): { heading: string; sections: ContextSection[] } {
-  if (pathname.startsWith('/funnels') || pathname.startsWith('/visual-builder')) {
+  if (pathname.startsWith('/funnels') || pathname.startsWith('/ai-generator') || pathname.startsWith('/link-funnel')) {
     return {
       heading: 'Funnel Controls',
       sections: [
@@ -34,7 +34,7 @@ function resolveContext(pathname: string): { heading: string; sections: ContextS
             { label: 'Template', value: 'Lead Magnet' },
             { label: 'Publish Status', value: 'Draft' },
             { label: 'CTA Variant', value: 'Primary' },
-            { label: 'Open Visual Builder', href: '/visual-builder' },
+            { label: 'Open Link Funnel Builder', href: '/link-funnel' },
           ],
         },
         {
@@ -110,7 +110,12 @@ function resolveContext(pathname: string): { heading: string; sections: ContextS
     }
   }
 
-  if (pathname.startsWith('/ai-generator') || pathname.startsWith('/intelligence') || pathname.startsWith('/ai-optimizer')) {
+  if (
+    pathname.startsWith('/ai-generator') ||
+    pathname.startsWith('/link-funnel') ||
+    pathname.startsWith('/intelligence') ||
+    pathname.startsWith('/ai-optimizer')
+  ) {
     return {
       heading: 'AI Core Controls',
       sections: [
@@ -186,7 +191,7 @@ function resolveContext(pathname: string): { heading: string; sections: ContextS
           icon: SlidersHorizontal,
           controls: [
             { label: 'AI Generator', href: '/ai-generator' },
-            { label: 'Visual Builder', href: '/visual-builder' },
+            { label: 'Link Funnel Builder', href: '/link-funnel' },
           ],
         },
       ],

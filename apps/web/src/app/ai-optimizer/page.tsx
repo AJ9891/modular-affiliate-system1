@@ -86,10 +86,10 @@ export default function AIOptimizerPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading AI Optimizer...</p>
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-rocket-500"></div>
+          <p className="text-text-secondary">Loading AI Optimizer...</p>
         </div>
       </div>
     )
@@ -97,46 +97,47 @@ export default function AIOptimizerPage() {
 
   if (funnels.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-        <div className="container mx-auto px-4 py-8">
+      <div className="cockpit-container min-h-screen py-8">
+        <div className="mx-auto px-4 py-8">
           {/* Header */}
           <div className="flex items-center mb-8">
             <Button 
               variant="ghost" 
               onClick={() => router.back()}
-              className="mr-4"
+              className="mr-4 border border-[var(--border-elevated)] bg-[rgba(255,255,255,0.03)] text-text-secondary hover:border-[var(--border-focus)] hover:bg-[rgba(255,255,255,0.07)] hover:text-text-primary"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
             <div>
-              <h1 className="text-3xl font-bold flex items-center gap-3">
-                <Brain className="h-8 w-8 text-purple-600" />
+              <h1 className="flex items-center gap-3 text-3xl font-bold text-text-primary">
+                <Brain className="h-8 w-8 text-rocket-500" />
                 AI Optimizer
               </h1>
-              <p className="text-gray-600">Boost your funnel performance with AI-powered suggestions</p>
+              <p className="text-text-secondary">Boost your funnel performance with AI-powered suggestions</p>
             </div>
           </div>
 
           {/* No Funnels State */}
-          <Card className="max-w-2xl mx-auto text-center">
+          <Card className="card-premium mx-auto max-w-2xl text-center">
             <CardContent className="py-16">
-              <Target className="h-16 w-16 mx-auto mb-6 text-gray-400" />
-              <h2 className="text-2xl font-semibold mb-4">No Active Funnels Found</h2>
-              <p className="text-gray-600 mb-8">
+              <Target className="mx-auto mb-6 h-16 w-16 text-text-muted" />
+              <h2 className="mb-4 text-2xl font-semibold text-text-primary">No Active Funnels Found</h2>
+              <p className="mb-8 text-text-secondary">
                 You need at least one active funnel to use the AI Optimizer. 
                 Create a funnel first to get personalized optimization suggestions.
               </p>
               <div className="flex gap-4 justify-center">
                 <Button 
                   onClick={() => router.push('/visual-builder')}
-                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                  className="btn-launch-premium"
                 >
                   <Zap className="h-4 w-4 mr-2" />
                   Create Funnel
                 </Button>
                 <Button 
                   variant="outline"
+                  className="hud-button-secondary"
                   onClick={() => router.push('/launchpad')}
                 >
                   Back to Launchpad
@@ -150,41 +151,41 @@ export default function AIOptimizerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-      <div className="container mx-auto px-4 py-8">
+    <div className="cockpit-container min-h-screen py-8">
+      <div className="mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center">
             <Button 
               variant="ghost" 
               onClick={() => router.back()}
-              className="mr-4"
+              className="mr-4 border border-[var(--border-elevated)] bg-[rgba(255,255,255,0.03)] text-text-secondary hover:border-[var(--border-focus)] hover:bg-[rgba(255,255,255,0.07)] hover:text-text-primary"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
             <div>
-              <h1 className="text-3xl font-bold flex items-center gap-3">
-                <Brain className="h-8 w-8 text-purple-600" />
+              <h1 className="flex items-center gap-3 text-3xl font-bold text-text-primary">
+                <Brain className="h-8 w-8 text-rocket-500" />
                 AI Optimizer
               </h1>
-              <p className="text-gray-600">Boost your funnel performance with AI-powered suggestions</p>
+              <p className="text-text-secondary">Boost your funnel performance with AI-powered suggestions</p>
             </div>
           </div>
 
           {/* Funnel Selector */}
           <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-gray-700">Select Funnel:</label>
+            <label className="text-sm font-medium text-text-secondary">Select Funnel:</label>
             <Select value={selectedFunnelId} onValueChange={setSelectedFunnelId}>
-              <SelectTrigger className="w-64">
+              <SelectTrigger className="w-64 border-[var(--border-elevated)] bg-[rgba(255,255,255,0.03)] text-text-primary">
                 <SelectValue placeholder="Choose a funnel to optimize" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="border-[var(--border-elevated)] bg-[rgba(6,10,20,0.98)] text-text-primary">
                 {funnels.map((funnel) => (
                   <SelectItem key={funnel.id} value={funnel.id}>
                     <div className="flex items-center justify-between w-full">
                       <span className="font-medium">{funnel.name}</span>
-                      <div className="flex items-center gap-2 text-xs text-gray-500 ml-4">
+                      <div className="ml-4 flex items-center gap-2 text-xs text-text-muted">
                         <span>{funnel.leads_count || 0} leads</span>
                         <span>•</span>
                         <span>{funnel.clicks_count || 0} clicks</span>
@@ -206,11 +207,11 @@ export default function AIOptimizerPage() {
         )}
 
         {!selectedFunnelId && funnels.length > 0 && (
-          <Card>
+          <Card className="card-premium">
             <CardContent className="py-16 text-center">
-              <Brain className="h-16 w-16 mx-auto mb-6 text-purple-400" />
-              <h2 className="text-xl font-semibold mb-4">Select a Funnel to Optimize</h2>
-              <p className="text-gray-600">
+              <Brain className="mx-auto mb-6 h-16 w-16 text-rocket-500" />
+              <h2 className="mb-4 text-xl font-semibold text-text-primary">Select a Funnel to Optimize</h2>
+              <p className="text-text-secondary">
                 Choose a funnel from the dropdown above to start analyzing and optimizing its performance.
               </p>
             </CardContent>
@@ -219,45 +220,45 @@ export default function AIOptimizerPage() {
 
         {/* Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-          <Card>
+          <Card className="card-premium">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Brain className="h-5 w-5 text-blue-600" />
+                <Brain className="h-5 w-5 text-rocket-500" />
                 AI Analysis
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-text-secondary">
                 Our AI analyzes your funnel performance data and identifies optimization opportunities 
                 based on industry best practices and your brand personality.
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="card-premium">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Zap className="h-5 w-5 text-orange-600" />
+                <Zap className="h-5 w-5 text-rocket-500" />
                 Auto-Optimize
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-text-secondary">
                 Apply AI suggestions with one click, or generate A/B test variations to validate 
                 improvements before making changes to your live funnels.
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="card-premium">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Target className="h-5 w-5 text-green-600" />
+                <Target className="h-5 w-5 text-rocket-500" />
                 Performance Boost
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-text-secondary">
                 Based on your BrandBrain personality, our AI generates suggestions that can 
                 improve conversion rates by 10-35% while staying true to your brand voice.
               </p>

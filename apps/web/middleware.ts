@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js'
 
 const PUBLIC_PATHS = new Set([
   '/',
+  '/about',
   '/pricing',
   '/signup',
   '/login',

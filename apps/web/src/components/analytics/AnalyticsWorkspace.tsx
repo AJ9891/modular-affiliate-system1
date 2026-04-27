@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Activity, TrendingUp, MousePointerClick, DollarSign } from 'lucide-react'
 import { getAnalyticsSummary, getFunnelPerformance, type FunnelPerformance } from '@/lib/api/analytics'
 import { listFunnels, type FunnelRecord } from '@/lib/api/funnels'
+import { getGrowthSnapshot } from '@/lib/api/growth-assistant'
 import DashboardPanel from '@/components/cockpit/DashboardPanel'
 import WorkspacePanel from '@/components/cockpit/WorkspacePanel'
 import { CockpitEmptyState } from '@/components/ui/CockpitEmptyState'
@@ -23,6 +24,7 @@ export default function AnalyticsWorkspace() {
   const [error, setError] = useState<string | null>(null)
   const [summary, setSummary] = useState<Awaited<ReturnType<typeof getAnalyticsSummary>> | null>(null)
   const [performanceRows, setPerformanceRows] = useState<PerformanceRow[]>([])
+  const [scoreByFunnel, setScoreByFunnel] = useState<Record<string, number>>({})
   const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
@@ -33,7 +35,19 @@ export default function AnalyticsWorkspace() {
         setLoading(true)
         setError(null)
 
-        const [summaryData, funnels] = await Promise.all([getAnalyticsSummary(range), listFunnels()])
+        const [summaryData, funnels, growthSnapshot] = await Promise.all([
+          getAnalyticsSummary(range),
+          listFunnels(),
+          getGrowthSnapshot({ range, limit: 200 }).catch(() => ({
+            insights: [],
+            plainEnglishInsights: [],
+            funnelScores: [],
+            abTestSuggestions: [],
+            optimizationIdeas: [],
+            weeklySummary: null,
+            forecasts: [],
+          })),
+        ])
         const candidates = funnels.slice(0, 8)
 
         const performance = await Promise.all(
@@ -50,6 +64,11 @@ export default function AnalyticsWorkspace() {
         if (active) {
           setSummary(summaryData)
           setPerformanceRows((performance.filter(Boolean) as PerformanceRow[]).sort((a, b) => b.performance.totalClicks - a.performance.totalClicks))
+          const nextScores: Record<string, number> = {}
+          for (const item of growthSnapshot.funnelScores || []) {
+            nextScores[item.funnelId] = item.score
+          }
+          setScoreByFunnel(nextScores)
         }
       } catch (err) {
         if (active) {
@@ -203,6 +222,7 @@ export default function AnalyticsWorkspace() {
                     <th className="px-3 py-2">Conversions</th>
                     <th className="px-3 py-2">Rate</th>
                     <th className="px-3 py-2">Revenue</th>
+                    <th className="px-3 py-2">Score</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -213,6 +233,7 @@ export default function AnalyticsWorkspace() {
                       <td className="px-3 py-3">{row.performance.totalConversions.toLocaleString()}</td>
                       <td className="px-3 py-3">{Number(row.performance.conversionRate).toFixed(2)}%</td>
                       <td className="px-3 py-3">${row.performance.totalRevenue.toLocaleString()}</td>
+                      <td className="px-3 py-3">{scoreByFunnel[row.funnel.funnel_id]?.toFixed(1) ?? '—'}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -32,8 +32,8 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MIGRATIONS_DIR="$SCRIPT_DIR/migrations"
 
-# Migration order (explicit)
-MIGRATIONS=(
+# Legacy migrations that must run first in this order.
+LEGACY_MIGRATIONS=(
   "add_admin_flag.sql"
   "add_domain_fields.sql"
   "add_onboarding_fields.sql"
@@ -46,15 +46,20 @@ MIGRATIONS=(
   "add_ai_chat_only.sql"
   "add_ai_support_chat.sql"
   "add_brand_modes.sql"
-  "add_brand_brain_tables.sql"
+  "001_add_brand_brain_tables.sql"
   "optimize_rls_and_performance.sql"
   "add_funnel_rls_policies.sql"
+  "update_brand_modes_voice_tone.sql"
+  "fix_rls_warnings.sql"
 )
 
 # Counters
 SUCCESS_COUNT=0
 FAIL_COUNT=0
 SKIP_COUNT=0
+
+# Final migration plan (legacy ordered core + all remaining *.sql files)
+MIGRATIONS=()
 
 ################################################################################
 # Functions
@@ -91,11 +96,38 @@ load_env() {
   # Load .env file if it exists
   if [ -f "$SCRIPT_DIR/../.env.local" ]; then
     echo -e "${BLUE}📄 Loading environment from .env.local${NC}"
-    export $(cat "$SCRIPT_DIR/../.env.local" | grep -v '^#' | xargs)
+    set -a
+    # shellcheck disable=SC1091
+    source "$SCRIPT_DIR/../.env.local"
+    set +a
   elif [ -f "$SCRIPT_DIR/../apps/web/.env.local" ]; then
     echo -e "${BLUE}📄 Loading environment from apps/web/.env.local${NC}"
-    export $(cat "$SCRIPT_DIR/../apps/web/.env.local" | grep -v '^#' | xargs)
+    set -a
+    # shellcheck disable=SC1091
+    source "$SCRIPT_DIR/../apps/web/.env.local"
+    set +a
   fi
+}
+
+build_migration_plan() {
+  MIGRATIONS=()
+  declare -A seen=()
+
+  local migration
+  for migration in "${LEGACY_MIGRATIONS[@]}"; do
+    if [ -f "$MIGRATIONS_DIR/$migration" ]; then
+      MIGRATIONS+=("$migration")
+      seen["$migration"]=1
+    fi
+  done
+
+  while IFS= read -r migration; do
+    [ -z "$migration" ] && continue
+    if [ -z "${seen[$migration]:-}" ]; then
+      MIGRATIONS+=("$migration")
+      seen["$migration"]=1
+    fi
+  done < <(find "$MIGRATIONS_DIR" -maxdepth 1 -type f -name '*.sql' -printf '%f\n' | sort)
 }
 
 validate_connection() {
@@ -151,9 +183,11 @@ SQL
 check_if_applied() {
   local migration_name=$1
   
+  local result
   result=$(psql "$DATABASE_URL" -t -c "SELECT COUNT(*) FROM _migrations WHERE name = '$migration_name'" 2>/dev/null || echo "0")
+  result=$(echo "$result" | tr -d '[:space:]')
   
-  if [ "$result" -gt 0 ]; then
+  if [[ "$result" =~ ^[0-9]+$ ]] && [ "$result" -gt 0 ]; then
     return 0  # Already applied
   else
     return 1  # Not applied
@@ -175,14 +209,14 @@ apply_migration() {
   # Check if file exists
   if [ ! -f "$filepath" ]; then
     echo -e "${YELLOW}  ⚠️  File not found, skipping${NC}"
-    ((SKIP_COUNT++))
+    SKIP_COUNT=$((SKIP_COUNT + 1))
     return
   fi
   
   # Check if already applied
   if check_if_applied "$filename"; then
     echo -e "${CYAN}  ℹ️  Already applied, skipping${NC}"
-    ((SKIP_COUNT++))
+    SKIP_COUNT=$((SKIP_COUNT + 1))
     return
   fi
   
@@ -192,12 +226,12 @@ apply_migration() {
   if psql "$DATABASE_URL" -f "$filepath" > /dev/null 2>&1; then
     mark_as_applied "$filename"
     echo -e "${GREEN}  ✓ Success${NC}"
-    ((SUCCESS_COUNT++))
+    SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
   else
     echo -e "${RED}  ✗ Failed${NC}"
     echo -e "${YELLOW}  Running with error output:${NC}"
     psql "$DATABASE_URL" -f "$filepath"
-    ((FAIL_COUNT++))
+    FAIL_COUNT=$((FAIL_COUNT + 1))
   fi
 }
 
@@ -210,6 +244,7 @@ main() {
   
   check_dependencies
   load_env
+  build_migration_plan
   validate_connection
   test_connection
   

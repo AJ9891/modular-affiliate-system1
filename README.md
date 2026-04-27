@@ -13,7 +13,7 @@ A complete, production-ready affiliate marketing platform combining powerful fun
 - **AI Content Generation** - Powered by OpenAI for headlines, copy, and full pages
 - **Lead Magnets** - Upload ebooks, PDFs, and digital downloads with email capture
 
-### Email Marketing (Sendshark Integration)
+### Email Marketing (Built-In Autoresponder + SES)
 
 - **Automated Sequences** - Welcome series, abandoned cart recovery
 - **Campaign Management** - One-off broadcasts and scheduled campaigns
@@ -43,7 +43,7 @@ A complete, production-ready affiliate marketing platform combining powerful fun
 - **[Downloads Documentation](./docs/DOWNLOADS.md)** - Complete downloads guide
 - **[Integration Summary](./INTEGRATION_SUMMARY.md)** - What's new and how to use it
 - **[Full Documentation](./docs/INTEGRATION.md)** - Complete feature guide
-- **[Sendshark Setup](./docs/SENDSHARK.md)** - Email integration instructions
+- **[Email Setup](./apps/web/.env.example)** - Built-in autoresponder + SES configuration
 - **[Deployment Guide](./DEPLOYMENT.md)** - Production deployment steps
 
 ## 🏃 Getting Started
@@ -76,8 +76,10 @@ STRIPE_SECRET_KEY=sk_test_xxx
 # OpenAI
 OPENAI_API_KEY=sk-xxx
 
-# Sendshark (NEW!)
-SENDSHARK_API_KEY=your_sendshark_api_key
+# Email
+EMAIL_PROVIDER=autoresponder
+AUTORESPONDER_CRON_SECRET=replace_with_strong_secret
+CRON_SECRET=replace_with_same_strong_secret
 ```
 
 ### 3. Database Setup
@@ -123,6 +125,7 @@ Visit:
 - `GET /api/email/templates` - List email templates
 - `POST /api/email/automation` - Create automation sequences
 - `POST /api/email/reports` - Send analytics reports
+- `GET/POST /api/email/autoresponder/run` - Run queued autoresponder jobs (cron/secured)
 
 ### Lead Management
 
@@ -146,7 +149,7 @@ Visit:
 - **UI**: Tailwind CSS + Lucide Icons
 - **Backend**: Supabase (PostgreSQL + Auth)
 - **Payments**: Stripe
-- **Email**: Sendshark
+- **Email**: Built-in autoresponder + AWS SES transport
 - **AI**: OpenAI GPT-4
 - **Deployment**: Vercel
 
@@ -157,7 +160,7 @@ Visit:
 │   Next.js App   │
 ├─────────────────┤
 │  Visual Builder │  ←→  Supabase DB
-│  Code Builder   │  ←→  Sendshark API
+│  Code Builder   │  ←→  Built-in autoresponder / SES
 │  Dashboard      │  ←→  Stripe API
 │  Analytics      │  ←→  OpenAI API
 └─────────────────┘
@@ -167,7 +170,7 @@ Visit:
 
 - **AI Features**: [docs/AI.md](./docs/AI.md)
 - **Tracking**: [docs/TRACKING.md](./docs/TRACKING.md)
-- **Email Setup**: [docs/SENDSHARK.md](./docs/SENDSHARK.md)
+- **Email Setup**: [apps/web/.env.example](./apps/web/.env.example)
 - **Integration**: [docs/INTEGRATION.md](./docs/INTEGRATION.md)
 
 ## 🚢 Deployment
@@ -198,7 +201,7 @@ npm run start
 ## 📈 Roadmap
 
 - [x] Visual funnel builder
-- [x] Sendshark email integration
+- [x] Built-in autoresponder email integration
 - [x] Lead capture automation
 - [x] Analytics dashboard
 - [x] AI content generation

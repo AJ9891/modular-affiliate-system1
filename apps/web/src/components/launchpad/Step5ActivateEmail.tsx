@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { ArrowRight, Mail, ExternalLink, CheckCircle } from 'lucide-react'
+import { ArrowRight, Mail, CheckCircle } from 'lucide-react'
 
 interface Step5ActivateEmailProps {
   funnelUrl?: string
@@ -13,8 +13,7 @@ export default function Step5ActivateEmail({ funnelUrl, onEmailComplete, onBack 
   const [hasActivated, setHasActivated] = useState(false)
 
   const handleActivate = () => {
-    // Open SendShark affiliate link in new tab
-    window.open('https://sendshark.com', '_blank')
+    setHasActivated(true)
   }
 
   const handleConfirmActivated = () => {
@@ -33,7 +32,7 @@ export default function Step5ActivateEmail({ funnelUrl, onEmailComplete, onBack 
         </h1>
         <p className="text-lg text-gray-600 mb-6">
           Funnels work better with follow-up.
-          SendShark is included and activated through our partner link.
+          Built-in email automation is included and ready to enable.
         </p>
       </div>
 
@@ -67,11 +66,16 @@ export default function Step5ActivateEmail({ funnelUrl, onEmailComplete, onBack 
         )}
         <button
           onClick={handleActivate}
-          className="w-full inline-flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+          className={`
+            w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-lg font-semibold transition-colors
+            ${hasActivated
+              ? 'bg-green-600 text-white hover:bg-green-700'
+              : 'bg-blue-600 text-white hover:bg-blue-700'
+            }
+          `}
         >
-          <Mail className="w-5 h-5" />
-          Activate SendShark Email
-          <ExternalLink className="w-4 h-4" />
+          {hasActivated ? <CheckCircle className="w-5 h-5" /> : <Mail className="w-5 h-5" />}
+          {hasActivated ? 'Email Automation Enabled' : 'Enable Built-In Email Automation'}
         </button>
 
         <button
@@ -91,7 +95,7 @@ export default function Step5ActivateEmail({ funnelUrl, onEmailComplete, onBack 
               Email Activated — Continue
             </>
           ) : (
-            "I've Activated SendShark"
+            "Enable Email First"
           )}
           <ArrowRight className="w-5 h-5" />
         </button>
@@ -100,7 +104,7 @@ export default function Step5ActivateEmail({ funnelUrl, onEmailComplete, onBack 
       {/* Trust Indicator */}
       <div className="text-center mt-6">
         <p className="text-sm text-gray-500">
-          SendShark integration is secure and respects your privacy
+          In-house email automation is secure and respects your privacy
         </p>
       </div>
     </div>

@@ -51,6 +51,7 @@ function getContextFromPathname(pathname: string): SoundContext {
   if (pathname.startsWith('/launchpad')) return 'launchpad'
   if (pathname.startsWith('/dashboard')) return 'dashboard'
   if (pathname.startsWith('/builder')) return 'builder'
+  if (pathname.startsWith('/link-funnel')) return 'builder'
   if (pathname.startsWith('/checkout')) return 'checkout'
   return 'other'
 }

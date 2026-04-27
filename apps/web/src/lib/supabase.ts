@@ -6,7 +6,9 @@ import { createClient } from '@supabase/supabase-js'
 
 // Get env vars
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabasePublicKey =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 // Only throw if called, not at module load
 let cachedClient: ReturnType<typeof createClient> | null = null
@@ -21,14 +23,14 @@ function getClient() {
     throw new Error(msg)
   }
 
-  if (!supabaseAnonKey) {
+  if (!supabasePublicKey) {
     const msg =
-      '[CLIENT ERROR] NEXT_PUBLIC_SUPABASE_ANON_KEY is not set.\n' +
-      'Fix: Check .env.local has NEXT_PUBLIC_SUPABASE_ANON_KEY=...'
+      '[CLIENT ERROR] Supabase public key is not set.\n' +
+      'Fix: Check .env.local has NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=... or NEXT_PUBLIC_SUPABASE_ANON_KEY=...'
     throw new Error(msg)
   }
 
-  cachedClient = createClient(supabaseUrl, supabaseAnonKey)
+  cachedClient = createClient(supabaseUrl, supabasePublicKey)
   return cachedClient
 }
 

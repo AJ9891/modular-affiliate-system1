@@ -1,20 +1,26 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { hasAdminAccess } from '@/lib/admin-access'
 
 const ONBOARDING_COMPLETE = 8
 
 export default function Login() {
   const router = useRouter()
+  const [mounted, setMounted] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -58,13 +64,19 @@ export default function Login() {
       if (user) {
         const { data: profile } = await supabase
           .from('users')
-          .select('onboarding_seen, onboarding_step')
+          .select('onboarding_seen, onboarding_step, onboarding_complete, is_admin, role')
           .eq('id', user.id)
           .maybeSingle()
 
-        if (!profile?.onboarding_seen) {
+        const isAdmin = hasAdminAccess(profile)
+        const onboardingStep = Number(profile?.onboarding_step ?? 0)
+        const onboardingComplete = Boolean(profile?.onboarding_complete) || onboardingStep >= ONBOARDING_COMPLETE
+
+        if (isAdmin || onboardingComplete) {
+          destination = '/cockpit'
+        } else if (!profile?.onboarding_seen) {
           destination = '/welcome'
-        } else if ((profile.onboarding_step ?? 0) < ONBOARDING_COMPLETE) {
+        } else if (onboardingStep < ONBOARDING_COMPLETE) {
           destination = '/launchpad'
         }
       }
@@ -75,6 +87,20 @@ export default function Login() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (!mounted) {
+    return (
+      <main className="min-h-screen theme-command flex items-center justify-center px-6 py-10">
+        <div className="w-full max-w-md space-y-6">
+          <div className="glass-tile p-8 border border-white/15 bg-black/30 text-center">
+            <p className="text-xs uppercase tracking-[0.25em] text-cyan-200/70">Access</p>
+            <h1 className="text-3xl font-semibold text-white">Log In</h1>
+            <p className="text-white/70 text-sm mt-2">Preparing secure login…</p>
+          </div>
+        </div>
+      </main>
+    )
   }
 
   return (

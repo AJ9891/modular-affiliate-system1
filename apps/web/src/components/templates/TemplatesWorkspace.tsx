@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Layers, Shapes, Mail } from 'lucide-react'
 import type { BrandVoice, TemplateCategory } from '@/config/funnelTemplates'
-import { getTemplateGallery } from '@/lib/api/templates'
+import { getTemplateGallery, type TemplateQuery } from '@/lib/api/templates'
 import DashboardPanel from '@/components/cockpit/DashboardPanel'
 import WorkspacePanel from '@/components/cockpit/WorkspacePanel'
 import { CockpitEmptyState } from '@/components/ui/CockpitEmptyState'
@@ -26,7 +26,11 @@ export default function TemplatesWorkspace() {
       try {
         setLoading(true)
         setError(null)
-        const data = await getTemplateGallery()
+        const query: TemplateQuery = {
+          brandVoice: voice === 'all' ? undefined : voice,
+          category: category === 'all' ? undefined : category,
+        }
+        const data = await getTemplateGallery(query)
         if (active) {
           setGallery(data)
         }
@@ -46,15 +50,11 @@ export default function TemplatesWorkspace() {
     return () => {
       active = false
     }
-  }, [])
+  }, [voice, category])
 
   const filteredLanding = useMemo(() => {
-    return (gallery?.landingTemplates || []).filter((template) => {
-      const voiceMatch = voice === 'all' || template.brandVoice === voice
-      const categoryMatch = category === 'all' || template.category === category
-      return voiceMatch && categoryMatch
-    })
-  }, [category, gallery?.landingTemplates, voice])
+    return gallery?.landingTemplates || []
+  }, [gallery?.landingTemplates])
 
   if (loading) {
     return <TemplatesSkeleton />

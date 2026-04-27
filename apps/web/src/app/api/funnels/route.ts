@@ -6,22 +6,45 @@ import { validateFunnel } from '@/lib/validators/funnels'
 import { error, ok, readJson, ValidationError } from '@/lib/http'
 import { checkUserCanPerform, incrementUserUsage } from '@/lib/plan-manager'
 
+function isRecoverableFunnelReadError(issue: unknown): boolean {
+  if (!issue || typeof issue !== 'object') return false
+
+  const candidate = issue as { code?: string; message?: string }
+  const code = candidate.code || ''
+  const message = (candidate.message || '').toLowerCase()
+
+  return (
+    code === '42501' ||
+    code === 'PGRST205' ||
+    code === '42P01' ||
+    message.includes('permission denied') ||
+    message.includes("could not find the table")
+  )
+}
+
 export async function GET(_request: NextRequest) {
   const check = checkSupabase()
   if (check) return check
   
   try {
     const supabase = await createServerRouteClient()
-    await requireUser(supabase)
-    const { data: funnels, error } = await supabase!
+    const user = await requireUser(supabase)
+
+    const reader = process.env.SUPABASE_SERVICE_ROLE_KEY ? createServiceRoleClient() : supabase
+    const { data: funnels, error: queryError } = await reader
       .from('funnels')
       .select('*')
+      .eq('user_id', user.id)
 
-    if (error) {
-      throw error
+    if (queryError) {
+      if (isRecoverableFunnelReadError(queryError)) {
+        console.warn('[FUNNELS API] Returning empty list due recoverable read error:', queryError)
+        return ok({ funnels: [] }, { status: 200 })
+      }
+      throw queryError
     }
 
-    return ok({ funnels }, { status: 200 })
+    return ok({ funnels: funnels || [] }, { status: 200 })
   } catch (err) {
     return error(err)
   }

@@ -38,7 +38,7 @@ export default function PublicPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="h-32 w-32 animate-spin rounded-full border-b-2 border-rocket-500"></div>
       </div>
     )
   }
@@ -46,21 +46,21 @@ export default function PublicPage() {
   if (error || !page) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Page Not Found</h1>
-          <p className="text-gray-600">The page you're looking for doesn't exist or has been removed.</p>
+        <div className="card-premium text-center">
+          <h1 className="mb-4 text-2xl font-bold text-text-primary">Page Not Found</h1>
+          <p className="text-text-secondary">The page you're looking for doesn't exist or has been removed.</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="max-w-4xl mx-auto px-6 py-12">
-        <h1 className="text-3xl font-bold mb-8">{page.name}</h1>
+    <div className="cockpit-container min-h-screen py-12">
+      <div className="mx-auto max-w-4xl">
+        <h1 className="mb-8 text-3xl font-bold text-text-primary">{page.name}</h1>
         <div className="prose prose-lg">
           {/* Render page content - this would need a proper renderer based on content structure */}
-          <pre className="whitespace-pre-wrap">{JSON.stringify(page.content, null, 2)}</pre>
+          <pre className="whitespace-pre-wrap rounded-lg border border-[var(--border-elevated)] bg-[rgba(255,255,255,0.03)] p-4 text-text-secondary">{JSON.stringify(page.content, null, 2)}</pre>
         </div>
       </div>
     </div>

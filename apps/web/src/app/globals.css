@@ -169,14 +169,20 @@
 @layer components {
   .cockpit-shell {
     min-height: 100vh;
-    background-color: var(--bg-primary);
+    background-color: #050913;
+    --room-glow-primary-x: 48%;
+    --room-glow-primary-y: 18%;
+    --room-glow-secondary-x: 78%;
+    --room-glow-secondary-y: 82%;
     background-image:
-      linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.45)),
-      radial-gradient(circle at 20% 20%, rgba(var(--accent-rgb), 0.18), transparent 60%),
-      radial-gradient(circle at 80% 80%, rgba(var(--accent-rgb), 0.12), transparent 60%);
+      linear-gradient(180deg, rgba(2, 6, 16, 0.86), rgba(2, 6, 16, 0.94)),
+      radial-gradient(circle at var(--room-glow-primary-x) var(--room-glow-primary-y), rgba(var(--accent-rgb), 0.2), transparent 44%),
+      radial-gradient(circle at var(--room-glow-secondary-x) var(--room-glow-secondary-y), rgba(var(--accent-rgb), 0.11), transparent 36%),
+      radial-gradient(circle at 50% 120%, rgba(12, 20, 30, 0.72), transparent 54%);
     background-position: center;
-    background-size: cover, cover, cover;
+    background-size: cover, cover, cover, cover;
     background-repeat: no-repeat;
+    background-attachment: fixed;
   }
 
   .page-mission-control,
@@ -193,63 +199,153 @@
   }
 
   .page-mission-control {
-    background:
-      linear-gradient(rgba(7, 12, 18, 0.64), rgba(7, 12, 18, 0.72)),
-      radial-gradient(circle at 48% 22%, rgba(var(--accent-rgb), 0.14), transparent 45%);
+    --room-glow-primary-x: 47%;
+    --room-glow-primary-y: 14%;
+    --room-glow-secondary-x: 82%;
+    --room-glow-secondary-y: 84%;
   }
 
   .page-flight-deck {
-    background:
-      linear-gradient(rgba(8, 14, 21, 0.62), rgba(8, 14, 21, 0.74)),
-      radial-gradient(circle at 20% 20%, rgba(var(--accent-rgb), 0.12), transparent 48%);
-  }
-
-  .theme-light.page-flight-deck {
-    background:
-      linear-gradient(rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.74)),
-      radial-gradient(circle at 20% 20%, rgba(var(--accent-rgb), 0.12), transparent 48%);
+    --room-glow-primary-x: 22%;
+    --room-glow-primary-y: 18%;
+    --room-glow-secondary-x: 78%;
+    --room-glow-secondary-y: 74%;
   }
 
   .page-engineering-bay {
-    background:
-      linear-gradient(rgba(4, 8, 13, 0.7), rgba(4, 8, 13, 0.8)),
-      radial-gradient(circle at 10% 75%, rgba(var(--accent-rgb), 0.1), transparent 50%);
+    --room-glow-primary-x: 14%;
+    --room-glow-primary-y: 74%;
+    --room-glow-secondary-x: 80%;
+    --room-glow-secondary-y: 20%;
   }
 
   .page-telemetry {
-    background:
-      linear-gradient(rgba(3, 8, 12, 0.78), rgba(3, 8, 12, 0.86)),
-      radial-gradient(circle at 80% 18%, rgba(var(--accent-rgb), 0.1), transparent 52%);
+    --room-glow-primary-x: 80%;
+    --room-glow-primary-y: 16%;
+    --room-glow-secondary-x: 22%;
+    --room-glow-secondary-y: 78%;
   }
 
   .page-ai-core {
-    background:
-      radial-gradient(circle at center, rgba(var(--accent-rgb), 0.14), transparent 42%),
-      linear-gradient(rgba(4, 8, 14, 0.78), rgba(4, 8, 14, 0.88));
+    --room-glow-primary-x: 50%;
+    --room-glow-primary-y: 28%;
+    --room-glow-secondary-x: 84%;
+    --room-glow-secondary-y: 82%;
   }
 
   .page-fuel-management {
-    background:
-      linear-gradient(rgba(6, 11, 17, 0.72), rgba(6, 11, 17, 0.82)),
-      radial-gradient(circle at 30% 88%, rgba(var(--accent-rgb), 0.12), transparent 45%);
+    --room-glow-primary-x: 30%;
+    --room-glow-primary-y: 84%;
+    --room-glow-secondary-x: 76%;
+    --room-glow-secondary-y: 22%;
   }
 
   .page-cargo-bay {
-    background:
-      linear-gradient(rgba(7, 12, 18, 0.78), rgba(7, 12, 18, 0.88)),
-      radial-gradient(circle at 76% 15%, rgba(174, 183, 194, 0.1), transparent 45%);
+    --room-glow-primary-x: 76%;
+    --room-glow-primary-y: 15%;
+    --room-glow-secondary-x: 18%;
+    --room-glow-secondary-y: 78%;
   }
 
   .page-crew {
-    background:
-      linear-gradient(rgba(7, 12, 18, 0.74), rgba(7, 12, 18, 0.84)),
-      radial-gradient(circle at 22% 20%, rgba(174, 183, 194, 0.12), transparent 48%);
+    --room-glow-primary-x: 22%;
+    --room-glow-primary-y: 22%;
+    --room-glow-secondary-x: 72%;
+    --room-glow-secondary-y: 80%;
   }
 
   .page-command-authority {
-    background:
-      linear-gradient(rgba(6, 10, 15, 0.84), rgba(6, 10, 15, 0.9)),
-      radial-gradient(circle at 75% 20%, rgba(174, 183, 194, 0.08), transparent 45%);
+    --room-glow-primary-x: 74%;
+    --room-glow-primary-y: 18%;
+    --room-glow-secondary-x: 24%;
+    --room-glow-secondary-y: 82%;
+  }
+
+  .rocket-room-shell {
+    position: relative;
+    min-height: 100vh;
+    isolation: isolate;
+  }
+
+  .rocket-room-shell::before,
+  .rocket-room-shell::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .rocket-room-shell::before {
+    background-image:
+      linear-gradient(rgba(159, 180, 200, 0.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(159, 180, 200, 0.055) 1px, transparent 1px),
+      radial-gradient(circle at var(--room-glow-primary-x) var(--room-glow-primary-y), rgba(var(--accent-rgb), 0.14), transparent 46%);
+    background-size: 28px 28px, 28px 28px, cover;
+    mix-blend-mode: screen;
+    opacity: 0.32;
+  }
+
+  .rocket-room-shell::after {
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(var(--accent-rgb), 0.03) 28%,
+      rgba(var(--accent-rgb), 0.14) 50%,
+      rgba(var(--accent-rgb), 0.03) 72%,
+      transparent 100%
+    );
+    transform: translateY(-115%);
+    animation: console-scan-sweep 9s ease-in-out infinite;
+    opacity: 0.6;
+  }
+
+  .rocket-room-content {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+  }
+
+  /* Legacy utility harmonizer: keeps older pages in the same rocket shell style */
+  .cockpit-shell .bg-white,
+  .cockpit-shell .bg-gray-50,
+  .cockpit-shell .bg-gray-100,
+  .cockpit-shell .bg-blue-50,
+  .cockpit-shell .bg-green-50,
+  .cockpit-shell .bg-yellow-50,
+  .cockpit-shell .bg-red-50 {
+    background-color: var(--bg-surface-elevated) !important;
+    border-color: var(--border-elevated) !important;
+    color: var(--text-primary) !important;
+  }
+
+  .cockpit-shell .text-gray-900 {
+    color: var(--text-primary) !important;
+  }
+
+  .cockpit-shell .text-gray-800,
+  .cockpit-shell .text-gray-700,
+  .cockpit-shell .text-gray-600,
+  .cockpit-shell .text-gray-500,
+  .cockpit-shell .text-gray-400 {
+    color: var(--text-secondary) !important;
+  }
+
+  .cockpit-shell .border-gray-100,
+  .cockpit-shell .border-gray-200,
+  .cockpit-shell .border-gray-300,
+  .cockpit-shell .border-blue-200,
+  .cockpit-shell .border-green-200,
+  .cockpit-shell .border-yellow-200,
+  .cockpit-shell .border-red-200 {
+    border-color: var(--border-elevated) !important;
+  }
+
+  .cockpit-shell .bg-gradient-to-br.from-blue-50,
+  .cockpit-shell .bg-gradient-to-br.from-orange-50,
+  .cockpit-shell .bg-gradient-to-br.from-purple-600,
+  .cockpit-shell .bg-gradient-to-br.from-blue-600 {
+    background-image: linear-gradient(145deg, rgba(8, 14, 22, 0.88), rgba(8, 14, 22, 0.68)) !important;
   }
 
   .cockpit-container {
@@ -442,7 +538,49 @@
   }
 
   .mission-console {
+    position: relative;
+    overflow: hidden;
     width: min(520px, calc(100vw - 3rem));
+    border-color: rgb(var(--accent-rgb) / 0.26);
+    background:
+      linear-gradient(155deg, rgb(255 255 255 / 0.08) 0%, rgb(255 255 255 / 0.02) 35%, rgb(6 12 18 / 0.62) 100%),
+      var(--bg-surface-elevated);
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 0.04),
+      0 10px 30px rgb(0 0 0 / 0.42),
+      0 0 26px rgb(var(--accent-rgb) / 0.22),
+      inset 0 1px 0 rgb(255 255 255 / 0.2);
+  }
+
+  .mission-console::before,
+  .mission-console::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .mission-console::before {
+    background-image:
+      linear-gradient(rgb(159 180 200 / 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(159 180 200 / 0.06) 1px, transparent 1px);
+    background-size: 26px 26px;
+    opacity: 0.32;
+    mix-blend-mode: screen;
+  }
+
+  .mission-console::after {
+    background:
+      linear-gradient(
+        180deg,
+        transparent 0%,
+        rgb(var(--accent-rgb) / 0.03) 38%,
+        rgb(var(--accent-rgb) / 0.18) 50%,
+        rgb(var(--accent-rgb) / 0.03) 62%,
+        transparent 100%
+      );
+    transform: translateY(-110%);
+    animation: console-scan-sweep 7s ease-in-out infinite;
   }
 
   .system-ready {
@@ -726,11 +864,28 @@
     50% { opacity: 0.95; }
   }
 
+  @keyframes console-scan-sweep {
+    0%,
+    16% {
+      transform: translateY(-110%);
+      opacity: 0;
+    }
+    28% {
+      opacity: 0.5;
+    }
+    58% {
+      transform: translateY(110%);
+      opacity: 0.24;
+    }
+    100% {
+      transform: translateY(110%);
+      opacity: 0;
+    }
+  }
+
   /* Theming: launch (onboarding) vs orbit (post-onboarding) */
   .theme-launch {
-    background: radial-gradient(circle at 20% 20%, rgba(255,136,0,0.14), transparent 35%),
-                radial-gradient(circle at 80% 10%, rgba(255,64,128,0.12), transparent 32%),
-                linear-gradient(135deg, #0b0f1d 0%, #150d2c 60%, #0b1025 100%);
+    background: transparent;
     color: #f9fbff;
     min-height: 100vh;
   }
@@ -748,9 +903,7 @@
   }
 
   .theme-orbit {
-    background: radial-gradient(circle at 15% 15%, rgba(56,189,248,0.08), transparent 35%),
-                radial-gradient(circle at 80% 25%, rgba(94,234,212,0.08), transparent 32%),
-                linear-gradient(135deg, #050a12 0%, #0a1324 60%, #050a14 100%);
+    background: transparent;
     color: #e8f6ff;
     min-height: 100vh;
   }
@@ -791,8 +944,7 @@
     background:
       linear-gradient(180deg, rgba(5,9,18,0.82), rgba(5,9,18,0.88)),
       radial-gradient(circle at 40% 20%, rgba(var(--accent-rgb), 0.16), transparent 40%),
-      radial-gradient(circle at 70% 0%, rgba(14,165,233,0.12), transparent 38%),
-      url('/dashboard-dark.png');
+      radial-gradient(circle at 70% 0%, rgba(14,165,233,0.12), transparent 38%);
     background-size: cover;
     background-position: center;
     backdrop-filter: blur(6px);
@@ -834,13 +986,13 @@
   }
 
   /* Additional room themes */
-  .theme-engineering { background: linear-gradient(135deg, #060b16, #0a1222); min-height: 100vh; }
-  .theme-telemetry { background: linear-gradient(145deg, #050914, #0b1728); min-height: 100vh; }
-  .theme-ai-core { background: radial-gradient(circle at 50% 20%, rgba(190,90,255,0.08), transparent 40%), linear-gradient(135deg, #050912, #0c1020); min-height: 100vh; }
-  .theme-fuel { background: linear-gradient(140deg, #0a0f19, #0d1728); min-height: 100vh; }
-  .theme-cargo { background: linear-gradient(130deg, #080d17, #0e1522); min-height: 100vh; }
-  .theme-crew { background: linear-gradient(135deg, #070d18, #0b1424); min-height: 100vh; }
-  .theme-command { background: linear-gradient(135deg, #060b14, #0c1423); min-height: 100vh; }
+  .theme-engineering { background: transparent; min-height: 100vh; }
+  .theme-telemetry { background: transparent; min-height: 100vh; }
+  .theme-ai-core { background: transparent; min-height: 100vh; }
+  .theme-fuel { background: transparent; min-height: 100vh; }
+  .theme-cargo { background: transparent; min-height: 100vh; }
+  .theme-crew { background: transparent; min-height: 100vh; }
+  .theme-command { background: transparent; min-height: 100vh; }
 }
 
 @media (max-width: 960px) {

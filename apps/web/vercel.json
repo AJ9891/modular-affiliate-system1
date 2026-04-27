@@ -4,7 +4,12 @@
   "installCommand": "npm install",
   "framework": "nextjs",
   "outputDirectory": ".next",
-  "crons": [],
+  "crons": [
+    {
+      "path": "/api/email/autoresponder/run",
+      "schedule": "0 0 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/api/(.*)",

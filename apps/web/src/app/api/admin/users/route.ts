@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
 import { createServiceRoleClient } from '@/lib/supabase-server'
+import { hasAdminAccess } from '@/lib/admin-access'
 
 async function requireAdmin() {
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabase = await createRouteHandlerClientCompat()
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -19,7 +19,7 @@ async function requireAdmin() {
     .eq('id', user.id)
     .maybeSingle()
 
-  const isAdmin = profile?.is_admin === true || profile?.role === 'admin' || profile?.role === 'owner'
+  const isAdmin = hasAdminAccess(profile)
 
   if (!isAdmin) {
     return { error: NextResponse.json({ error: 'Forbidden' }, { status: 403 }) }

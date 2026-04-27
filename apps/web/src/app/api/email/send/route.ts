@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sendshark } from '@/lib/sendshark'
+import { emailService } from '@/lib/email/service'
+import { getOptionalAuthenticatedUserId, resolveEmailErrorStatus } from '@/lib/email/route-utils'
 
 /**
  * Send Email API Endpoint
@@ -7,15 +8,33 @@ import { sendshark } from '@/lib/sendshark'
  */
 export async function POST(request: NextRequest) {
   try {
+    const userId = await getOptionalAuthenticatedUserId(request)
     const body = await request.json()
     const { to, subject, html, text, template, type = 'single' } = body
+    const defaultFromEmail = process.env.EMAIL_DEFAULT_FROM || 'user@launchpad4success.pro'
+    const defaultFromName = process.env.EMAIL_DEFAULT_FROM_NAME || 'Launchpad4Success'
 
     if (type === 'campaign') {
+      if (!subject || typeof subject !== 'string') {
+        return NextResponse.json(
+          { success: false, error: 'subject is required for campaigns' },
+          { status: 400 }
+        )
+      }
+
+      if (!template && (!html || typeof html !== 'string')) {
+        return NextResponse.json(
+          { success: false, error: 'template or html is required for campaigns' },
+          { status: 400 }
+        )
+      }
+
       // Send campaign
-      const campaign = await sendshark.createCampaign({
+      const campaign = await emailService.createCampaign({
+        userId,
         name: body.name || `Campaign ${Date.now()}`,
-        fromEmail: body.fromEmail || 'noreply@affiliatelaunchpad.com',
-        fromName: body.fromName || 'Affiliate Launchpad',
+        fromEmail: body.fromEmail || defaultFromEmail,
+        fromName: body.fromName || defaultFromName,
         subject,
         template: template || { name: 'Custom', subject, html, text },
         recipients: body.recipients || [],
@@ -29,12 +48,19 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    if (!to || !subject || !html) {
+      return NextResponse.json(
+        { success: false, error: 'to, subject, and html are required' },
+        { status: 400 }
+      )
+    }
+
     // Send single email
-    const result = await sendshark.sendEmail({
+    const result = await emailService.sendEmail({
       to: typeof to === 'string' ? { email: to } : to,
       from: {
-        email: body.fromEmail || 'noreply@affiliatelaunchpad.com',
-        name: body.fromName || 'Affiliate Launchpad',
+        email: body.fromEmail || defaultFromEmail,
+        name: body.fromName || defaultFromName,
       },
       subject,
       html,
@@ -48,14 +74,16 @@ export async function POST(request: NextRequest) {
       messageId: result.id,
       message: 'Email sent successfully' 
     })
-  } catch (error) {
-    console.error('Send email error:', error)
+  } catch (err) {
+    console.error('Send email error:', err)
+    const message = err instanceof Error ? err.message : 'Failed to send email'
+    const status = resolveEmailErrorStatus(message)
     return NextResponse.json(
       { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Failed to send email' 
+        error: message
       },
-      { status: 500 }
+      { status }
     )
   }
 }

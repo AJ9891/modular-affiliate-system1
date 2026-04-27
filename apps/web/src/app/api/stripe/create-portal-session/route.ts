@@ -29,9 +29,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: session.url })
   } catch (error: any) {
     console.error('Stripe portal error:', error)
+    const status = error?.type === 'StripeInvalidRequestError' ? 400 : 500
     return NextResponse.json(
       { error: error.message || 'Failed to create portal session' },
-      { status: 500 }
+      { status }
     )
   }
 }

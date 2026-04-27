@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { hasAdminAccess } from '@/lib/admin-access'
 
 export class AuthError extends Error {
   status: number
@@ -27,6 +28,7 @@ export type UserProfile = {
   id: string
   email?: string
   is_admin?: boolean
+  role?: string | null
   subscription_plan?: string
   subdomain?: string | null
   custom_domain?: string | null
@@ -52,5 +54,5 @@ export async function fetchUserProfile(
 
 export function canUseCustomDomain(profile?: UserProfile | null) {
   if (!profile) return false
-  return profile.is_admin || profile.subscription_plan === 'agency'
+  return hasAdminAccess(profile) || profile.subscription_plan === 'agency'
 }

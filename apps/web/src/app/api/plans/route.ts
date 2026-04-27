@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
 import { withRateLimit, withAuth, withErrorHandling } from '@/lib/api-middleware'
 import { PLAN_DEFINITIONS } from '@/lib/plan-manager'
 
@@ -26,7 +25,7 @@ async function getPlans(request: NextRequest) {
 
 // GET /api/plans/current - Get current user's plan status
 async function getCurrentPlan(request: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabase = await createRouteHandlerClientCompat()
   const { data: { user } } = await supabase.auth.getUser()
 
   // Get user's current plan and usage
@@ -87,7 +86,7 @@ async function getCurrentPlan(request: NextRequest) {
 
 // POST /api/plans/check-limit - Check if user can perform action
 async function checkLimit(request: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabase = await createRouteHandlerClientCompat()
   const { data: { user } } = await supabase.auth.getUser()
   
   const { action } = await request.json()
@@ -110,7 +109,7 @@ async function checkLimit(request: NextRequest) {
 
 // POST /api/plans/usage - Increment usage counter  
 async function incrementUsage(request: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabase = await createRouteHandlerClientCompat()
   const { data: { user } } = await supabase.auth.getUser()
   
   const { usageType } = await request.json()
@@ -133,7 +132,7 @@ async function incrementUsage(request: NextRequest) {
 
 // GET /api/plans/upgrade-suggestions - Get personalized upgrade suggestions
 async function getUpgradeSuggestions(request: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabase = await createRouteHandlerClientCompat()
   const { data: { user } } = await supabase.auth.getUser()
 
   // Get current plan status

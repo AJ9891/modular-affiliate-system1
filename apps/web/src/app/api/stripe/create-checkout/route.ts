@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe, dollarsToCredits } from '@/lib/stripe'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
 import { log } from '@/lib/log'
 import { validateCheckout } from '@/lib/validators/stripe'
 import { error, ok } from '@/lib/http'
+import { hasAdminAccess } from '@/lib/admin-access'
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabase = await createRouteHandlerClientCompat()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -19,11 +19,11 @@ export async function POST(req: NextRequest) {
   // Check admin flag
   const { data: profile } = await supabase
     .from('users')
-    .select('is_admin')
+    .select('is_admin, role')
     .eq('id', user.id)
     .single()
   
-  if (!profile?.is_admin) {
+  if (!hasAdminAccess(profile)) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 })
   }
 

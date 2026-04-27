@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe, dollarsToCredits } from '@/lib/stripe'
-import { sendshark } from '@/lib/sendshark'
+import { emailProviderName, emailService } from '@/lib/email/service'
 import { log } from '@/lib/log'
 import { headers } from 'next/headers'
 import Stripe from 'stripe'
 import { createServiceRoleClient } from '@/lib/supabase-server'
-import { PlanManager } from '@/lib/plan-manager'
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || ''
-const supabaseAdmin = createServiceRoleClient()
-const planManager = new PlanManager()
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
@@ -96,7 +93,7 @@ async function handleCreditTopup(session: Stripe.Checkout.Session) {
   if (!targetUserId) return
 
   try {
-    const adminClient = supabaseAdmin
+    const adminClient = createServiceRoleClient()
 
     // Get topup record
     const { data: topupData, error: topupErr } = await adminClient
@@ -186,7 +183,7 @@ async function handleCheckoutSessionCompleted(session: any) {
   if (!userId) return
 
   try {
-    const adminClient = supabaseAdmin
+    const adminClient = createServiceRoleClient()
 
     const { error } = await adminClient
       .from('users')
@@ -205,28 +202,29 @@ async function handleCheckoutSessionCompleted(session: any) {
       log.info(`Subscription activated for user ${userId}, plan: ${plan}`)
     }
 
-    // Auto-provision Sendshark account for the user
+    // Auto-provision email automation profile for the user
     if (customerEmail) {
-      await provisionSendsharkAccount(userId, customerEmail, plan)
+      await provisionEmailAutomation(userId, customerEmail, plan)
     }
   } catch (error) {
     console.error('Error updating subscription:', error)
   }
 }
 
-async function provisionSendsharkAccount(userId: string, email: string, plan: string) {
+async function provisionEmailAutomation(userId: string, email: string, plan: string) {
   try {
-    console.log(`Provisioning Sendshark account for user ${userId}, email: ${email}`)
+    console.log(`Provisioning ${emailProviderName} email profile for user ${userId}, email: ${email}`)
     
     // Create a dedicated list for the user
     const listName = `Launchpad4Success - ${email}`
     
-    // Add user to Sendshark as a subscriber with special tags
-    const subscriber = await sendshark.addSubscriber({
+    // Add user to configured provider with launch tags.
+    const subscriber = await emailService.addSubscriber({
+      userId,
       listName,
       email,
       name: email.split('@')[0],
-      tags: ['launchpad4success', 'paid-subscriber', `plan-${plan}`, 'sendshark-provisioned'],
+      tags: ['launchpad4success', 'paid-subscriber', `plan-${plan}`, `${emailProviderName}-provisioned`],
       customFields: {
         user_id: userId,
         subscription_plan: plan,
@@ -236,53 +234,64 @@ async function provisionSendsharkAccount(userId: string, email: string, plan: st
     })
 
     if (subscriber) {
-      console.log(`✅ Sendshark account provisioned for ${email}`)
+      console.log(`✅ Email profile provisioned for ${email}`)
       
-      // Update user record with Sendshark info
-      const adminClient = supabaseAdmin
+      // Keep legacy columns for backward compatibility with existing dashboards.
+      const adminClient = createServiceRoleClient()
 
+      const { error: updateError } = await adminClient
+        .from('users')
+        .update({
+          email_automation_provisioned: true,
+          email_automation_email: email,
+          sendshark_provisioned: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId)
+
+      if (updateError) {
+        console.warn('Failed to persist email provisioning status:', updateError)
+      }
+
+      // Best-effort legacy field update for environments where this column still exists.
       await adminClient
         .from('users')
         .update({
-          sendshark_provisioned: true,
           sendshark_email: email,
           updated_at: new Date().toISOString(),
         })
         .eq('id', userId)
 
-      // Send welcome email with Sendshark access info
+      // Send welcome email with provider-agnostic setup info.
       await sendWelcomeEmail(email, listName)
     }
   } catch (error) {
-    console.error('Error provisioning Sendshark account:', error)
-    // Don't fail the webhook if Sendshark provisioning fails
+    console.error('Error provisioning email profile:', error)
+    // Don't fail the webhook if provider provisioning fails
   }
 }
 
 async function sendWelcomeEmail(email: string, listName: string) {
   try {
-    // Send welcome email via Sendshark API
-    await sendshark.sendEmail({
+    await emailService.sendEmail({
       to: { email },
       from: {
-        email: 'support@launchpad4success.com',
+        email: process.env.EMAIL_DEFAULT_FROM || 'user@launchpad4success.pro',
         name: 'Launchpad4Success Team'
       },
-      subject: '🎉 Welcome to Launchpad4Success + Sendshark!',
+      subject: 'Welcome to Launchpad4Success email automation',
       html: `
         <h1>Welcome to Launchpad4Success!</h1>
-        <p>Great news! Your Sendshark email automation is now active and included with your subscription.</p>
-        <h2>Your Sendshark Account Details:</h2>
+        <p>Your email automation is now active and included with your subscription.</p>
+        <h2>Your Email Setup:</h2>
         <ul>
-          <li><strong>Email List:</strong> ${listName}</li>
+          <li><strong>Provider:</strong> ${emailProviderName.toUpperCase()}</li>
+          <li><strong>List:</strong> ${listName}</li>
           <li><strong>Status:</strong> Active & Ready</li>
           <li><strong>Integration:</strong> Automatic lead capture enabled</li>
         </ul>
-        <p>All leads from your funnels will automatically be added to Sendshark for email follow-up.</p>
-        <p>To access your Sendshark dashboard and set up email sequences:</p>
-        <a href="https://sendshark.com/launch/ecfunnel?id=Abby9891" style="display: inline-block; padding: 12px 24px; background: #ff6b35; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">
-          Access Your Sendshark Account →
-        </a>
+        <p>All leads from your funnels will automatically be added for follow-up sequences.</p>
+        <p>You can manage campaigns and automations from your Launchpad email workspace.</p>
         <p>Questions? We're here to help!</p>
         <p>Best,<br>The Launchpad4Success Team</p>
       `
@@ -300,7 +309,7 @@ async function handleSubscriptionUpdated(subscription: any) {
   if (!customerId) return
 
   try {
-    const adminClient = supabaseAdmin
+    const adminClient = createServiceRoleClient()
 
     const { error } = await adminClient
       .from('users')
@@ -324,7 +333,7 @@ async function handleSubscriptionDeleted(subscription: any) {
   if (!customerId) return
 
   try {
-    const adminClient = supabaseAdmin
+    const adminClient = createServiceRoleClient()
 
     const { error } = await adminClient
       .from('users')
@@ -349,12 +358,12 @@ async function handleInvoicePaymentSucceeded(invoice: any) {
   if (!customerId) return
 
   try {
-    const adminClient = supabaseAdmin
+    const adminClient = createServiceRoleClient()
 
     // Get user info
     const { data: userData } = await adminClient
       .from('users')
-      .select('id, email, subscription_plan, sendshark_provisioned')
+      .select('id, email, subscription_plan, email_automation_provisioned, sendshark_provisioned')
       .eq('stripe_customer_id', customerId)
       .single()
 
@@ -371,9 +380,12 @@ async function handleInvoicePaymentSucceeded(invoice: any) {
     } else {
       console.log(`Payment succeeded for customer ${customerId}`)
       
-      // If Sendshark hasn't been provisioned yet, do it now
-      if (userData && !userData.sendshark_provisioned && userData.email) {
-        await provisionSendsharkAccount(userData.id, userData.email, userData.subscription_plan)
+      // If email provisioning has not run yet, run it now.
+      const alreadyProvisioned = Boolean(
+        userData?.email_automation_provisioned || userData?.sendshark_provisioned
+      )
+      if (userData && !alreadyProvisioned && userData.email) {
+        await provisionEmailAutomation(userData.id, userData.email, userData.subscription_plan)
       }
     }
   } catch (error) {
@@ -387,7 +399,7 @@ async function handleInvoicePaymentFailed(invoice: any) {
   if (!customerId) return
 
   try {
-    const adminClient = supabaseAdmin
+    const adminClient = createServiceRoleClient()
 
     const { error } = await adminClient
       .from('users')
@@ -404,5 +416,3 @@ async function handleInvoicePaymentFailed(invoice: any) {
     console.error('Error updating payment status:', error)
   }
 }
-
-

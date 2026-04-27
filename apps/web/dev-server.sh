@@ -1,1 +1,43 @@
-#!/bin/bash\n\n# Development server startup script with enhanced debugging\n\necho \"🔧 Starting Modular Affiliate System - Development Mode\"\necho \"================================================\"\n\n# Set development environment\nexport NODE_ENV=development\nexport NEXT_DEBUG=1\nexport DEBUG=*\n\n# Clear any cached builds\necho \"🧹 Clearing Next.js cache...\"\nrm -rf .next\nrm -rf node_modules/.cache\n\n# Check environment variables\necho \"🔍 Checking environment setup...\"\n\nif [ ! -f .env.local ]; then\n  echo \"⚠️  Warning: .env.local not found. Copy from .env.example and configure.\"\nfi\n\nif [ ! -f .env.development ]; then\n  echo \"⚠️  Warning: .env.development not found. Creating default...\"\n  cp .env.example .env.development\nfi\n\n# Install dependencies if needed\nif [ ! -d node_modules ]; then\n  echo \"📦 Installing dependencies...\"\n  npm install\nfi\n\n# Type check\necho \"🔍 Running type check...\"\nnpm run type-check\n\nif [ $? -ne 0 ]; then\n  echo \"⚠️  Type check failed. Continuing anyway...\"\nfi\n\necho \"\"\necho \"🚀 Starting development server with enhanced debugging...\"\necho \"   - Source maps enabled\"\necho \"   - Minification disabled  \"\necho \"   - Verbose error reporting enabled\"\necho \"   - API debugging enabled\"\necho \"\"\necho \"🌐 Your app will be available at:\"\necho \"   Local:    http://localhost:3000\"\necho \"   Network:  http://$(hostname -I | awk '{print $1}'):3000\"\necho \"\"\necho \"📊 Debug tools:\"\necho \"   - React DevTools (browser extension)\"\necho \"   - Network tab for API calls\"\necho \"   - Console for detailed logs\"\necho \"\"\necho \"Press Ctrl+C to stop the server\"\necho \"================================================\"\n\n# Start the development server\nnext dev
+#!/usr/bin/env bash
+
+set -u
+
+echo "Starting Modular Affiliate System - Development Mode"
+echo "================================================"
+
+export NODE_ENV=development
+export NEXT_DEBUG=1
+export DEBUG=*
+
+echo "Clearing Next.js cache..."
+rm -rf .next
+rm -rf node_modules/.cache
+
+if [ ! -f .env.local ]; then
+  echo "Warning: .env.local not found. Copy from .env.example and configure."
+fi
+
+if [ ! -f .env.development ] && [ -f .env.example ]; then
+  echo "Creating .env.development from .env.example"
+  cp .env.example .env.development
+fi
+
+if [ ! -d node_modules ]; then
+  echo "Installing dependencies..."
+  npm install
+fi
+
+echo "Running type check..."
+npm run type-check || echo "Type check failed. Continuing with dev server."
+
+echo
+echo "Starting development server..."
+echo "Local:   http://localhost:${PORT:-3000}"
+NETWORK_IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
+if [ -n "${NETWORK_IP}" ]; then
+  echo "Network: http://${NETWORK_IP}:${PORT:-3000}"
+fi
+echo "Press Ctrl+C to stop"
+echo "================================================"
+
+exec npx next dev --webpack --port "${PORT:-3000}"

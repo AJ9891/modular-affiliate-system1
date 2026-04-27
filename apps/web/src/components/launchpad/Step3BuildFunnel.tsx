@@ -11,9 +11,17 @@ interface Step3BuildFunnelProps {
   funnelId?: string | null
 }
 
+const objectiveTemplateMap: Record<string, string> = {
+  'lead-magnet': 'anchor-lead-magnet',
+  'product-review': 'anchor-affiliate-review',
+  webinar: 'anchor-webinar',
+  vsl: 'anchor-sales-page',
+}
+
 export default function Step3BuildFunnel({ onFunnelComplete, selectedObjective, onBack, funnelId }: Step3BuildFunnelProps) {
   const [isSaved, setIsSaved] = useState(false)
   const [currentFunnelSlug, setCurrentFunnelSlug] = useState<string | null>(null)
+  const initialTemplate = selectedObjective ? objectiveTemplateMap[selectedObjective] : undefined
 
   const handleFunnelSave = (funnelId: string, slug: string) => {
     setCurrentFunnelSlug(slug)
@@ -73,6 +81,7 @@ export default function Step3BuildFunnel({ onFunnelComplete, selectedObjective, 
         <div className="p-6">
           <EnhancedFunnelBuilder
             initialNiche="general"
+            initialTemplate={initialTemplate}
             funnelId={funnelId}
             onSave={handleFunnelSave}
           />

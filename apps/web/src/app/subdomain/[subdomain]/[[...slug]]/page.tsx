@@ -57,7 +57,7 @@ export default function SubdomainPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="h-32 w-32 animate-spin rounded-full border-b-2 border-rocket-500"></div>
       </div>
     )
   }
@@ -65,12 +65,12 @@ export default function SubdomainPage() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">404</h1>
-          <p className="text-xl text-gray-600 mb-8">{error}</p>
+        <div className="card-premium text-center">
+          <h1 className="mb-4 text-4xl font-bold text-text-primary">404</h1>
+          <p className="mb-8 text-xl text-text-secondary">{error}</p>
           <button
             onClick={() => router.push('/')}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+            className="btn-launch-premium px-6 py-3"
           >
             Go Home
           </button>
@@ -81,15 +81,15 @@ export default function SubdomainPage() {
 
   if (data?.message) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
-        <div className="text-center">
-          <h1 className="text-6xl font-bold text-gray-900 mb-4">
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="card-premium text-center">
+          <h1 className="mb-4 text-6xl font-bold text-text-primary">
             {data.message}
           </h1>
-          <p className="text-2xl text-gray-600 mb-4">
+          <p className="mb-4 text-2xl text-text-secondary">
             {data.owner.name}'s site is launching soon
           </p>
-          <p className="text-lg text-gray-500">
+          <p className="text-lg text-text-muted">
             {subdomain}.launchpad4success.pro
           </p>
         </div>
@@ -100,23 +100,23 @@ export default function SubdomainPage() {
   if (data?.funnel) {
     // Render the funnel based on its configuration
     return (
-      <div className="min-h-screen">
+      <div className="cockpit-container min-h-screen py-8">
         {/* This would be replaced with your funnel renderer component */}
-        <div className="container mx-auto px-4 py-8">
+        <div className="mx-auto px-4 py-8">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            <h1 className="mb-4 text-4xl font-bold text-text-primary">
               {data.funnel.name}
             </h1>
-            <p className="text-xl text-gray-600 mb-8">
+            <p className="mb-8 text-xl text-text-secondary">
               by {data.owner.name}
             </p>
             
             {/* Funnel content would be rendered here based on data.funnel.config */}
             <div className="max-w-4xl mx-auto">
-              <p className="text-gray-600">
+              <p className="text-text-secondary">
                 Funnel content will be rendered here based on the funnel configuration.
               </p>
-              <pre className="mt-4 p-4 bg-gray-100 rounded text-left text-sm overflow-auto">
+              <pre className="mt-4 overflow-auto rounded border border-[var(--border-elevated)] bg-[rgba(255,255,255,0.03)] p-4 text-left text-sm text-text-secondary">
                 {JSON.stringify(data.funnel.config, null, 2)}
               </pre>
             </div>
@@ -128,11 +128,11 @@ export default function SubdomainPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
+      <div className="card-premium text-center">
+        <h1 className="mb-4 text-4xl font-bold text-text-primary">
           Welcome to {data?.owner.name}'s Site
         </h1>
-        <p className="text-xl text-gray-600">
+        <p className="text-xl text-text-secondary">
           No funnels are currently published.
         </p>
       </div>

@@ -11,16 +11,13 @@ const VERCEL_API_TOKEN = process.env.VERCEL_API_TOKEN
 const VERCEL_PROJECT_ID = process.env.VERCEL_PROJECT_ID
 const VERCEL_TEAM_ID = process.env.VERCEL_TEAM_ID
 
-// Validate critical env vars upfront
-function validateEnv() {
+// Validate env only when custom-domain provisioning is requested.
+function validateCustomDomainEnv() {
   if (!VERCEL_API_TOKEN) {
     throw new Error('[API/DOMAINS] VERCEL_API_TOKEN is required but not set')
   }
   if (!VERCEL_PROJECT_ID) {
     throw new Error('[API/DOMAINS] VERCEL_PROJECT_ID is required but not set')
-  }
-  if (!VERCEL_TEAM_ID) {
-    throw new Error('[API/DOMAINS] VERCEL_TEAM_ID is required but not set')
   }
 }
 
@@ -30,7 +27,6 @@ export async function GET(request: NextRequest) {
   if (check) return check
 
   try {
-    validateEnv()
     const supabase = await createServerRouteClient()
     const user = await requireUser(supabase)
 
@@ -38,7 +34,7 @@ export async function GET(request: NextRequest) {
     const userData = await fetchUserProfile(
       adminClient,
       user.id,
-      'custom_domain, subdomain, subscription_plan, email, is_admin'
+      'custom_domain, subdomain, subscription_plan, email, is_admin, role'
     )
 
     return ok({
@@ -47,9 +43,9 @@ export async function GET(request: NextRequest) {
       plan: userData?.subscription_plan || 'starter',
       canAddCustomDomain: canUseCustomDomain(userData)
     })
-  } catch (error: any) {
-    console.error('Error fetching domains:', error)
-    return error(error)
+  } catch (err: unknown) {
+    console.error('Error fetching domains:', err)
+    return error(err)
   }
 }
 
@@ -59,7 +55,6 @@ export async function POST(request: NextRequest) {
   if (check) return check
 
   try {
-    validateEnv()
     const supabase = await createServerRouteClient()
     const user = await requireUser(supabase)
 
@@ -72,7 +67,7 @@ export async function POST(request: NextRequest) {
     const userData = await fetchUserProfile(
       adminClient,
       user.id,
-      'subscription_plan, is_admin'
+      'subscription_plan, is_admin, role'
     )
 
     if (type === 'custom' && !canUseCustomDomain(userData)) {
@@ -121,6 +116,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (type === 'custom') {
+      validateCustomDomainEnv()
+
       // Add domain to Vercel via API
       if (!VERCEL_API_TOKEN || !VERCEL_PROJECT_ID) {
         return NextResponse.json(
@@ -181,8 +178,8 @@ export async function POST(request: NextRequest) {
     }
 
     throw new Error('Invalid domain type')
-  } catch (error: any) {
-    console.error('Error managing domain:', error)
-    return error(error)
+  } catch (err: unknown) {
+    console.error('Error managing domain:', err)
+    return error(err)
   }
 }

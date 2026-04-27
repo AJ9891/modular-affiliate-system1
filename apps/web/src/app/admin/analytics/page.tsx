@@ -5,6 +5,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { AdminMetricCard } from '@/components/AdminMetricCard'
+import { hasAdminAccess } from '@/lib/admin-access'
 
 interface ProviderTotal {
   provider: string
@@ -47,7 +48,7 @@ export default function AdminAnalytics() {
         .eq('id', user.id)
         .single()
 
-      const allowed = adminUser?.is_admin || adminUser?.role === 'admin' || adminUser?.role === 'owner'
+      const allowed = hasAdminAccess(adminUser)
 
       if (adminError || !allowed) {
         router.push('/dashboard')

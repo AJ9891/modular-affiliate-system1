@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateContent, GenerateContentParams } from '@/lib/openai'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
 import { 
   validateAITone, 
   validateAIBehavior, 
@@ -12,7 +11,7 @@ import {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createRouteHandlerClientCompat()
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {

@@ -28,6 +28,7 @@ import {
   X,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { hasAdminAccess } from '@/lib/admin-access'
 
 interface NavigationItem {
   name: string
@@ -51,7 +52,7 @@ const sections: NavigationSection[] = [
       { name: 'Cockpit', href: '/cockpit', icon: Radar },
       { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
       { name: 'Funnels', href: '/funnels', icon: PenSquare },
-      { name: 'Visual Builder', href: '/visual-builder', icon: Sparkles },
+      { name: 'AI Link Builder', href: '/link-funnel', icon: Sparkles },
       { name: 'Templates', href: '/templates', icon: FileStack },
     ],
   },
@@ -120,13 +121,14 @@ export default function Sidebar() {
 
         const { data: profile } = await supabase
           .from('users')
-          .select('onboarding_complete, onboarding_step, is_admin')
+          .select('onboarding_complete, onboarding_step, is_admin, role')
           .eq('id', user.id)
           .maybeSingle()
 
-        setOnboardingComplete(Boolean(profile?.onboarding_complete))
-        setOnboardingStep(Number(profile?.onboarding_step ?? 0))
-        setIsAdmin(Boolean(profile?.is_admin))
+        const admin = hasAdminAccess(profile)
+        setOnboardingComplete(Boolean(profile?.onboarding_complete) || admin)
+        setOnboardingStep(admin ? ONBOARDING_COMPLETE : Number(profile?.onboarding_step ?? 0))
+        setIsAdmin(admin)
       } catch (error) {
         console.error('Error checking profile state for sidebar:', error)
       } finally {

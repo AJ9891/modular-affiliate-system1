@@ -20,6 +20,10 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+function isNetworkFetchError(error: unknown): boolean {
+  return error instanceof TypeError && /failed to fetch/i.test(error.message)
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
@@ -46,7 +50,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch (error) {
-      console.error('AuthContext: Error checking auth:', error)
+      if (!isNetworkFetchError(error)) {
+        console.error('AuthContext: Error checking auth:', error)
+      }
       setUser(null)
     } finally {
       setLoading(false)
@@ -58,22 +64,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = async (email: string, password: string) => {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    })
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
 
-    if (!res.ok) {
-      try {
-        const error = await res.json()
-        throw new Error(error.error || 'Login failed')
-      } catch (parseError) {
-        throw new Error('Login failed - server error')
+      if (!res.ok) {
+        try {
+          const error = await res.json()
+          throw new Error(error.error || 'Login failed')
+        } catch {
+          throw new Error('Login failed - server error')
+        }
       }
-    }
 
-    await checkAuth()
+      await checkAuth()
+    } catch (error) {
+      if (isNetworkFetchError(error)) {
+        throw new Error('Unable to reach the server. Check your connection and try again.')
+      }
+      throw error
+    }
   }
 
   const logout = () => {

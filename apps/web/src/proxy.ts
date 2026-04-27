@@ -2,18 +2,21 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import {
   parseSubdomain,
-  createSubdomainMiddlewareClient,
   getSubdomainRedirectUrl,
 } from './lib/subdomain-auth'
 import { addSecurityHeaders } from './lib/security'
 import { isPublicPath } from './config/publicPaths'
 import { getRateLimitKey, rateLimit, RATE_LIMIT_CONFIGS } from './lib/rate-limit'
+import { createClient as createSsrMiddlewareClient } from './utils/supabase/middleware'
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
+  const supabasePublicKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   const supabaseEnvReady =
     !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    !!supabasePublicKey
 
   // API rate limiting (covers auth + public abuse-prone endpoints)
   if (pathname.startsWith('/api/')) {
@@ -64,7 +67,6 @@ export async function proxy(req: NextRequest) {
     return addSecurityHeaders(res)
   }
 
-  const res = NextResponse.next()
   const { isSubdomain, subdomain } = parseSubdomain(req)
 
   // Handle subdomain routing
@@ -81,29 +83,30 @@ export async function proxy(req: NextRequest) {
   // Configure Supabase client with proper cookie domain handling for subdomains
   if (!supabaseEnvReady) {
     // In local/preview runs without Supabase creds, skip auth enforcement but keep security headers.
+    const res = NextResponse.next()
     return addSecurityHeaders(res)
   }
 
-  const supabase = createSubdomainMiddlewareClient(req, res)
+  const { supabase, response: res } = createSsrMiddlewareClient(req)
   if (!supabase) {
     return addSecurityHeaders(res)
   }
 
-  // Refresh session if expired - required for Server Components
+  // Single auth check path to avoid duplicate refresh-token consumption in the same request.
   const {
-    data: { session },
-  } = await supabase.auth.getSession()
+    data: { user },
+  } = await supabase.auth.getUser()
 
   // Add user ID to headers for rate limiting if authenticated
-  if (session?.user) {
-    res.headers.set('x-user-id', session.user.id)
+  if (user) {
+    res.headers.set('x-user-id', user.id)
   }
 
   // Protect authenticated routes
-  const protectedPaths = ['/launchpad', '/dashboard', '/admin', '/builder', '/domains']
+  const protectedPaths = ['/launchpad', '/dashboard', '/admin', '/builder', '/domains', '/link-funnel']
   const isProtectedPath = protectedPaths.some((path) => req.nextUrl.pathname.startsWith(path))
 
-  if (isProtectedPath && !session) {
+  if (isProtectedPath && !user) {
     const redirectUrl = getSubdomainRedirectUrl(req, '/login')
     const loginUrl = new URL(redirectUrl)
     loginUrl.searchParams.set('redirect', req.nextUrl.pathname)

@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -35,13 +34,7 @@ export default function Niches() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#020913] text-slate-100">
       <div className="pointer-events-none absolute inset-0">
-        <Image
-          src="/Backgrounds/dashboard-dark.png"
-          alt="Cockpit background"
-          fill
-          priority
-          className="object-cover object-center opacity-80"
-        />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(56,189,248,0.12),transparent_38%),radial-gradient(circle_at_80%_12%,rgba(34,211,238,0.1),transparent_35%),radial-gradient(circle_at_50%_78%,rgba(14,165,233,0.08),transparent_38%)]" />
         <div className="absolute inset-0 bg-gradient-to-b from-[#020913]/60 via-[#020913]/80 to-[#020913]/95" />
       </div>
 

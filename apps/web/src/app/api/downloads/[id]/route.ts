@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
 
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabase = await createRouteHandlerClientCompat()
   
   try {
     const { id } = await context.params;
@@ -31,6 +30,8 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const email = searchParams.get('email');
     const funnelId = searchParams.get('funnelId');
+    const generationId = searchParams.get('generationId');
+    const variantId = searchParams.get('variantId');
 
     // If email is required and not provided, return error
     if (download.require_email && !email) {
@@ -71,7 +72,10 @@ export async function GET(
       try {
         await supabase.from('leads').insert({
           email: email,
+          user_id: download.user_id || null,
           funnel_id: funnelId || null,
+          generation_id: generationId || null,
+          variant_id: variantId || null,
           source: 'download',
           metadata: {
             download_id: id,

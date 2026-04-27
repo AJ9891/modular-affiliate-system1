@@ -3,6 +3,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { getDashboardData, type DashboardData } from '@/lib/api/dashboard'
+import { getAlerts, getGrowthSnapshot, getRecommendations } from '@/lib/api/growth-assistant'
+import type {
+  ABTestSuggestion,
+  FunnelOptimizationIdea,
+  FunnelPerformanceScore,
+  GrowthAlert,
+  GrowthInsight,
+  GrowthRecommendation,
+  PerformanceForecast,
+  PlainEnglishInsight,
+  WeeklyPerformanceSummary,
+} from '@/lib/growth-assistant/types'
 import DashboardSkeleton from './DashboardSkeleton'
 import {
   VisitorsPanel,
@@ -11,10 +23,18 @@ import {
   SubscribersPanel,
   TrafficChartPanel,
   FunnelPerformancePanel,
+  PerformanceScorePanel,
   AffiliateEarningsPanel,
   RecentActivityPanel,
-  NotificationsPanel,
+  InsightsPanel,
+  RecommendationsFeedPanel,
+  AlertsPanel,
   QuickActionsPanel,
+  ABTestSuggestionsPanel,
+  OptimizationIdeasPanel,
+  PlainEnglishInsightsPanel,
+  WeeklySummaryReportPanel,
+  PerformanceForecastPanel,
 } from './panels'
 
 const ranges = [
@@ -32,6 +52,15 @@ export default function DashboardControlCenter() {
   const [error, setError] = useState<string | null>(null)
   const [refreshSeed, setRefreshSeed] = useState(0)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [funnelScores, setFunnelScores] = useState<FunnelPerformanceScore[]>([])
+  const [insights, setInsights] = useState<GrowthInsight[]>([])
+  const [recommendations, setRecommendations] = useState<GrowthRecommendation[]>([])
+  const [alerts, setAlerts] = useState<GrowthAlert[]>([])
+  const [plainEnglishInsights, setPlainEnglishInsights] = useState<PlainEnglishInsight[]>([])
+  const [weeklySummary, setWeeklySummary] = useState<WeeklyPerformanceSummary | null>(null)
+  const [forecasts, setForecasts] = useState<PerformanceForecast[]>([])
+  const [abTestSuggestions, setAbTestSuggestions] = useState<ABTestSuggestion[]>([])
+  const [optimizationIdeas, setOptimizationIdeas] = useState<FunnelOptimizationIdea[]>([])
 
   useEffect(() => {
     let active = true
@@ -40,9 +69,94 @@ export default function DashboardControlCenter() {
       try {
         setLoading(true)
         setError(null)
-        const next = await getDashboardData(range)
+        const [dashboardResult, snapshotResult, recommendationsResult, alertsResult] = await Promise.allSettled([
+          getDashboardData(range),
+          getGrowthSnapshot({ range, limit: 30 }),
+          getRecommendations({ range, limit: 30, status: 'open' }),
+          getAlerts({ range, limit: 30, state: 'active' }),
+        ])
         if (!active) return
-        setData(next)
+
+        if (dashboardResult.status === 'rejected') {
+          throw dashboardResult.reason
+        }
+
+        setData(dashboardResult.value)
+
+        const snapshotPayload = snapshotResult.status === 'fulfilled' ? snapshotResult.value : null
+
+        if (snapshotPayload) {
+          setInsights(snapshotPayload.insights)
+          setPlainEnglishInsights(snapshotPayload.plainEnglishInsights)
+          setFunnelScores(snapshotPayload.funnelScores)
+          setWeeklySummary(snapshotPayload.weeklySummary)
+          setForecasts(snapshotPayload.forecasts)
+          setAbTestSuggestions(snapshotPayload.abTestSuggestions)
+          setOptimizationIdeas(snapshotPayload.optimizationIdeas)
+        } else {
+          setInsights([])
+          setPlainEnglishInsights([])
+          setFunnelScores([])
+          setWeeklySummary(null)
+          setForecasts([])
+          setAbTestSuggestions([])
+          setOptimizationIdeas([])
+        }
+
+        const snapshotRecommendations: GrowthRecommendation[] = [
+          ...(snapshotPayload?.optimizationIdeas || []).map((item) => ({
+            id: item.id,
+            userId: item.userId,
+            funnelId: item.funnelId,
+            recommendationType: 'auto_funnel_optimization',
+            title: item.title,
+            description: item.description,
+            rationale: item.actions.join(' • '),
+            priority: item.priority,
+            confidence: 0.76,
+            expectedLiftMin: item.expectedLiftMin,
+            expectedLiftMax: item.expectedLiftMax,
+            effort: item.effort,
+            metadata: { source: item.source, actions: item.actions },
+            status: 'open' as const,
+            createdAt: item.createdAt,
+          })),
+          ...(snapshotPayload?.abTestSuggestions || []).map((item) => ({
+            id: item.id,
+            userId: item.userId,
+            funnelId: item.funnelId,
+            recommendationType: 'ab_test_suggestion',
+            title: item.title,
+            description: item.hypothesis,
+            rationale: `${item.variantA.name} vs ${item.variantB.name}`,
+            priority: 'high' as const,
+            confidence: item.confidence,
+            expectedLiftMin: item.expectedLiftMin,
+            expectedLiftMax: item.expectedLiftMax,
+            effort: 'medium' as const,
+            metadata: {
+              source: item.source,
+              objective: item.objective,
+              variantA: item.variantA,
+              variantB: item.variantB,
+            },
+            status: 'open' as const,
+            createdAt: item.createdAt,
+          })),
+        ]
+
+        if (recommendationsResult.status === 'fulfilled') {
+          setRecommendations([...recommendationsResult.value, ...snapshotRecommendations].slice(0, 30))
+        } else {
+          setRecommendations(snapshotRecommendations)
+        }
+
+        if (alertsResult.status === 'fulfilled') {
+          setAlerts(alertsResult.value)
+        } else {
+          setAlerts([])
+        }
+
         setLastUpdated(new Date())
       } catch (err) {
         if (!active) return
@@ -81,8 +195,34 @@ export default function DashboardControlCenter() {
       items.push({ level: 'info', message: 'No recent events. Verify traffic sources and funnel publishing status.' })
     }
 
+    if (alerts.length > 0) {
+      items.push({ level: 'warning', message: `${alerts.length} active growth alert(s) need review.` })
+    }
+
+    if (weeklySummary?.headline) {
+      items.push({ level: 'info', message: weeklySummary.headline })
+    }
+
+    if (forecasts.length > 0) {
+      const atRisk = forecasts.find((item) => item.predictedConversionRate < item.baselineConversionRate * 0.9)
+      if (atRisk) {
+        items.push({
+          level: 'warning',
+          message: `Forecast risk: ${atRisk.funnelName} may decline from ${atRisk.baselineConversionRate.toFixed(2)}% to ${atRisk.predictedConversionRate.toFixed(2)}% conversion.`,
+        })
+      }
+    }
+
+    if (abTestSuggestions.length > 0) {
+      items.push({ level: 'info', message: `${abTestSuggestions.length} new A/B test idea(s) generated.` })
+    }
+
+    if (optimizationIdeas.length > 0) {
+      items.push({ level: 'info', message: `${optimizationIdeas.length} automatic optimization idea(s) queued.` })
+    }
+
     return items
-  }, [data])
+  }, [data, alerts.length, weeklySummary, forecasts, abTestSuggestions.length, optimizationIdeas.length])
 
   if (loading && !data) {
     return <DashboardSkeleton />
@@ -136,7 +276,7 @@ export default function DashboardControlCenter() {
           <SubscribersPanel subscribers={data?.totals.leads || 0} />
         </section>
 
-        <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-4">
           <TrafficChartPanel sources={data?.sourceBreakdown || []} />
           <FunnelPerformancePanel
             funnels={data?.totals.funnels || 0}
@@ -144,13 +284,48 @@ export default function DashboardControlCenter() {
             conversions={data?.totals.conversions || 0}
             conversionRate={data?.totals.conversionRate || 0}
           />
+          <PerformanceScorePanel scores={funnelScores} />
           <AffiliateEarningsPanel revenue={data?.totals.revenue || 0} conversionRate={data?.totals.conversionRate || 0} />
         </section>
 
-        <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-4">
           <RecentActivityPanel items={data?.recentActivity || []} />
-          <NotificationsPanel notifications={notifications} />
+          <InsightsPanel insights={insights} />
+          <RecommendationsFeedPanel recommendations={recommendations} />
+          <AlertsPanel alerts={alerts} />
+        </section>
+
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <PlainEnglishInsightsPanel insights={plainEnglishInsights} />
+          <ABTestSuggestionsPanel suggestions={abTestSuggestions} />
+          <OptimizationIdeasPanel ideas={optimizationIdeas} />
+        </section>
+
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <WeeklySummaryReportPanel summary={weeklySummary} />
+          <PerformanceForecastPanel forecasts={forecasts} />
+        </section>
+
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <QuickActionsPanel />
+          <div className="min-h-[1px]">
+            {/* Keep existing notice stream for compatibility while Alerts panel handles critical signals. */}
+            <div className="h-full rounded-lg border border-[var(--border-subtle)] p-4">
+              <p className="mb-2 text-sm font-semibold text-text-primary">System Notices</p>
+              {weeklySummary && (
+                <p className="mb-2 text-xs text-text-secondary">
+                  {weeklySummary.summary}
+                </p>
+              )}
+              <div className="space-y-2">
+                {notifications.map((notification, index) => (
+                  <div key={`${notification.message}-${index}`} className="rounded-lg border border-[var(--border-subtle)] px-3 py-2 text-xs text-text-secondary">
+                    {notification.message}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </section>
       </div>
     </main>

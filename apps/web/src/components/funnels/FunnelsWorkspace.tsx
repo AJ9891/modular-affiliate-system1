@@ -113,8 +113,8 @@ export default function FunnelsWorkspace() {
             <button type="button" className="hud-button-secondary px-4 py-2" onClick={() => setShowCreate((v) => !v)}>
               {showCreate ? 'Close Composer' : 'Create Funnel'}
             </button>
-            <Link href="/visual-builder" className="hud-button-primary px-4 py-2">
-              Open Builder
+            <Link href="/link-funnel" className="hud-button-primary px-4 py-2">
+              Open Link Builder
             </Link>
           </div>
         </section>
@@ -190,7 +190,7 @@ export default function FunnelsWorkspace() {
               title="No funnels yet"
               description="Create your first funnel to publish pages, capture leads, and start tracking performance."
               primaryAction={{ label: 'Create Funnel', onClick: () => setShowCreate(true) }}
-              secondaryAction={{ label: 'Open Visual Builder', href: '/visual-builder' }}
+              secondaryAction={{ label: 'Open Link Builder', href: '/link-funnel' }}
             />
           ) : (
             <>

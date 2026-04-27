@@ -1,26 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
 import { generateAIResponse } from '@/lib/openai'
 import { 
   validateAITone, 
-  validateAIBehavior, 
   wrapAIResponse 
 } from '@/lib/ai-guidelines'
+import { createSubdomainRouteHandlerClient } from '@/lib/subdomain-auth'
+
+async function getAuthenticatedUser(request: NextRequest) {
+  const supabase = await createSubdomainRouteHandlerClient(request)
+  const { data: { user }, error } = await supabase.auth.getUser()
+
+  if (user) {
+    return { supabase, user }
+  }
+
+  // Legacy fallback for routes that still pass explicit bearer/cookie tokens.
+  const bearerHeader = request.headers.get('authorization')
+  const bearerToken = bearerHeader?.startsWith('Bearer ')
+    ? bearerHeader.slice(7)
+    : null
+  const cookieToken = request.cookies.get('sb-access-token')?.value
+  const accessToken = bearerToken || cookieToken
+
+  if (accessToken) {
+    const { data, error: tokenError } = await supabase.auth.getUser(accessToken)
+    if (!tokenError && data.user) {
+      return { supabase, user: data.user }
+    }
+  }
+
+  if (error) {
+    console.error('Chat auth error:', error.message)
+  }
+
+  return { supabase, user: null }
+}
 
 // GET /api/chat?conversationId=xxx - Get conversation history
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
-    const accessToken = request.cookies.get('sb-access-token')?.value
-    
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
-    
-    if (authError || !user) {
+    const { supabase, user } = await getAuthenticatedUser(request)
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -73,16 +93,8 @@ export async function GET(request: NextRequest) {
 // POST /api/chat - Send a message and get AI response
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
-    const accessToken = request.cookies.get('sb-access-token')?.value
-    
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
-    
-    if (authError || !user) {
+    const { supabase, user } = await getAuthenticatedUser(request)
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -148,7 +160,7 @@ Help users with all platform features, troubleshooting, and best practices. Be f
 - **Themes**: Real-time color/font customization
 - **AI Generation**: OpenAI-powered headline, copy, and full-page generation
 
-### 2. EMAIL MARKETING (Sendshark Integration - $97/mo value FREE)
+### 2. EMAIL MARKETING (In-house Provider Integration)
 - **Automated Sequences**: Welcome series, abandoned cart recovery
 - **Campaigns**: One-off broadcasts and scheduled campaigns  
 - **Subscriber Management**: Tagging, segmentation, custom fields
@@ -159,7 +171,7 @@ Help users with all platform features, troubleshooting, and best practices. Be f
 ### 3. LEAD CAPTURE & DOWNLOADS
 - **Lead Magnets**: Upload PDFs, ebooks, digital downloads
 - **Email Capture Forms**: Built into funnels
-- **Automatic Flow**: Lead captured → Saved to DB → Added to Sendshark → Welcome email triggered
+- **Automatic Flow**: Lead captured → Saved to DB → Added to provider list → Welcome email triggered
 - **Downloads Page**: /downloads - Manage all lead magnets
 
 ### 4. ANALYTICS & TRACKING
@@ -191,7 +203,7 @@ Help users with all platform features, troubleshooting, and best practices. Be f
 - **Starter ($30/mo)**: 1 funnel, basic templates, subdomain hosting
 - **Pro ($45/mo)**: Unlimited funnels, AI generation, premium templates, priority support
 - **Agency ($60/mo)**: Everything in Pro + team collaboration, white label, custom domains, unlimited team members
-- **ALL PLANS**: Include Sendshark email automation (normally $97/mo - FREE!)
+- **ALL PLANS**: Include integrated email automation and reporting
 
 ## KEY API ENDPOINTS
 - POST /api/leads/capture - Capture new lead
@@ -209,7 +221,7 @@ Help users with all platform features, troubleshooting, and best practices. Be f
 → Check /api/leads/capture endpoint, verify Supabase connection, check RLS policies
 
 **"Emails not sending"**
-→ Verify SENDSHARK_API_KEY in environment variables, check /api/email/send logs
+→ Verify EMAIL_PROVIDER and provider credentials (autoresponder or SES), check /api/email/send logs
 
 **"Can't invite team members"**
 → Confirm user has Agency plan, check email invitation endpoint, verify invite token
@@ -226,7 +238,7 @@ Help users with all platform features, troubleshooting, and best practices. Be f
 ## TECH STACK
 - Frontend: Next.js 14 + React 18 + TypeScript + Tailwind CSS
 - Backend: Supabase (PostgreSQL + Auth + Storage)
-- Email: Sendshark API
+- Email: In-house provider layer (autoresponder + SES transport)
 - Payments: Stripe
 - AI: OpenAI GPT-3.5/4
 - Deployment: Vercel
@@ -241,46 +253,34 @@ Help users with all platform features, troubleshooting, and best practices. Be f
 
 Always maintain a helpful, professional tone. Users are building their business with this platform - make them feel supported!`
 
-    const aiResponse = await generateAIResponse({
-      systemPrompt,
-      messages: messages || [],
-      userMessage: message
-    })
+    let assistantContent: string
+    let validation: { tone: ReturnType<typeof validateAITone> } | undefined
 
-    // Validate AI response tone
-    const toneValidation = validateAITone(aiResponse)
-    if (!toneValidation.passed) {
-      console.warn('Chat AI tone validation failed:', toneValidation.issues)
-      // For chat, we'll log but continue with a fallback response
-      const fallbackResponse = "I can help with that, but let me rephrase to be more helpful. What specific aspect would you like me to focus on?"
-      
-      // Save fallback response instead
-      const { data: assistantMsg, error: aiMsgError } = await supabase
-        .from('chat_messages')
-        .insert({
-          conversation_id: activeConversationId,
-          role: 'assistant',
-          content: fallbackResponse
-        })
-        .select()
-        .single()
-
-      if (aiMsgError) {
-        return NextResponse.json({ error: aiMsgError.message }, { status: 500 })
-      }
-
-      return NextResponse.json({
-        conversationId: activeConversationId,
-        message: assistantMsg,
-        validation: { tone: toneValidation }
+    try {
+      const aiResponse = await generateAIResponse({
+        systemPrompt,
+        messages: messages || [],
+        userMessage: message
       })
-    }
 
-    // For chat, wrap with lighter guidelines (suggestions don't need heavy consent)
-    const wrappedResponse = wrapAIResponse(aiResponse, "suggest", {
-      includeDisclaimer: false,
-      allowOverride: false
-    })
+      // Validate AI response tone
+      const toneValidation = validateAITone(aiResponse)
+      if (!toneValidation.passed) {
+        console.warn('Chat AI tone validation failed:', toneValidation.issues)
+        validation = { tone: toneValidation }
+        assistantContent = "I can help with that, but let me rephrase to be more helpful. What specific aspect would you like me to focus on?"
+      } else {
+        // For chat, wrap with lighter guidelines (suggestions don't need heavy consent)
+        const wrappedResponse = wrapAIResponse(aiResponse, "suggest", {
+          includeDisclaimer: false,
+          allowOverride: false
+        })
+        assistantContent = wrappedResponse.content
+      }
+    } catch (generationError) {
+      console.error('Chat AI generation failed:', generationError)
+      assistantContent = "I'm having trouble reaching the AI service right now. Please try again in a moment."
+    }
 
     // Save AI response
     const { data: assistantMsg, error: aiMsgError } = await supabase
@@ -288,7 +288,7 @@ Always maintain a helpful, professional tone. Users are building their business 
       .insert({
         conversation_id: activeConversationId,
         role: 'assistant',
-        content: wrappedResponse.content
+        content: assistantContent
       })
       .select()
       .single()
@@ -297,10 +297,20 @@ Always maintain a helpful, professional tone. Users are building their business 
       return NextResponse.json({ error: aiMsgError.message }, { status: 500 })
     }
 
-    return NextResponse.json({
+    const responsePayload: {
+      conversationId: string
+      message: typeof assistantMsg
+      validation?: { tone: ReturnType<typeof validateAITone> }
+    } = {
       conversationId: activeConversationId,
       message: assistantMsg
-    })
+    }
+
+    if (validation) {
+      responsePayload.validation = validation
+    }
+
+    return NextResponse.json(responsePayload)
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
@@ -309,16 +319,8 @@ Always maintain a helpful, professional tone. Users are building their business 
 // PATCH /api/chat?conversationId=xxx - Update conversation status (e.g., escalate to human support)
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
-    const accessToken = request.cookies.get('sb-access-token')?.value
-    
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
-    
-    if (authError || !user) {
+    const { supabase, user } = await getAuthenticatedUser(request)
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

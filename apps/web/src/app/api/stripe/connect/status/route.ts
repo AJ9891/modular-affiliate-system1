@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
-import Stripe from 'stripe'
+import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
 import { checkSupabase } from '@/lib/check-supabase'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-12-15.clover',
-})
+import { getStripeServerClient } from '@/lib/stripe-server'
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
@@ -16,7 +11,8 @@ export async function GET(request: NextRequest) {
   if (check) return check
 
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const stripe = getStripeServerClient()
+    const supabase = await createRouteHandlerClientCompat()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
@@ -24,11 +20,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user's Stripe Connect account
-    const { data: userData } = await supabase
+    const { data: userData, error: userQueryError } = await supabase
       .from('users')
       .select('stripe_connect_account_id, stripe_connect_onboarding_complete, stripe_connect_charges_enabled, stripe_connect_payouts_enabled')
       .eq('id', user.id)
       .single()
+
+    if (userQueryError) {
+      throw new Error(`Unable to load Stripe status: ${userQueryError.message}`)
+    }
 
     if (!userData?.stripe_connect_account_id) {
       return NextResponse.json({
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
         chargesEnabled !== userData.stripe_connect_charges_enabled ||
         payoutsEnabled !== userData.stripe_connect_payouts_enabled) {
 
-      await supabase
+      const { error: updateError } = await supabase
         .from('users')
         .update({
           stripe_connect_onboarding_complete: onboardingComplete,
@@ -60,6 +60,10 @@ export async function GET(request: NextRequest) {
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id)
+
+      if (updateError) {
+        throw new Error(`Unable to persist Stripe status: ${updateError.message}`)
+      }
     }
 
     return NextResponse.json({

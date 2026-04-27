@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
+import { hasAdminAccess } from '@/lib/admin-access'
 
 // GET /api/team - List team members
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createRouteHandlerClientCompat()
     const accessToken = request.cookies.get('sb-access-token')?.value
     
     if (!accessToken) {
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
 // POST /api/team - Invite team member
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createRouteHandlerClientCompat()
     const accessToken = request.cookies.get('sb-access-token')?.value
     
     if (!accessToken) {
@@ -70,11 +70,11 @@ export async function POST(request: NextRequest) {
     // Check if user has Agency plan
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('plan, is_admin')
+      .select('plan, is_admin, role')
       .eq('id', user.id)
       .single()
 
-    if (userError || (!userData?.is_admin && userData?.plan !== 'agency')) {
+    if (userError || (!hasAdminAccess(userData) && userData?.plan !== 'agency')) {
       return NextResponse.json({ 
         error: 'Team collaboration is only available on the Agency plan' 
       }, { status: 403 })
@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Send invite email via Sendshark
+    // Send invite email via internal email service route
     try {
       const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/team/accept?token=${inviteToken}`
       
@@ -198,7 +198,7 @@ export async function POST(request: NextRequest) {
 // DELETE /api/team?memberId=xxx - Remove team member
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createRouteHandlerClientCompat()
     const accessToken = request.cookies.get('sb-access-token')?.value
     
     if (!accessToken) {

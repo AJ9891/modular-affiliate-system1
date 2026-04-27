@@ -144,7 +144,7 @@ Table: public.users
 │ email                │ text     │ UNIQUE, NOT NULL       │
 │ subdomain            │ text     │ UNIQUE                 │
 │ custom_domain        │ text     │ UNIQUE                 │
-│ sendshark_provisioned│ boolean  │ DEFAULT false          │
+│ email_automation_provisioned │ boolean │ DEFAULT false   │
 │ stripe_customer_id   │ text     │                        │
 │ stripe_subscription  │ text     │                        │
 │ plan                 │ text     │ CHECK (starter/pro/    │
@@ -171,7 +171,8 @@ Already Configured:
   ✅ NEXT_PUBLIC_SUPABASE_URL
   ✅ NEXT_PUBLIC_SUPABASE_ANON_KEY
   ✅ SUPABASE_SERVICE_ROLE_KEY
-  ✅ SENDSHARK_API_KEY
+  ✅ EMAIL_PROVIDER
+  ✅ AUTORESPONDER_CRON_SECRET
   ✅ STRIPE_SECRET_KEY
 
 ┌─────────────────────────────────────────────────────────────────┐

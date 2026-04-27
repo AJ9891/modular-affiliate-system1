@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sendshark } from '@/lib/sendshark'
+import { emailService } from '@/lib/email/service'
+import { getOptionalAuthenticatedUserId, resolveEmailErrorStatus } from '@/lib/email/route-utils'
 
 /**
  * Email Automation API Endpoint
@@ -8,13 +9,20 @@ import { sendshark } from '@/lib/sendshark'
  */
 export async function POST(request: NextRequest) {
   try {
+    const userId = await getOptionalAuthenticatedUserId(request)
     const body = await request.json()
     const { action, ...data } = body
 
     if (action === 'trigger') {
       // Trigger automation for a user
       const { automationId, recipient } = data
-      const result = await sendshark.triggerAutomation(automationId, recipient)
+      if (!automationId || !recipient?.email) {
+        return NextResponse.json(
+          { success: false, error: 'automationId and recipient.email are required' },
+          { status: 400 }
+        )
+      }
+      const result = await emailService.triggerAutomation(automationId, recipient)
       
       return NextResponse.json({ 
         success: true, 
@@ -23,22 +31,37 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    if (!data?.name || !data?.trigger || !Array.isArray(data?.emails)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Automation payload must include name, trigger, and emails[]',
+        },
+        { status: 400 }
+      )
+    }
+
     // Create new automation
-    const automation = await sendshark.createAutomation(data)
+    const automation = await emailService.createAutomation({
+      ...data,
+      userId,
+    })
     
     return NextResponse.json({ 
       success: true, 
       automation,
       message: 'Automation created successfully' 
     })
-  } catch (error) {
-    console.error('Automation error:', error)
+  } catch (err) {
+    console.error('Automation error:', err)
+    const message = err instanceof Error ? err.message : 'Automation operation failed'
+    const status = resolveEmailErrorStatus(message)
     return NextResponse.json(
       { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Automation operation failed' 
+        error: message
       },
-      { status: 500 }
+      { status }
     )
   }
 }
@@ -49,7 +72,8 @@ export async function POST(request: NextRequest) {
  */
 export async function PUT(_request: NextRequest) {
   try {
-    const automations = await sendshark.setupDefaultAutomations()
+    const userId = await getOptionalAuthenticatedUserId(_request)
+    const automations = await emailService.setupDefaultAutomations(userId)
     
     return NextResponse.json({ 
       success: true, 

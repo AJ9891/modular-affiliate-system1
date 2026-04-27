@@ -25,6 +25,9 @@ export const funnelSchema = z.object({
 export const leadCaptureSchema = z.object({
   email: emailSchema,
   funnel_id: uuidSchema.optional(),
+  page_path: z.string().max(500).optional(),
+  generation_id: uuidSchema.optional(),
+  variant_id: z.string().max(100).optional(),
   source: z.string().max(50).optional(),
   utm_source: z.string().max(100).optional(),
   utm_medium: z.string().max(100).optional(),
@@ -130,7 +133,7 @@ export function addSecurityHeaders(response: NextResponse): NextResponse {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https:",
-    "connect-src 'self' https://*.supabase.co https://api.openai.com https://api.sendshark.com https://api.stripe.com",
+    "connect-src 'self' https://*.supabase.co https://api.openai.com https://api.stripe.com",
     "frame-src https://js.stripe.com",
     "media-src 'self'",
   ].join('; ')

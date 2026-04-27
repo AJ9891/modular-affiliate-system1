@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sendshark } from '@/lib/sendshark'
+import { emailService } from '@/lib/email/service'
 import { PERSONALITY_EMAIL_TEMPLATES, type EmailPersonality } from '@/config/emailTemplates'
+import { resolveEmailErrorStatus } from '@/lib/email/route-utils'
 
 type TemplateRecord = {
   id?: string
@@ -65,7 +66,7 @@ export async function GET() {
   }))
 
   try {
-    const remotePayload = await sendshark.getTemplates()
+    const remotePayload = await emailService.getTemplates()
     const remoteTemplates = normalizeRemoteTemplates(remotePayload).map((template) => ({
       ...template,
       source: 'remote' as const,
@@ -98,21 +99,40 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const template = await request.json()
-    const result = await sendshark.saveTemplate(template)
+
+    if (
+      !template ||
+      typeof template !== 'object' ||
+      typeof template.name !== 'string' ||
+      typeof template.subject !== 'string' ||
+      typeof template.html !== 'string'
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Template payload must include name, subject, and html',
+        },
+        { status: 400 }
+      )
+    }
+
+    const result = await emailService.saveTemplate(template)
     
     return NextResponse.json({ 
       success: true, 
       template: result,
       message: 'Template saved successfully' 
     })
-  } catch (error) {
-    console.error('Save template error:', error)
+  } catch (err) {
+    console.error('Save template error:', err)
+    const message = err instanceof Error ? err.message : 'Failed to save template'
+    const status = resolveEmailErrorStatus(message)
     return NextResponse.json(
       { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Failed to save template' 
+        error: message
       },
-      { status: 500 }
+      { status }
     )
   }
 }

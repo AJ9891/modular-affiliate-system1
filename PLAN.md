@@ -411,3 +411,252 @@ apps/web/src/
 3. Create 15 complete template definitions
 4. Build template gallery UI
 5. Test end-to-end flow
+
+---
+
+# Addendum: AI Growth Assistant + Production Build Blueprint
+
+## Goal
+
+Integrate an AI-powered growth assistant that automatically analyzes funnel performance, generates insights, creates optimization recommendations, assigns funnel scores, and triggers alerts.
+
+This addendum combines:
+
+1. Your production blueprint (Prisma + OpenAI + PDF + analytics pattern).
+2. Repo-aligned execution plan for this codebase (Next.js App Router + Supabase-first architecture).
+
+No implementation in this step. Planning only.
+
+---
+
+## Scope
+
+### Core Features
+
+1. Funnel analysis:
+   - Detect drop-off points.
+   - Detect low conversion pages.
+   - Detect high bounce rates.
+2. Performance insights:
+   - Example: conversion dropped X% in last 7 days.
+   - Example: high traffic + low conversion page.
+   - Example: low CTA click-through.
+3. Recommendation engine:
+   - Headline improvement.
+   - CTA placement optimization.
+   - Layout simplification.
+   - Offer testing recommendation.
+   - Testimonial/trust proof additions.
+4. Funnel scoring:
+   - Composite score from conversion, engagement, and click-through.
+5. Alert system:
+   - Sudden conversion drops.
+   - Traffic spikes.
+   - Funnel break (traffic with no conversions).
+6. Dashboard integration:
+   - Insights panel.
+   - Recommendations feed.
+   - Score display.
+   - Alerts panel.
+7. Data processing:
+   - Aggregation, rate calculations, anomaly detection, pattern detection.
+8. API endpoints:
+   - `GET /api/insights`
+   - `GET /api/recommendations`
+   - `GET /api/alerts`
+
+---
+
+## Architecture Decision
+
+### Source Blueprint (Reference)
+
+Your provided "Full Production Build" is accepted as a reference architecture, especially for:
+
+- AI-generated funnel/variant pattern.
+- Variant picker logic.
+- PDF lead-magnet delivery + conversion logging.
+- Event-based analytics rollup pattern.
+
+### Repo-Aligned Execution (Primary)
+
+Because this repository is Supabase-based (not Prisma-first), implementation should be aligned to existing data and APIs:
+
+- Keep Next.js App Router.
+- Keep Supabase route handlers and RLS model.
+- Add new derived metrics/insight tables in Supabase migrations.
+- Add new API routes under `/app/api`.
+
+---
+
+## Data Model Plan
+
+### Existing Tables Reused
+
+- `funnels`
+- `pages` (or `funnel_pages`, depending on migration state)
+- `leads`
+- `clicks`
+- `conversions`
+- `niches`
+
+### New Tables To Add
+
+1. `page_views` (or `analytics_events`) to support bounce/session-based metrics.
+2. `funnel_metrics_daily`.
+3. `page_metrics_daily`.
+4. `growth_insights`.
+5. `growth_recommendations`.
+6. `growth_alerts`.
+7. Optional: `funnel_scores_daily`.
+
+### Schema Normalization Blockers (Must Resolve First)
+
+1. `funnels.funnel_id` vs `funnels.id` drift in some code/migrations.
+2. `pages` vs `funnel_pages` split in migrations.
+3. Timestamp consistency across analytics queries (`clicked_at`, `converted_at`, `created_at`).
+
+---
+
+## Processing Logic Plan
+
+### Aggregation Jobs
+
+1. Hourly incremental aggregation:
+   - Update daily metrics for current date.
+2. Daily finalization:
+   - Finalize previous day and update rolling baselines.
+
+### Metric Rules
+
+1. Funnel conversion rate = conversions / clicks.
+2. Page conversion rate = leads or conversions / page views.
+3. Bounce rate = single-page sessions / total sessions.
+4. Drop-off by step = 1 - (next step sessions / current step sessions).
+
+### Insight/Recommendation Generation
+
+1. Compare:
+   - last 7d vs previous 7d.
+   - current day/hour vs rolling baseline.
+2. Rank by impact:
+   - traffic weight x severity x confidence.
+3. Store top N items per funnel and account.
+
+### Alert Rules
+
+1. Conversion drop alert:
+   - significant relative drop and minimum traffic threshold.
+2. Traffic spike alert:
+   - significant spike vs baseline.
+3. Funnel break alert:
+   - clicks/page views present with near-zero conversions over threshold window.
+
+---
+
+## API Plan
+
+### 1) `GET /api/insights`
+
+Returns ranked performance insights.
+
+- Query params:
+  - `funnelId?`
+  - `range?=7d|30d|90d`
+  - `limit?`
+
+### 2) `GET /api/recommendations`
+
+Returns actionable optimization recommendations.
+
+- Query params:
+  - `funnelId?`
+  - `status?=open|applied|dismissed`
+  - `limit?`
+
+### 3) `GET /api/alerts`
+
+Returns active/recent alerts.
+
+- Query params:
+  - `funnelId?`
+  - `state?=active|resolved`
+  - `severity?=low|medium|high|critical`
+  - `limit?`
+
+---
+
+## Dashboard Integration Plan
+
+### Existing Surfaces To Extend
+
+1. `DashboardControlCenter`:
+   - Add Insights panel.
+   - Add Recommendations feed.
+   - Extend Notifications to Alerts panel.
+2. `AnalyticsWorkspace`:
+   - Add page-level drop-off and bounce diagnostics.
+   - Add funnel score column and trend.
+
+### UX Principles
+
+1. Keep current cockpit visual style.
+2. Every insight/recommendation must show evidence and timeframe.
+3. Show confidence and expected lift where applicable.
+
+---
+
+## Implementation Roadmap
+
+### Phase A: Data Foundation
+
+1. Resolve schema drift (`funnel_id/id`, `pages/funnel_pages`).
+2. Add page-view/session event capture persistence.
+3. Add indexes needed for aggregation and trend queries.
+
+### Phase B: Metrics Pipeline
+
+1. Build hourly/daily aggregation jobs.
+2. Build rolling baseline computation (7d/30d).
+3. Backfill historical metrics (initial 30-90 days).
+
+### Phase C: AI Growth Intelligence
+
+1. Implement deterministic insight rules.
+2. Implement recommendation rules with priority/confidence.
+3. Implement scoring model and alert triggers.
+
+### Phase D: API Layer
+
+1. Ship `/api/insights`.
+2. Ship `/api/recommendations`.
+3. Ship `/api/alerts`.
+
+### Phase E: Dashboard Integration
+
+1. Wire new APIs into dashboard panels.
+2. Add filtering and drill-down by funnel/page.
+3. Add near-real-time alert refresh.
+
+### Phase F: Stabilization
+
+1. Add tests for metrics logic and alert thresholds.
+2. Add data-quality checks and dedupe logic.
+3. Add operator runbook for tuning thresholds.
+
+---
+
+## Acceptance Criteria
+
+1. Insights, recommendations, and alerts are persisted and queryable by user/funnel.
+2. Dashboard shows new intelligence panels with loading/error states.
+3. Funnel score visible with trend direction.
+4. Alerts fire for drop, spike, and break scenarios within defined thresholds.
+5. APIs return stable contracts and pass integration tests.
+6. Existing analytics pages continue to function without regression.
+
+---
+
+## Notes on Your Prisma Blueprint
+
+The Prisma schema and routes you provided are preserved as a valid reference implementation pattern. For this repository, the same feature logic will be delivered via Supabase-backed models and APIs to remain consistent with current architecture and deployment.

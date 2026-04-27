@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { X } from 'lucide-react'
 import { buildAffiliateLink } from '@/lib/tracking'
 
 interface Offer {
@@ -12,6 +13,44 @@ interface Offer {
   commission_rate: number
   niche_id?: string
   is_active: boolean
+}
+
+type ApiPayload = {
+  error?: string
+  message?: string
+  details?: string
+  hint?: string
+  code?: string
+  offer?: Offer
+  offers?: Offer[]
+}
+
+async function readResponsePayload(response: Response): Promise<ApiPayload | string | null> {
+  const raw = await response.text().catch(() => '')
+  if (!raw) return null
+
+  try {
+    return JSON.parse(raw) as ApiPayload
+  } catch {
+    return raw
+  }
+}
+
+function getApiErrorMessage(response: Response, payload: ApiPayload | string | null): string {
+  if (typeof payload === 'string' && payload.trim().length > 0) {
+    return payload
+  }
+
+  if (payload && typeof payload === 'object') {
+    if (typeof payload.error === 'string' && payload.error.trim().length > 0) {
+      return payload.error
+    }
+    if (typeof payload.message === 'string' && payload.message.trim().length > 0) {
+      return payload.message
+    }
+  }
+
+  return `Request failed (${response.status}${response.statusText ? ` ${response.statusText}` : ''})`
 }
 
 export default function OffersPage() {
@@ -45,8 +84,9 @@ export default function OffersPage() {
       setLoading(true)
       const res = await fetch('/api/offers')
       if (res.ok) {
-        const data = await res.json()
-        setOffers(data.offers || [])
+        const payload = await readResponsePayload(res)
+        const data = payload && typeof payload === 'object' ? payload : null
+        setOffers(data?.offers || [])
       }
     } catch (error) {
       console.error('Failed to load offers:', error)
@@ -64,20 +104,24 @@ export default function OffersPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newOffer),
       })
-
-      const data = await res.json()
+      const payload = await readResponsePayload(res)
 
       if (res.ok) {
         setShowAddForm(false)
         setNewOffer({ name: '', description: '', affiliate_link: '', commission_rate: 0 })
         loadOffers()
       } else {
-        console.error('Failed to add offer:', data)
-        alert(`Failed to add offer: ${data.error || 'Unknown error'}`)
+        const message = getApiErrorMessage(res, payload)
+        console.error('Failed to add offer:', {
+          status: res.status,
+          statusText: res.statusText,
+          payload,
+        })
+        alert(`Failed to add offer: ${message}`)
       }
     } catch (error) {
       console.error('Error adding offer:', error)
-      alert('Error adding offer')
+      alert(`Error adding offer: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -155,72 +199,12 @@ export default function OffersPage() {
           </div>
           
           <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-lg font-bold transition"
+            onClick={() => setShowAddForm(true)}
+            className="hud-button-primary px-6 py-3 text-sm"
           >
-            {showAddForm ? 'Cancel' : '+ Add Offer'}
+            + Add Offer
           </button>
         </div>
-
-        {/* Add Offer Form */}
-        {showAddForm && (
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 mb-8">
-            <h2 className="text-2xl font-bold text-white mb-4">Add New Offer</h2>
-            <form onSubmit={handleAddOffer} className="space-y-4">
-              <div>
-                <label className="block text-white mb-2">Offer Name</label>
-                <input
-                  type="text"
-                  value={newOffer.name}
-                  onChange={(e) => setNewOffer({ ...newOffer, name: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg bg-white/20 text-white border border-white/30 focus:border-yellow-400 focus:outline-none"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-white mb-2">Description</label>
-                <textarea
-                  value={newOffer.description}
-                  onChange={(e) => setNewOffer({ ...newOffer, description: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg bg-white/20 text-white border border-white/30 focus:border-yellow-400 focus:outline-none"
-                  rows={3}
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-white mb-2">Affiliate Link</label>
-                <input
-                  type="url"
-                  value={newOffer.affiliate_link}
-                  onChange={(e) => setNewOffer({ ...newOffer, affiliate_link: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg bg-white/20 text-white border border-white/30 focus:border-yellow-400 focus:outline-none"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-white mb-2">Commission Rate (%)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={newOffer.commission_rate}
-                  onChange={(e) => setNewOffer({ ...newOffer, commission_rate: parseFloat(e.target.value) })}
-                  className="w-full px-4 py-3 rounded-lg bg-white/20 text-white border border-white/30 focus:border-yellow-400 focus:outline-none"
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-lg font-bold transition"
-              >
-                Add Offer
-              </button>
-            </form>
-          </div>
-        )}
 
         {/* Offers List */}
         <div className="space-y-4">
@@ -316,6 +300,127 @@ export default function OffersPage() {
           </button>
         </div>
       </div>
+
+      {showAddForm && (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/65 px-4 backdrop-blur-sm"
+          onClick={() => setShowAddForm(false)}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-offer-dialog-title"
+            className="glass-tile relative w-full max-w-2xl border-white/20 bg-[rgba(8,14,24,0.9)] p-0 shadow-[0_26px_80px_rgba(0,0,0,0.52)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="pointer-events-none absolute inset-0 rounded-[14px] bg-[radial-gradient(circle_at_12%_0%,rgba(46,230,194,0.16),transparent_46%),radial-gradient(circle_at_92%_100%,rgba(31,199,167,0.14),transparent_42%)]" />
+            <div className="relative space-y-5 p-5 sm:p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-2">
+                  <p className="text-xs uppercase tracking-system text-text-secondary">Offers</p>
+                  <h2 id="add-offer-dialog-title" className="text-2xl font-semibold leading-tight text-text-primary">
+                    Add New Offer
+                  </h2>
+                  <p className="text-sm text-text-secondary">Create an offer with direct and trackable affiliate links.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAddForm(false)}
+                  className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-white/20 text-text-secondary transition hover:text-text-primary"
+                  aria-label="Close add offer dialog"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <form onSubmit={handleAddOffer} className="space-y-4">
+                <div>
+                  <label htmlFor="offer-name" className="mb-2 block text-xs uppercase tracking-system text-text-secondary">
+                    Offer Name
+                  </label>
+                  <input
+                    id="offer-name"
+                    type="text"
+                    value={newOffer.name}
+                    onChange={(e) => setNewOffer({ ...newOffer, name: e.target.value })}
+                    className="w-full rounded-lg border border-white/15 bg-[rgba(6,10,16,0.72)] px-4 py-3 text-sm text-text-primary placeholder:text-text-secondary focus:border-rocket-500/80 focus:outline-none focus:ring-2 focus:ring-rocket-500/30"
+                    placeholder="Offer title"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="offer-description" className="mb-2 block text-xs uppercase tracking-system text-text-secondary">
+                    Description
+                  </label>
+                  <textarea
+                    id="offer-description"
+                    value={newOffer.description}
+                    onChange={(e) => setNewOffer({ ...newOffer, description: e.target.value })}
+                    className="w-full rounded-lg border border-white/15 bg-[rgba(6,10,16,0.72)] px-4 py-3 text-sm text-text-primary placeholder:text-text-secondary focus:border-rocket-500/80 focus:outline-none focus:ring-2 focus:ring-rocket-500/30"
+                    rows={3}
+                    placeholder="What does this offer help the customer achieve?"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="offer-affiliate-link" className="mb-2 block text-xs uppercase tracking-system text-text-secondary">
+                    Affiliate Link
+                  </label>
+                  <input
+                    id="offer-affiliate-link"
+                    type="url"
+                    value={newOffer.affiliate_link}
+                    onChange={(e) => setNewOffer({ ...newOffer, affiliate_link: e.target.value })}
+                    className="w-full rounded-lg border border-white/15 bg-[rgba(6,10,16,0.72)] px-4 py-3 text-sm text-text-primary placeholder:text-text-secondary focus:border-rocket-500/80 focus:outline-none focus:ring-2 focus:ring-rocket-500/30"
+                    placeholder="https://example.com/offer"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="offer-commission-rate" className="mb-2 block text-xs uppercase tracking-system text-text-secondary">
+                    Commission Rate (%)
+                  </label>
+                  <input
+                    id="offer-commission-rate"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={newOffer.commission_rate}
+                    onChange={(e) =>
+                      setNewOffer({
+                        ...newOffer,
+                        commission_rate: Number.isFinite(e.target.valueAsNumber) ? e.target.valueAsNumber : 0,
+                      })
+                    }
+                    className="w-full rounded-lg border border-white/15 bg-[rgba(6,10,16,0.72)] px-4 py-3 text-sm text-text-primary placeholder:text-text-secondary focus:border-rocket-500/80 focus:outline-none focus:ring-2 focus:ring-rocket-500/30"
+                    required
+                  />
+                </div>
+
+                <div className="flex flex-wrap justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddForm(false)}
+                    className="hud-button-secondary inline-flex min-h-[44px] items-center px-4 py-2 text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="hud-button-primary inline-flex min-h-[44px] items-center px-4 py-2 text-sm"
+                  >
+                    Save Offer
+                  </button>
+                </div>
+              </form>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   )
 }

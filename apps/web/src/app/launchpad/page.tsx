@@ -143,28 +143,36 @@ export default function LaunchpadPage() {
       title: 'Visual Funnel Builder',
       description: 'Drag-and-drop interface with pre-built blocks',
       icon: Sparkles,
-      color: 'from-blue-500 to-blue-600',
+      barClass: 'bg-cyan-300/80',
+      chipClass: 'border-cyan-300/40 bg-cyan-400/15',
+      iconClass: 'text-cyan-100',
       href: '/visual-builder'
     },
     {
       title: 'AI Content Generator',
       description: 'Let AI create your landing pages and emails',
       icon: Zap,
-      color: 'from-purple-500 to-purple-600',
+      barClass: 'bg-violet-300/80',
+      chipClass: 'border-violet-300/40 bg-violet-400/15',
+      iconClass: 'text-violet-100',
       href: '/ai-generator'
     },
     {
       title: 'Analytics Dashboard',
       description: 'Track leads, conversions, and revenue',
       icon: BarChart,
-      color: 'from-green-500 to-green-600',
+      barClass: 'bg-emerald-300/80',
+      chipClass: 'border-emerald-300/40 bg-emerald-400/15',
+      iconClass: 'text-emerald-100',
       href: '/dashboard'
     },
     {
       title: 'Manage Offers',
       description: 'Add and organize affiliate products',
       icon: DollarSign,
-      color: 'from-orange-500 to-orange-600',
+      barClass: 'bg-amber-300/80',
+      chipClass: 'border-amber-300/40 bg-amber-400/15',
+      iconClass: 'text-amber-100',
       href: '/offers'
     }
   ]
@@ -350,10 +358,10 @@ export default function LaunchpadPage() {
 
   if (loadingUserData) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
-        <div className="rounded-2xl border border-white/10 bg-black/25 px-8 py-7 text-center backdrop-blur-sm">
-          <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-b-2 border-orange-400" />
-          <p className="text-sm text-slate-200">Loading your launchpad...</p>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="card-premium rounded-2xl px-8 py-7 text-center">
+          <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-b-2 border-rocket-500" />
+          <p className="text-sm text-text-secondary">Loading your launchpad...</p>
         </div>
       </div>
     )
@@ -362,49 +370,49 @@ export default function LaunchpadPage() {
   // Success screen after launch
   if (showSuccessScreen) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-green-500 flex items-center justify-center p-8">
-        <div className="max-w-4xl w-full bg-white rounded-3xl shadow-2xl p-12">
+      <div className="min-h-screen flex items-center justify-center p-8">
+        <div className="card-premium w-full max-w-4xl rounded-3xl p-12">
           {/* Success Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 mb-4">
-              <CheckCircle className="text-green-600" size={48} />
+          <div className="mb-8 text-center">
+            <div className="mb-4 inline-flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/20">
+              <CheckCircle className="text-emerald-300" size={48} />
             </div>
-            <h1 className="text-4xl font-bold mb-2">🎉 Your Funnel is Live!</h1>
-            <p className="text-xl text-gray-600">
+            <h1 className="mb-2 text-4xl font-bold text-text-primary">🎉 Your Funnel is Live!</h1>
+            <p className="text-xl text-text-secondary">
               Congratulations! Your {funnelTemplates.find(t => t.category === selectedTemplate)?.name} funnel is ready to start converting.
             </p>
           </div>
 
           {/* Funnel Preview */}
-          <div className="mb-8 p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-gray-200">
+          <div className="mb-8 rounded-xl border-2 border-[var(--border-elevated)] bg-[rgba(255,255,255,0.04)] p-6">
             <div className="flex items-start justify-between mb-4">
               <div>
                 <h3 className="font-bold text-lg mb-1">
                   {funnelTemplates.find(t => t.category === selectedTemplate)?.name}
                 </h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-text-secondary">
                   Niche: <span className="font-semibold">{selectedNiche || 'General'}</span>
                 </p>
               </div>
               <div className="text-right">
-                <div className="text-sm text-gray-600">Expected CVR</div>
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-sm text-text-secondary">Expected CVR</div>
+                <div className="text-2xl font-bold text-emerald-300">
                   {funnelTemplates.find(t => t.category === selectedTemplate)?.conversions}
                 </div>
               </div>
             </div>
             
             {/* Mini Preview */}
-            <div className="bg-white rounded-lg p-4 border">
+            <div className="rounded-lg border border-[var(--border-elevated)] bg-[rgba(255,255,255,0.04)] p-4">
               <div className="text-center">
-                <div className="w-full h-32 bg-gradient-to-r from-blue-400 to-purple-400 rounded mb-3 flex items-center justify-center">
-                  <PlayCircle className="text-white" size={48} />
+                <div className="mb-3 flex h-32 w-full items-center justify-center rounded bg-[linear-gradient(120deg,rgba(var(--accent-rgb),0.42),rgba(56,189,248,0.14))]">
+                  <PlayCircle className="text-text-primary" size={48} />
                 </div>
-                <div className="text-sm text-gray-600 mb-2">Your funnel includes:</div>
+                <div className="text-sm text-text-secondary mb-2">Your funnel includes:</div>
                 <div className="flex justify-center gap-2 text-xs">
-                  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded">Hero Section</span>
-                  <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded">Features</span>
-                  <span className="px-2 py-1 bg-green-100 text-green-700 rounded">CTA</span>
+                  <span className="rounded border border-cyan-300/35 bg-cyan-400/12 px-2 py-1 text-cyan-100">Hero Section</span>
+                  <span className="rounded border border-violet-300/35 bg-violet-400/12 px-2 py-1 text-violet-100">Features</span>
+                  <span className="rounded border border-emerald-300/35 bg-emerald-400/12 px-2 py-1 text-emerald-100">CTA</span>
                 </div>
               </div>
             </div>
@@ -418,11 +426,11 @@ export default function LaunchpadPage() {
                 type="text"
                 value={getFunnelUrl()}
                 readOnly
-                className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50 font-mono text-sm"
+                className="hud-input flex-1 rounded-lg px-4 py-3 font-mono text-sm"
               />
               <button
                 onClick={copyFunnelUrl}
-                className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition"
+                className="hud-button-secondary px-6 py-3"
               >
                 {copiedUrl ? 'Copied' : 'Copy'}
               </button>
@@ -434,20 +442,22 @@ export default function LaunchpadPage() {
             <h3 className="font-semibold mb-4 text-center">Share Your Funnel</h3>
             <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
               {[
-                { name: 'Facebook', icon: '📘', color: 'bg-blue-600', platform: 'facebook' },
-                { name: 'Twitter', icon: '🐦', color: 'bg-sky-500', platform: 'twitter' },
-                { name: 'LinkedIn', icon: '💼', color: 'bg-blue-700', platform: 'linkedin' },
-                { name: 'Instagram', icon: '📷', color: 'bg-pink-600', platform: 'instagram' },
-                { name: 'Pinterest', icon: '📌', color: 'bg-red-600', platform: 'pinterest' },
-                { name: 'Reddit', icon: '🤖', color: 'bg-orange-600', platform: 'reddit' }
+                { name: 'Facebook', icon: '📘', chipClass: 'border-blue-300/35 bg-blue-400/15', textClass: 'text-blue-100', platform: 'facebook' },
+                { name: 'Twitter', icon: '🐦', chipClass: 'border-cyan-300/35 bg-cyan-400/15', textClass: 'text-cyan-100', platform: 'twitter' },
+                { name: 'LinkedIn', icon: '💼', chipClass: 'border-indigo-300/35 bg-indigo-400/15', textClass: 'text-indigo-100', platform: 'linkedin' },
+                { name: 'Instagram', icon: '📷', chipClass: 'border-pink-300/35 bg-pink-400/15', textClass: 'text-pink-100', platform: 'instagram' },
+                { name: 'Pinterest', icon: '📌', chipClass: 'border-rose-300/35 bg-rose-400/15', textClass: 'text-rose-100', platform: 'pinterest' },
+                { name: 'Reddit', icon: '🤖', chipClass: 'border-amber-300/35 bg-amber-400/15', textClass: 'text-amber-100', platform: 'reddit' }
               ].map((social) => (
                 <button
                   key={social.platform}
                   onClick={() => shareToSocial(social.platform)}
-                  className={`${social.color} text-white p-4 rounded-lg hover:opacity-90 transition text-center`}
+                  className="card-premium rounded-lg p-3 text-center transition hover:-translate-y-0.5"
                 >
-                  <div className="text-2xl mb-1">{social.icon}</div>
-                  <div className="text-xs font-semibold">{social.name}</div>
+                  <div className={`mx-auto mb-1 inline-flex h-9 w-9 items-center justify-center rounded-lg border ${social.chipClass}`}>
+                    <span className={social.textClass}>{social.icon}</span>
+                  </div>
+                  <div className="text-xs font-semibold text-text-secondary">{social.name}</div>
                 </button>
               ))}
             </div>
@@ -457,7 +467,7 @@ export default function LaunchpadPage() {
           <div className="flex gap-4">
             <button
               onClick={() => window.location.href = `/visual-builder?funnelId=${createdFunnel?.funnelId}&niche=${selectedNiche}`}
-              className="flex-1 px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-lg hover:shadow-xl transition"
+              className="btn-launch-premium flex-1 px-6 py-4 font-bold"
             >
               Customize Funnel
             </button>
@@ -467,7 +477,7 @@ export default function LaunchpadPage() {
                 setShowSuccessScreen(false)
                 loadUserData()
               }}
-              className="flex-1 px-6 py-4 bg-gray-800 text-white font-bold rounded-lg hover:bg-gray-900 transition"
+              className="hud-button-secondary flex-1 px-6 py-4 font-bold"
             >
               Go to Dashboard
             </button>
@@ -480,17 +490,17 @@ export default function LaunchpadPage() {
   if (setupComplete || stats.funnels > 0) {
     // Main dashboard for returning users
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="max-w-7xl mx-auto px-4 py-12">
+      <div className="cockpit-container min-h-screen py-12">
+        <div className="mx-auto max-w-7xl px-4 py-12">
           <div className="mb-12">
-            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="mb-4 text-4xl font-bold text-text-primary">
               Welcome Back! 🚀
             </h1>
-            <p className="text-xl text-gray-600">
+            <p className="text-xl text-text-secondary">
               Your affiliate empire is growing. Here&apos;s what&apos;s happening.
             </p>
             {operationNotice && (
-              <p className="mt-3 inline-flex rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm text-emerald-700">
+              <p className="mt-3 inline-flex rounded-lg border border-emerald-400/35 bg-emerald-500/10 px-3 py-1 text-sm text-emerald-200">
                 {operationNotice}
               </p>
             )}
@@ -498,34 +508,42 @@ export default function LaunchpadPage() {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-            <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-blue-500">
+            <div className="card-premium rounded-xl border border-[var(--border-elevated)] p-6">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-gray-600">Active Funnels</span>
-                <Target className="text-blue-500" size={24} />
+                <span className="text-text-secondary">Active Funnels</span>
+                <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-cyan-300/35 bg-cyan-400/15">
+                  <Target className="text-cyan-100" size={18} />
+                </div>
               </div>
               <div className="text-3xl font-bold">{stats.funnels}</div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-green-500">
+            <div className="card-premium rounded-xl border border-[var(--border-elevated)] p-6">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-gray-600">Total Leads</span>
-                <Users className="text-green-500" size={24} />
+                <span className="text-text-secondary">Total Leads</span>
+                <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-emerald-300/35 bg-emerald-400/15">
+                  <Users className="text-emerald-100" size={18} />
+                </div>
               </div>
               <div className="text-3xl font-bold">{stats.leads.toLocaleString()}</div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-purple-500">
+            <div className="card-premium rounded-xl border border-[var(--border-elevated)] p-6">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-gray-600">Revenue</span>
-                <DollarSign className="text-purple-500" size={24} />
+                <span className="text-text-secondary">Revenue</span>
+                <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-violet-300/35 bg-violet-400/15">
+                  <DollarSign className="text-violet-100" size={18} />
+                </div>
               </div>
               <div className="text-3xl font-bold">${stats.revenue.toLocaleString()}</div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-lg p-6 border-t-4 border-orange-500">
+            <div className="card-premium rounded-xl border border-[var(--border-elevated)] p-6">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-gray-600">Conversions</span>
-                <TrendingUp className="text-orange-500" size={24} />
+                <span className="text-text-secondary">Conversions</span>
+                <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-amber-300/35 bg-amber-400/15">
+                  <TrendingUp className="text-amber-100" size={18} />
+                </div>
               </div>
               <div className="text-3xl font-bold">{stats.conversions}</div>
             </div>
@@ -541,15 +559,14 @@ export default function LaunchpadPage() {
                   <a
                     key={index}
                     href={action.href}
-                    className={`
-                      bg-gradient-to-br ${action.color} 
-                      text-white rounded-xl shadow-lg p-6 
-                      hover:shadow-2xl transition-all transform hover:-translate-y-1
-                    `}
+                    className="card-premium group relative overflow-hidden rounded-xl p-6 transition-all hover:-translate-y-1 hover:shadow-2xl"
                   >
-                    <ActionIcon className="mb-4" size={32} />
-                    <h3 className="font-bold text-lg mb-2">{action.title}</h3>
-                    <p className="text-sm opacity-90">{action.description}</p>
+                    <div className={`pointer-events-none absolute inset-x-6 top-0 h-[2px] ${action.barClass}`} />
+                    <div className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg border ${action.chipClass}`}>
+                      <ActionIcon className={action.iconClass} size={24} />
+                    </div>
+                    <h3 className="font-bold text-lg mb-2 text-text-primary">{action.title}</h3>
+                    <p className="text-sm text-text-secondary">{action.description}</p>
                   </a>
                 )
               })}
@@ -563,21 +580,21 @@ export default function LaunchpadPage() {
               {funnelTemplates.map((template, index) => (
                 <div
                   key={index}
-                  className="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all cursor-pointer"
+                  className="card-premium rounded-xl p-6 hover:shadow-2xl transition-all cursor-pointer"
                   onClick={() => {
                     if (creatingTemplate) return
                     createFunnelFromTemplate(template)
                   }}
                 >
                   <h3 className="font-bold text-lg mb-2">{template.name}</h3>
-                  <p className="text-gray-600 text-sm mb-4">{template.description}</p>
+                  <p className="text-text-secondary text-sm mb-4">{template.description}</p>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500">{template.blocks} blocks</span>
-                    <span className="text-green-600 font-semibold">{template.conversions}</span>
+                    <span className="text-text-muted">{template.blocks} blocks</span>
+                    <span className="font-semibold text-emerald-300">{template.conversions}</span>
                   </div>
                   <button
                     disabled={creatingTemplate !== null}
-                    className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 flex items-center justify-center gap-2"
+                    className="btn-launch-premium mt-4 flex w-full items-center justify-center gap-2 px-4 py-2 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {creatingTemplate === template.category ? 'Creating...' : 'Use Template'} <ArrowRight size={16} />
                   </button>
@@ -595,24 +612,24 @@ export default function LaunchpadPage() {
   const StepIcon = step.icon
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-rose-50">
-      <div className="max-w-4xl mx-auto px-4 py-12">
+    <div className="cockpit-container min-h-screen py-12">
+      <div className="mx-auto max-w-4xl px-4 py-12">
         {/* Progress Bar */}
         <div className="mb-12">
-          <div className="mb-4 flex items-center justify-between text-sm text-slate-600">
+          <div className="mb-4 flex items-center justify-between text-sm text-text-secondary">
             <span>Step {currentStep + 1} of {launchSteps.length}</span>
             <span>{Math.round(((currentStep + 1) / launchSteps.length) * 100)}% complete</span>
           </div>
           <div className="flex items-center justify-between mb-4">
             {launchSteps.map((s, index) => (
-              <div
-                key={s.id}
-                className={`
+                <div
+                  key={s.id}
+                  className={`
                   flex items-center justify-center w-10 h-10 rounded-full
-                  ${index <= currentStep ? 'bg-orange-700 text-white' : 'bg-stone-200 text-stone-600'}
+                  ${index <= currentStep ? 'bg-rocket-500 text-slate-900' : 'bg-[rgba(255,255,255,0.1)] text-text-secondary'}
                   transition-all
                 `}
-              >
+                >
                 {index < currentStep ? (
                   <CheckCircle size={20} />
                 ) : (
@@ -621,31 +638,31 @@ export default function LaunchpadPage() {
               </div>
             ))}
           </div>
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-2 overflow-hidden rounded-full bg-[rgba(255,255,255,0.12)]">
             <div
-              className="h-full bg-gradient-to-r from-orange-700 to-amber-600 transition-all duration-500"
+              className="h-full bg-gradient-to-r from-rocket-600 to-rocket-500 transition-all duration-500"
               style={{ width: `${((currentStep + 1) / launchSteps.length) * 100}%` }}
             />
           </div>
         </div>
 
         {/* Step Content */}
-        <div className="bg-white rounded-2xl shadow-2xl p-12 text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-orange-600 to-amber-600 mb-6">
+        <div className="card-premium rounded-2xl p-12 text-center">
+          <div className="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-rocket-700 to-rocket-500">
             <StepIcon className="text-white" size={36} />
           </div>
 
-          <h1 className="text-4xl font-bold mb-4 text-slate-900">{step.title}</h1>
-          <p className="text-xl text-slate-700 mb-8">{step.description}</p>
+          <h1 className="text-4xl font-bold mb-4 text-text-primary">{step.title}</h1>
+          <p className="text-xl text-text-secondary mb-8">{step.description}</p>
 
           {operationNotice && (
-            <p className="mx-auto mb-5 max-w-xl rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
+            <p className="mx-auto mb-5 max-w-xl rounded-lg border border-emerald-400/35 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-200">
               {operationNotice}
             </p>
           )}
 
           {stepValidationError && (
-            <p className="mx-auto mb-5 max-w-xl rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+            <p className="mx-auto mb-5 max-w-xl rounded-lg border border-red-400/35 bg-red-500/10 px-4 py-2 text-sm text-red-200">
               {stepValidationError}
             </p>
           )}
@@ -654,20 +671,20 @@ export default function LaunchpadPage() {
           {step.id === 'welcome' && (
             <div className="space-y-6 mb-8">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-                <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                  <Zap className="text-orange-700 mb-2" size={24} />
-                  <h3 className="font-bold mb-1 text-slate-900">Lightning Fast</h3>
-                  <p className="text-sm text-slate-700">Launch in minutes, not days</p>
+                <div className="rounded-lg border border-[var(--border-elevated)] bg-[var(--accent-soft)] p-4">
+                  <Zap className="mb-2 text-amber-200" size={24} />
+                  <h3 className="font-bold mb-1 text-text-primary">Lightning Fast</h3>
+                  <p className="text-sm text-text-secondary">Launch in minutes, not days</p>
                 </div>
-                <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                  <Sparkles className="text-purple-600 mb-2" size={24} />
-                  <h3 className="font-bold mb-1 text-slate-900">AI-Powered</h3>
-                  <p className="text-sm text-slate-700">Let AI create your content</p>
+                <div className="rounded-lg border border-[var(--border-elevated)] bg-[var(--accent-soft)] p-4">
+                  <Sparkles className="mb-2 text-violet-200" size={24} />
+                  <h3 className="font-bold mb-1 text-text-primary">AI-Powered</h3>
+                  <p className="text-sm text-text-secondary">Let AI create your content</p>
                 </div>
-                <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                  <BarChart className="text-green-600 mb-2" size={24} />
-                  <h3 className="font-bold mb-1 text-slate-900">Track Everything</h3>
-                  <p className="text-sm text-slate-700">Real-time analytics</p>
+                <div className="rounded-lg border border-[var(--border-elevated)] bg-[var(--accent-soft)] p-4">
+                  <BarChart className="mb-2 text-emerald-200" size={24} />
+                  <h3 className="font-bold mb-1 text-text-primary">Track Everything</h3>
+                  <p className="text-sm text-text-secondary">Real-time analytics</p>
                 </div>
               </div>
             </div>
@@ -689,15 +706,15 @@ export default function LaunchpadPage() {
                   className={`
                     p-6 border-2 rounded-lg cursor-pointer transition-all text-center
                     ${selectedNiche === niche.id 
-                      ? 'border-orange-700 bg-orange-50 shadow-lg' 
-                      : 'border-gray-200 hover:border-orange-300'
+                      ? 'border-rocket-500 bg-[var(--accent-soft)] shadow-lg' 
+                      : 'border-[var(--border-elevated)] hover:border-[var(--border-focus)]'
                     }
                   `}
                 >
                   <div className="text-4xl mb-2">{niche.emoji}</div>
-                  <h4 className="font-bold text-sm text-orange-800">{niche.name}</h4>
+                  <h4 className="font-bold text-sm text-text-primary">{niche.name}</h4>
                   {selectedNiche === niche.id && (
-                    <div className="mt-2 text-orange-700">
+                    <div className="mt-2 text-rocket-500">
                       <CheckCircle size={20} className="mx-auto" />
                     </div>
                   )}
@@ -715,21 +732,21 @@ export default function LaunchpadPage() {
                   className={`
                     p-6 border-2 rounded-lg cursor-pointer transition-all
                     ${selectedTemplate === template.category
-                      ? 'border-orange-700 bg-orange-50 shadow-lg'
-                      : 'border-gray-200 hover:border-orange-300'
+                      ? 'border-rocket-500 bg-[var(--accent-soft)] shadow-lg'
+                      : 'border-[var(--border-elevated)] hover:border-[var(--border-focus)]'
                     }
                   `}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <h4 className="font-bold">{template.name}</h4>
                     {selectedTemplate === template.category && (
-                      <CheckCircle size={20} className="text-orange-700" />
+                      <CheckCircle size={20} className="text-rocket-500" />
                     )}
                   </div>
-                  <p className="text-sm text-slate-700 mb-3">{template.description}</p>
-                  <div className="flex justify-between text-xs text-slate-600">
+                  <p className="text-sm text-text-secondary mb-3">{template.description}</p>
+                  <div className="flex justify-between text-xs text-text-secondary">
                     <span>{template.blocks} blocks</span>
-                    <span className="text-green-600 font-semibold">{template.conversions} CVR</span>
+                    <span className="font-semibold text-emerald-300">{template.conversions} CVR</span>
                   </div>
                 </div>
               ))}
@@ -737,19 +754,19 @@ export default function LaunchpadPage() {
           )}
 
           {step.id === 'offers' && (
-            <div className="mb-8 p-6 bg-gray-50 rounded-lg">
-              <p className="text-gray-600 mb-4">You can add affiliate offers after setup completes.</p>
+            <div className="mb-8 rounded-lg border border-[var(--border-elevated)] bg-[rgba(255,255,255,0.04)] p-6">
+              <p className="text-text-secondary mb-4">You can add affiliate offers after setup completes.</p>
               <div className="text-left space-y-2">
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <CheckCircle size={16} className="text-green-600" />
+                <div className="flex items-center gap-2 text-sm text-text-secondary">
+                  <CheckCircle size={16} className="text-emerald-300" />
                   <span>Connect to major affiliate networks</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <CheckCircle size={16} className="text-green-600" />
+                <div className="flex items-center gap-2 text-sm text-text-secondary">
+                  <CheckCircle size={16} className="text-emerald-300" />
                   <span>Track clicks and conversions</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <CheckCircle size={16} className="text-green-600" />
+                <div className="flex items-center gap-2 text-sm text-text-secondary">
+                  <CheckCircle size={16} className="text-emerald-300" />
                   <span>Automatic link cloaking</span>
                 </div>
               </div>
@@ -757,19 +774,19 @@ export default function LaunchpadPage() {
           )}
 
           {step.id === 'email' && (
-            <div className="mb-8 p-6 bg-gray-50 rounded-lg">
-              <p className="text-gray-600 mb-4">Email automation is ready to configure after setup.</p>
+            <div className="mb-8 rounded-lg border border-[var(--border-elevated)] bg-[rgba(255,255,255,0.04)] p-6">
+              <p className="text-text-secondary mb-4">Email automation is ready to configure after setup.</p>
               <div className="text-left space-y-2">
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <CheckCircle size={16} className="text-green-600" />
+                <div className="flex items-center gap-2 text-sm text-text-secondary">
+                  <CheckCircle size={16} className="text-emerald-300" />
                   <span>Welcome sequence for new leads</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <CheckCircle size={16} className="text-green-600" />
+                <div className="flex items-center gap-2 text-sm text-text-secondary">
+                  <CheckCircle size={16} className="text-emerald-300" />
                   <span>Abandoned cart recovery</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <CheckCircle size={16} className="text-green-600" />
+                <div className="flex items-center gap-2 text-sm text-text-secondary">
+                  <CheckCircle size={16} className="text-emerald-300" />
                   <span>Weekly analytics reports</span>
                 </div>
               </div>
@@ -777,32 +794,32 @@ export default function LaunchpadPage() {
           )}
 
           {step.id === 'launch' && (
-            <div className="mb-8 p-6 bg-gradient-to-br from-orange-50 to-amber-50 rounded-lg">
-              <p className="text-slate-800 mb-4 font-semibold">🎉 You&apos;re all set!</p>
+            <div className="mb-8 rounded-lg border border-[var(--border-elevated)] bg-[var(--accent-soft)] p-6">
+              <p className="text-text-primary mb-4 font-semibold">🎉 You&apos;re all set!</p>
               <div className="text-left space-y-2 mb-4">
-                <div className="flex items-center gap-2 text-sm text-slate-700">
-                  <CheckCircle size={16} className="text-green-600" />
+                <div className="flex items-center gap-2 text-sm text-text-secondary">
+                  <CheckCircle size={16} className="text-emerald-300" />
                   <span>Niche selected: <strong>{selectedNiche || 'General'}</strong></span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-slate-700">
-                  <CheckCircle size={16} className="text-green-600" />
+                <div className="flex items-center gap-2 text-sm text-text-secondary">
+                  <CheckCircle size={16} className="text-emerald-300" />
                   <span>Template ready: <strong>{funnelTemplates.find(t => t.category === selectedTemplate)?.name || 'Custom'}</strong></span>
                 </div>
               </div>
-              <p className="text-sm text-slate-700">Click below to access cockpit navigation.</p>
+              <p className="text-sm text-text-secondary">Click below to access cockpit navigation.</p>
             </div>
           )}
 
-          <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 pt-6">
-            <button
+          <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border-elevated)] pt-6">
+                <button
               type="button"
               onClick={() => setCurrentStep(prev => Math.max(0, prev - 1))}
               disabled={currentStep === 0}
               className={`
                 rounded-lg border px-4 py-2 text-sm font-semibold transition
                 ${currentStep === 0
-                  ? 'cursor-not-allowed border-gray-200 text-gray-400'
-                  : 'border-gray-300 text-gray-700 hover:border-gray-400 hover:text-gray-900'
+                  ? 'cursor-not-allowed border-[var(--border-elevated)] text-text-muted'
+                  : 'border-[var(--border-elevated)] text-text-secondary hover:border-[var(--border-focus)] hover:text-text-primary'
                 }
               `}
             >
@@ -813,14 +830,14 @@ export default function LaunchpadPage() {
               <button
                 type="button"
                 onClick={skipOnboarding}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 transition hover:border-gray-400 hover:text-gray-900"
+                className="hud-button-secondary rounded-lg px-4 py-2 text-sm"
               >
                 Skip onboarding
               </button>
               <button
                 type="button"
                 onClick={closeOnboarding}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 transition hover:border-gray-400 hover:text-gray-900"
+                className="hud-button-secondary rounded-lg px-4 py-2 text-sm"
               >
                 Close
               </button>
@@ -828,7 +845,7 @@ export default function LaunchpadPage() {
                 type="button"
                 onClick={() => handleStepComplete(step.id)}
                 disabled={creatingTemplate !== null}
-                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-orange-700 to-amber-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:shadow-lg"
+                className="btn-launch-premium inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition hover:shadow-lg"
               >
                 {creatingTemplate ? 'Working...' : currentStep < launchSteps.length - 1 ? 'Next' : step.action}
                 <ArrowRight size={16} />
@@ -839,13 +856,13 @@ export default function LaunchpadPage() {
 
         {/* Help Text */}
         <div className="mt-8 text-center">
-          <p className="text-gray-600">
+          <p className="text-text-secondary">
             Need help? Check out our{' '}
-            <a href="/docs" className="text-orange-700 hover:text-orange-800 hover:underline">
+            <a href="/docs" className="text-rocket-500 hover:text-text-primary hover:underline">
               documentation
             </a>{' '}
             or{' '}
-            <a href="/support" className="text-orange-700 hover:text-orange-800 hover:underline">
+            <a href="/support" className="text-rocket-500 hover:text-text-primary hover:underline">
               contact support
             </a>
           </p>
