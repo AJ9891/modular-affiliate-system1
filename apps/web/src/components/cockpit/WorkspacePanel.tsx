@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 
 export interface WorkspacePanelProps {
   title: string
+  titleAccessory?: ReactNode
   icon?: ReactNode
   description?: string
   actions?: ReactNode
@@ -18,6 +19,7 @@ export interface WorkspacePanelProps {
 
 export default function WorkspacePanel({
   title,
+  titleAccessory,
   icon,
   description,
   actions,
@@ -36,6 +38,7 @@ export default function WorkspacePanel({
           <div className="flex items-center gap-2">
             {icon && <span className="text-text-secondary">{icon}</span>}
             <h2 className="text-base font-semibold text-text-primary md:text-lg">{title}</h2>
+            {titleAccessory}
           </div>
           {description && <p className="mt-1 text-sm text-text-secondary">{description}</p>}
         </div>

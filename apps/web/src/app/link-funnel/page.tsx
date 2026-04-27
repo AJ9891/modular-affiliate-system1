@@ -9,6 +9,7 @@ import { CockpitEmptyState } from '@/components/ui/CockpitEmptyState'
 import LinkIngestionForm, { type LinkIngestionPayload } from '@/components/funnels/LinkIngestionForm'
 import GenerationProgress, { type GenerationStageKey } from '@/components/funnels/GenerationProgress'
 import GeneratedAssetsTabs from '@/components/funnels/GeneratedAssetsTabs'
+import FunnelPreviewDialog from '@/components/funnels/FunnelPreviewDialog'
 import type { GeneratedFunnelAssets } from '@/lib/ai/tasks/generateFunnelFromOffer'
 
 interface GenerationResult {
@@ -137,8 +138,24 @@ export default function LinkFunnelPage() {
           <DashboardPanel title="Source Host" icon={<Link2 size={16} />} value={sourceLabel} tone="neutral">
             <p className="text-xs text-text-secondary">Origin host for latest analyzed URL.</p>
           </DashboardPanel>
-          <DashboardPanel title="Saved Funnel" icon={<Radar size={16} />} value={result?.funnel?.slug || 'Not saved'} tone="warning">
-            <p className="text-xs text-text-secondary">Draft funnel created from generated assets.</p>
+          <DashboardPanel
+            title="Saved Funnel"
+            icon={<Radar size={16} />}
+            value={
+              result?.funnel?.slug ? (
+                <FunnelPreviewDialog
+                  slug={result.funnel.slug}
+                  name={result.funnel.name}
+                  triggerLabel={`/${result.funnel.slug}`}
+                  triggerClassName="text-2xl font-semibold leading-tight text-rocket-300 hover:text-rocket-200"
+                />
+              ) : (
+                'Not saved'
+              )
+            }
+            tone="warning"
+          >
+            <p className="text-xs text-text-secondary">Draft funnel created from generated assets. Click slug to preview.</p>
           </DashboardPanel>
         </section>
 

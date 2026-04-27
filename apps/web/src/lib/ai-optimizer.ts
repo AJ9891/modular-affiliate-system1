@@ -193,7 +193,7 @@ export class AIOptimizer {
         *,
         user:users!funnels_user_id_fkey(brand_mode, subdomain)
       `)
-      .eq('id', funnelId)
+      .eq('funnel_id', funnelId)
       .single()
 
     if (error) throw error

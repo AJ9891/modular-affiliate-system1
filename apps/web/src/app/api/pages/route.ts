@@ -3,6 +3,10 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { checkSupabase } from '@/lib/check-supabase'
 
+const publicKey =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
 export async function GET(request: NextRequest) {
   const check = checkSupabase()
   if (check) return check
@@ -18,7 +22,7 @@ export async function GET(request: NextRequest) {
     const { createClient } = await import('@supabase/supabase-js')
     const userSupabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      publicKey!,
       {
         global: {
           headers: {
@@ -71,7 +75,7 @@ export async function POST(request: NextRequest) {
     const { createClient } = await import('@supabase/supabase-js')
     const userSupabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      publicKey!,
       {
         global: {
           headers: {

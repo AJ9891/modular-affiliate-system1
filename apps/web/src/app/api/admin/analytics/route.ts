@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
     const { data: costSummary } = await supabase.rpc('usage_summary')
     
     // Top AI users (optional pre-made function)
-    const { data: topUsers } = await supabase.rpc('top_ai_users', { limit: 10 })
+    const { data: topUsers } = await supabase.rpc('top_ai_users', { p_limit: 10 })
 
     // Quick example queries - aggregate by provider
     const { data: totals } = await supabase

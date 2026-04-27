@@ -5,6 +5,7 @@ import { log } from '@/lib/log'
 import { validateCheckout } from '@/lib/validators/stripe'
 import { error, ok } from '@/lib/http'
 import { hasAdminAccess } from '@/lib/admin-access'
+import { createServiceRoleClient } from '@/lib/supabase-server'
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
@@ -69,8 +70,9 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    // Insert a pending topup row
-    await supabase.from('topups').insert({
+    // Insert a pending topup row with service role to avoid RLS edge cases.
+    const adminClient = createServiceRoleClient()
+    await adminClient.from('topups').insert({
       admin_id: user.id,
       user_id: target_user_id,
       amount: amount_usd,
