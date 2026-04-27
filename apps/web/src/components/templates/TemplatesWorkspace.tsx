@@ -109,6 +109,11 @@ export default function TemplatesWorkspace() {
                 <CockpitEmptyState
                   title="No templates match current filters"
                   description="Adjust voice or category filters to see available landing templates."
+                  tone="warning"
+                  tips={[
+                    'Switch category to "all" to broaden results.',
+                    'Try a different brand voice filter.',
+                  ]}
                 />
               </div>
             ) : (
@@ -132,6 +137,8 @@ export default function TemplatesWorkspace() {
               compact
               title="No email templates available"
               description="Email templates appear here after API sync."
+              tone="warning"
+              tips={['Use Email workspace setup to seed baseline templates.']}
               secondaryAction={{ label: 'Open Email Workspace', href: '/email' }}
             />
           ) : (

@@ -262,6 +262,11 @@ export default function EmailWorkspace() {
                 compact
                 title="No templates returned yet"
                 description="Templates will appear here after your template API is configured."
+                tone="warning"
+                tips={[
+                  'Sync templates from the Templates workspace.',
+                  'Ensure email template API endpoint is reachable.',
+                ]}
                 secondaryAction={{ label: 'Open Settings', href: '/settings' }}
               />
             ) : (
@@ -281,6 +286,8 @@ export default function EmailWorkspace() {
                       compact
                       title={`No ${selectedPersonalityLabel} templates`}
                       description="Switch voice mode or create templates to continue automation setup."
+                      tone="warning"
+                      tips={['Create at least one template for this voice profile.']}
                     />
                   )}
                 </div>
@@ -295,6 +302,11 @@ export default function EmailWorkspace() {
                   compact
                   title="No subscribers captured yet"
                   description="Publish a funnel and connect forms to start collecting subscribers."
+                  tone="info"
+                  tips={[
+                    'Add an email capture block in your funnel.',
+                    'Run a small traffic test to verify lead capture.',
+                  ]}
                   primaryAction={{ label: 'Go to Funnels', href: '/funnels' }}
                 />
               )}

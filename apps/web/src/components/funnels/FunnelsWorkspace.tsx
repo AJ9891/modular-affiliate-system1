@@ -189,6 +189,12 @@ export default function FunnelsWorkspace() {
             <CockpitEmptyState
               title="No funnels yet"
               description="Create your first funnel to publish pages, capture leads, and start tracking performance."
+              tone="info"
+              tips={[
+                'Start with a template to reduce setup time.',
+                'Publish one funnel before connecting paid traffic.',
+                'Use the link builder to route source-tagged traffic.',
+              ]}
               primaryAction={{ label: 'Create Funnel', onClick: () => setShowCreate(true) }}
               secondaryAction={{ label: 'Open Link Builder', href: '/link-funnel' }}
             />

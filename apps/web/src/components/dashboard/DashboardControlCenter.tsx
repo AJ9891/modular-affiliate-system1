@@ -224,6 +224,52 @@ export default function DashboardControlCenter() {
     return items
   }, [data, alerts.length, weeklySummary, forecasts, abTestSuggestions.length, optimizationIdeas.length])
 
+  const atRiskForecastCount = useMemo(
+    () => forecasts.filter((item) => item.predictedConversionRate < item.baselineConversionRate * 0.9).length,
+    [forecasts]
+  )
+
+  const priorityActions = useMemo(() => {
+    const items: Array<{ title: string; detail: string; tone: 'warning' | 'info' | 'success' }> = []
+
+    if (alerts.length > 0) {
+      const topAlert = alerts[0]
+      items.push({
+        title: 'Resolve highest-severity alert',
+        detail: `${topAlert.title}: ${topAlert.message}`,
+        tone: 'warning',
+      })
+    }
+
+    if (optimizationIdeas.length > 0) {
+      const topIdea = optimizationIdeas[0]
+      items.push({
+        title: 'Apply top optimization idea',
+        detail: `${topIdea.title} (${topIdea.effort} effort, ${topIdea.priority} priority)`,
+        tone: 'info',
+      })
+    }
+
+    if (abTestSuggestions.length > 0) {
+      const topAB = abTestSuggestions[0]
+      items.push({
+        title: 'Launch next A/B test',
+        detail: `${topAB.title} targeting ${topAB.objective.replace('_', ' ')}`,
+        tone: 'info',
+      })
+    }
+
+    if (weeklySummary?.recommendedFocus.length) {
+      items.push({
+        title: 'Weekly focus',
+        detail: weeklySummary.recommendedFocus[0],
+        tone: 'success',
+      })
+    }
+
+    return items.slice(0, 4)
+  }, [alerts, optimizationIdeas, abTestSuggestions, weeklySummary])
+
   if (loading && !data) {
     return <DashboardSkeleton />
   }
@@ -238,6 +284,17 @@ export default function DashboardControlCenter() {
               <h1 className="text-3xl font-semibold text-text-primary md:text-4xl">Dashboard Control Panel</h1>
               <p className="mt-2 text-sm text-text-secondary">Monitor traffic, funnels, earnings, and operational signals at a glance.</p>
               {lastUpdated && <p className="mt-2 text-xs text-text-secondary">Last updated {lastUpdated.toLocaleTimeString()}</p>}
+              <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                <span className="rounded-full border border-[var(--border-subtle)] px-2 py-1 text-text-secondary">
+                  Conv Rate {(data?.totals.conversionRate || 0).toFixed(2)}%
+                </span>
+                <span className="rounded-full border border-amber-400/30 px-2 py-1 text-amber-100">
+                  {alerts.length} active alerts
+                </span>
+                <span className="rounded-full border border-cyan-400/30 px-2 py-1 text-cyan-100">
+                  {atRiskForecastCount} at-risk forecasts
+                </span>
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-2">
@@ -309,15 +366,34 @@ export default function DashboardControlCenter() {
         <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <QuickActionsPanel />
           <div className="min-h-[1px]">
-            {/* Keep existing notice stream for compatibility while Alerts panel handles critical signals. */}
             <div className="h-full rounded-lg border border-[var(--border-subtle)] p-4">
-              <p className="mb-2 text-sm font-semibold text-text-primary">System Notices</p>
+              <p className="mb-2 text-sm font-semibold text-text-primary">Command Brief</p>
               {weeklySummary && (
                 <p className="mb-2 text-xs text-text-secondary">
                   {weeklySummary.summary}
                 </p>
               )}
-              <div className="space-y-2">
+              {priorityActions.length > 0 && (
+                <div className="mb-3 space-y-2">
+                  {priorityActions.map((item, index) => (
+                    <div
+                      key={`${item.title}-${index}`}
+                      className={`rounded-lg border px-3 py-2 text-xs ${
+                        item.tone === 'warning'
+                          ? 'border-amber-400/35'
+                          : item.tone === 'success'
+                            ? 'border-emerald-400/35'
+                            : 'border-cyan-400/35'
+                      }`}
+                    >
+                      <p className="font-semibold text-text-primary">{item.title}</p>
+                      <p className="mt-1 text-text-secondary">{item.detail}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="space-y-2 border-t border-[var(--border-subtle)] pt-3">
+                <p className="text-xs uppercase tracking-system text-text-secondary">System Notices</p>
                 {notifications.map((notification, index) => (
                   <div key={`${notification.message}-${index}`} className="rounded-lg border border-[var(--border-subtle)] px-3 py-2 text-xs text-text-secondary">
                     {notification.message}

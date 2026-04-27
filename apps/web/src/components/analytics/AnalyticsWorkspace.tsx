@@ -165,6 +165,11 @@ export default function AnalyticsWorkspace() {
                   compact
                   title="No source data yet"
                   description="Source attribution appears here after tracked visits."
+                  tone="warning"
+                  tips={[
+                    'Send traffic through tracked funnel URLs.',
+                    'Verify click events are firing in your live funnel.',
+                  ]}
                   primaryAction={{ label: 'Open Funnels', href: '/funnels' }}
                 />
               ) : (
@@ -210,6 +215,11 @@ export default function AnalyticsWorkspace() {
               compact
               title="No funnel performance data"
               description="Create traffic to at least one funnel and performance rows will appear here."
+              tone="warning"
+              tips={[
+                'Publish a funnel and send test traffic.',
+                'Confirm conversion tracking is configured.',
+              ]}
               primaryAction={{ label: 'Go to Funnels', href: '/funnels' }}
             />
           ) : (

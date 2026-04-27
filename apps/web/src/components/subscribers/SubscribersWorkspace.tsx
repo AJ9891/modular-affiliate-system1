@@ -114,6 +114,11 @@ export default function SubscribersWorkspace() {
             <CockpitEmptyState
               title="No subscribers captured yet"
               description="Subscriber records appear here after your funnels start collecting leads."
+              tone="info"
+              tips={[
+                'Place a lead form on your highest-traffic page.',
+                'Connect email automation after your first 10 leads.',
+              ]}
               primaryAction={{ label: 'Open Funnels', href: '/funnels' }}
               secondaryAction={{ label: 'Configure Email', href: '/email' }}
             />

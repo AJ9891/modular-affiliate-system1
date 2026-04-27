@@ -151,6 +151,11 @@ export default function AffiliatesWorkspace() {
               compact
               title="No offers available yet"
               description="Add affiliate offers to generate tracking links and commission reporting."
+              tone="warning"
+              tips={[
+                'Add at least one offer with commission rate.',
+                'Use tracked links instead of direct destination URLs.',
+              ]}
               primaryAction={{ label: 'Manage Offers', href: '/offers' }}
               secondaryAction={{ label: 'Open Launchpad', href: '/launchpad' }}
             />

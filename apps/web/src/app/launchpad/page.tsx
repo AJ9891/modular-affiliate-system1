@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 
 export const runtime = 'edge'
 
-import { 
+import {
   Rocket, 
   Zap, 
   Target, 
@@ -19,6 +19,15 @@ import {
   Users,
   Sparkles
 } from 'lucide-react'
+
+const ONBOARDING_DRAFT_KEY = 'launchpad_onboarding_draft_v1'
+
+interface OnboardingDraftState {
+  step: number
+  selectedNiche: string
+  selectedTemplate: string
+  updatedAt: string
+}
 
 /**
  * Affiliate Launchpad - Main Launch Dashboard
@@ -51,6 +60,11 @@ export default function LaunchpadPage() {
     conversions: 0
   })
 
+  const clearOnboardingDraft = () => {
+    if (typeof window === 'undefined') return
+    localStorage.removeItem(ONBOARDING_DRAFT_KEY)
+  }
+
   useEffect(() => {
     loadUserData()
     
@@ -60,12 +74,55 @@ export default function LaunchpadPage() {
       setSelectedNiche(niche)
       // Skip to the funnel creation step
       setCurrentStep(2)
+      return
+    }
+
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem(ONBOARDING_DRAFT_KEY)
+        if (!raw) return
+        const parsed = JSON.parse(raw) as Partial<OnboardingDraftState>
+        if (typeof parsed.step === 'number' && parsed.step >= 0 && parsed.step < 6) {
+          setCurrentStep(parsed.step)
+        }
+        if (typeof parsed.selectedNiche === 'string') {
+          setSelectedNiche(parsed.selectedNiche)
+        }
+        if (typeof parsed.selectedTemplate === 'string') {
+          setSelectedTemplate(parsed.selectedTemplate)
+        }
+        if ((parsed.step || 0) > 0) {
+          setOperationNotice('Resumed your previous onboarding checkpoint.')
+        }
+      } catch (error) {
+        console.warn('Failed to restore onboarding checkpoint:', error)
+      }
     }
   }, [searchParams])
 
   useEffect(() => {
     setStepValidationError(null)
   }, [currentStep])
+
+  useEffect(() => {
+    if (stats.funnels > 0 || setupComplete) {
+      clearOnboardingDraft()
+    }
+  }, [stats.funnels, setupComplete])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (setupComplete || showSuccessScreen) return
+
+    const draft: OnboardingDraftState = {
+      step: currentStep,
+      selectedNiche,
+      selectedTemplate,
+      updatedAt: new Date().toISOString(),
+    }
+
+    localStorage.setItem(ONBOARDING_DRAFT_KEY, JSON.stringify(draft))
+  }, [currentStep, selectedNiche, selectedTemplate, setupComplete, showSuccessScreen])
 
   const loadUserData = async () => {
     try {
@@ -223,6 +280,7 @@ export default function LaunchpadPage() {
     setStepValidationError(null)
     
     if (stepId === 'launch') {
+      clearOnboardingDraft()
       setOperationNotice('Routing you to cockpit...')
       if (typeof window !== 'undefined') {
         localStorage.setItem('lp_skip_onboarding', '1')
@@ -345,10 +403,12 @@ export default function LaunchpadPage() {
   }
 
   const closeOnboarding = () => {
+    setOperationNotice('Progress saved. Routing to cockpit...')
     window.location.href = '/cockpit?skip_onboarding=1'
   }
 
   const skipOnboarding = () => {
+    clearOnboardingDraft()
     if (typeof window !== 'undefined') {
       localStorage.setItem('lp_skip_onboarding', '1')
       document.cookie = 'lp_skip_onboarding=1; Path=/; Max-Age=2592000; SameSite=Lax'
@@ -473,6 +533,7 @@ export default function LaunchpadPage() {
             </button>
             <button
               onClick={() => {
+                clearOnboardingDraft()
                 setSetupComplete(true)
                 setShowSuccessScreen(false)
                 loadUserData()
@@ -619,6 +680,9 @@ export default function LaunchpadPage() {
           <div className="mb-4 flex items-center justify-between text-sm text-text-secondary">
             <span>Step {currentStep + 1} of {launchSteps.length}</span>
             <span>{Math.round(((currentStep + 1) / launchSteps.length) * 100)}% complete</span>
+          </div>
+          <div className="mb-3 text-xs text-text-secondary">
+            Checkpoint autosave is active. You can safely leave and resume later.
           </div>
           <div className="flex items-center justify-between mb-4">
             {launchSteps.map((s, index) => (
@@ -839,7 +903,7 @@ export default function LaunchpadPage() {
                 onClick={closeOnboarding}
                 className="hud-button-secondary rounded-lg px-4 py-2 text-sm"
               >
-                Close
+                Save and exit
               </button>
               <button
                 type="button"
