@@ -48,7 +48,10 @@ function CockpitContent() {
   useEffect(() => {
     const run = async () => {
       // If Supabase isn't configured, fail open so the UI still renders
-      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      const publicKey =
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !publicKey) {
         setLoading(false)
         return
       }

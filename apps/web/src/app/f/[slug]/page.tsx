@@ -1,9 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
 import RenderFunnel from '@/components/RenderFunnel'
 
+const publicKey =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  publicKey!
 )
 
 interface FunnelPageProps {

@@ -6,11 +6,13 @@ export type { BrandMode, BrandModeKey }
 
 function getPublicSupabaseEnv() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!supabaseUrl || !supabaseAnonKey) {
+  const supabasePublicKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!supabaseUrl || !supabasePublicKey) {
     throw new Error('Supabase public client is not configured.')
   }
-  return { supabaseUrl, supabaseAnonKey }
+  return { supabaseUrl, supabasePublicKey }
 }
 
 function getAdminSupabaseEnv() {
@@ -36,7 +38,7 @@ export async function getFunnelBrandMode(
   const { data, error } = await supabaseAdmin
     .from('funnels')
     .select('brand_mode')
-    .eq('id', funnelId)
+    .eq('funnel_id', funnelId)
     .single()
 
   if (error || !data?.brand_mode) {
@@ -50,13 +52,13 @@ export async function updateFunnelBrandMode(
   funnelId: string,
   brandMode: BrandModeKey
 ) {
-  const { supabaseUrl, supabaseAnonKey } = getPublicSupabaseEnv()
-  const supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
+  const { supabaseUrl, supabasePublicKey } = getPublicSupabaseEnv()
+  const supabaseClient = createClient(supabaseUrl, supabasePublicKey)
 
   const { error } = await supabaseClient
     .from('funnels')
     .update({ brand_mode: brandMode })
-    .eq('id', funnelId)
+    .eq('funnel_id', funnelId)
 
   if (error) {
     throw new Error(error.message)

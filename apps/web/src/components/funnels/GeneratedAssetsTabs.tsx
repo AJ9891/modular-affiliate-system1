@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ClipboardCopy, RefreshCcw, CheckCircle2, ExternalLink } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import FunnelPreviewDialog from '@/components/funnels/FunnelPreviewDialog'
 import type { GeneratedFunnelAssets } from '@/lib/ai/tasks/generateFunnelFromOffer'
 
 interface SignalsView {
@@ -121,9 +122,12 @@ export default function GeneratedAssetsTabs({
         <div className="rounded-lg border border-[var(--border-subtle)] bg-[rgba(10,16,24,0.45)] p-3">
           <p className="text-xs uppercase tracking-system text-text-secondary">Funnel</p>
           {funnel ? (
-            <Link href={`/funnels/${funnel.funnel_id}`} className="mt-1 inline-flex text-sm text-rocket-400 hover:text-rocket-300">
-              Open Editor
-            </Link>
+            <div className="mt-1 flex flex-wrap items-center gap-3">
+              <Link href={`/funnels/${funnel.funnel_id}`} className="inline-flex text-sm text-rocket-400 hover:text-rocket-300">
+                Open Editor
+              </Link>
+              <FunnelPreviewDialog slug={funnel.slug} name={funnel.name} triggerLabel="Preview Generated Funnel" />
+            </div>
           ) : (
             <p className="mt-1 text-sm text-text-secondary">Not saved</p>
           )}

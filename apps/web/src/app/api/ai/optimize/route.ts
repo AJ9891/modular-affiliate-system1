@@ -1,27 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
 import { AIOptimizer } from '@/lib/ai-optimizer'
-import { withRateLimit, withAuth, withErrorHandling } from '@/lib/api-middleware'
+import { withRateLimit, withErrorHandling } from '@/lib/api-middleware'
 import { checkUserCanPerform, incrementUserUsage } from '@/lib/plan-manager'
 
-// POST /api/ai/optimize-funnel - Analyze and get optimization suggestions
-async function optimizeFunnel(request: NextRequest) {
+type ABTestType = 'headline' | 'cta' | 'copy' | 'style'
+type OptimizeAction = 'optimize-funnel' | 'auto-optimize' | 'generate-ab-test'
+
+interface OptimizePayload {
+  action?: OptimizeAction
+  funnelId?: string
+  timeframe?: number
+  blockId?: string
+  testType?: ABTestType
+}
+
+function normalizeAction(payload: OptimizePayload): OptimizeAction {
+  if (payload.action) return payload.action
+  if (payload.blockId && payload.testType) return 'generate-ab-test'
+  if (payload.blockId) return 'auto-optimize'
+  return 'optimize-funnel'
+}
+
+async function optimizeFunnel(payload: OptimizePayload) {
   const supabase = await createRouteHandlerClientCompat()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
-  const { funnelId, timeframe = 30 } = await request.json()
+  const funnelId = payload.funnelId
+  const timeframe = payload.timeframe ?? 30
 
   if (!funnelId) {
     throw new Error('Funnel ID is required')
   }
 
-  // Verify user owns the funnel
   const { data: funnel, error } = await supabase
     .from('funnels')
-    .select('id, user_id')
-    .eq('id', funnelId)
-    .eq('user_id', user!.id)
+    .select('funnel_id, user_id')
+    .eq('funnel_id', funnelId)
+    .eq('user_id', user.id)
     .single()
 
   if (error || !funnel) {
@@ -35,36 +54,36 @@ async function optimizeFunnel(request: NextRequest) {
 
   const optimizer = new AIOptimizer()
   const suggestions = await optimizer.analyzeFunnelPerformance(funnelId, timeframe)
-
   await incrementUserUsage(user.id, 'ai_generation')
 
   return NextResponse.json({
     funnelId,
     suggestions,
     totalSuggestions: suggestions.length,
-    highImpactSuggestions: suggestions.filter(s => s.expectedLift >= 20).length,
-    analysisDate: new Date().toISOString()
+    highImpactSuggestions: suggestions.filter((suggestion) => suggestion.expectedLift >= 20).length,
+    analysisDate: new Date().toISOString(),
   })
 }
 
-// POST /api/ai/auto-optimize - Auto-apply optimization to a block
-async function autoOptimize(request: NextRequest) {
+async function autoOptimize(payload: OptimizePayload) {
   const supabase = await createRouteHandlerClientCompat()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
-  
-  const { funnelId, blockId } = await request.json()
+
+  const funnelId = payload.funnelId
+  const blockId = payload.blockId
 
   if (!funnelId || !blockId) {
     throw new Error('Funnel ID and Block ID are required')
   }
 
-  // Verify user owns the funnel
   const { data: funnel, error } = await supabase
     .from('funnels')
-    .select('id, user_id, blocks')
-    .eq('id', funnelId)
-    .eq('user_id', user!.id)
+    .select('funnel_id, user_id, blocks')
+    .eq('funnel_id', funnelId)
+    .eq('user_id', user.id)
     .single()
 
   if (error || !funnel) {
@@ -79,21 +98,19 @@ async function autoOptimize(request: NextRequest) {
   const optimizer = new AIOptimizer()
   const optimizedBlock = await optimizer.autoOptimizeBlock(blockId, funnelId)
 
-  // Update the funnel with optimized block
+  const sourceBlocks = typeof funnel.blocks === 'string' ? JSON.parse(funnel.blocks) : funnel.blocks
   const updatedBlocks = {
-    ...funnel.blocks,
-    blocks: funnel.blocks.blocks.map((block: any) => 
-      block.id === blockId ? optimizedBlock : block
-    )
+    ...sourceBlocks,
+    blocks: (sourceBlocks.blocks || []).map((block: any) => (block.id === blockId ? optimizedBlock : block)),
   }
 
   const { error: updateError } = await supabase
     .from('funnels')
-    .update({ 
+    .update({
       blocks: updatedBlocks,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     })
-    .eq('id', funnelId)
+    .eq('funnel_id', funnelId)
 
   if (updateError) {
     throw new Error(`Failed to update funnel: ${updateError.message}`)
@@ -104,27 +121,30 @@ async function autoOptimize(request: NextRequest) {
   return NextResponse.json({
     success: true,
     optimizedBlock,
-    message: 'Block optimized successfully'
+    message: 'Block optimized successfully',
   })
 }
 
-// POST /api/ai/generate-ab-test - Generate A/B test variations
-async function generateABTest(request: NextRequest) {
+async function generateABTest(payload: OptimizePayload) {
   const supabase = await createRouteHandlerClientCompat()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  const { funnelId, blockId, testType } = await request.json()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const funnelId = payload.funnelId
+  const blockId = payload.blockId
+  const testType = payload.testType
 
   if (!funnelId || !blockId || !testType) {
     throw new Error('Funnel ID, Block ID, and test type are required')
   }
 
-  // Verify user owns the funnel
   const { data: funnel, error } = await supabase
     .from('funnels')
-    .select('id, user_id')
-    .eq('id', funnelId)
-    .eq('user_id', user!.id)
+    .select('funnel_id, user_id')
+    .eq('funnel_id', funnelId)
+    .eq('user_id', user.id)
     .single()
 
   if (error || !funnel) {
@@ -134,17 +154,16 @@ async function generateABTest(request: NextRequest) {
   const optimizer = new AIOptimizer()
   const variations = await optimizer.generateABTestVariations(funnelId, blockId, testType)
 
-  // Store the A/B test in the database
   const { data: abTest, error: testError } = await supabase
     .from('ab_tests')
     .insert({
       funnel_id: funnelId,
-      user_id: user!.id,
+      user_id: user.id,
       block_id: blockId,
       test_type: testType,
-      variations: variations,
+      variations,
       status: 'draft',
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
     })
     .select()
     .single()
@@ -156,36 +175,36 @@ async function generateABTest(request: NextRequest) {
   return NextResponse.json({
     abTest,
     variations,
-    message: 'A/B test variations generated successfully'
+    message: 'A/B test variations generated successfully',
   })
 }
 
-// GET /api/ai/optimization-history - Get optimization history for a funnel
 async function getOptimizationHistory(request: NextRequest) {
   const supabase = await createRouteHandlerClientCompat()
-  const { data: { user } } = await supabase.auth.getUser()
-  
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
   const { searchParams } = new URL(request.url)
   const funnelId = searchParams.get('funnelId')
-  const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100)
+  const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100)
 
   if (!funnelId) {
     throw new Error('Funnel ID is required')
   }
 
-  // Verify user owns the funnel
   const { data: funnel, error } = await supabase
     .from('funnels')
-    .select('id, user_id')
-    .eq('id', funnelId)
-    .eq('user_id', user!.id)
+    .select('funnel_id, user_id')
+    .eq('funnel_id', funnelId)
+    .eq('user_id', user.id)
     .single()
 
   if (error || !funnel) {
     throw new Error('Funnel not found or access denied')
   }
 
-  // Get optimization history
   const { data: history, error: historyError } = await supabase
     .from('optimization_log')
     .select('*')
@@ -200,22 +219,25 @@ async function getOptimizationHistory(request: NextRequest) {
   return NextResponse.json({
     funnelId,
     history: history || [],
-    totalOptimizations: history?.length || 0
+    totalOptimizations: history?.length || 0,
   })
 }
 
-export const POST = withErrorHandling(withAuth(withRateLimit(async (request: NextRequest) => {
-  const { pathname } = new URL(request.url)
-  
-  if (pathname.endsWith('/optimize-funnel')) {
-    return optimizeFunnel(request)
-  } else if (pathname.endsWith('/auto-optimize')) {
-    return autoOptimize(request)
-  } else if (pathname.endsWith('/generate-ab-test')) {
-    return generateABTest(request)
-  }
-  
-  throw new Error('Invalid endpoint')
-})))
+export const POST = withErrorHandling(
+  withRateLimit(async (request: NextRequest) => {
+    const payload = (await request.json()) as OptimizePayload
+    const action = normalizeAction(payload)
 
-export const GET = withErrorHandling(withAuth(withRateLimit(getOptimizationHistory)))
+    if (action === 'auto-optimize') {
+      return autoOptimize(payload)
+    }
+
+    if (action === 'generate-ab-test') {
+      return generateABTest(payload)
+    }
+
+    return optimizeFunnel(payload)
+  })
+)
+
+export const GET = withErrorHandling(withRateLimit(getOptimizationHistory))

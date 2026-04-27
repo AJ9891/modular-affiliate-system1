@@ -3,6 +3,7 @@
 import { ReactNode } from 'react'
 import WorkspacePanel, { WorkspacePanelProps } from './WorkspacePanel'
 import { cn } from '@/lib/utils'
+import HoverAnalyticsTooltip from '@/components/dashboard/ui/HoverAnalyticsTooltip'
 
 type DashboardTone = 'neutral' | 'success' | 'info' | 'warning'
 
@@ -11,6 +12,7 @@ interface DashboardPanelProps extends Omit<WorkspacePanelProps, 'className'> {
   className?: string
   value?: ReactNode
   valueLabel?: string
+  tooltip?: string
 }
 
 const toneClassMap: Record<DashboardTone, string> = {
@@ -25,12 +27,14 @@ export default function DashboardPanel({
   className,
   value,
   valueLabel,
+  tooltip,
   children,
   ...rest
 }: DashboardPanelProps) {
   return (
     <WorkspacePanel
       {...rest}
+      titleAccessory={tooltip ? <HoverAnalyticsTooltip content={tooltip} /> : undefined}
       className={cn('transition-[border-color,transform] duration-200 hover:-translate-y-0.5', toneClassMap[tone], className)}
     >
       {value !== undefined && (

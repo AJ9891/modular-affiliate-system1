@@ -7,6 +7,7 @@ import { createFunnel, deleteFunnel, listFunnels, type FunnelRecord } from '@/li
 import DashboardPanel from '@/components/cockpit/DashboardPanel'
 import WorkspacePanel from '@/components/cockpit/WorkspacePanel'
 import { CockpitEmptyState } from '@/components/ui/CockpitEmptyState'
+import FunnelPreviewDialog from './FunnelPreviewDialog'
 import FunnelsSkeleton from './FunnelsSkeleton'
 
 export default function FunnelsWorkspace() {
@@ -201,7 +202,14 @@ export default function FunnelsWorkspace() {
                     className="rounded-lg border border-[var(--border-subtle)] bg-[rgba(10,16,24,0.5)] p-4"
                   >
                     <p className="text-base font-semibold text-text-primary">{funnel.name}</p>
-                    <p className="mt-1 text-xs text-text-secondary">/{funnel.slug}</p>
+                    <div className="mt-1">
+                      <FunnelPreviewDialog
+                        slug={funnel.slug}
+                        name={funnel.name}
+                        triggerLabel={`/${funnel.slug}`}
+                        triggerClassName="text-xs text-rocket-400 hover:text-rocket-300"
+                      />
+                    </div>
                     <p className="mt-2 text-xs text-text-secondary">
                       Updated {new Date(funnel.updated_at || funnel.created_at || '').toLocaleString()}
                     </p>
@@ -209,6 +217,12 @@ export default function FunnelsWorkspace() {
                       <Link href={`/funnels/${funnel.funnel_id}`} className="hud-button-secondary px-3 py-1 text-xs">
                         Edit
                       </Link>
+                      <FunnelPreviewDialog
+                        slug={funnel.slug}
+                        name={funnel.name}
+                        triggerLabel="Preview"
+                        triggerClassName="hud-button-secondary px-3 py-1 text-xs"
+                      />
                       <button
                         type="button"
                         onClick={() => handleDelete(funnel.funnel_id)}
@@ -237,7 +251,14 @@ export default function FunnelsWorkspace() {
                     {sortedFunnels.map((funnel) => (
                       <tr key={funnel.funnel_id} className="border-b border-[var(--border-subtle)] text-text-primary">
                         <td className="px-3 py-3 font-medium">{funnel.name}</td>
-                        <td className="px-3 py-3 text-text-secondary">/{funnel.slug}</td>
+                        <td className="px-3 py-3 text-text-secondary">
+                          <FunnelPreviewDialog
+                            slug={funnel.slug}
+                            name={funnel.name}
+                            triggerLabel={`/${funnel.slug}`}
+                            triggerClassName="text-sm text-rocket-400 hover:text-rocket-300"
+                          />
+                        </td>
                         <td className="px-3 py-3">
                           <span className="rounded-full border border-rocket-500/35 px-2 py-1 text-xs">{funnel.status || 'draft'}</span>
                         </td>
@@ -247,6 +268,12 @@ export default function FunnelsWorkspace() {
                             <Link href={`/funnels/${funnel.funnel_id}`} className="hud-button-secondary px-3 py-1 text-xs">
                               Edit
                             </Link>
+                            <FunnelPreviewDialog
+                              slug={funnel.slug}
+                              name={funnel.name}
+                              triggerLabel="Preview"
+                              triggerClassName="hud-button-secondary px-3 py-1 text-xs"
+                            />
                             <button
                               type="button"
                               onClick={() => handleDelete(funnel.funnel_id)}
