@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation'
+import UnifiedBuilderWorkspace from '@/components/funnels/UnifiedBuilderWorkspace'
 
-export default function VisualBuilderRedirectPage() {
-  redirect('/ai-generator')
+export default function VisualBuilderPage() {
+  return <UnifiedBuilderWorkspace source="visual-builder" />
 }
