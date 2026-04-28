@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 
 export const runtime = 'edge'
 
@@ -31,10 +32,12 @@ import {
  * - AI-powered content generation
  */
 export default function LaunchpadPage() {
+  const ONBOARDING_COMPLETE = 8
   const searchParams = useSearchParams()
   const [currentStep, setCurrentStep] = useState(0)
   const [setupComplete, setSetupComplete] = useState(false)
   const [_userProfile, setUserProfile] = useState<any>(null)
+  const [userId, setUserId] = useState<string | null>(null)
   const [loadingUserData, setLoadingUserData] = useState(true)
   const [stepValidationError, setStepValidationError] = useState<string | null>(null)
   const [operationNotice, setOperationNotice] = useState<string | null>(null)
@@ -74,6 +77,9 @@ export default function LaunchpadPage() {
       if (response.ok) {
         const data = await response.json()
         setUserProfile(data.user)
+        if (data?.user?.id) {
+          setUserId(data.user.id)
+        }
         
         const statsResponse = await fetch('/api/analytics?range=30d')
         if (statsResponse.ok) {
@@ -90,6 +96,58 @@ export default function LaunchpadPage() {
       console.error('Failed to load user data:', error)
     } finally {
       setLoadingUserData(false)
+    }
+  }
+
+  const markOnboardingComplete = async () => {
+    try {
+      let targetUserId = userId
+
+      if (!targetUserId) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        targetUserId = user?.id ?? null
+      }
+
+      if (!targetUserId) return
+
+      await supabase
+        .from('users')
+        .update({
+          onboarding_seen: true,
+          onboarding_complete: true,
+          onboarding_step: 99,
+        })
+        .eq('id', targetUserId)
+    } catch (error) {
+      // Best effort: cockpit skip flag still prevents hard redirect loop.
+      console.error('Failed to mark onboarding complete:', error)
+    }
+  }
+
+  const persistOnboardingStep = async (step: number) => {
+    try {
+      let targetUserId = userId
+
+      if (!targetUserId) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        targetUserId = user?.id ?? null
+      }
+
+      if (!targetUserId) return
+
+      await supabase
+        .from('users')
+        .update({
+          onboarding_seen: true,
+          onboarding_step: step,
+        })
+        .eq('id', targetUserId)
+    } catch (error) {
+      console.error('Failed to persist onboarding step:', error)
     }
   }
 
@@ -224,13 +282,16 @@ export default function LaunchpadPage() {
     
     if (stepId === 'launch') {
       setOperationNotice('Routing you to cockpit...')
+      await markOnboardingComplete()
       if (typeof window !== 'undefined') {
         localStorage.setItem('lp_skip_onboarding', '1')
         document.cookie = 'lp_skip_onboarding=1; Path=/; Max-Age=2592000; SameSite=Lax'
       }
-      window.location.href = '/cockpit?skip_onboarding=1'
+      window.location.href = '/cockpit'
       return
     } else {
+      const nextStep = Math.min(currentStep + 1, ONBOARDING_COMPLETE)
+      await persistOnboardingStep(nextStep)
       setCurrentStep(prev => prev + 1)
     }
   }
@@ -344,7 +405,19 @@ export default function LaunchpadPage() {
     }
   }
 
-  const closeOnboarding = () => {
+  const closeOnboarding = async () => {
+    const hasFinishedFlow = currentStep >= launchSteps.length - 1 || setupComplete || showSuccessScreen
+
+    if (hasFinishedFlow) {
+      await markOnboardingComplete()
+      window.location.href = '/cockpit'
+      return
+    }
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('lp_skip_onboarding', '1')
+      document.cookie = 'lp_skip_onboarding=1; Path=/; Max-Age=2592000; SameSite=Lax'
+    }
     window.location.href = '/cockpit?skip_onboarding=1'
   }
 
@@ -472,7 +545,8 @@ export default function LaunchpadPage() {
               Customize Funnel
             </button>
             <button
-              onClick={() => {
+              onClick={async () => {
+                await markOnboardingComplete()
                 setSetupComplete(true)
                 setShowSuccessScreen(false)
                 loadUserData()

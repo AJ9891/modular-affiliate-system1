@@ -126,8 +126,10 @@ export default function Sidebar() {
           .maybeSingle()
 
         const admin = hasAdminAccess(profile)
-        setOnboardingComplete(Boolean(profile?.onboarding_complete) || admin)
-        setOnboardingStep(admin ? ONBOARDING_COMPLETE : Number(profile?.onboarding_step ?? 0))
+        const onboardingStep = Number(profile?.onboarding_step ?? 0)
+        const isOnboardingComplete = Boolean(profile?.onboarding_complete) || onboardingStep >= ONBOARDING_COMPLETE
+        setOnboardingComplete(isOnboardingComplete || admin)
+        setOnboardingStep(admin ? ONBOARDING_COMPLETE : onboardingStep)
         setIsAdmin(admin)
       } catch (error) {
         console.error('Error checking profile state for sidebar:', error)

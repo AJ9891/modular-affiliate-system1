@@ -11,6 +11,7 @@ import { hasAdminAccess } from '@/lib/admin-access'
 
 const SIDEBAR_COLLAPSE_KEY = 'cockpit_sidebar_collapsed'
 const CONTEXT_COLLAPSE_KEY = 'cockpit_context_collapsed'
+const ONBOARDING_COMPLETE = 8
 
 export default function CockpitLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
@@ -58,13 +59,15 @@ export default function CockpitLayout({ children }: { children: ReactNode }) {
 
         const { data: profile } = await supabase
           .from('users')
-          .select('is_admin, role, onboarding_complete')
+          .select('is_admin, role, onboarding_complete, onboarding_step')
           .eq('id', user.id)
           .maybeSingle()
 
         const admin = hasAdminAccess(profile)
+        const onboardingStep = Number(profile?.onboarding_step ?? 0)
+        const isOnboardingComplete = Boolean(profile?.onboarding_complete) || onboardingStep >= ONBOARDING_COMPLETE
         setIsAdmin(admin)
-        setOnboardingComplete(Boolean(profile?.onboarding_complete) || admin)
+        setOnboardingComplete(isOnboardingComplete || admin)
       } catch (error) {
         console.error('Failed loading cockpit role state:', error)
       }
