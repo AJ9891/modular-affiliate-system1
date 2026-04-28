@@ -1,89 +1,32 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { emailService } from '@/lib/email/service'
+import { NextResponse } from 'next/server'
+import { withRouteHandler } from '@/features/shared/api/route-handler'
+import { readJson } from '@/lib/http'
 import { getOptionalAuthenticatedUserId, resolveEmailErrorStatus } from '@/lib/email/route-utils'
+import { handleEmailSend, type SendEmailPayload } from '@/features/email/server/send-email.service'
 
 /**
  * Send Email API Endpoint
  * POST /api/email/send
  */
-export async function POST(request: NextRequest) {
-  try {
-    const userId = await getOptionalAuthenticatedUserId(request)
-    const body = await request.json()
-    const { to, subject, html, text, template, type = 'single' } = body
-    const defaultFromEmail = process.env.EMAIL_DEFAULT_FROM || 'user@launchpad4success.pro'
-    const defaultFromName = process.env.EMAIL_DEFAULT_FROM_NAME || 'Launchpad4Success'
-
-    if (type === 'campaign') {
-      if (!subject || typeof subject !== 'string') {
-        return NextResponse.json(
-          { success: false, error: 'subject is required for campaigns' },
-          { status: 400 }
-        )
-      }
-
-      if (!template && (!html || typeof html !== 'string')) {
-        return NextResponse.json(
-          { success: false, error: 'template or html is required for campaigns' },
-          { status: 400 }
-        )
-      }
-
-      // Send campaign
-      const campaign = await emailService.createCampaign({
-        userId,
-        name: body.name || `Campaign ${Date.now()}`,
-        fromEmail: body.fromEmail || defaultFromEmail,
-        fromName: body.fromName || defaultFromName,
-        subject,
-        template: template || { name: 'Custom', subject, html, text },
-        recipients: body.recipients || [],
-        scheduledAt: body.scheduledAt ? new Date(body.scheduledAt) : undefined,
-      })
-
-      return NextResponse.json({ 
-        success: true, 
-        campaignId: campaign.id,
-        message: 'Campaign created successfully' 
-      })
-    }
-
-    if (!to || !subject || !html) {
+export const POST = withRouteHandler(
+  async ({ request }) => {
+    try {
+      const userId = await getOptionalAuthenticatedUserId(request)
+      const body = await readJson<SendEmailPayload>(request)
+      const result = await handleEmailSend(body, userId)
+      return NextResponse.json(result)
+    } catch (err) {
+      console.error('Send email error:', err)
+      const message = err instanceof Error ? err.message : 'Failed to send email'
+      const status = resolveEmailErrorStatus(message)
       return NextResponse.json(
-        { success: false, error: 'to, subject, and html are required' },
-        { status: 400 }
+        {
+          success: false,
+          error: message,
+        },
+        { status: (err as { status?: number })?.status ?? status }
       )
     }
-
-    // Send single email
-    const result = await emailService.sendEmail({
-      to: typeof to === 'string' ? { email: to } : to,
-      from: {
-        email: body.fromEmail || defaultFromEmail,
-        name: body.fromName || defaultFromName,
-      },
-      subject,
-      html,
-      text,
-      trackOpens: body.trackOpens !== false,
-      trackClicks: body.trackClicks !== false,
-    })
-
-    return NextResponse.json({ 
-      success: true, 
-      messageId: result.id,
-      message: 'Email sent successfully' 
-    })
-  } catch (err) {
-    console.error('Send email error:', err)
-    const message = err instanceof Error ? err.message : 'Failed to send email'
-    const status = resolveEmailErrorStatus(message)
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: message
-      },
-      { status }
-    )
-  }
-}
+  },
+  { requireAuth: false }
+)
