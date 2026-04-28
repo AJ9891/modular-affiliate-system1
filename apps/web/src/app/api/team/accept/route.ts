@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
+import { getRouteUser } from '@/lib/auth/session'
 
 // GET /api/team/accept?token=xxx - Accept team invite
 export async function GET(request: NextRequest) {
@@ -12,17 +13,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invite token is required' }, { status: 400 })
     }
 
-    const accessToken = request.cookies.get('sb-access-token')?.value
-    
-    if (!accessToken) {
-      return NextResponse.json({ error: 'You must be logged in to accept invites' }, { status: 401 })
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
-    
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { user, response } = await getRouteUser(supabase, 'You must be logged in to accept invites')
+    if (!user) return response!
 
     // Find the invite
     const { data: invite, error: inviteError } = await supabase
@@ -87,17 +79,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invite token is required' }, { status: 400 })
     }
 
-    const accessToken = request.cookies.get('sb-access-token')?.value
-    
-    if (!accessToken) {
-      return NextResponse.json({ error: 'You must be logged in to accept invites' }, { status: 401 })
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
-    
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { user, response } = await getRouteUser(supabase, 'You must be logged in to accept invites')
+    if (!user) return response!
 
     // Find the invite
     const { data: invite, error: inviteError } = await supabase

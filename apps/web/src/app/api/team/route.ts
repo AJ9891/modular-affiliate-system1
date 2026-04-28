@@ -1,22 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
 import { hasAdminAccess } from '@/lib/admin-access'
+import { getRouteUser } from '@/lib/auth/session'
 
 // GET /api/team - List team members
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createRouteHandlerClientCompat()
-    const accessToken = request.cookies.get('sb-access-token')?.value
-    
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
-    
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { user, response } = await getRouteUser(supabase)
+    if (!user) return response!
 
     // Get team members where user is the owner
     const { data: ownedTeamMembers, error: ownedError } = await supabase
@@ -55,17 +47,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createRouteHandlerClientCompat()
-    const accessToken = request.cookies.get('sb-access-token')?.value
-    
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
-    
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { user, response } = await getRouteUser(supabase)
+    if (!user) return response!
 
     // Check if user has Agency plan
     const { data: userData, error: userError } = await supabase
@@ -199,17 +182,8 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const supabase = await createRouteHandlerClientCompat()
-    const accessToken = request.cookies.get('sb-access-token')?.value
-    
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
-    
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { user, response } = await getRouteUser(supabase)
+    if (!user) return response!
 
     const { searchParams } = new URL(request.url)
     const memberId = searchParams.get('memberId')

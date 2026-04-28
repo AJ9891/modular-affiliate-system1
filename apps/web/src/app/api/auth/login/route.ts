@@ -140,27 +140,8 @@ export async function POST(request: NextRequest) {
 }
 
 function createLoginSuccessResponse(data: { user: any; session: any }) {
-  const response = NextResponse.json({
+  return NextResponse.json({
     user: data.user,
     session: data.session
   }, { status: 200 })
-
-  // Keep legacy token cookies for routes that still read sb-access-token directly.
-  const secure = process.env.NODE_ENV === 'production'
-  const cookieOptions = {
-    path: '/',
-    sameSite: 'lax' as const,
-    secure,
-    maxAge: 60 * 60 * 24 * 30,
-  }
-
-  if (data.session?.access_token) {
-    response.cookies.set('sb-access-token', data.session.access_token, cookieOptions)
-  }
-
-  if (data.session?.refresh_token) {
-    response.cookies.set('sb-refresh-token', data.session.refresh_token, cookieOptions)
-  }
-
-  return response
 }

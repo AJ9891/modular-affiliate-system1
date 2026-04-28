@@ -5,35 +5,12 @@ import {
   wrapAIResponse 
 } from '@/lib/ai-guidelines'
 import { createSubdomainRouteHandlerClient } from '@/lib/subdomain-auth'
+import { getRouteUser } from '@/lib/auth/session'
 
 async function getAuthenticatedUser(request: NextRequest) {
   const supabase = await createSubdomainRouteHandlerClient(request)
-  const { data: { user }, error } = await supabase.auth.getUser()
-
-  if (user) {
-    return { supabase, user }
-  }
-
-  // Legacy fallback for routes that still pass explicit bearer/cookie tokens.
-  const bearerHeader = request.headers.get('authorization')
-  const bearerToken = bearerHeader?.startsWith('Bearer ')
-    ? bearerHeader.slice(7)
-    : null
-  const cookieToken = request.cookies.get('sb-access-token')?.value
-  const accessToken = bearerToken || cookieToken
-
-  if (accessToken) {
-    const { data, error: tokenError } = await supabase.auth.getUser(accessToken)
-    if (!tokenError && data.user) {
-      return { supabase, user: data.user }
-    }
-  }
-
-  if (error) {
-    console.error('Chat auth error:', error.message)
-  }
-
-  return { supabase, user: null }
+  const { user } = await getRouteUser(supabase)
+  return { supabase, user }
 }
 
 // GET /api/chat?conversationId=xxx - Get conversation history

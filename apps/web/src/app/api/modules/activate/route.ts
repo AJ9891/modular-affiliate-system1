@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
 import { checkSupabase } from '@/lib/check-supabase'
+import { getRouteUser } from '@/lib/auth/session'
 
 export async function POST(request: NextRequest) {
   const check = checkSupabase()
@@ -8,18 +9,8 @@ export async function POST(request: NextRequest) {
   
   try {
     const supabase = await createRouteHandlerClientCompat()
-    // Get user from session
-    const accessToken = request.cookies.get('sb-access-token')?.value
-    
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
-    }
-
-    const { data: { user }, error: authError } = await supabase!.auth.getUser(accessToken)
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
-    }
+    const { user, response } = await getRouteUser(supabase, 'Not authenticated')
+    if (!user) return response!
 
     const { moduleId, moduleName } = await request.json()
 
@@ -31,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Store the activated module in the database
-    const { data, error } = await supabase!
+    const { data, error } = await supabase
       .from('user_modules')
       .upsert({
         user_id: user.id,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
+import { getRouteUser } from '@/lib/auth/session'
 
 // PATCH /api/team/[memberId] - Update team member role
 export async function PATCH(
@@ -8,17 +9,8 @@ export async function PATCH(
 ) {
   try {
     const supabase = await createRouteHandlerClientCompat()
-    const accessToken = request.cookies.get('sb-access-token')?.value
-    
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
-    
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { user, response } = await getRouteUser(supabase)
+    if (!user) return response!
 
     const body = await request.json()
     const { role } = body

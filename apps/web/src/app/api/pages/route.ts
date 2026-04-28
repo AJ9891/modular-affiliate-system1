@@ -1,42 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
 import { checkSupabase } from '@/lib/check-supabase'
-
-const publicKey =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
+import { getRouteUser } from '@/lib/auth/session'
 
 export async function GET(request: NextRequest) {
   const check = checkSupabase()
   if (check) return check
 
   try {
-    // Get user from session
-    const accessToken = request.cookies.get('sb-access-token')?.value
-
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
-    }
-
-    const { createClient } = await import('@supabase/supabase-js')
-    const userSupabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      publicKey!,
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
-        }
-      }
-    )
-
-    const { data: { user }, error: authError } = await userSupabase.auth.getUser(accessToken)
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
-    }
+    const userSupabase = await createRouteHandlerClientCompat()
+    const { user, response } = await getRouteUser(userSupabase, 'Not authenticated')
+    if (!user) return response!
 
     // Get pages for user's funnels
     const { data: pages, error } = await userSupabase
@@ -65,31 +39,9 @@ export async function POST(request: NextRequest) {
   if (check) return check
 
   try {
-    // Get user from session
-    const accessToken = request.cookies.get('sb-access-token')?.value
-
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
-    }
-
-    const { createClient } = await import('@supabase/supabase-js')
-    const userSupabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      publicKey!,
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
-        }
-      }
-    )
-
-    const { data: { user }, error: authError } = await userSupabase.auth.getUser(accessToken)
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
-    }
+    const userSupabase = await createRouteHandlerClientCompat()
+    const { user, response } = await getRouteUser(userSupabase, 'Not authenticated')
+    if (!user) return response!
 
     const body = await request.json()
     const { name, content, funnel_id, slug } = body
