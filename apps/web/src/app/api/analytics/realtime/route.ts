@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
+import { resolveAllowedCorsOrigin } from '@/lib/security/policies'
 
 // Server-Sent Events for real-time analytics updates
 export async function GET(request: NextRequest) {
+  const allowedOrigin = resolveAllowedCorsOrigin(request)
+  const origin = request.headers.get('origin')
+
+  if (origin && !allowedOrigin) {
+    return new NextResponse('Origin not allowed', { status: 403 })
+  }
+
   const supabase = await createRouteHandlerClientCompat()
   
   // Check authentication
@@ -127,9 +135,29 @@ export async function GET(request: NextRequest) {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
-      'Access-Control-Allow-Origin': '*',
+      ...(allowedOrigin ? { 'Access-Control-Allow-Origin': allowedOrigin } : {}),
       'Access-Control-Allow-Methods': 'GET',
       'Access-Control-Allow-Headers': 'Cache-Control',
+      'Vary': 'Origin',
+    },
+  })
+}
+
+export async function OPTIONS(request: NextRequest) {
+  const allowedOrigin = resolveAllowedCorsOrigin(request)
+  const origin = request.headers.get('origin')
+
+  if (origin && !allowedOrigin) {
+    return new NextResponse(null, { status: 403 })
+  }
+
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      ...(allowedOrigin ? { 'Access-Control-Allow-Origin': allowedOrigin } : {}),
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Cache-Control, Content-Type',
+      'Vary': 'Origin',
     },
   })
 }
