@@ -3,6 +3,7 @@ import { withRateLimit, withValidation, withErrorHandling } from '@/lib/api-midd
 import { leadCaptureSchema } from '@/lib/security'
 import { emailService } from '@/lib/email/service'
 import { createSubdomainRouteHandlerClient } from '@/lib/subdomain-auth'
+import { withTrace } from '@/lib/observability/tracing'
 
 function isRecoverableDbError(issue: unknown): boolean {
   if (!issue || typeof issue !== 'object') return false
@@ -66,24 +67,29 @@ export const POST = withRateLimit(
       }
 
       // Save lead to database
-      const { data: lead, error: leadError } = await supabase
-        .from('leads')
-        .insert({
-          email,
-          user_id: ownerUserId,
-          funnel_id,
-          generation_id: generation_id || null,
-          variant_id: variant_id || null,
-          source,
-          utm_source,
-          utm_medium,
-          utm_campaign,
-          utm_content,
-          utm_term,
-          created_at: new Date().toISOString()
-        })
-        .select()
-        .single()
+      const { data: lead, error: leadError } = await withTrace(
+        'leads.insert',
+        () =>
+          supabase
+            .from('leads')
+            .insert({
+              email,
+              user_id: ownerUserId,
+              funnel_id,
+              generation_id: generation_id || null,
+              variant_id: variant_id || null,
+              source,
+              utm_source,
+              utm_medium,
+              utm_campaign,
+              utm_content,
+              utm_term,
+              created_at: new Date().toISOString()
+            })
+            .select()
+            .single(),
+        { funnelId: funnel_id || null, ownerUserId }
+      )
 
       if (leadError) {
         console.error('Lead save error:', leadError)

@@ -3,6 +3,7 @@ import { checkSupabase } from '@/lib/check-supabase'
 import { createSubdomainRouteHandlerClientWithResponse } from '@/lib/subdomain-auth'
 import { createServiceRoleClient, loadSupabaseEnv } from '@/lib/supabase-server'
 import { log } from '@/lib/log'
+import { withTrace } from '@/lib/observability/tracing'
 
 function getSupabaseAdminClient() {
   try {
@@ -56,10 +57,15 @@ export async function POST(request: NextRequest) {
       ))
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    const { data, error } = await withTrace(
+      'auth.signInWithPassword',
+      () =>
+        supabase.auth.signInWithPassword({
+          email,
+          password,
+        }),
+      { email }
+    )
 
     if (error) {
       log.warn('Supabase auth error', { error: error?.message })

@@ -1,18 +1,10 @@
-type Level = 'debug' | 'info' | 'warn' | 'error'
+import { createLogger } from '@/lib/observability/logger'
 
-const DISABLED = process.env.NODE_ENV === 'test'
-
-function emit(level: Level, message: string, meta?: Record<string, unknown>) {
-  if (DISABLED) return
-  const payload = meta ? { message, ...meta } : message
-  const prefix = `[${level.toUpperCase()}]`
-  // eslint-disable-next-line no-console
-  console[level === 'debug' ? 'log' : level](prefix, payload)
-}
+const appLogger = createLogger('app')
 
 export const log = {
-  debug: (msg: string, meta?: Record<string, unknown>) => emit('debug', msg, meta),
-  info: (msg: string, meta?: Record<string, unknown>) => emit('info', msg, meta),
-  warn: (msg: string, meta?: Record<string, unknown>) => emit('warn', msg, meta),
-  error: (msg: string, meta?: Record<string, unknown>) => emit('error', msg, meta),
+  debug: (msg: string, meta?: Record<string, unknown>) => appLogger.debug(msg, meta),
+  info: (msg: string, meta?: Record<string, unknown>) => appLogger.info(msg, meta),
+  warn: (msg: string, meta?: Record<string, unknown>) => appLogger.warn(msg, meta),
+  error: (msg: string, meta?: Record<string, unknown>) => appLogger.error(msg, meta),
 }
