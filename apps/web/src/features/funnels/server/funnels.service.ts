@@ -62,6 +62,87 @@ export async function listFunnelsForUser(supabase: SupabaseClient, userId: strin
   return funnels || []
 }
 
+export async function getFunnelForUserByIdOrSlug(
+  supabase: SupabaseClient,
+  userId: string,
+  idOrSlug: string
+) {
+  const { data: byId, error: byIdError } = await supabase
+    .from('funnels')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('funnel_id', idOrSlug)
+    .maybeSingle()
+
+  if (byId && !byIdError) return byId
+
+  const { data: bySlug, error: bySlugError } = await supabase
+    .from('funnels')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('slug', idOrSlug)
+    .maybeSingle()
+
+  if (bySlugError || !bySlug) {
+    const err = new Error('Funnel not found')
+    ;(err as Error & { status?: number }).status = 404
+    throw err
+  }
+
+  return bySlug
+}
+
+export async function updateFunnelForUserByIdOrSlug(
+  supabase: SupabaseClient,
+  userId: string,
+  idOrSlug: string,
+  body: Record<string, unknown>
+) {
+  const funnel = await getFunnelForUserByIdOrSlug(supabase, userId, idOrSlug)
+  const patch: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  }
+
+  if (typeof body.name === 'string') patch.name = body.name
+  if (typeof body.slug === 'string') patch.slug = body.slug
+  if (Object.prototype.hasOwnProperty.call(body, 'blocks')) patch.blocks = body.blocks
+
+  const { data, error } = await supabase
+    .from('funnels')
+    .update(patch)
+    .eq('funnel_id', funnel.funnel_id)
+    .eq('user_id', userId)
+    .select('*')
+    .single()
+
+  if (error || !data) {
+    const err = new Error(error?.message || 'Failed to update funnel')
+    ;(err as Error & { status?: number }).status = 400
+    throw err
+  }
+
+  return data
+}
+
+export async function deleteFunnelForUserByIdOrSlug(
+  supabase: SupabaseClient,
+  userId: string,
+  idOrSlug: string
+) {
+  const funnel = await getFunnelForUserByIdOrSlug(supabase, userId, idOrSlug)
+  const { error } = await supabase
+    .from('funnels')
+    .delete()
+    .eq('funnel_id', funnel.funnel_id)
+    .eq('user_id', userId)
+
+  if (error) {
+    const err = new Error(error.message)
+    ;(err as Error & { status?: number }).status = 400
+    throw err
+  }
+}
+
 export async function createFunnelForUser(
   _supabase: SupabaseClient,
   user: User,

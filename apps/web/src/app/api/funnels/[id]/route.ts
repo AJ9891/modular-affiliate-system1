@@ -1,121 +1,38 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
-import { checkSupabase } from '@/lib/check-supabase'
+import { NextResponse } from 'next/server'
+import { withRouteHandler } from '@/features/shared/api/route-handler'
+import { readJson } from '@/lib/http'
+import {
+  deleteFunnelForUserByIdOrSlug,
+  getFunnelForUserByIdOrSlug,
+  updateFunnelForUserByIdOrSlug,
+} from '@/features/funnels/server/funnels.service'
 
-export async function GET(
-  _request: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
-  const check = checkSupabase()
-  if (check) return check
-
-  try {
-    const supabase = await createRouteHandlerClientCompat()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { id } = await context.params
-
-    // Allow direct UUID fetch and slug fallback for compatibility.
-    let query = supabase
-      .from('funnels')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('funnel_id', id)
-      .maybeSingle()
-
-    let { data: funnel, error } = await query
-
-    if ((!funnel || error) && id) {
-      const slugResult = await supabase
-        .from('funnels')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('slug', id)
-        .maybeSingle()
-      funnel = slugResult.data
-      error = slugResult.error
-    }
-
-    if (error || !funnel) {
-      return NextResponse.json({ error: 'Funnel not found' }, { status: 404 })
-    }
-
-    return NextResponse.json({ funnel }, { status: 200 })
-  } catch (_error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+async function getIdFromParams(params?: Promise<Record<string, string>> | Record<string, string>) {
+  const resolved = params ? await params : {}
+  const id = resolved.id
+  if (!id) {
+    const err = new Error('Missing funnel id')
+    ;(err as Error & { status?: number }).status = 400
+    throw err
   }
+  return id
 }
 
-export async function PUT(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
-  const check = checkSupabase()
-  if (check) return check
-  
-  try {
-    const supabase = await createRouteHandlerClientCompat()
-    const body = await request.json()
-    const { name, blocks, slug } = body
+export const GET = withRouteHandler(async ({ supabase, user, params }) => {
+  const id = await getIdFromParams(params)
+  const funnel = await getFunnelForUserByIdOrSlug(supabase, user!.id, id)
+  return NextResponse.json({ funnel }, { status: 200 })
+})
 
-    const { id } = await context.params
-    const { data, error } = await supabase!
-      .from('funnels')
-      .update({
-        name,
-        slug,
-        blocks: JSON.stringify(blocks),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('funnel_id', id)
-      .select()
+export const PUT = withRouteHandler(async ({ request, supabase, user, params }) => {
+  const id = await getIdFromParams(params)
+  const body = await readJson<Record<string, unknown>>(request)
+  const funnel = await updateFunnelForUserByIdOrSlug(supabase, user!.id, id, body)
+  return NextResponse.json({ funnel }, { status: 200 })
+})
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 })
-    }
-
-    return NextResponse.json({ funnel: data[0] }, { status: 200 })
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
-  }
-}
-
-export async function DELETE(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
-  const check = checkSupabase()
-  if (check) return check
-  
-  try {
-    const supabase = await createRouteHandlerClientCompat()
-    const { id } = await context.params
-    const { error } = await supabase!
-      .from('funnels')
-      .delete()
-      .eq('funnel_id', id)
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 })
-    }
-
-    return NextResponse.json(
-      { message: 'Funnel deleted successfully' },
-      { status: 200 }
-    )
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
-  }
-}
+export const DELETE = withRouteHandler(async ({ supabase, user, params }) => {
+  const id = await getIdFromParams(params)
+  await deleteFunnelForUserByIdOrSlug(supabase, user!.id, id)
+  return NextResponse.json({ message: 'Funnel deleted successfully' }, { status: 200 })
+})
