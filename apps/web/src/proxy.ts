@@ -37,7 +37,7 @@ export async function proxy(req: NextRequest) {
     }
 
     const key = getRateLimitKey(req, pathname.startsWith('/api/auth') ? 'auth' : 'api')
-    const result = rateLimit(key, bucket)
+    const result = await rateLimit(key, bucket)
 
     if (!result.success) {
       return NextResponse.json(

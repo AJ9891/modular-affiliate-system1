@@ -1,19 +1,7 @@
 import { NextRequest } from 'next/server'
-
-interface RateLimitStore {
-  [key: string]: {
-    count: number
-    resetTime: number
-  }
-}
-
-// In-memory store (in production, use Redis)
-const store: RateLimitStore = {}
-
-export interface RateLimitConfig {
-  interval: number // Time window in milliseconds
-  limit: number // Max requests per window
-}
+import { MemoryRateLimiter } from './rate-limit/memory'
+import { RedisRateLimiter } from './rate-limit/redis'
+import type { RateLimitConfig, RateLimitResult } from './rate-limit/types'
 
 export const RATE_LIMIT_CONFIGS = {
   // API endpoints
@@ -28,46 +16,22 @@ export const RATE_LIMIT_CONFIGS = {
   agency: { interval: 60 * 1000, limit: 500 },
 } as const
 
-export function rateLimit(identifier: string, config: RateLimitConfig): {
-  success: boolean
-  remaining: number
-  resetTime: number
-} {
-  const now = Date.now()
-  const key = identifier
+const memoryLimiter = new MemoryRateLimiter()
+const redisLimiter = new RedisRateLimiter()
+let redisUnavailableLogged = false
 
-  // Clean up expired entries
-  if (store[key] && store[key].resetTime < now) {
-    delete store[key]
+export async function rateLimit(identifier: string, config: RateLimitConfig): Promise<RateLimitResult> {
+  const redisResult = await redisLimiter.check(identifier, config)
+  if (redisResult) {
+    return redisResult
   }
 
-  // Initialize or get current count
-  if (!store[key]) {
-    store[key] = {
-      count: 0,
-      resetTime: now + config.interval
-    }
+  if (redisLimiter.isConfigured() && !redisUnavailableLogged) {
+    redisUnavailableLogged = true
+    console.warn('[RateLimit] Redis backend unavailable, falling back to in-memory limits.')
   }
 
-  const current = store[key]
-  
-  // Check if limit exceeded
-  if (current.count >= config.limit) {
-    return {
-      success: false,
-      remaining: 0,
-      resetTime: current.resetTime
-    }
-  }
-
-  // Increment count
-  current.count++
-
-  return {
-    success: true,
-    remaining: config.limit - current.count,
-    resetTime: current.resetTime
-  }
+  return memoryLimiter.check(identifier, config)
 }
 
 export function getRateLimitKey(req: NextRequest, type: string = 'api'): string {

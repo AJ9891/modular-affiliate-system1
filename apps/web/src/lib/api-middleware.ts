@@ -15,7 +15,7 @@ export function withRateLimit(
 
     const identifier = getRateLimitKey(req, typeof limitType === 'string' ? limitType : 'custom')
     
-    const { success, remaining, resetTime } = rateLimit(identifier, config)
+    const { success, remaining, resetTime } = await rateLimit(identifier, config)
     
     if (!success) {
       const response = NextResponse.json(
