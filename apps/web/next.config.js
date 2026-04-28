@@ -40,8 +40,7 @@ const nextConfig = {
     },
   }),
   typescript: {
-    // Only ignore build errors in production deployments
-    ignoreBuildErrors: process.env.NODE_ENV === 'production',
+    ignoreBuildErrors: false,
   },
   experimental: {
     webpackBuildWorker: false,

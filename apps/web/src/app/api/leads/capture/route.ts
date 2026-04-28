@@ -69,8 +69,8 @@ export const POST = withRateLimit(
       // Save lead to database
       const { data: lead, error: leadError } = await withTrace(
         'leads.insert',
-        () =>
-          supabase
+        async () =>
+          await supabase
             .from('leads')
             .insert({
               email,

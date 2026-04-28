@@ -7,7 +7,7 @@
     "dev:debug": "NODE_ENV=development DEBUG=* next dev",
     "dev:turbo": "NODE_ENV=development next dev --turbo",
     "dev:verbose": "NODE_ENV=development next dev --experimental-debug",
-    "build": "next build --webpack",
+    "build": "node scripts/validate-env.mjs && next build --webpack",
     "build:debug": "NEXT_DEBUG=1 next build --webpack",
     "build:turbo": "next build",
     "start": "next start",
