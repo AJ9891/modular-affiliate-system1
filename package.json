@@ -20,6 +20,7 @@
     "lint:fix": "turbo run lint:fix",
     "lint:md": "markdownlint-cli2 \"**/*.md\" \"#**/node_modules/**\" \"#.next\" \"#.turbo\" \"#.vercel\"",
     "lint:md:fix": "markdownlint-cli2 \"**/*.md\" \"#**/node_modules/**\" \"#.next\" \"#.turbo\" \"#.vercel\" --fix",
+    "repo:hygiene": "node scripts/check-repo-hygiene.js",
     "type-check": "turbo run type-check",
     "clean": "turbo run clean && rm -rf node_modules",
     "deploy": "./scripts/vercel-safe-deploy.sh",

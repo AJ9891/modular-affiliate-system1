@@ -23,6 +23,9 @@ jobs:
       - name: Install
         run: npm install --no-optional --force
 
+      - name: Repo Hygiene
+        run: npm run repo:hygiene
+
       - name: Lint
         run: npm run lint
         working-directory: apps/web
