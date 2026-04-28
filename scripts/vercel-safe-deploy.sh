@@ -11,6 +11,11 @@ PROD_CUSTOM_ALIASES="${PROD_CUSTOM_ALIASES:-*.launchpad4success.pro}"
 
 CHECK_ONLY=0
 TARGET="prod"
+VERCEL_CMD=(npx --yes vercel)
+
+run_vercel() {
+  "${VERCEL_CMD[@]}" "$@"
+}
 
 trim_spaces() {
   local s="$1"
@@ -34,7 +39,7 @@ sync_prod_domains() {
       continue
     fi
     echo "[vercel-safe-deploy] Ensuring project domain: $domain"
-    if ! add_output="$(vercel domains add "$domain" --scope "$EXPECTED_SCOPE" 2>&1)"; then
+    if ! add_output="$(run_vercel domains add "$domain" --scope "$EXPECTED_SCOPE" 2>&1)"; then
       echo "$add_output"
       if [[ "$add_output" == *"alias_conflict"* || "$add_output" == *"already assigned to another project"* ]]; then
         echo "[vercel-safe-deploy] Domain add conflict for $domain; continuing with alias refresh."
@@ -46,7 +51,7 @@ sync_prod_domains() {
       echo "$add_output"
     fi
     echo "[vercel-safe-deploy] Ensuring alias: $domain -> $PROD_BASE_ALIAS"
-    vercel alias set "$PROD_BASE_ALIAS" "$domain" --scope "$EXPECTED_SCOPE"
+    run_vercel alias set "$PROD_BASE_ALIAS" "$domain" --scope "$EXPECTED_SCOPE"
   done
 
   IFS=',' read -r -a alias_entries <<< "$PROD_CUSTOM_ALIASES"
@@ -56,7 +61,7 @@ sync_prod_domains() {
       continue
     fi
     echo "[vercel-safe-deploy] Ensuring alias: $alias -> $PROD_BASE_ALIAS"
-    vercel alias set "$PROD_BASE_ALIAS" "$alias" --scope "$EXPECTED_SCOPE"
+    run_vercel alias set "$PROD_BASE_ALIAS" "$alias" --scope "$EXPECTED_SCOPE"
   done
 }
 
@@ -124,9 +129,9 @@ fi
 
 if [[ "$TARGET" == "preview" ]]; then
   echo "[vercel-safe-deploy] Deploying preview to scope $EXPECTED_SCOPE..."
-  vercel deploy --yes --scope "$EXPECTED_SCOPE" "$@"
+  run_vercel deploy --yes --scope "$EXPECTED_SCOPE" "$@"
 else
   echo "[vercel-safe-deploy] Deploying production to scope $EXPECTED_SCOPE..."
-  vercel deploy --prod --yes --scope "$EXPECTED_SCOPE" "$@"
+  run_vercel deploy --prod --yes --scope "$EXPECTED_SCOPE" "$@"
   sync_prod_domains
 fi

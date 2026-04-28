@@ -40,8 +40,11 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "dependencies": {
-    "vercel": "^50.44.0"
+  "overrides": {
+    "next": {
+      "postcss": "8.5.12"
+    },
+    "postcss": "^8.5.12"
   },
   "lint-staged": {
     "*.md": [
