@@ -42,9 +42,9 @@ export async function GET(request: NextRequest) {
     // Check account status with Stripe
     const account = await stripe.accounts.retrieve(userData.stripe_connect_account_id)
 
-    const onboardingComplete = account.details_submitted
-    const chargesEnabled = account.capabilities?.card_payments === 'active'
-    const payoutsEnabled = account.capabilities?.transfers === 'active'
+    const onboardingComplete = Boolean(account.details_submitted)
+    const chargesEnabled = Boolean(account.charges_enabled)
+    const payoutsEnabled = Boolean(account.payouts_enabled)
 
     // Update database if status changed
     if (onboardingComplete !== userData.stripe_connect_onboarding_complete ||

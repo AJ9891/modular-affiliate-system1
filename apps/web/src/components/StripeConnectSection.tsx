@@ -141,18 +141,34 @@ export default function StripeConnectSection() {
             <p className="text-xs text-gray-500">
               Account ID: {status.accountId}
             </p>
+            <button
+              onClick={handleConnect}
+              disabled={connecting}
+              className="mt-3 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            >
+              {connecting ? 'Opening...' : 'Manage Bank Account'}
+            </button>
           </div>
         ) : (
           <div>
             <p className="text-sm text-yellow-600 mb-3">
-              Your onboarding is complete, but payouts are not yet enabled. This usually takes 24-48 hours after setup.
+              Your Stripe account is connected, but payouts are not enabled yet. Add or update your bank account details in Stripe, then refresh status.
             </p>
-            <button
-              onClick={checkStatus}
-              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium"
-            >
-              Check Status
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={handleConnect}
+                disabled={connecting}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              >
+                {connecting ? 'Opening...' : 'Add Bank Account'}
+              </button>
+              <button
+                onClick={checkStatus}
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium"
+              >
+                Refresh Status
+              </button>
+            </div>
           </div>
         )}
       </div>

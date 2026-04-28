@@ -61,17 +61,30 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const account = await stripe.accounts.retrieve(accountId)
+    const onboardingComplete = Boolean(account.details_submitted)
+
+    if (onboardingComplete) {
+      const loginLink = await stripe.accounts.createLoginLink(accountId)
+      return NextResponse.json({
+        url: loginLink.url,
+        accountId,
+        action: 'dashboard_login',
+      })
+    }
+
     // Create an account link for onboarding
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
-      refresh_url: `${appBaseUrl}/dashboard`,
-      return_url: `${appBaseUrl}/dashboard`,
+      refresh_url: `${appBaseUrl}/subscription`,
+      return_url: `${appBaseUrl}/subscription`,
       type: 'account_onboarding',
     })
 
     return NextResponse.json({
       url: accountLink.url,
-      accountId: accountId
+      accountId,
+      action: 'onboarding',
     })
   } catch (error: any) {
     console.error('Stripe Connect onboarding error:', error)
