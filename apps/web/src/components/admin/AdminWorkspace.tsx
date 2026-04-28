@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { getAdminOverview, getAdminProviderTotals, getAdminUsers, type AdminAnalyticsTotals, type AdminOverview, type AdminUserRecord } from '@/lib/api/admin'
+import { PageHeader } from '@/features/shared/ui'
 import AdminSkeleton from './AdminSkeleton'
 
 function currency(value: number) {
@@ -63,11 +64,11 @@ export default function AdminWorkspace() {
   return (
     <main className="cockpit-shell page-command-authority py-8">
       <div className="cockpit-container max-w-6xl space-y-6">
-        <section className="hud-panel">
-          <p className="text-xs uppercase tracking-system text-text-secondary">Admin</p>
-          <h1 className="text-3xl font-semibold text-text-primary md:text-4xl">System Analytics and User Management</h1>
-          <p className="mt-2 text-sm text-text-secondary">Command view for users, platform metrics, and revenue overview.</p>
-        </section>
+        <PageHeader
+          eyebrow="Admin"
+          title="System Analytics and User Management"
+          description="Command view for users, platform metrics, and revenue overview."
+        />
 
         {error && <section className="rounded-lg border border-red-400/35 bg-red-500/12 p-4 text-red-200">{error}</section>}
 

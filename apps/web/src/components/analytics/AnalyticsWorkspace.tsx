@@ -8,6 +8,7 @@ import { getGrowthSnapshot } from '@/lib/api/growth-assistant'
 import DashboardPanel from '@/components/cockpit/DashboardPanel'
 import WorkspacePanel from '@/components/cockpit/WorkspacePanel'
 import { CockpitEmptyState } from '@/components/ui/CockpitEmptyState'
+import { PageHeader, StatsGrid } from '@/features/shared/ui'
 import AnalyticsSkeleton from './AnalyticsSkeleton'
 
 const ranges = ['7d', '30d', '90d'] as const
@@ -99,32 +100,32 @@ export default function AnalyticsWorkspace() {
   return (
     <main className="cockpit-shell page-telemetry py-8">
       <div className="cockpit-container max-w-7xl space-y-6">
-        <section className="hud-panel flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-system text-text-secondary">Analytics</p>
-            <h1 className="text-3xl font-semibold text-text-primary md:text-4xl">Traffic and Conversion Command</h1>
-            <p className="mt-1 text-sm text-text-secondary">Inspect traffic quality, funnel conversion efficiency, and revenue movement.</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {ranges.map((value) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setRange(value)}
-                className={`rounded-lg px-3 py-2 text-sm ${
-                  value === range
-                    ? 'bg-rocket-500 text-slate-950'
-                    : 'border border-[var(--border-subtle)] text-text-secondary hover:text-text-primary'
-                }`}
-              >
-                {value}
+        <PageHeader
+          eyebrow="Analytics"
+          title="Traffic and Conversion Command"
+          description="Inspect traffic quality, funnel conversion efficiency, and revenue movement."
+          actions={
+            <>
+              {ranges.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setRange(value)}
+                  className={`rounded-lg px-3 py-2 text-sm ${
+                    value === range
+                      ? 'bg-rocket-500 text-slate-950'
+                      : 'border border-[var(--border-subtle)] text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  {value}
+                </button>
+              ))}
+              <button type="button" onClick={() => setRefreshKey((value) => value + 1)} className="hud-button-secondary px-3 py-2 text-sm">
+                Refresh
               </button>
-            ))}
-            <button type="button" onClick={() => setRefreshKey((value) => value + 1)} className="hud-button-secondary px-3 py-2 text-sm">
-              Refresh
-            </button>
-          </div>
-        </section>
+            </>
+          }
+        />
 
         {error && (
           <section className="rounded-lg border border-red-400/35 bg-red-500/12 p-4 text-red-200">
@@ -132,7 +133,7 @@ export default function AnalyticsWorkspace() {
           </section>
         )}
 
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatsGrid>
           <DashboardPanel
             title="Total Clicks"
             icon={<MousePointerClick size={16} />}
@@ -155,7 +156,7 @@ export default function AnalyticsWorkspace() {
           <DashboardPanel title="Revenue" icon={<DollarSign size={16} />} value={`$${(summary?.stats.totalRevenue || 0).toLocaleString()}`} tone="success">
             <p className="text-xs text-text-secondary">Estimated tracked revenue.</p>
           </DashboardPanel>
-        </section>
+        </StatsGrid>
 
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <WorkspacePanel title="Traffic Sources" description="Source attribution and channel concentration." expandable>
