@@ -1,27 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
-import { hasAdminAccess } from '@/lib/admin-access'
 import { getRouteUser } from '@/lib/auth/session'
+import { canUseTeamCollaboration } from '@/lib/team/permissions'
+import { canManageTeamMembers, listTeamMembershipsForOwner, resolveTeamScope } from '@/lib/team/service'
 
-// GET /api/team - List team members
-export async function GET(request: NextRequest) {
+// GET /api/team - List team membership context
+export async function GET(_request: NextRequest) {
   try {
     const supabase = await createRouteHandlerClientCompat()
     const { user, response } = await getRouteUser(supabase)
     if (!user) return response!
 
-    // Get team members where user is the owner
-    const { data: ownedTeamMembers, error: ownedError } = await supabase
-      .from('team_members')
-      .select('*')
-      .eq('account_owner_id', user.id)
-      .order('created_at', { ascending: false })
+    const scope = await resolveTeamScope(supabase, user.id)
+    const ownedTeamMembers = await listTeamMembershipsForOwner(supabase, scope.ownerId)
 
-    if (ownedError) {
-      return NextResponse.json({ error: ownedError.message }, { status: 500 })
-    }
-
-    // Get teams where user is a member
     const { data: memberOf, error: memberError } = await supabase
       .from('team_members')
       .select('*')
@@ -34,9 +26,10 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      ownedTeam: ownedTeamMembers || [],
+      ownedTeam: ownedTeamMembers,
       memberOf: memberOf || [],
-      isOwner: (ownedTeamMembers?.length || 0) > 0
+      isOwner: scope.isOwner,
+      userRole: scope.userRole,
     })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -50,17 +43,22 @@ export async function POST(request: NextRequest) {
     const { user, response } = await getRouteUser(supabase)
     if (!user) return response!
 
-    // Check if user has Agency plan
-    const { data: userData, error: userError } = await supabase
+    const { data: userProfile, error: profileError } = await supabase
       .from('users')
       .select('plan, is_admin, role')
       .eq('id', user.id)
       .single()
 
-    if (userError || (!hasAdminAccess(userData) && userData?.plan !== 'agency')) {
-      return NextResponse.json({ 
-        error: 'Team collaboration is only available on the Agency plan' 
-      }, { status: 403 })
+    if (profileError || !canUseTeamCollaboration(userProfile)) {
+      return NextResponse.json(
+        { error: 'Team collaboration is only available on the Agency plan' },
+        { status: 403 }
+      )
+    }
+
+    const { allowed, scope } = await canManageTeamMembers(supabase, user.id)
+    if (!allowed) {
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 
     const body = await request.json()
@@ -70,94 +68,67 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
     }
 
-    // Generate invite token
+    if (!['owner', 'admin', 'editor', 'viewer'].includes(role)) {
+      return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
+    }
+
     const inviteToken = crypto.randomUUID()
 
-    // Check if user with this email already exists
     const { data: existingUser } = await supabase
       .from('users')
       .select('id')
       .eq('email', member_email)
-      .single()
+      .maybeSingle()
 
-    // Create team member invite
+    const { data: existingInvite } = await supabase
+      .from('team_members')
+      .select('id, status')
+      .eq('account_owner_id', scope.ownerId)
+      .eq('member_email', member_email)
+      .in('status', ['pending', 'active'])
+      .maybeSingle()
+
+    if (existingInvite) {
+      return NextResponse.json(
+        {
+          error:
+            existingInvite.status === 'active'
+              ? 'This user is already a team member'
+              : 'Invitation already sent',
+        },
+        { status: 400 }
+      )
+    }
+
     const { data, error } = await supabase
       .from('team_members')
       .insert({
-        account_owner_id: user.id,
+        account_owner_id: scope.ownerId,
         member_user_id: existingUser?.id || null,
-        member_email: member_email,
-        role: role,
+        member_email,
+        role,
         status: 'pending',
-        invite_token: inviteToken
+        invite_token: inviteToken,
       })
       .select()
       .single()
 
     if (error) {
-      if (error.code === '23505') { // Unique violation
-        return NextResponse.json({ 
-          error: 'This user is already invited or is a team member' 
-        }, { status: 400 })
-      }
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Send invite email via internal email service route
     try {
-      const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/team/accept?token=${inviteToken}`
-      
-      const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/api/email/send`, {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+      const inviteLink = `${appUrl}/team/accept?token=${inviteToken}`
+
+      const emailResponse = await fetch(`${appUrl}/api/email/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           to: member_email,
-          subject: 'You\'ve been invited to join a team on Launchpad4Success',
-          html: `
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <style>
-                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-                .content { background: #f9f9f9; padding: 30px; }
-                .button { display: inline-block; background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-                .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-              </style>
-            </head>
-            <body>
-              <div class="container">
-                <div class="header">
-                  <h1>🚀 Team Invitation</h1>
-                </div>
-                <div class="content">
-                  <p>Hi there!</p>
-                  <p>You've been invited to join a team on <strong>Launchpad4Success</strong> as a <strong>${role}</strong>.</p>
-                  <p>This gives you access to collaborate on funnels, offers, and analytics with your team.</p>
-                  <p style="text-align: center;">
-                    <a href="${inviteLink}" class="button">Accept Invitation</a>
-                  </p>
-                  <p style="font-size: 12px; color: #666;">
-                    Or copy this link: <br>
-                    <code style="background: #e0e0e0; padding: 5px 10px; border-radius: 3px; display: inline-block; margin-top: 5px;">${inviteLink}</code>
-                  </p>
-                  <p><strong>Role Permissions:</strong></p>
-                  <ul>
-                    ${role === 'viewer' ? '<li>View funnels and offers</li>' : ''}
-                    ${role === 'editor' ? '<li>Create and edit funnels</li><li>Manage offers</li>' : ''}
-                    ${role === 'admin' ? '<li>Full team access</li><li>Manage team members</li><li>Create, edit, and delete all resources</li>' : ''}
-                  </ul>
-                </div>
-                <div class="footer">
-                  <p>This invitation was sent from Launchpad4Success</p>
-                  <p>If you didn't expect this invitation, you can safely ignore this email.</p>
-                </div>
-              </div>
-            </body>
-            </html>
-          `
-        })
+          subject: "You've been invited to join a team on Launchpad4Success",
+          html: `<p>You've been invited as a <strong>${role}</strong>.</p><p><a href="${inviteLink}">Accept invitation</a></p>`,
+        }),
       })
 
       if (!emailResponse.ok) {
@@ -165,13 +136,12 @@ export async function POST(request: NextRequest) {
       }
     } catch (emailError) {
       console.error('Error sending invite email:', emailError)
-      // Don't fail the invite if email fails
     }
-    
-    return NextResponse.json({ 
-      success: true, 
+
+    return NextResponse.json({
+      success: true,
       member: data,
-      inviteLink: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/team/accept?token=${inviteToken}`
+      inviteLink: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/team/accept?token=${inviteToken}`,
     })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -192,12 +162,16 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Member ID is required' }, { status: 400 })
     }
 
-    // Delete team member (must be owner)
+    const { allowed, scope } = await canManageTeamMembers(supabase, user.id)
+    if (!allowed) {
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+    }
+
     const { error } = await supabase
       .from('team_members')
       .delete()
       .eq('id', memberId)
-      .eq('account_owner_id', user.id)
+      .eq('account_owner_id', scope.ownerId)
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })

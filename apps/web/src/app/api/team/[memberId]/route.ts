@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
 import { getRouteUser } from '@/lib/auth/session'
+import { canManageTeamMembers } from '@/lib/team/service'
 
 // PATCH /api/team/[memberId] - Update team member role
 export async function PATCH(
@@ -19,13 +20,18 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
     }
 
+    const { allowed, scope } = await canManageTeamMembers(supabase, user.id)
+    if (!allowed) {
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+    }
+
     // Update team member role (must be owner or admin)
     const { memberId } = await context.params
     const { data, error } = await supabase
       .from('team_members')
       .update({ role, updated_at: new Date().toISOString() })
       .eq('id', memberId)
-      .eq('account_owner_id', user.id)
+      .eq('account_owner_id', scope.ownerId)
       .select()
       .single()
 

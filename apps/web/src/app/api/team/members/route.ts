@@ -1,253 +1,148 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
-import { withRateLimit, withAuth, withValidation, withErrorHandling } from '@/lib/api-middleware'
+import { getRouteUser } from '@/lib/auth/session'
 import { teamInviteSchema } from '@/lib/security'
+import { canUseTeamCollaboration } from '@/lib/team/permissions'
+import { canManageTeamMembers, listTeamMembershipsForOwner, resolveTeamScope } from '@/lib/team/service'
 
 // GET /api/team/members - List team members
-export const GET = withRateLimit(
-  withErrorHandling(
-    withAuth(async (req: NextRequest, userId: string) => {
-      const supabase = await createRouteHandlerClientCompat()
-      
-      // Check if user is account owner or admin
-      const { data: teamData, error } = await supabase
-        .from('team_members')
-        .select(`
-          *,
-          member_user:member_user_id(id, email, subdomain, plan),
-          account_owner:account_owner_id(id, email, subdomain)
-        `)
-        .or(`account_owner_id.eq.${userId},member_user_id.eq.${userId}`)
-        .eq('status', 'active')
+export async function GET(_request: NextRequest) {
+  try {
+    const supabase = await createRouteHandlerClientCompat()
+    const { user, response } = await getRouteUser(supabase)
+    if (!user) return response!
 
-      if (error) {
-        throw new Error('Failed to fetch team members')
-      }
+    const scope = await resolveTeamScope(supabase, user.id)
+    const members = await listTeamMembershipsForOwner(supabase, scope.ownerId)
 
-      // Get user's role in the team
-      const userRole = teamData?.find(member => 
-        member.account_owner_id === userId || member.member_user_id === userId
-      )?.role || 'viewer'
-
-      // Filter data based on permissions
-      if (!['owner', 'admin'].includes(userRole)) {
-        // Non-admin users can only see basic team info
-        const filteredData = teamData?.map(member => ({
-          id: member.id,
-          role: member.role,
-          status: member.status,
-          member_user: member.member_user ? {
-            email: member.member_user.email,
-            subdomain: member.member_user.subdomain
-          } : null
-        }))
-        
-        return NextResponse.json({ 
-          success: true, 
-          members: filteredData,
-          userRole 
-        })
-      }
-
-      return NextResponse.json({ 
-        success: true, 
-        members: teamData,
-        userRole 
-      })
+    return NextResponse.json({
+      success: true,
+      members,
+      userRole: scope.userRole,
+      ownerId: scope.ownerId,
     })
-  ),
-  'api'
-)
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
 
 // POST /api/team/members - Invite team member
-export const POST = withRateLimit(
-  withErrorHandling(
-    withAuth(async (req: NextRequest, userId: string) => {
-      const body = await req.json()
-      const validation = teamInviteSchema.safeParse(body)
+export async function POST(req: NextRequest) {
+  try {
+    const supabase = await createRouteHandlerClientCompat()
+    const { user, response } = await getRouteUser(supabase)
+    if (!user) return response!
 
-      if (!validation.success) {
-        const errors = validation.error.issues.map(err => `${err.path.join('.')}: ${err.message}`)
-        return NextResponse.json({ error: 'Validation failed', details: errors }, { status: 400 })
-      }
+    const { data: profile, error: profileError } = await supabase
+      .from('users')
+      .select('plan, is_admin, role')
+      .eq('id', user.id)
+      .single()
 
-      const { email, role } = validation.data
-      const supabase = await createRouteHandlerClientCompat()
+    if (profileError || !canUseTeamCollaboration(profile)) {
+      return NextResponse.json(
+        { error: 'Team collaboration is only available on the Agency plan' },
+        { status: 403 }
+      )
+    }
 
-      // Check if user is account owner or admin
-      const { data: userTeamData } = await supabase
-        .from('team_members')
-        .select('role')
-        .eq('account_owner_id', userId)
-        .single()
+    const body = await req.json()
+    const validation = teamInviteSchema.safeParse(body)
+    if (!validation.success) {
+      const errors = validation.error.issues.map((err) => `${err.path.join('.')}: ${err.message}`)
+      return NextResponse.json({ error: 'Validation failed', details: errors }, { status: 400 })
+    }
 
-      if (!userTeamData && !await isAccountOwner(userId, supabase)) {
-        return NextResponse.json(
-          { error: 'Only account owners and admins can invite team members' },
-          { status: 403 }
-        )
-      }
+    const { allowed, scope } = await canManageTeamMembers(supabase, user.id)
+    if (!allowed) {
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+    }
 
-      // Check if user already invited
-      const { data: existingInvite } = await supabase
-        .from('team_members')
-        .select('id, status')
-        .eq('account_owner_id', userId)
-        .eq('member_email', email)
-        .single()
+    const { email, role } = validation.data
+    const inviteToken = crypto.randomUUID()
 
-      if (existingInvite) {
-        return NextResponse.json(
-          { 
-            error: existingInvite.status === 'active' 
-              ? 'User is already a team member' 
-              : 'Invitation already sent' 
-          },
-          { status: 400 }
-        )
-      }
+    const { data: existingInvite } = await supabase
+      .from('team_members')
+      .select('id, status')
+      .eq('account_owner_id', scope.ownerId)
+      .eq('member_email', email)
+      .in('status', ['pending', 'active'])
+      .maybeSingle()
 
-      // Generate unique invite token
-      const inviteToken = crypto.randomUUID()
+    if (existingInvite) {
+      return NextResponse.json(
+        {
+          error:
+            existingInvite.status === 'active'
+              ? 'User is already a team member'
+              : 'Invitation already sent',
+        },
+        { status: 400 }
+      )
+    }
 
-      // Create invitation
-      const { data: invitation, error } = await supabase
-        .from('team_members')
-        .insert({
-          account_owner_id: userId,
-          member_email: email,
-          role,
-          status: 'pending',
-          invite_token: inviteToken,
-          invited_at: new Date().toISOString()
-        })
-        .select()
-        .single()
-
-      if (error) {
-        throw new Error('Failed to create invitation')
-      }
-
-      // Log team activity
-      await logTeamActivity(supabase, userId, 'invite_sent', 'team_member', invitation.id, {
-        email,
+    const { data: invitation, error } = await supabase
+      .from('team_members')
+      .insert({
+        account_owner_id: scope.ownerId,
+        member_email: email,
         role,
-        inviteToken
+        status: 'pending',
+        invite_token: inviteToken,
+        invited_at: new Date().toISOString(),
       })
+      .select()
+      .single()
 
-      // TODO: Send invitation email
-      console.log(`Team invitation sent to ${email} with role ${role}`)
+    if (error) {
+      throw new Error(`Failed to create invitation: ${error.message}`)
+    }
 
-      return NextResponse.json({
-        success: true,
-        invitation,
-        inviteUrl: `${process.env.NEXT_PUBLIC_APP_URL}/team/accept/${inviteToken}`
-      })
+    return NextResponse.json({
+      success: true,
+      invitation,
+      inviteUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/team/accept?token=${inviteToken}`,
     })
-  ),
-  'api'
-)
-
-// DELETE /api/team/members/[memberId] - Remove team member
-export async function DELETE(
-  req: NextRequest
-) {
-  const url = new URL(req.url)
-  const memberId = url.searchParams.get('memberId')
-
-  if (!memberId) {
-    return NextResponse.json(
-      { error: 'memberId is required' },
-      { status: 400 }
-    )
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 })
   }
-
-  return withRateLimit(
-    withErrorHandling(
-      withAuth(async (req: NextRequest, userId: string) => {
-        const supabase = await createRouteHandlerClientCompat()
-
-        // Check permissions
-        if (!await hasTeamPermission(userId, 'admin', supabase)) {
-          return NextResponse.json(
-            { error: 'Insufficient permissions' },
-            { status: 403 }
-          )
-        }
-
-        // Remove team member
-        const { data: removedMember, error } = await supabase
-          .from('team_members')
-          .delete()
-          .eq('id', memberId)
-          .eq('account_owner_id', userId)
-          .select()
-          .single()
-
-        if (error) {
-          throw new Error('Failed to remove team member')
-        }
-
-        // Log activity
-        await logTeamActivity(supabase, userId, 'member_removed', 'team_member', memberId, {
-          memberEmail: removedMember.member_email,
-          role: removedMember.role
-        })
-
-        return NextResponse.json({
-          success: true,
-          message: 'Team member removed successfully'
-        })
-      })
-    )
-  )(req)
 }
 
-// Helper functions
-async function isAccountOwner(userId: string, supabase: any): Promise<boolean> {
-  const { data } = await supabase
-    .from('users')
-    .select('id')
-    .eq('id', userId)
-    .single()
-  
-  return !!data
-}
+// DELETE /api/team/members?memberId=xxx - Remove team member
+export async function DELETE(req: NextRequest) {
+  try {
+    const supabase = await createRouteHandlerClientCompat()
+    const { user, response } = await getRouteUser(supabase)
+    if (!user) return response!
 
-async function hasTeamPermission(userId: string, minRole: string, supabase: any): Promise<boolean> {
-  const roleHierarchy = { owner: 3, admin: 2, editor: 1, viewer: 0 }
-  
-  const { data } = await supabase
-    .from('team_members')
-    .select('role')
-    .or(`account_owner_id.eq.${userId},member_user_id.eq.${userId}`)
-    .eq('status', 'active')
-    .single()
+    const memberId = new URL(req.url).searchParams.get('memberId')
+    if (!memberId) {
+      return NextResponse.json({ error: 'memberId is required' }, { status: 400 })
+    }
 
-  if (!data) return false
-  
-  const userRoleLevel = roleHierarchy[data.role as keyof typeof roleHierarchy] || 0
-  const minRoleLevel = roleHierarchy[minRole as keyof typeof roleHierarchy] || 0
-  
-  return userRoleLevel >= minRoleLevel
-}
+    const { allowed, scope } = await canManageTeamMembers(supabase, user.id)
+    if (!allowed) {
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+    }
 
-async function logTeamActivity(
-  supabase: any, 
-  userId: string, 
-  action: string, 
-  resourceType: string, 
-  resourceId: string, 
-  details: any
-) {
-  await supabase
-    .from('team_activity_log')
-    .insert({
-      team_id: userId, // Using account owner as team_id
-      user_id: userId,
-      action,
-      resource_type: resourceType,
-      resource_id: resourceId,
-      details
+    const { data: removedMember, error } = await supabase
+      .from('team_members')
+      .delete()
+      .eq('id', memberId)
+      .eq('account_owner_id', scope.ownerId)
+      .select()
+      .single()
+
+    if (error) {
+      throw new Error(`Failed to remove team member: ${error.message}`)
+    }
+
+    return NextResponse.json({
+      success: true,
+      member: removedMember,
+      message: 'Team member removed successfully',
     })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 })
+  }
 }
