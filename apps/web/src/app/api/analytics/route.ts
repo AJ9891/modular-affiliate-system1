@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
 import { checkSupabase } from '@/lib/check-supabase'
 import { createServiceRoleClient } from '@/lib/supabase-server'
+import { getAnalyticsCacheKey, getCachedAnalytics, setCachedAnalytics } from '@/lib/cache/analytics'
 
 export const dynamic = 'force-dynamic'
 
@@ -90,6 +91,16 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const range = searchParams.get('range') || '7d'
     const funnelId = searchParams.get('funnelId')
+    const cacheKey = getAnalyticsCacheKey(user.id, range, funnelId)
+    const cachedPayload = getCachedAnalytics(cacheKey)
+    if (cachedPayload) {
+      return NextResponse.json(cachedPayload, {
+        headers: {
+          'X-Cache': 'HIT',
+        },
+      })
+    }
+
     const startDate = rangeToStartDate(range)
     const payload = createEmptyAnalyticsPayload()
     const reader = process.env.SUPABASE_SERVICE_ROLE_KEY ? createServiceRoleClient() : supabase
@@ -110,12 +121,14 @@ export async function GET(request: NextRequest) {
         throw funnelError
       }
       console.warn('Analytics funnel lookup degraded:', funnelError)
+      setCachedAnalytics(cacheKey, payload)
       return NextResponse.json(payload)
     }
 
     const funnelIds = (funnelRows || []).map((row) => row.funnel_id).filter(Boolean)
 
     if (funnelIds.length === 0) {
+      setCachedAnalytics(cacheKey, payload)
       return NextResponse.json(payload)
     }
 
@@ -249,7 +262,7 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       .slice(0, 20)
 
-    return NextResponse.json({
+    const responsePayload = {
       success: true,
       stats: {
         totalLeads,
@@ -265,6 +278,14 @@ export async function GET(request: NextRequest) {
       clicksByOffer,
       recentClicks,
       recentActivity,
+    }
+
+    setCachedAnalytics(cacheKey, responsePayload)
+
+    return NextResponse.json(responsePayload, {
+      headers: {
+        'X-Cache': 'MISS',
+      },
     })
   } catch (error) {
     console.error('Analytics error:', error)
