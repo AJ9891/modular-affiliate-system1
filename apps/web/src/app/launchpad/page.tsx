@@ -21,6 +21,16 @@ import {
   Sparkles
 } from 'lucide-react'
 
+const NICHE_OPTIONS = [
+  { id: 'health', name: 'Health & Wellness', emoji: '💪' },
+  { id: 'finance', name: 'Finance & Investing', emoji: '💰' },
+  { id: 'technology', name: 'Technology & Software', emoji: '💻' },
+  { id: 'dating', name: 'Dating & Relationships', emoji: '❤️' },
+  { id: 'education', name: 'Education & Courses', emoji: '🎓' },
+  { id: 'custom', name: 'Custom Niche', emoji: '✨' },
+  { id: 'general', name: 'General', emoji: '🎯' },
+] as const
+
 /**
  * Affiliate Launchpad - Main Launch Dashboard
  * 
@@ -32,7 +42,7 @@ import {
  * - AI-powered content generation
  */
 export default function LaunchpadPage() {
-  const ONBOARDING_COMPLETE = 8
+  const ONBOARDING_COMPLETE = 6
   const searchParams = useSearchParams()
   const [currentStep, setCurrentStep] = useState(0)
   const [setupComplete, setSetupComplete] = useState(false)
@@ -54,21 +64,89 @@ export default function LaunchpadPage() {
     conversions: 0
   })
 
+  type LaunchpadTemplate = {
+    name: string
+    description: string
+    blocks: number
+    conversions: string
+    category: string
+  }
+
+  type OfferRecord = {
+    id: string
+    name: string
+    description?: string | null
+    affiliate_link: string
+    commission_rate?: number | null
+    active?: boolean
+    is_active?: boolean
+  }
+
+  const [offers, setOffers] = useState<OfferRecord[]>([])
+  const [offersLoading, setOffersLoading] = useState(false)
+  const [selectedOfferId, setSelectedOfferId] = useState('')
+  const [creatingOfferInline, setCreatingOfferInline] = useState(false)
+  const [attachingOffer, setAttachingOffer] = useState(false)
+  const [offerAttached, setOfferAttached] = useState(false)
+  const [provisioningEmail, setProvisioningEmail] = useState(false)
+  const [emailAutomationReady, setEmailAutomationReady] = useState(false)
+  const [publishingFunnel, setPublishingFunnel] = useState(false)
+  const [funnelPublished, setFunnelPublished] = useState(false)
+  const [attachedOfferId, setAttachedOfferId] = useState<string | null>(null)
+  const [launchChecksRunning, setLaunchChecksRunning] = useState(false)
+  const [launchChecks, setLaunchChecks] = useState({
+    previewOk: false,
+    ctaOk: false,
+    lastRunAt: null as string | null,
+  })
+  const [newOffer, setNewOffer] = useState({
+    name: '',
+    description: '',
+    affiliate_link: '',
+    commission_rate: 30,
+  })
+
   useEffect(() => {
     loadUserData()
-    
-    // Check if a niche was selected
+
     const niche = searchParams.get('niche')
     if (niche) {
       setSelectedNiche(niche)
-      // Skip to the funnel creation step
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('launchpad_selected_niche', niche)
+      }
       setCurrentStep(2)
+      return
+    }
+
+    if (typeof window !== 'undefined') {
+      const savedNiche = localStorage.getItem('launchpad_selected_niche')
+      if (savedNiche) {
+        setSelectedNiche(savedNiche)
+      }
     }
   }, [searchParams])
 
   useEffect(() => {
     setStepValidationError(null)
   }, [currentStep])
+
+  useEffect(() => {
+    const current = launchSteps[currentStep]?.id
+    if (current === 'offers') {
+      void loadOffers()
+    }
+  }, [currentStep])
+
+  useEffect(() => {
+    const status = `${createdFunnel?.funnel?.status || ''}`.toLowerCase()
+    setFunnelPublished(status === 'published')
+  }, [createdFunnel])
+
+  useEffect(() => {
+    if (!selectedNiche || typeof window === 'undefined') return
+    localStorage.setItem('launchpad_selected_niche', selectedNiche)
+  }, [selectedNiche])
 
   const loadUserData = async () => {
     try {
@@ -235,7 +313,7 @@ export default function LaunchpadPage() {
     }
   ]
 
-  const funnelTemplates = [
+  const funnelTemplates: LaunchpadTemplate[] = [
     {
       name: 'Lead Magnet',
       description: 'Capture emails with a free download',
@@ -266,6 +344,319 @@ export default function LaunchpadPage() {
     }
   ]
 
+  const stepPurpose: Record<string, string> = {
+    welcome: 'You will see the full flow before touching settings, so each action has context.',
+    niche: 'Your niche controls language, examples, and offer fit. Pick this first so copy and offers align.',
+    funnel: 'A working funnel starts as a real saved draft. This creates the public slug you will preview and share.',
+    offers: 'Offers give your funnel monetization targets, so CTA buttons have somewhere valuable to send traffic.',
+    email: 'Most visitors do not buy on first click. Follow-up email recovers intent and compounds conversion rate.',
+    launch: 'Publishing is where tracking starts. You need a real URL live so clicks, leads, and revenue can be measured.',
+  }
+
+  const getCreatedFunnelId = () =>
+    createdFunnel?.funnel?.funnel_id || createdFunnel?.funnelId || null
+
+  const getCreatedFunnelSlug = () =>
+    createdFunnel?.funnel?.slug || createdFunnel?.slug || null
+
+  const getPublicFunnelPath = () => {
+    const slug = getCreatedFunnelSlug()
+    if (slug) return `/f/${encodeURIComponent(slug)}`
+    return ''
+  }
+
+  const getAttachedTrackingPath = () => {
+    const funnelId = getCreatedFunnelId()
+    if (!funnelId || !attachedOfferId) return null
+
+    return `/api/redirect/${attachedOfferId}?aff_funnel=${encodeURIComponent(funnelId)}&utm_source=launchpad&utm_medium=funnel&utm_campaign=onboarding`
+  }
+
+  const resetLaunchChecks = () => {
+    setLaunchChecks({
+      previewOk: false,
+      ctaOk: false,
+      lastRunAt: null,
+    })
+  }
+
+  const normalizeOffers = (rows: unknown[]): OfferRecord[] => {
+    return rows
+      .filter((row): row is Record<string, unknown> => typeof row === 'object' && row !== null)
+      .map((row) => ({
+        id: String(row.id || ''),
+        name: String(row.name || ''),
+        description: typeof row.description === 'string' ? row.description : null,
+        affiliate_link: String(row.affiliate_link || ''),
+        commission_rate: typeof row.commission_rate === 'number' ? row.commission_rate : null,
+        active: typeof row.active === 'boolean' ? row.active : undefined,
+        is_active: typeof row.is_active === 'boolean' ? row.is_active : undefined,
+      }))
+      .filter((row) => row.id.length > 0 && row.name.length > 0 && row.affiliate_link.length > 0)
+  }
+
+  const isOfferActive = (offer: OfferRecord) => {
+    if (typeof offer.is_active === 'boolean') return offer.is_active
+    if (typeof offer.active === 'boolean') return offer.active
+    return true
+  }
+
+  const getSelectedOffer = () => offers.find((offer) => offer.id === selectedOfferId) || null
+
+  const loadOffers = async () => {
+    try {
+      setOffersLoading(true)
+      const response = await fetch('/api/offers', { cache: 'no-store' })
+      if (!response.ok) {
+        setStepValidationError('Could not load offers. Try again.')
+        return
+      }
+
+      const payload = await response.json()
+      const rows = Array.isArray(payload?.offers) ? payload.offers : []
+      const normalized = normalizeOffers(rows)
+      const activeOnly = normalized.filter(isOfferActive)
+      setOffers(activeOnly)
+
+      if (!selectedOfferId && activeOnly.length > 0) {
+        setSelectedOfferId(activeOnly[0].id)
+      }
+    } catch (error) {
+      console.error('Failed to load offers for onboarding:', error)
+      setStepValidationError('Failed to load offers right now.')
+    } finally {
+      setOffersLoading(false)
+    }
+  }
+
+  const createOfferInline = async () => {
+    if (!newOffer.name.trim() || !newOffer.affiliate_link.trim() || !newOffer.description.trim()) {
+      setStepValidationError('Offer name, description, and affiliate link are required.')
+      return
+    }
+
+    try {
+      setCreatingOfferInline(true)
+      setStepValidationError(null)
+      const response = await fetch('/api/offers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newOffer.name.trim(),
+          description: newOffer.description.trim(),
+          affiliate_link: newOffer.affiliate_link.trim(),
+          commission_rate: Number(newOffer.commission_rate) || 0,
+        }),
+      })
+
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        setStepValidationError(payload?.error || 'Failed to create offer.')
+        return
+      }
+
+      const created = payload?.offer
+      if (!created) {
+        setStepValidationError('Offer created but could not be selected.')
+        return
+      }
+
+      const normalized = normalizeOffers([created])[0]
+      if (normalized) {
+        setOffers((prev) => [normalized, ...prev])
+        setSelectedOfferId(normalized.id)
+        setOperationNotice(`Offer "${normalized.name}" created and selected.`)
+      }
+
+      setNewOffer({
+        name: '',
+        description: '',
+        affiliate_link: '',
+        commission_rate: 30,
+      })
+    } catch (error) {
+      console.error('Failed to create onboarding offer:', error)
+      setStepValidationError('Failed to create offer.')
+    } finally {
+      setCreatingOfferInline(false)
+    }
+  }
+
+  const attachSelectedOfferToFunnel = async () => {
+    const funnelId = getCreatedFunnelId()
+    const selectedOffer = getSelectedOffer()
+    if (!funnelId || !selectedOffer) {
+      setStepValidationError('Create a funnel and select an offer first.')
+      return false
+    }
+
+    try {
+      setAttachingOffer(true)
+      setStepValidationError(null)
+
+      const getResponse = await fetch(`/api/funnels/${encodeURIComponent(funnelId)}`, { cache: 'no-store' })
+      if (!getResponse.ok) {
+        setStepValidationError('Failed to load funnel before attaching offer.')
+        return false
+      }
+
+      const getPayload = await getResponse.json()
+      const funnel = getPayload?.funnel
+      if (!funnel) {
+        setStepValidationError('Funnel not found while attaching offer.')
+        return false
+      }
+
+      const rawBlocks = typeof funnel.blocks === 'string' ? JSON.parse(funnel.blocks) : (funnel.blocks || {})
+      const currentBlocks = Array.isArray(rawBlocks?.blocks) ? rawBlocks.blocks : []
+      const trackingHref = `/api/redirect/${selectedOffer.id}?aff_funnel=${encodeURIComponent(funnelId)}&utm_source=launchpad&utm_medium=funnel&utm_campaign=onboarding`
+
+      let patched = false
+      const nextBlocks = currentBlocks.map((block: Record<string, unknown>) => {
+        const blockType = typeof block?.type === 'string' ? block.type : ''
+        if ((blockType === 'hero' || blockType === 'cta') && !patched) {
+          patched = true
+          const content = typeof block.content === 'object' && block.content ? block.content as Record<string, unknown> : {}
+          return {
+            ...block,
+            content: {
+              ...content,
+              ctaLink: trackingHref,
+              buttonLink: trackingHref,
+              affiliateLink: trackingHref,
+            },
+          }
+        }
+        return block
+      })
+
+      if (!patched) {
+        nextBlocks.push({
+          id: `cta-offer-${Date.now()}`,
+          type: 'cta',
+          content: {
+            headline: `Explore ${selectedOffer.name}`,
+            subheadline: selectedOffer.description || 'Visit the recommended offer.',
+            buttonText: 'Open Offer',
+            ctaLink: trackingHref,
+            buttonLink: trackingHref,
+            affiliateLink: trackingHref,
+          },
+          style: {
+            align: 'center',
+          },
+        })
+      }
+
+      const nextPayload = {
+        ...rawBlocks,
+        offer: {
+          id: selectedOffer.id,
+          name: selectedOffer.name,
+          affiliate_link: selectedOffer.affiliate_link,
+        },
+        blocks: nextBlocks,
+      }
+
+      const updateResponse = await fetch(`/api/funnels/${encodeURIComponent(funnelId)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blocks: nextPayload }),
+      })
+
+      const updatePayload = await updateResponse.json().catch(() => ({}))
+      if (!updateResponse.ok || !updatePayload?.funnel) {
+        setStepValidationError(updatePayload?.error || 'Failed to attach offer to funnel.')
+        return false
+      }
+
+      setCreatedFunnel((prev: Record<string, unknown>) => ({
+        ...(prev || {}),
+        funnel: updatePayload.funnel,
+      }))
+      setAttachedOfferId(selectedOffer.id)
+      setOfferAttached(true)
+      resetLaunchChecks()
+      setOperationNotice(`Offer "${selectedOffer.name}" connected to your funnel CTA.`)
+      return true
+    } catch (error) {
+      console.error('Failed to attach offer:', error)
+      setStepValidationError('Unable to attach offer right now.')
+      return false
+    } finally {
+      setAttachingOffer(false)
+    }
+  }
+
+  const enableEmailAutomation = async () => {
+    try {
+      setProvisioningEmail(true)
+      setStepValidationError(null)
+      const response = await fetch('/api/email/automation', { method: 'PUT' })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok || payload?.success === false) {
+        setStepValidationError(payload?.error || 'Failed to enable email automation.')
+        return false
+      }
+
+      setEmailAutomationReady(true)
+      setOperationNotice('Default email automations are active for your account.')
+      return true
+    } catch (error) {
+      console.error('Failed to setup email automation:', error)
+      setStepValidationError('Failed to enable email automation.')
+      return false
+    } finally {
+      setProvisioningEmail(false)
+    }
+  }
+
+  const publishCreatedFunnel = async () => {
+    const funnelId = getCreatedFunnelId()
+    if (!funnelId) {
+      setStepValidationError('Create a funnel first.')
+      return false
+    }
+
+    if (!launchChecks.previewOk || !launchChecks.ctaOk) {
+      setStepValidationError('Run and pass Step 4.5 launch checks before publishing.')
+      return false
+    }
+
+    try {
+      setPublishingFunnel(true)
+      setStepValidationError(null)
+
+      const response = await fetch(`/api/funnels/${encodeURIComponent(funnelId)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'published',
+          active: true,
+        }),
+      })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok || !payload?.funnel) {
+        setStepValidationError(payload?.error || 'Failed to publish funnel.')
+        return false
+      }
+
+      setCreatedFunnel((prev: Record<string, unknown>) => ({
+        ...(prev || {}),
+        funnel: payload.funnel,
+      }))
+      setFunnelPublished(true)
+      setOperationNotice('Funnel published and ready for live traffic.')
+      return true
+    } catch (error) {
+      console.error('Failed to publish funnel:', error)
+      setStepValidationError('Failed to publish funnel right now.')
+      return false
+    } finally {
+      setPublishingFunnel(false)
+    }
+  }
+
   const handleStepComplete = async (stepId: string) => {
     // Validate step requirements before advancing
     if (stepId === 'niche' && !selectedNiche) {
@@ -278,16 +669,46 @@ export default function LaunchpadPage() {
       return
     }
 
+    if (stepId === 'funnel' && !createdFunnel) {
+      const template = funnelTemplates.find(t => t.category === selectedTemplate)
+      if (!template) {
+        setStepValidationError('Choose a valid funnel template before continuing.')
+        return
+      }
+
+      const created = await createFunnelFromTemplate(template, { redirectToBuilder: false })
+      if (!created) return
+    }
+
+    if (stepId === 'launch' && !createdFunnel) {
+      setStepValidationError('Create your funnel first so Launch has a real public URL.')
+      return
+    }
+
+    if (stepId === 'launch' && (!launchChecks.previewOk || !launchChecks.ctaOk)) {
+      setStepValidationError('Run Step 4.5 checks and pass both tests before launching.')
+      return
+    }
+
+    if (stepId === 'offers' && !offerAttached) {
+      setStepValidationError('Attach an offer to your funnel before continuing.')
+      return
+    }
+
+    if (stepId === 'email' && !emailAutomationReady) {
+      setStepValidationError('Enable email automation before continuing.')
+      return
+    }
+
     setStepValidationError(null)
     
     if (stepId === 'launch') {
-      setOperationNotice('Routing you to cockpit...')
-      await markOnboardingComplete()
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('lp_skip_onboarding', '1')
-        document.cookie = 'lp_skip_onboarding=1; Path=/; Max-Age=2592000; SameSite=Lax'
+      if (!funnelPublished) {
+        const published = await publishCreatedFunnel()
+        if (!published) return
       }
-      window.location.href = '/cockpit'
+      await markOnboardingComplete()
+      setShowSuccessScreen(true)
       return
     } else {
       const nextStep = Math.min(currentStep + 1, ONBOARDING_COMPLETE)
@@ -299,14 +720,38 @@ export default function LaunchpadPage() {
   const selectNiche = (nicheId: string) => {
     setStepValidationError(null)
     setSelectedNiche(nicheId)
+    setCreatedFunnel(null)
+    setOfferAttached(false)
+    setAttachedOfferId(null)
+    setEmailAutomationReady(false)
+    setFunnelPublished(false)
+    resetLaunchChecks()
   }
 
-  const selectTemplate = (template: any) => {
+  const updateNichePreference = (nicheId: string) => {
     setStepValidationError(null)
+    setSelectedNiche(nicheId)
+    setOperationNotice(`Default niche set to "${nicheId}". You can change it anytime.`)
+  }
+
+  const selectTemplate = (template: LaunchpadTemplate) => {
+    setStepValidationError(null)
+    if (selectedTemplate !== template.category) {
+      setCreatedFunnel(null)
+      setOfferAttached(false)
+      setAttachedOfferId(null)
+      setEmailAutomationReady(false)
+      setFunnelPublished(false)
+      resetLaunchChecks()
+    }
     setSelectedTemplate(template.category)
   }
 
-  const createFunnelFromTemplate = async (template: any, isLaunching = false) => {
+  const createFunnelFromTemplate = async (
+    template: LaunchpadTemplate,
+    options: { showSuccessScreen?: boolean; redirectToBuilder?: boolean } = {}
+  ) => {
+    const { showSuccessScreen = false, redirectToBuilder = true } = options
     try {
       setCreatingTemplate(template.category)
       setOperationNotice(`Creating "${template.name}"...`)
@@ -329,52 +774,102 @@ export default function LaunchpadPage() {
       if (response.ok) {
         const data = await response.json()
         console.log('Funnel created:', data)
-        setCreatedFunnel(data)
+        const normalizedFunnel = {
+          ...data,
+          funnelId: data?.funnelId || data?.funnel?.funnel_id,
+          slug: data?.slug || data?.funnel?.slug,
+          funnel: data?.funnel || null,
+        }
+        setCreatedFunnel(normalizedFunnel)
+        setOfferAttached(false)
+        setAttachedOfferId(null)
+        setEmailAutomationReady(false)
+        setFunnelPublished(false)
+        resetLaunchChecks()
         setOperationNotice(`"${template.name}" is ready.`)
         
-        if (isLaunching) {
+        if (showSuccessScreen) {
           setShowSuccessScreen(true)
-        } else {
-          window.location.href = `/visual-builder?funnelId=${data.funnelId}&niche=${selectedNiche || 'general'}`
+        } else if (redirectToBuilder) {
+          window.location.href = `/visual-builder?funnelId=${normalizedFunnel.funnelId || ''}&niche=${selectedNiche || 'general'}`
         }
+        return true
       } else {
         const errorData = await response.json()
         console.error('Failed to create funnel:', errorData)
-        
-        // If database fails, still show success screen for demo purposes
-        if (isLaunching) {
-          setCreatedFunnel({ 
-            funnelId: 'demo-' + Date.now(),
-            funnel: { name: template.name }
-          })
-          setOperationNotice(`"${template.name}" is ready in preview mode.`)
-          setShowSuccessScreen(true)
-        } else {
-          setStepValidationError(errorData.error || 'Failed to create funnel.')
-        }
+
+        setStepValidationError(errorData.error || 'Failed to create funnel.')
+        return false
       }
     } catch (error: any) {
       console.error('Failed to create funnel:', error)
-      
-      // If request times out or fails, still show success screen for demo
-      if (isLaunching) {
-        setCreatedFunnel({ 
-          funnelId: 'demo-' + Date.now(),
-          funnel: { name: template.name }
-        })
-        setOperationNotice(`"${template.name}" is ready in preview mode.`)
-        setShowSuccessScreen(true)
-      } else {
-        setStepValidationError('Request timed out or failed while creating your funnel.')
-      }
+
+      setStepValidationError('Request timed out or failed while creating your funnel.')
+      return false
     } finally {
       setCreatingTemplate(null)
     }
   }
 
   const getFunnelUrl = () => {
-    if (!createdFunnel) return ''
-    return `${window.location.origin}/f/${createdFunnel.funnelId || 'preview'}`
+    if (!createdFunnel || typeof window === 'undefined') return ''
+    const path = getPublicFunnelPath()
+    return path ? `${window.location.origin}${path}` : ''
+  }
+
+  const runLaunchChecks = async () => {
+    const previewPath = getPublicFunnelPath()
+    const trackingPath = getAttachedTrackingPath()
+    if (!previewPath) {
+      setStepValidationError('Preview URL is not ready. Save your funnel draft first.')
+      return false
+    }
+    if (!trackingPath) {
+      setStepValidationError('Offer tracking link is not ready. Attach an offer first.')
+      return false
+    }
+
+    try {
+      setLaunchChecksRunning(true)
+      setStepValidationError(null)
+
+      const previewResponse = await fetch(previewPath, {
+        method: 'GET',
+        cache: 'no-store',
+      })
+
+      const ctaResponse = await fetch(trackingPath, {
+        method: 'GET',
+        cache: 'no-store',
+        redirect: 'manual',
+      })
+
+      const previewOk = previewResponse.ok
+      const ctaOk = ctaResponse.type === 'opaqueredirect' || (ctaResponse.status >= 300 && ctaResponse.status < 400)
+
+      setLaunchChecks({
+        previewOk,
+        ctaOk,
+        lastRunAt: new Date().toISOString(),
+      })
+
+      if (!previewOk || !ctaOk) {
+        const failures: string[] = []
+        if (!previewOk) failures.push('preview load')
+        if (!ctaOk) failures.push('CTA redirect')
+        setStepValidationError(`Step 4.5 failed: ${failures.join(' and ')} check did not pass.`)
+        return false
+      }
+
+      setOperationNotice('Step 4.5 passed: preview and CTA redirect checks are green.')
+      return true
+    } catch (error) {
+      console.error('Launch checks failed:', error)
+      setStepValidationError('Could not run launch checks right now.')
+      return false
+    } finally {
+      setLaunchChecksRunning(false)
+    }
   }
 
   const shareToSocial = (platform: string) => {
@@ -539,7 +1034,7 @@ export default function LaunchpadPage() {
           {/* Action Buttons */}
           <div className="flex gap-4">
             <button
-              onClick={() => window.location.href = `/visual-builder?funnelId=${createdFunnel?.funnelId}&niche=${selectedNiche}`}
+              onClick={() => window.location.href = `/visual-builder?funnelId=${getCreatedFunnelId()}&niche=${selectedNiche}`}
               className="btn-launch-premium flex-1 px-6 py-4 font-bold"
             >
               Customize Funnel
@@ -647,6 +1142,28 @@ export default function LaunchpadPage() {
             </div>
           </div>
 
+          <div className="mb-12 rounded-xl border border-[var(--border-elevated)] bg-[rgba(255,255,255,0.04)] p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-bold text-text-primary">Default Niche</h2>
+                <p className="text-sm text-text-secondary">
+                  Change this anytime after onboarding. New Launchpad funnels will use this niche by default.
+                </p>
+              </div>
+              <select
+                value={selectedNiche || 'general'}
+                onChange={(event) => updateNichePreference(event.target.value)}
+                className="hud-select min-w-[240px]"
+              >
+                {NICHE_OPTIONS.map((niche) => (
+                  <option key={niche.id} value={niche.id}>
+                    {niche.emoji} {niche.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           {/* Funnel Templates */}
           <div>
             <h2 className="text-2xl font-bold mb-6">Start a New Funnel</h2>
@@ -684,6 +1201,16 @@ export default function LaunchpadPage() {
   // Onboarding for new users
   const step = launchSteps[currentStep]
   const StepIcon = step.icon
+  const selectedOffer = getSelectedOffer()
+  const isNextDisabled =
+    creatingTemplate !== null ||
+    attachingOffer ||
+    provisioningEmail ||
+    publishingFunnel ||
+    launchChecksRunning ||
+    (step.id === 'offers' && !offerAttached) ||
+    (step.id === 'email' && !emailAutomationReady) ||
+    (step.id === 'launch' && (!launchChecks.previewOk || !launchChecks.ctaOk))
 
   return (
     <div className="cockpit-container min-h-screen py-12">
@@ -741,6 +1268,11 @@ export default function LaunchpadPage() {
             </p>
           )}
 
+          <div className="mx-auto mb-8 max-w-2xl rounded-lg border border-amber-300/35 bg-amber-500/10 px-4 py-3 text-left">
+            <p className="text-xs font-semibold uppercase tracking-wide text-amber-200">Why this step matters</p>
+            <p className="mt-1 text-sm text-amber-100">{stepPurpose[step.id]}</p>
+          </div>
+
           {/* Step-specific content */}
           {step.id === 'welcome' && (
             <div className="space-y-6 mb-8">
@@ -766,14 +1298,7 @@ export default function LaunchpadPage() {
 
           {step.id === 'niche' && (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-              {[
-                { id: 'health', name: 'Health & Wellness', emoji: '💪', color: 'blue' },
-                { id: 'finance', name: 'Finance & Investing', emoji: '💰', color: 'green' },
-                { id: 'technology', name: 'Technology & Software', emoji: '💻', color: 'purple' },
-                { id: 'dating', name: 'Dating & Relationships', emoji: '❤️', color: 'pink' },
-                { id: 'education', name: 'Education & Courses', emoji: '🎓', color: 'indigo' },
-                { id: 'custom', name: 'Custom Niche', emoji: '✨', color: 'gray' }
-              ].map((niche) => (
+              {NICHE_OPTIONS.filter((niche) => niche.id !== 'general').map((niche) => (
                 <div
                   key={niche.id}
                   onClick={() => selectNiche(niche.id)}
@@ -798,59 +1323,140 @@ export default function LaunchpadPage() {
           )}
 
           {step.id === 'funnel' && (
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              {funnelTemplates.map((template, index) => (
-                <div
-                  key={index}
-                  onClick={() => selectTemplate(template)}
-                  className={`
-                    p-6 border-2 rounded-lg cursor-pointer transition-all
-                    ${selectedTemplate === template.category
-                      ? 'border-rocket-500 bg-[var(--accent-soft)] shadow-lg'
-                      : 'border-[var(--border-elevated)] hover:border-[var(--border-focus)]'
-                    }
-                  `}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-bold">{template.name}</h4>
-                    {selectedTemplate === template.category && (
-                      <CheckCircle size={20} className="text-rocket-500" />
-                    )}
+            <>
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                {funnelTemplates.map((template, index) => (
+                  <div
+                    key={index}
+                    onClick={() => selectTemplate(template)}
+                    className={`
+                      p-6 border-2 rounded-lg cursor-pointer transition-all
+                      ${selectedTemplate === template.category
+                        ? 'border-rocket-500 bg-[var(--accent-soft)] shadow-lg'
+                        : 'border-[var(--border-elevated)] hover:border-[var(--border-focus)]'
+                      }
+                    `}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-bold">{template.name}</h4>
+                      {selectedTemplate === template.category && (
+                        <CheckCircle size={20} className="text-rocket-500" />
+                      )}
+                    </div>
+                    <p className="text-sm text-text-secondary mb-3">{template.description}</p>
+                    <div className="flex justify-between text-xs text-text-secondary">
+                      <span>{template.blocks} blocks</span>
+                      <span className="font-semibold text-emerald-300">{template.conversions} CVR</span>
+                    </div>
                   </div>
-                  <p className="text-sm text-text-secondary mb-3">{template.description}</p>
-                  <div className="flex justify-between text-xs text-text-secondary">
-                    <span>{template.blocks} blocks</span>
-                    <span className="font-semibold text-emerald-300">{template.conversions} CVR</span>
-                  </div>
+                ))}
+              </div>
+              {createdFunnel && (
+                <div className="mb-8 rounded-lg border border-emerald-300/35 bg-emerald-500/10 p-4 text-left">
+                  <p className="text-sm font-semibold text-emerald-200">Working draft created</p>
+                  <p className="mt-1 text-xs text-emerald-100">Preview URL: {getPublicFunnelPath() || 'Unavailable until slug is ready'}</p>
+                  {getPublicFunnelPath() && (
+                    <a
+                      href={getPublicFunnelPath()}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-3 inline-flex rounded-md border border-emerald-300/40 px-3 py-1.5 text-xs font-semibold text-emerald-100 hover:bg-emerald-400/10"
+                    >
+                      Open Preview
+                    </a>
+                  )}
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
 
           {step.id === 'offers' && (
-            <div className="mb-8 rounded-lg border border-[var(--border-elevated)] bg-[rgba(255,255,255,0.04)] p-6">
-              <p className="text-text-secondary mb-4">You can add affiliate offers after setup completes.</p>
-              <div className="text-left space-y-2">
-                <div className="flex items-center gap-2 text-sm text-text-secondary">
-                  <CheckCircle size={16} className="text-emerald-300" />
-                  <span>Connect to major affiliate networks</span>
+            <div className="mb-8 space-y-4 rounded-lg border border-[var(--border-elevated)] bg-[rgba(255,255,255,0.04)] p-6">
+              <p className="text-sm text-text-secondary">
+                Select an existing offer or create a new one. We will wire it into your funnel CTA with tracking.
+              </p>
+
+              {offersLoading ? (
+                <p className="text-sm text-text-secondary">Loading offers...</p>
+              ) : offers.length > 0 ? (
+                <div className="grid gap-3 md:grid-cols-2">
+                  {offers.map((offer) => (
+                    <button
+                      key={offer.id}
+                      type="button"
+                      onClick={() => setSelectedOfferId(offer.id)}
+                      className={`rounded-lg border p-4 text-left transition ${
+                        selectedOfferId === offer.id
+                          ? 'border-rocket-500 bg-[var(--accent-soft)]'
+                          : 'border-[var(--border-elevated)] hover:border-[var(--border-focus)]'
+                      }`}
+                    >
+                      <p className="font-semibold text-text-primary">{offer.name}</p>
+                      <p className="mt-1 text-xs text-text-secondary">{offer.description || 'No description'}</p>
+                      <p className="mt-2 text-xs text-emerald-300">
+                        {typeof offer.commission_rate === 'number' ? `${offer.commission_rate}% commission` : 'Commission not set'}
+                      </p>
+                    </button>
+                  ))}
                 </div>
-                <div className="flex items-center gap-2 text-sm text-text-secondary">
-                  <CheckCircle size={16} className="text-emerald-300" />
-                  <span>Track clicks and conversions</span>
+              ) : (
+                <p className="text-sm text-text-secondary">No active offers found. Create one below.</p>
+              )}
+
+              <div className="rounded-lg border border-[var(--border-elevated)] bg-[rgba(255,255,255,0.03)] p-4 text-left">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-secondary">Quick add offer</p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <input
+                    value={newOffer.name}
+                    onChange={(event) => setNewOffer((prev) => ({ ...prev, name: event.target.value }))}
+                    placeholder="Offer name"
+                    className="hud-input"
+                  />
+                  <input
+                    value={newOffer.affiliate_link}
+                    onChange={(event) => setNewOffer((prev) => ({ ...prev, affiliate_link: event.target.value }))}
+                    placeholder="https://offer-url.example"
+                    className="hud-input"
+                  />
+                  <input
+                    value={newOffer.description}
+                    onChange={(event) => setNewOffer((prev) => ({ ...prev, description: event.target.value }))}
+                    placeholder="Short offer summary"
+                    className="hud-input md:col-span-2"
+                  />
                 </div>
-                <div className="flex items-center gap-2 text-sm text-text-secondary">
-                  <CheckCircle size={16} className="text-emerald-300" />
-                  <span>Automatic link cloaking</span>
-                </div>
+                <button
+                  type="button"
+                  onClick={createOfferInline}
+                  disabled={creatingOfferInline}
+                  className="hud-button-secondary mt-3 px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {creatingOfferInline ? 'Creating offer...' : 'Create Offer'}
+                </button>
+              </div>
+
+              <div className="rounded-lg border border-emerald-300/35 bg-emerald-500/10 p-4 text-left">
+                <p className="text-xs text-emerald-100">
+                  Selected offer: <strong>{selectedOffer?.name || 'None'}</strong>
+                </p>
+                <button
+                  type="button"
+                  onClick={attachSelectedOfferToFunnel}
+                  disabled={!selectedOffer || attachingOffer || !createdFunnel}
+                  className="btn-launch-premium mt-3 px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {attachingOffer ? 'Attaching offer...' : offerAttached ? 'Offer Attached' : 'Attach Offer to Funnel CTA'}
+                </button>
               </div>
             </div>
           )}
 
           {step.id === 'email' && (
             <div className="mb-8 rounded-lg border border-[var(--border-elevated)] bg-[rgba(255,255,255,0.04)] p-6">
-              <p className="text-text-secondary mb-4">Email automation is ready to configure after setup.</p>
-              <div className="text-left space-y-2">
+              <p className="text-sm text-text-secondary mb-4">
+                This provisions default automation sequences on your account so new leads receive follow-up immediately.
+              </p>
+              <div className="text-left space-y-2 mb-4">
                 <div className="flex items-center gap-2 text-sm text-text-secondary">
                   <CheckCircle size={16} className="text-emerald-300" />
                   <span>Welcome sequence for new leads</span>
@@ -864,6 +1470,15 @@ export default function LaunchpadPage() {
                   <span>Weekly analytics reports</span>
                 </div>
               </div>
+
+              <button
+                type="button"
+                onClick={enableEmailAutomation}
+                disabled={provisioningEmail}
+                className="btn-launch-premium px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {provisioningEmail ? 'Enabling automations...' : emailAutomationReady ? 'Email Automation Enabled' : 'Enable Email Automation'}
+              </button>
             </div>
           )}
 
@@ -879,8 +1494,66 @@ export default function LaunchpadPage() {
                   <CheckCircle size={16} className="text-emerald-300" />
                   <span>Template ready: <strong>{funnelTemplates.find(t => t.category === selectedTemplate)?.name || 'Custom'}</strong></span>
                 </div>
+                <div className="flex items-center gap-2 text-sm text-text-secondary">
+                  <CheckCircle size={16} className="text-emerald-300" />
+                  <span>Preview URL: <strong>{getPublicFunnelPath() || 'Not available yet'}</strong></span>
+                </div>
               </div>
-              <p className="text-sm text-text-secondary">Click below to access cockpit navigation.</p>
+              <div className="mb-4 rounded-lg border border-cyan-300/35 bg-cyan-500/10 p-4 text-left">
+                <p className="text-xs font-semibold uppercase tracking-wide text-cyan-100">Step 4.5 Quick Checklist</p>
+                <p className="mt-1 text-xs text-cyan-50">
+                  Run this before publish. It validates that your public page loads and your CTA tracking redirect responds.
+                </p>
+                <div className="mt-3 space-y-2 text-sm">
+                  <div className="flex items-center justify-between rounded border border-cyan-300/25 px-3 py-2">
+                    <span className="text-cyan-50">Preview route returns 200</span>
+                    <span className={launchChecks.previewOk ? 'text-emerald-200' : 'text-amber-200'}>
+                      {launchChecks.previewOk ? 'Pass' : 'Pending'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between rounded border border-cyan-300/25 px-3 py-2">
+                    <span className="text-cyan-50">CTA redirect returns 3xx</span>
+                    <span className={launchChecks.ctaOk ? 'text-emerald-200' : 'text-amber-200'}>
+                      {launchChecks.ctaOk ? 'Pass' : 'Pending'}
+                    </span>
+                  </div>
+                </div>
+                {launchChecks.lastRunAt && (
+                  <p className="mt-2 text-xs text-cyan-100/85">Last run: {new Date(launchChecks.lastRunAt).toLocaleString()}</p>
+                )}
+                <button
+                  type="button"
+                  onClick={runLaunchChecks}
+                  disabled={launchChecksRunning || !offerAttached || !emailAutomationReady || !createdFunnel}
+                  className="hud-button-secondary mt-3 rounded-lg px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {launchChecksRunning ? 'Running checks...' : 'Run Step 4.5 Checks'}
+                </button>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                {getPublicFunnelPath() ? (
+                  <a
+                    href={getPublicFunnelPath()}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="hud-button-secondary rounded-lg px-4 py-2 text-sm"
+                  >
+                    Open Live Preview
+                  </a>
+                ) : (
+                  <span className="rounded-lg border border-[var(--border-elevated)] px-4 py-2 text-sm text-text-secondary">
+                    Preview URL pending
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={publishCreatedFunnel}
+                  disabled={publishingFunnel || !createdFunnel || !launchChecks.previewOk || !launchChecks.ctaOk}
+                  className="btn-launch-premium rounded-lg px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {publishingFunnel ? 'Publishing...' : funnelPublished ? 'Published' : 'Publish Funnel'}
+                </button>
+              </div>
             </div>
           )}
 
@@ -918,10 +1591,14 @@ export default function LaunchpadPage() {
               <button
                 type="button"
                 onClick={() => handleStepComplete(step.id)}
-                disabled={creatingTemplate !== null}
+                disabled={isNextDisabled}
                 className="btn-launch-premium inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition hover:shadow-lg"
               >
-                {creatingTemplate ? 'Working...' : currentStep < launchSteps.length - 1 ? 'Next' : step.action}
+                {creatingTemplate || attachingOffer || provisioningEmail || publishingFunnel || launchChecksRunning
+                  ? 'Working...'
+                  : currentStep < launchSteps.length - 1
+                    ? 'Next'
+                    : step.action}
                 <ArrowRight size={16} />
               </button>
             </div>

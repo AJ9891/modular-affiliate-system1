@@ -31,6 +31,30 @@ function isRecoverableOffersReadError(issue: unknown): boolean {
   )
 }
 
+function isColumnMismatchError(issue: unknown): boolean {
+  if (!issue || typeof issue !== 'object') return false
+
+  const candidate = issue as {
+    code?: string
+    message?: string
+    details?: string | null
+    hint?: string | null
+  }
+
+  const code = (candidate.code || '').toUpperCase()
+  const combined = [candidate.message, candidate.details, candidate.hint]
+    .filter((part): part is string => typeof part === 'string' && part.length > 0)
+    .join(' ')
+    .toLowerCase()
+
+  return (
+    code === '42703' ||
+    code === 'PGRST204' ||
+    combined.includes('column') ||
+    combined.includes('does not exist')
+  )
+}
+
 export async function GET() {
   const check = checkSupabase()
   if (check) return check
@@ -98,29 +122,79 @@ export async function POST(request: NextRequest) {
     const supabase = await createServerRouteClient()
     const user = await requireUser(supabase)
     const body = await readJson(request)
-    const { name, description, affiliate_link, commission_rate, niche_id } = validateOffer(body)
+    const {
+      name,
+      description,
+      affiliate_link,
+      commission_rate,
+      commission_type,
+      commission_value,
+      commission_currency,
+      niche_label,
+      niche_id,
+    } = validateOffer(body)
 
-    console.log('Creating offer:', { name, description, affiliate_link, commission_rate, niche_id })
+    console.log('Creating offer:', {
+      name,
+      description,
+      affiliate_link,
+      commission_rate,
+      commission_type,
+      commission_value,
+      commission_currency,
+      niche_label,
+      niche_id,
+    })
 
     // Use service role client to bypass RLS
     const adminClient = createServiceRoleClient()
 
-    const { data, error } = await adminClient
+    const baseInsert = {
+      name,
+      description,
+      affiliate_link,
+      commission_rate,
+      niche_id,
+      user_id: user.id,
+      team_id: user.id,
+      active: true,
+    }
+
+    const extendedInsert = {
+      ...baseInsert,
+      niche_label: niche_label || null,
+      commission_type,
+      commission_value,
+      commission_currency,
+    }
+
+    let data: any[] | null = null
+    let error: any = null
+
+    const primaryInsert = await adminClient
       .from('offers')
-      .insert({
-        name,
-        description,
-        affiliate_link,
-        commission_rate,
-        niche_id,
-        user_id: user.id,
-        team_id: user.id,
-        active: true,
-      })
+      .insert(extendedInsert)
       .select()
+
+    data = primaryInsert.data
+    error = primaryInsert.error
+
+    if (error && isColumnMismatchError(error)) {
+      const fallbackInsert = await adminClient
+        .from('offers')
+        .insert(baseInsert)
+        .select()
+
+      data = fallbackInsert.data
+      error = fallbackInsert.error
+    }
 
     if (error) {
       throw error
+    }
+
+    if (!data || data.length === 0) {
+      throw new Error('Failed to create offer')
     }
 
     console.log('Offer created successfully:', data)

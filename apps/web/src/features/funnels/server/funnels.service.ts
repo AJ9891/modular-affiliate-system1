@@ -106,6 +106,13 @@ export async function updateFunnelForUserByIdOrSlug(
   if (typeof body.name === 'string') patch.name = body.name
   if (typeof body.slug === 'string') patch.slug = body.slug
   if (Object.prototype.hasOwnProperty.call(body, 'blocks')) patch.blocks = body.blocks
+  if (typeof body.active === 'boolean') patch.active = body.active
+  if (typeof body.status === 'string') {
+    const normalizedStatus = body.status.trim().toLowerCase()
+    if (normalizedStatus === 'draft' || normalizedStatus === 'published') {
+      patch.status = normalizedStatus
+    }
+  }
 
   const { data, error } = await supabase
     .from('funnels')

@@ -1,18 +1,25 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { X } from 'lucide-react'
 import { buildAffiliateLink } from '@/lib/tracking'
 
+type CommissionType = 'percent' | 'flat'
+
 interface Offer {
   id: string
   name: string
-  description: string
+  description?: string
   affiliate_link: string
-  commission_rate: number
-  niche_id?: string
-  is_active: boolean
+  commission_rate?: number
+  commission_type?: CommissionType
+  commission_value?: number
+  commission_currency?: string
+  niche_id?: string | null
+  niche_label?: string | null
+  is_active?: boolean
+  active?: boolean
 }
 
 type ApiPayload = {
@@ -23,6 +30,26 @@ type ApiPayload = {
   code?: string
   offer?: Offer
   offers?: Offer[]
+}
+
+interface NewOfferForm {
+  name: string
+  description: string
+  niche_label: string
+  affiliate_link: string
+  commission_type: CommissionType
+  commission_value: number
+  commission_currency: string
+}
+
+const DEFAULT_NEW_OFFER: NewOfferForm = {
+  name: '',
+  description: '',
+  niche_label: '',
+  affiliate_link: '',
+  commission_type: 'percent',
+  commission_value: 0,
+  commission_currency: 'USD',
 }
 
 async function readResponsePayload(response: Response): Promise<ApiPayload | string | null> {
@@ -53,6 +80,26 @@ function getApiErrorMessage(response: Response, payload: ApiPayload | string | n
   return `Request failed (${response.status}${response.statusText ? ` ${response.statusText}` : ''})`
 }
 
+function isOfferActive(offer: Offer): boolean {
+  if (typeof offer.is_active === 'boolean') return offer.is_active
+  if (typeof offer.active === 'boolean') return offer.active
+  return true
+}
+
+function formatCommission(offer: Offer): string {
+  const type: CommissionType = offer.commission_type === 'flat' ? 'flat' : 'percent'
+  const value = Number.isFinite(Number(offer.commission_value))
+    ? Number(offer.commission_value)
+    : Number(offer.commission_rate || 0)
+
+  if (type === 'flat') {
+    const currency = (offer.commission_currency || 'USD').toUpperCase()
+    return `${currency} ${value.toFixed(2)}`
+  }
+
+  return `${value.toFixed(2)}%`
+}
+
 export default function OffersPage() {
   const router = useRouter()
   const [offers, setOffers] = useState<Offer[]>([])
@@ -60,17 +107,17 @@ export default function OffersPage() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [copiedType, setCopiedType] = useState<'tracking' | 'affiliate' | null>(null)
-  const [newOffer, setNewOffer] = useState({
-    name: '',
-    description: '',
-    affiliate_link: '',
-    commission_rate: 0,
-  })
+  const [newOffer, setNewOffer] = useState<NewOfferForm>(DEFAULT_NEW_OFFER)
 
   useEffect(() => {
     checkAuth()
     loadOffers()
   }, [])
+
+  const sortedOffers = useMemo(
+    () => [...offers].sort((a, b) => Number(isOfferActive(b)) - Number(isOfferActive(a))),
+    [offers]
+  )
 
   async function checkAuth() {
     const res = await fetch('/api/auth/me')
@@ -82,11 +129,11 @@ export default function OffersPage() {
   async function loadOffers() {
     try {
       setLoading(true)
-      const res = await fetch('/api/offers')
+      const res = await fetch('/api/offers', { cache: 'no-store' })
       if (res.ok) {
         const payload = await readResponsePayload(res)
         const data = payload && typeof payload === 'object' ? payload : null
-        setOffers(data?.offers || [])
+        setOffers(Array.isArray(data?.offers) ? data.offers : [])
       }
     } catch (error) {
       console.error('Failed to load offers:', error)
@@ -97,26 +144,32 @@ export default function OffersPage() {
 
   async function handleAddOffer(e: React.FormEvent) {
     e.preventDefault()
-    
+
     try {
+      const commissionRate = newOffer.commission_type === 'percent' ? newOffer.commission_value : 0
       const res = await fetch('/api/offers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newOffer),
+        body: JSON.stringify({
+          name: newOffer.name,
+          description: newOffer.description,
+          niche_label: newOffer.niche_label || null,
+          affiliate_link: newOffer.affiliate_link,
+          commission_type: newOffer.commission_type,
+          commission_value: newOffer.commission_value,
+          commission_currency: newOffer.commission_currency.toUpperCase(),
+          commission_rate: commissionRate,
+          niche_id: null,
+        }),
       })
       const payload = await readResponsePayload(res)
 
       if (res.ok) {
         setShowAddForm(false)
-        setNewOffer({ name: '', description: '', affiliate_link: '', commission_rate: 0 })
-        loadOffers()
+        setNewOffer(DEFAULT_NEW_OFFER)
+        await loadOffers()
       } else {
         const message = getApiErrorMessage(res, payload)
-        console.error('Failed to add offer:', {
-          status: res.status,
-          statusText: res.statusText,
-          payload,
-        })
         alert(`Failed to add offer: ${message}`)
       }
     } catch (error) {
@@ -127,14 +180,18 @@ export default function OffersPage() {
 
   async function handleToggleActive(offerId: string, currentStatus: boolean) {
     try {
+      const next = !currentStatus
       const res = await fetch(`/api/offers/${offerId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_active: !currentStatus }),
+        body: JSON.stringify({
+          active: next,
+          is_active: next,
+        }),
       })
 
       if (res.ok) {
-        loadOffers()
+        await loadOffers()
       }
     } catch (error) {
       console.error('Error toggling offer:', error)
@@ -149,7 +206,7 @@ export default function OffersPage() {
     setTimeout(() => {
       setCopiedId(null)
       setCopiedType(null)
-    }, 2000)
+    }, 1500)
   }
 
   function copyAffiliateLink(baseUrl: string, offerId: string) {
@@ -164,17 +221,16 @@ export default function OffersPage() {
       setTimeout(() => {
         setCopiedId(null)
         setCopiedType(null)
-      }, 2000)
+      }, 1500)
     } catch (error) {
       console.error('Error building affiliate link:', error)
-      // Fallback: just copy the base URL
       navigator.clipboard.writeText(baseUrl)
       setCopiedId(offerId)
       setCopiedType('affiliate')
       setTimeout(() => {
         setCopiedId(null)
         setCopiedType(null)
-      }, 2000)
+      }, 1500)
     }
   }
 
@@ -188,16 +244,13 @@ export default function OffersPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-green-900 py-12 px-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
+      <div className="max-w-7xl mx-auto">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold text-white mb-2">
-              Affiliate Offers
-            </h1>
-            <p className="text-blue-200">Manage your affiliate offers and tracking links</p>
+            <h1 className="text-4xl font-bold text-white mb-2">Affiliate Offers</h1>
+            <p className="text-blue-200">Persistent offer list with niche, commission model, and affiliate links.</p>
           </div>
-          
+
           <button
             onClick={() => setShowAddForm(true)}
             className="hud-button-primary px-6 py-3 text-sm"
@@ -206,91 +259,83 @@ export default function OffersPage() {
           </button>
         </div>
 
-        {/* Offers List */}
-        <div className="space-y-4">
-          {offers.length > 0 ? (
-            offers.map((offer) => (
-              <div
-                key={offer.id}
-                className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="text-2xl font-bold text-white mb-2">{offer.name}</h3>
-                    <p className="text-blue-200 mb-2">{offer.description}</p>
-                    <div className="text-sm text-blue-200">
-                      Commission: <span className="text-yellow-400 font-bold">{offer.commission_rate}%</span>
-                    </div>
-                  </div>
-                  
-                  <button
-                    onClick={() => handleToggleActive(offer.id, offer.is_active)}
-                    className={`px-4 py-2 rounded-lg font-semibold transition ${
-                      offer.is_active
-                        ? 'bg-green-500 text-white'
-                        : 'bg-gray-500 text-white'
-                    }`}
-                  >
-                    {offer.is_active ? 'Active' : 'Inactive'}
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-sm text-blue-200 mb-2">Tracking Link (redirects & tracks)</div>
-                    <div className="flex gap-2">
-                      <code className="flex-1 px-3 py-2 bg-black/30 rounded text-white text-sm break-all">
-                        {`${typeof window !== 'undefined' ? window.location.origin : ''}/api/redirect/${offer.id}`}
-                      </code>
-                      <button
-                        onClick={() => copyTrackingLink(offer.id)}
-                        className={`px-4 py-2 rounded font-semibold transition ${
-                          copiedId === offer.id && copiedType === 'tracking'
-                            ? 'bg-green-500 text-white'
-                            : 'bg-yellow-400 hover:bg-yellow-500 text-gray-900'
-                        }`}
-                      >
-                        {copiedId === offer.id && copiedType === 'tracking' ? 'Copied!' : 'Copy'}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="text-sm text-blue-200 mb-2">Direct Affiliate Link</div>
-                    <div className="flex gap-2">
-                      <code className="flex-1 px-3 py-2 bg-black/30 rounded text-white text-sm break-all">
-                        {offer.affiliate_link}
-                      </code>
-                      <button
-                        onClick={() => copyAffiliateLink(offer.affiliate_link, offer.id)}
-                        className={`px-4 py-2 rounded font-semibold transition ${
-                          copiedId === offer.id && copiedType === 'affiliate'
-                            ? 'bg-green-500 text-white'
-                            : 'bg-white/20 hover:bg-white/30 text-white'
-                        }`}
-                      >
-                        {copiedId === offer.id && copiedType === 'affiliate' ? 'Copied!' : 'Copy'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-12 border border-white/20 text-center">
-              <div className="text-white text-xl mb-4">No offers yet</div>
-              <p className="text-blue-200 mb-6">Add your first affiliate offer to start tracking clicks and conversions</p>
-              <button
-                onClick={() => setShowAddForm(true)}
-                className="px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-lg font-bold transition"
-              >
-                Add Your First Offer
-              </button>
+        {sortedOffers.length > 0 ? (
+          <div className="overflow-hidden rounded-2xl border border-white/20 bg-white/10 backdrop-blur-lg">
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm text-white">
+                <thead className="bg-black/20 text-blue-100">
+                  <tr>
+                    <th className="px-4 py-3 text-left">Offer</th>
+                    <th className="px-4 py-3 text-left">Niche</th>
+                    <th className="px-4 py-3 text-left">Commission</th>
+                    <th className="px-4 py-3 text-left">Affiliate Link</th>
+                    <th className="px-4 py-3 text-left">Tracking Link</th>
+                    <th className="px-4 py-3 text-left">Status</th>
+                    <th className="px-4 py-3 text-left">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedOffers.map((offer) => {
+                    const active = isOfferActive(offer)
+                    return (
+                      <tr key={offer.id} className="border-t border-white/10 align-top">
+                        <td className="px-4 py-4">
+                          <p className="font-semibold text-white">{offer.name}</p>
+                          <p className="mt-1 text-xs text-blue-100/80">{offer.description || 'No description'}</p>
+                        </td>
+                        <td className="px-4 py-4 text-blue-50">{offer.niche_label || 'General'}</td>
+                        <td className="px-4 py-4 text-yellow-300 font-semibold">{formatCommission(offer)}</td>
+                        <td className="px-4 py-4">
+                          <div className="max-w-[220px] break-all text-xs text-blue-100/90">{offer.affiliate_link}</div>
+                          <button
+                            onClick={() => copyAffiliateLink(offer.affiliate_link, offer.id)}
+                            className="mt-2 rounded border border-white/20 px-2 py-1 text-xs hover:bg-white/10"
+                          >
+                            {copiedId === offer.id && copiedType === 'affiliate' ? 'Copied' : 'Copy'}
+                          </button>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="max-w-[220px] break-all text-xs text-blue-100/90">{`${typeof window !== 'undefined' ? window.location.origin : ''}/api/redirect/${offer.id}`}</div>
+                          <button
+                            onClick={() => copyTrackingLink(offer.id)}
+                            className="mt-2 rounded border border-white/20 px-2 py-1 text-xs hover:bg-white/10"
+                          >
+                            {copiedId === offer.id && copiedType === 'tracking' ? 'Copied' : 'Copy'}
+                          </button>
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${active ? 'bg-emerald-500/25 text-emerald-100' : 'bg-slate-500/30 text-slate-100'}`}>
+                            {active ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4">
+                          <button
+                            onClick={() => handleToggleActive(offer.id, active)}
+                            className="rounded border border-white/25 px-3 py-1 text-xs hover:bg-white/10"
+                          >
+                            {active ? 'Deactivate' : 'Activate'}
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-12 border border-white/20 text-center">
+            <div className="text-white text-xl mb-4">No offers yet</div>
+            <p className="text-blue-200 mb-6">Add your first offer with niche, commission model, and affiliate link.</p>
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-lg font-bold transition"
+            >
+              Add Your First Offer
+            </button>
+          </div>
+        )}
 
-        {/* Back to Dashboard */}
         <div className="mt-8 text-center">
           <button
             onClick={() => router.push('/dashboard')}
@@ -321,7 +366,7 @@ export default function OffersPage() {
                   <h2 id="add-offer-dialog-title" className="text-2xl font-semibold leading-tight text-text-primary">
                     Add New Offer
                   </h2>
-                  <p className="text-sm text-text-secondary">Create an offer with direct and trackable affiliate links.</p>
+                  <p className="text-sm text-text-secondary">Store offer niche, commission model, and affiliate link in one place.</p>
                 </div>
                 <button
                   type="button"
@@ -334,25 +379,35 @@ export default function OffersPage() {
               </div>
 
               <form onSubmit={handleAddOffer} className="space-y-4">
-                <div>
-                  <label htmlFor="offer-name" className="mb-2 block text-xs uppercase tracking-system text-text-secondary">
-                    Offer Name
-                  </label>
-                  <input
-                    id="offer-name"
-                    type="text"
-                    value={newOffer.name}
-                    onChange={(e) => setNewOffer({ ...newOffer, name: e.target.value })}
-                    className="w-full rounded-lg border border-white/15 bg-[rgba(6,10,16,0.72)] px-4 py-3 text-sm text-text-primary placeholder:text-text-secondary focus:border-rocket-500/80 focus:outline-none focus:ring-2 focus:ring-rocket-500/30"
-                    placeholder="Offer title"
-                    required
-                  />
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label htmlFor="offer-name" className="mb-2 block text-xs uppercase tracking-system text-text-secondary">Offer Name</label>
+                    <input
+                      id="offer-name"
+                      type="text"
+                      value={newOffer.name}
+                      onChange={(e) => setNewOffer({ ...newOffer, name: e.target.value })}
+                      className="w-full rounded-lg border border-white/15 bg-[rgba(6,10,16,0.72)] px-4 py-3 text-sm text-text-primary placeholder:text-text-secondary focus:border-rocket-500/80 focus:outline-none focus:ring-2 focus:ring-rocket-500/30"
+                      placeholder="Offer title"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="offer-niche-label" className="mb-2 block text-xs uppercase tracking-system text-text-secondary">Niche</label>
+                    <input
+                      id="offer-niche-label"
+                      type="text"
+                      value={newOffer.niche_label}
+                      onChange={(e) => setNewOffer({ ...newOffer, niche_label: e.target.value })}
+                      className="w-full rounded-lg border border-white/15 bg-[rgba(6,10,16,0.72)] px-4 py-3 text-sm text-text-primary placeholder:text-text-secondary focus:border-rocket-500/80 focus:outline-none focus:ring-2 focus:ring-rocket-500/30"
+                      placeholder="e.g. SaaS, Health, Finance"
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <label htmlFor="offer-description" className="mb-2 block text-xs uppercase tracking-system text-text-secondary">
-                    Description
-                  </label>
+                  <label htmlFor="offer-description" className="mb-2 block text-xs uppercase tracking-system text-text-secondary">Description</label>
                   <textarea
                     id="offer-description"
                     value={newOffer.description}
@@ -360,14 +415,11 @@ export default function OffersPage() {
                     className="w-full rounded-lg border border-white/15 bg-[rgba(6,10,16,0.72)] px-4 py-3 text-sm text-text-primary placeholder:text-text-secondary focus:border-rocket-500/80 focus:outline-none focus:ring-2 focus:ring-rocket-500/30"
                     rows={3}
                     placeholder="What does this offer help the customer achieve?"
-                    required
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="offer-affiliate-link" className="mb-2 block text-xs uppercase tracking-system text-text-secondary">
-                    Affiliate Link
-                  </label>
+                  <label htmlFor="offer-affiliate-link" className="mb-2 block text-xs uppercase tracking-system text-text-secondary">Affiliate Link</label>
                   <input
                     id="offer-affiliate-link"
                     type="url"
@@ -379,26 +431,53 @@ export default function OffersPage() {
                   />
                 </div>
 
-                <div>
-                  <label htmlFor="offer-commission-rate" className="mb-2 block text-xs uppercase tracking-system text-text-secondary">
-                    Commission Rate (%)
-                  </label>
-                  <input
-                    id="offer-commission-rate"
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    value={newOffer.commission_rate}
-                    onChange={(e) =>
-                      setNewOffer({
-                        ...newOffer,
-                        commission_rate: Number.isFinite(e.target.valueAsNumber) ? e.target.valueAsNumber : 0,
-                      })
-                    }
-                    className="w-full rounded-lg border border-white/15 bg-[rgba(6,10,16,0.72)] px-4 py-3 text-sm text-text-primary placeholder:text-text-secondary focus:border-rocket-500/80 focus:outline-none focus:ring-2 focus:ring-rocket-500/30"
-                    required
-                  />
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div>
+                    <label htmlFor="offer-commission-type" className="mb-2 block text-xs uppercase tracking-system text-text-secondary">Commission Type</label>
+                    <select
+                      id="offer-commission-type"
+                      value={newOffer.commission_type}
+                      onChange={(e) => setNewOffer({ ...newOffer, commission_type: e.target.value as CommissionType })}
+                      className="w-full rounded-lg border border-white/15 bg-[rgba(6,10,16,0.72)] px-4 py-3 text-sm text-text-primary focus:border-rocket-500/80 focus:outline-none focus:ring-2 focus:ring-rocket-500/30"
+                    >
+                      <option value="percent">Percent (%)</option>
+                      <option value="flat">Flat Amount ($)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="offer-commission-value" className="mb-2 block text-xs uppercase tracking-system text-text-secondary">
+                      {newOffer.commission_type === 'flat' ? 'Commission Amount' : 'Commission Rate'}
+                    </label>
+                    <input
+                      id="offer-commission-value"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={newOffer.commission_value}
+                      onChange={(e) =>
+                        setNewOffer({
+                          ...newOffer,
+                          commission_value: Number.isFinite(e.target.valueAsNumber) ? e.target.valueAsNumber : 0,
+                        })
+                      }
+                      className="w-full rounded-lg border border-white/15 bg-[rgba(6,10,16,0.72)] px-4 py-3 text-sm text-text-primary placeholder:text-text-secondary focus:border-rocket-500/80 focus:outline-none focus:ring-2 focus:ring-rocket-500/30"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="offer-commission-currency" className="mb-2 block text-xs uppercase tracking-system text-text-secondary">Currency</label>
+                    <input
+                      id="offer-commission-currency"
+                      type="text"
+                      maxLength={3}
+                      value={newOffer.commission_currency}
+                      onChange={(e) => setNewOffer({ ...newOffer, commission_currency: e.target.value.toUpperCase() || 'USD' })}
+                      className="w-full rounded-lg border border-white/15 bg-[rgba(6,10,16,0.72)] px-4 py-3 text-sm text-text-primary placeholder:text-text-secondary focus:border-rocket-500/80 focus:outline-none focus:ring-2 focus:ring-rocket-500/30"
+                      placeholder="USD"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap justify-end gap-2 pt-1">

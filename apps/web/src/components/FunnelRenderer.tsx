@@ -7,9 +7,24 @@ interface FunnelRendererProps {
 }
 
 export default function FunnelRenderer({ blocks }: FunnelRendererProps) {
+  const resolveCtaHref = (content: Record<string, any>) => {
+    const candidates = [
+      content.ctaLink,
+      content.buttonLink,
+      content.link,
+      content.url,
+      content.affiliateLink,
+      content.affiliate_link,
+    ]
+    const first = candidates.find((value) => typeof value === 'string' && value.trim().length > 0)
+    return typeof first === 'string' ? first : null
+  }
+
   const renderBlock = (block: FunnelBlock) => {
     switch (block.type) {
       case 'hero':
+        {
+          const ctaHref = resolveCtaHref(block.content || {})
         return (
           <section className="py-20 px-6 text-center" style={block.style}>
             <div className="max-w-4xl mx-auto">
@@ -21,12 +36,24 @@ export default function FunnelRenderer({ blocks }: FunnelRendererProps) {
                   {block.content.subheadline}
                 </p>
               )}
-              <button className="px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-lg hover:bg-blue-700 transition-colors">
-                {block.content.cta}
-              </button>
+              {ctaHref ? (
+                <a
+                  href={ctaHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  {block.content.cta || block.content.buttonText || 'Learn more'}
+                </a>
+              ) : (
+                <button className="px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                  {block.content.cta || block.content.buttonText || 'Learn more'}
+                </button>
+              )}
             </div>
           </section>
         )
+        }
 
       case 'features':
         return (
@@ -74,6 +101,42 @@ export default function FunnelRenderer({ blocks }: FunnelRendererProps) {
             </div>
           </section>
         )
+
+      case 'cta':
+        {
+          const ctaHref = resolveCtaHref(block.content || {})
+          return (
+            <section className="py-16 px-6 text-center" style={block.style}>
+              <div className="max-w-3xl mx-auto">
+                <h2 className="text-3xl font-bold mb-4">
+                  {block.content.headline}
+                </h2>
+                {block.content.subheadline && (
+                  <p className="text-lg text-gray-600 mb-8">
+                    {block.content.subheadline}
+                  </p>
+                )}
+                {ctaHref ? (
+                  <a
+                    href={ctaHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    {block.content.buttonText || block.content.cta || 'Continue'}
+                  </a>
+                ) : (
+                  <button className="px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                    {block.content.buttonText || block.content.cta || 'Continue'}
+                  </button>
+                )}
+                {block.content.subtext && (
+                  <p className="mt-4 text-sm text-gray-500">{block.content.subtext}</p>
+                )}
+              </div>
+            </section>
+          )
+        }
 
       case 'text':
         return (
