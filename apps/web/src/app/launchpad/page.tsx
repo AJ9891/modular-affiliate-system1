@@ -18,7 +18,8 @@ import {
   PlayCircle,
   BarChart,
   Users,
-  Sparkles
+  Sparkles,
+  Copy
 } from 'lucide-react'
 
 const NICHE_OPTIONS = [
@@ -30,6 +31,224 @@ const NICHE_OPTIONS = [
   { id: 'custom', name: 'Custom Niche', emoji: '✨' },
   { id: 'general', name: 'General', emoji: '🎯' },
 ] as const
+
+const QUICK_PRODUCT_TYPES = [
+  { id: 'digital-product', label: 'Digital Product', defaultNiche: 'education' },
+  { id: 'software-saas', label: 'Software / SaaS', defaultNiche: 'technology' },
+  { id: 'coaching-service', label: 'Coaching Service', defaultNiche: 'education' },
+  { id: 'affiliate-offer', label: 'Affiliate Offer', defaultNiche: 'general' },
+  { id: 'launchpad-platform', label: 'Platform-as-Product (Launchpad)', defaultNiche: 'technology' },
+] as const
+
+const QUICK_TRAFFIC_SOURCES = [
+  { id: 'paid', label: 'Paid Traffic' },
+  { id: 'organic', label: 'Organic Traffic' },
+  { id: 'email', label: 'Email Traffic' },
+  { id: 'social', label: 'Social Traffic' },
+] as const
+
+const QUICK_GOALS = [
+  { id: 'lead-capture', label: 'Lead Capture' },
+  { id: 'book-calls', label: 'Book Calls' },
+  { id: 'direct-sales', label: 'Direct Sales' },
+  { id: 'webinar-signup', label: 'Webinar Signup' },
+] as const
+
+type QuickProductType = typeof QUICK_PRODUCT_TYPES[number]['id']
+type QuickTrafficSource = typeof QUICK_TRAFFIC_SOURCES[number]['id']
+type QuickGoal = typeof QUICK_GOALS[number]['id']
+
+const GOAL_TO_TEMPLATE: Record<QuickGoal, 'lead-gen' | 'review' | 'vsl' | 'webinar'> = {
+  'lead-capture': 'lead-gen',
+  'book-calls': 'vsl',
+  'direct-sales': 'review',
+  'webinar-signup': 'webinar',
+}
+
+const TRAFFIC_SOURCE_PROFILES: Record<
+  QuickTrafficSource,
+  {
+    label: string
+    headline: string
+    guidance: string
+    cadence: string
+  }
+> = {
+  paid: {
+    label: 'Paid',
+    headline: 'Fast clarity for cost-per-click economics',
+    guidance: 'Lead with offer clarity and immediate payoff above the fold.',
+    cadence: 'Short copy, tight CTA, low-friction progression.',
+  },
+  organic: {
+    label: 'Organic',
+    headline: 'Trust-first positioning for intent-driven discovery',
+    guidance: 'Use educational framing and proof before hard ask.',
+    cadence: 'Value-first copy with layered CTA escalation.',
+  },
+  email: {
+    label: 'Email',
+    headline: 'Warm-audience conversion profile',
+    guidance: 'Assume prior context and move faster to action.',
+    cadence: 'Bridge copy plus one primary conversion path.',
+  },
+  social: {
+    label: 'Social',
+    headline: 'Attention-window optimized profile',
+    guidance: 'Hook quickly with direct outcome language and visual hierarchy.',
+    cadence: 'Punchy sections with frequent CTA opportunities.',
+  },
+}
+
+function getQuickLabel<T extends { id: string; label: string }>(options: readonly T[], id: string) {
+  return options.find((item) => item.id === id)?.label || id
+}
+
+function stripTrackingParams(urlValue: string) {
+  try {
+    const parsed = new URL(urlValue)
+    const trackingParams = ['aff_funnel', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']
+    for (const param of trackingParams) {
+      parsed.searchParams.delete(param)
+    }
+    return parsed.toString()
+  } catch {
+    return urlValue
+  }
+}
+
+function buildTrackingHref(offerId: string, funnelId: string, campaign: string) {
+  return `/api/redirect/${offerId}?aff_funnel=${encodeURIComponent(
+    funnelId
+  )}&utm_source=launchpad&utm_medium=funnel&utm_campaign=${encodeURIComponent(campaign)}`
+}
+
+function extractRedirectOfferId(urlValue: string) {
+  const match = urlValue.match(/\/api\/redirect\/([^/?#]+)/i)
+  if (!match?.[1]) return null
+  try {
+    return decodeURIComponent(match[1])
+  } catch {
+    return match[1]
+  }
+}
+
+function createSmartDefaultBlocks({
+  productType,
+  trafficSource,
+  goal,
+}: {
+  productType: QuickProductType
+  trafficSource: QuickTrafficSource
+  goal: QuickGoal
+}) {
+  const productLabel = getQuickLabel(QUICK_PRODUCT_TYPES, productType)
+  const trafficLabel = getQuickLabel(QUICK_TRAFFIC_SOURCES, trafficSource)
+  const goalLabel = getQuickLabel(QUICK_GOALS, goal)
+
+  const goalCopy: Record<QuickGoal, { promise: string; cta: string; outcome: string }> = {
+    'lead-capture': {
+      promise: 'Capture qualified leads and follow up automatically.',
+      cta: 'Get The Free Starter Kit',
+      outcome: 'Leads flow into your list for nurture and conversion.',
+    },
+    'book-calls': {
+      promise: 'Warm prospects and convert intent into booked calls.',
+      cta: 'Book Your Strategy Call',
+      outcome: 'Visitors qualify themselves before they hit your calendar.',
+    },
+    'direct-sales': {
+      promise: 'Move traffic straight to conversion without extra steps.',
+      cta: 'See The Recommended Offer',
+      outcome: 'Clicks route to your monetized destination with tracking.',
+    },
+    'webinar-signup': {
+      promise: 'Register and remind high-intent visitors for your training.',
+      cta: 'Reserve My Seat',
+      outcome: 'Signups collect and receive reminder-driven follow-up.',
+    },
+  }
+
+  const sourceHint: Record<QuickTrafficSource, string> = {
+    paid: 'Built for paid traffic with fast clarity and friction-aware copy.',
+    organic: 'Built for intent-driven discovery and credibility-first messaging.',
+    email: 'Built for warm audiences with direct conversion pathways.',
+    social: 'Built for short attention windows and scroll-stopping structure.',
+  }
+
+  const selectedGoal = goalCopy[goal]
+  const isPlatformAsProduct = productType === 'launchpad-platform'
+
+  return [
+    {
+      id: `hero-${Date.now()}`,
+      type: 'hero',
+      content: {
+        headline: isPlatformAsProduct
+          ? 'Launchpad Built This Funnel With Launchpad'
+          : `${productLabel} Funnel: ${goalLabel}`,
+        subheadline: `${selectedGoal.promise} ${sourceHint[trafficSource]} Traffic source: ${trafficLabel}.`,
+        cta: selectedGoal.cta,
+      },
+      style: { align: 'center' },
+    },
+    {
+      id: `features-${Date.now()}`,
+      type: 'features',
+      content: {
+        headline: 'Smart Defaults Applied',
+        features: [
+          {
+            icon: '⚡',
+            title: 'Pre-selected Layout',
+            description: 'Page structure selected from your product + goal profile.',
+          },
+          {
+            icon: '🧠',
+            title: 'Conversion Copy Blocks',
+            description: 'Starter messaging generated for your traffic source.',
+          },
+          {
+            icon: '🔁',
+            title: 'Flow Ready',
+            description: selectedGoal.outcome,
+          },
+          ...(isPlatformAsProduct
+            ? [
+                {
+                  icon: '🚀',
+                  title: 'Product Uses Product',
+                  description: 'This funnel demonstrates the same launch workflow users buy.',
+                },
+              ]
+            : []),
+        ],
+      },
+      style: {},
+    },
+    {
+      id: `capture-${Date.now()}`,
+      type: 'email-capture',
+      content: {
+        headline: 'Stay in the loop',
+        subheadline: 'Join the list for updates, offers, and launch notifications.',
+        placeholder: 'Enter your email',
+        buttonText: 'Join now',
+      },
+      style: {},
+    },
+    {
+      id: `cta-${Date.now()}`,
+      type: 'cta',
+      content: {
+        headline: 'Ready to launch?',
+        subheadline: 'Your funnel is ready to customize, relink, and publish.',
+        buttonText: selectedGoal.cta,
+      },
+      style: { align: 'center' },
+    },
+  ]
+}
 
 /**
  * Affiliate Launchpad - Main Launch Dashboard
@@ -82,6 +301,13 @@ export default function LaunchpadPage() {
     is_active?: boolean
   }
 
+  type FunnelRecord = {
+    funnel_id: string
+    name: string
+    slug?: string | null
+    blocks?: unknown
+  }
+
   const [offers, setOffers] = useState<OfferRecord[]>([])
   const [offersLoading, setOffersLoading] = useState(false)
   const [selectedOfferId, setSelectedOfferId] = useState('')
@@ -105,6 +331,22 @@ export default function LaunchpadPage() {
     affiliate_link: '',
     commission_rate: 30,
   })
+  const [quickProductType, setQuickProductType] = useState<QuickProductType>('digital-product')
+  const [quickTrafficSource, setQuickTrafficSource] = useState<QuickTrafficSource>('organic')
+  const [quickGoal, setQuickGoal] = useState<QuickGoal>('lead-capture')
+  const [quickStartCreating, setQuickStartCreating] = useState(false)
+  const [duplicateFunnels, setDuplicateFunnels] = useState<FunnelRecord[]>([])
+  const [duplicateFunnelsLoading, setDuplicateFunnelsLoading] = useState(false)
+  const [duplicateSourceFunnelId, setDuplicateSourceFunnelId] = useState('')
+  const [duplicateTargetNiche, setDuplicateTargetNiche] = useState('general')
+  const [duplicateOfferId, setDuplicateOfferId] = useState('')
+  const [duplicatingFunnel, setDuplicatingFunnel] = useState(false)
+  const [swapTargetFunnelId, setSwapTargetFunnelId] = useState('')
+  const [swapToOfferId, setSwapToOfferId] = useState('')
+  const [swappingOfferLinks, setSwappingOfferLinks] = useState(false)
+  const [governanceSourceOfferId, setGovernanceSourceOfferId] = useState('')
+  const [governanceTargetOfferId, setGovernanceTargetOfferId] = useState('')
+  const [governanceRunning, setGovernanceRunning] = useState(false)
 
   useEffect(() => {
     loadUserData()
@@ -148,6 +390,18 @@ export default function LaunchpadPage() {
     localStorage.setItem('launchpad_selected_niche', selectedNiche)
   }, [selectedNiche])
 
+  useEffect(() => {
+    if (!selectedNiche) return
+    setDuplicateTargetNiche(selectedNiche)
+  }, [selectedNiche])
+
+  useEffect(() => {
+    const shouldLoadDashboardData = setupComplete || stats.funnels > 0
+    if (!shouldLoadDashboardData) return
+    void loadDuplicateFunnels()
+    void loadOffers()
+  }, [setupComplete, stats.funnels])
+
   const loadUserData = async () => {
     try {
       setLoadingUserData(true)
@@ -174,6 +428,36 @@ export default function LaunchpadPage() {
       console.error('Failed to load user data:', error)
     } finally {
       setLoadingUserData(false)
+    }
+  }
+
+  const loadDuplicateFunnels = async () => {
+    try {
+      setDuplicateFunnelsLoading(true)
+      const response = await fetch('/api/funnels', { cache: 'no-store' })
+      if (!response.ok) return
+      const payload = await response.json()
+      const rows: unknown[] = Array.isArray(payload?.funnels) ? payload.funnels : []
+      const normalized = rows
+        .filter((row: unknown): row is Record<string, unknown> => typeof row === 'object' && row !== null)
+        .map((row): FunnelRecord => ({
+          funnel_id: String(row.funnel_id || ''),
+          name: String(row.name || ''),
+          slug: typeof row.slug === 'string' ? row.slug : null,
+          blocks: row.blocks,
+        }))
+        .filter((row: FunnelRecord) => row.funnel_id.length > 0 && row.name.length > 0)
+      setDuplicateFunnels(normalized)
+      if (!duplicateSourceFunnelId && normalized.length > 0) {
+        setDuplicateSourceFunnelId(normalized[0].funnel_id)
+      }
+      if (!swapTargetFunnelId && normalized.length > 0) {
+        setSwapTargetFunnelId(normalized[0].funnel_id)
+      }
+    } catch (error) {
+      console.error('Failed to load duplicate funnel list:', error)
+    } finally {
+      setDuplicateFunnelsLoading(false)
     }
   }
 
@@ -811,6 +1095,500 @@ export default function LaunchpadPage() {
     }
   }
 
+  const getOfferById = (offerId: string) => offers.find((offer) => offer.id === offerId) || null
+
+  const injectOfferTrackingIntoBlocks = (
+    inputBlocks: Array<Record<string, unknown>>,
+    funnelId: string,
+    offerId: string,
+    campaign = 'quickstart'
+  ) => {
+    const trackingHref = buildTrackingHref(offerId, funnelId, campaign)
+    let replaced = false
+
+    const blocks = inputBlocks.map((block) => {
+      const nextBlock = { ...block }
+      const type = typeof nextBlock.type === 'string' ? nextBlock.type : ''
+      if (type !== 'hero' && type !== 'cta') return nextBlock
+
+      const content =
+        typeof nextBlock.content === 'object' && nextBlock.content !== null
+          ? { ...(nextBlock.content as Record<string, unknown>) }
+          : {}
+
+      content.ctaLink = trackingHref
+      content.buttonLink = trackingHref
+      content.affiliateLink = trackingHref
+      replaced = true
+
+      return {
+        ...nextBlock,
+        content,
+      }
+    })
+
+    if (!replaced) {
+      blocks.push({
+        id: `cta-offer-${Date.now()}`,
+        type: 'cta',
+        content: {
+          headline: 'Recommended Next Step',
+          subheadline: 'Open the tracked offer link tied to this funnel.',
+          buttonText: 'Open Offer',
+          ctaLink: trackingHref,
+          buttonLink: trackingHref,
+          affiliateLink: trackingHref,
+        },
+        style: { align: 'center' },
+      })
+    }
+
+    return blocks
+  }
+
+  const readFunnelBlocksPayload = (funnel: Record<string, unknown>) => {
+    const rawBlocks =
+      typeof funnel.blocks === 'string' ? JSON.parse(funnel.blocks) : (funnel.blocks || {})
+    const payload = typeof rawBlocks === 'object' && rawBlocks ? (rawBlocks as Record<string, unknown>) : {}
+    const blocks = Array.isArray(payload.blocks) ? (payload.blocks as Array<Record<string, unknown>>) : []
+    return { payload, blocks }
+  }
+
+  const rewriteOfferLinksInBlocks = ({
+    inputBlocks,
+    funnelId,
+    toOfferId,
+    fromOfferId,
+    campaign,
+  }: {
+    inputBlocks: Array<Record<string, unknown>>
+    funnelId: string
+    toOfferId: string
+    fromOfferId?: string
+    campaign: string
+  }) => {
+    const relinkHref = buildTrackingHref(toOfferId, funnelId, campaign)
+    let rewiredCount = 0
+
+    const updated = inputBlocks.map((block) => {
+      const nextBlock = { ...block }
+      const content =
+        typeof nextBlock.content === 'object' && nextBlock.content !== null
+          ? { ...(nextBlock.content as Record<string, unknown>) }
+          : null
+
+      if (!content) return nextBlock
+
+      for (const linkKey of ['ctaLink', 'buttonLink', 'affiliateLink', 'affiliate_link']) {
+        const current = content[linkKey]
+        if (typeof current !== 'string' || current.trim().length === 0) continue
+        const currentOfferId = extractRedirectOfferId(current)
+        const shouldReplace = fromOfferId ? currentOfferId === fromOfferId : Boolean(currentOfferId)
+        if (!shouldReplace) continue
+        content[linkKey] = relinkHref
+        rewiredCount += 1
+      }
+
+      return {
+        ...nextBlock,
+        content,
+      }
+    })
+
+    return {
+      blocks: updated,
+      rewiredCount,
+    }
+  }
+
+  const createQuickStartFunnel = async () => {
+    try {
+      setQuickStartCreating(true)
+      setStepValidationError(null)
+
+      const productLabel = getQuickLabel(QUICK_PRODUCT_TYPES, quickProductType)
+      const goalLabel = getQuickLabel(QUICK_GOALS, quickGoal)
+      const profile = TRAFFIC_SOURCE_PROFILES[quickTrafficSource]
+      const niche =
+        selectedNiche ||
+        QUICK_PRODUCT_TYPES.find((item) => item.id === quickProductType)?.defaultNiche ||
+        'general'
+      const template = GOAL_TO_TEMPLATE[quickGoal]
+
+      const response = await fetch('/api/funnels', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name:
+            quickProductType === 'launchpad-platform'
+              ? 'Launchpad Markets Launchpad Funnel'
+              : `${productLabel} ${goalLabel} Funnel`,
+          template,
+          niche,
+          blocks: createSmartDefaultBlocks({
+            productType: quickProductType,
+            trafficSource: quickTrafficSource,
+            goal: quickGoal,
+          }),
+          theme: {
+            sourceProfile: profile.label,
+            sourceGuidance: profile.guidance,
+            sourceCadence: profile.cadence,
+          },
+        }),
+      })
+
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok || !payload?.funnel) {
+        setStepValidationError(payload?.error || 'Failed to generate quick-start funnel.')
+        return
+      }
+
+      let nextFunnel = payload.funnel
+      const createdFunnelId = String(payload.funnel.funnel_id || '')
+      const selectedOffer = getOfferById(selectedOfferId)
+      const baseBlocksPayload = typeof nextFunnel.blocks === 'object' && nextFunnel.blocks
+        ? nextFunnel.blocks
+        : {}
+      const sourceBlocks = Array.isArray((baseBlocksPayload as Record<string, unknown>).blocks)
+        ? ((baseBlocksPayload as Record<string, unknown>).blocks as Array<Record<string, unknown>>)
+        : []
+
+      if (selectedOffer && createdFunnelId && sourceBlocks.length > 0) {
+        const trackedBlocks = injectOfferTrackingIntoBlocks(sourceBlocks, createdFunnelId, selectedOffer.id)
+        const updateResponse = await fetch(`/api/funnels/${encodeURIComponent(createdFunnelId)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            blocks: {
+              ...(baseBlocksPayload as Record<string, unknown>),
+              blocks: trackedBlocks,
+              offer: {
+                id: selectedOffer.id,
+                name: selectedOffer.name,
+                affiliate_link: selectedOffer.affiliate_link,
+              },
+            },
+          }),
+        })
+        const updatePayload = await updateResponse.json().catch(() => ({}))
+        if (updateResponse.ok && updatePayload?.funnel) {
+          nextFunnel = updatePayload.funnel
+        }
+      }
+
+      const normalizedFunnel = {
+        funnel: nextFunnel,
+        funnelId: nextFunnel.funnel_id,
+        slug: nextFunnel.slug,
+      }
+
+      setCreatedFunnel(normalizedFunnel)
+      setSelectedTemplate(template)
+      setSelectedNiche(niche)
+      setOfferAttached(Boolean(selectedOffer))
+      setAttachedOfferId(selectedOffer?.id || null)
+      setEmailAutomationReady(false)
+      setFunnelPublished(false)
+      resetLaunchChecks()
+      setCurrentStep(2)
+      setOperationNotice('Quick-start funnel generated with smart defaults. Open it in the builder to customize.')
+
+      await loadUserData()
+      await loadDuplicateFunnels()
+    } catch (error) {
+      console.error('Failed to quick-start funnel:', error)
+      setStepValidationError('Quick-start generation failed.')
+    } finally {
+      setQuickStartCreating(false)
+    }
+  }
+
+  const duplicateFunnel = async () => {
+    if (!duplicateSourceFunnelId) {
+      setStepValidationError('Select a source funnel to duplicate.')
+      return
+    }
+
+    try {
+      setDuplicatingFunnel(true)
+      setStepValidationError(null)
+
+      const sourceResponse = await fetch(`/api/funnels/${encodeURIComponent(duplicateSourceFunnelId)}`, { cache: 'no-store' })
+      const sourcePayload = await sourceResponse.json().catch(() => ({}))
+      if (!sourceResponse.ok || !sourcePayload?.funnel) {
+        setStepValidationError(sourcePayload?.error || 'Unable to load source funnel.')
+        return
+      }
+
+      const sourceFunnel = sourcePayload.funnel as Record<string, unknown>
+      const sourceName = typeof sourceFunnel.name === 'string' ? sourceFunnel.name : 'Funnel'
+      const rawBlocks =
+        typeof sourceFunnel.blocks === 'string'
+          ? JSON.parse(sourceFunnel.blocks)
+          : (sourceFunnel.blocks || {})
+      const sourceBlocks = Array.isArray(rawBlocks?.blocks) ? rawBlocks.blocks : []
+
+      const clonedBlocks = sourceBlocks.map((block: Record<string, unknown>) => {
+        const nextBlock = { ...block }
+        const content =
+          typeof nextBlock.content === 'object' && nextBlock.content !== null
+            ? { ...(nextBlock.content as Record<string, unknown>) }
+            : {}
+
+        const removableTrackingKeys = ['tracking', 'trackingId', 'conversionCount', 'clickCount', 'lastClickedAt']
+        for (const key of removableTrackingKeys) {
+          if (key in content) delete content[key]
+        }
+
+        for (const linkKey of ['ctaLink', 'buttonLink', 'affiliateLink', 'affiliate_link']) {
+          const value = content[linkKey]
+          if (typeof value === 'string' && value.trim().length > 0) {
+            content[linkKey] = stripTrackingParams(value)
+          }
+        }
+
+        return {
+          ...nextBlock,
+          id: typeof nextBlock.id === 'string' ? `${nextBlock.id}-clone-${Date.now()}` : `clone-${Date.now()}`,
+          content,
+        }
+      })
+
+      const cloneName = `${sourceName} (${duplicateTargetNiche || 'general'} clone)`
+      const createResponse = await fetch('/api/funnels', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: cloneName,
+          template: rawBlocks?.template || 'custom',
+          niche: duplicateTargetNiche || rawBlocks?.niche || 'general',
+          blocks: clonedBlocks,
+          theme: rawBlocks?.theme || undefined,
+        }),
+      })
+
+      const createPayload = await createResponse.json().catch(() => ({}))
+      if (!createResponse.ok || !createPayload?.funnel) {
+        setStepValidationError(createPayload?.error || 'Failed to duplicate funnel.')
+        return
+      }
+
+      let nextFunnel = createPayload.funnel
+      const newFunnelId = String(nextFunnel.funnel_id || '')
+      const chosenOffer = getOfferById(duplicateOfferId)
+
+      if (newFunnelId && chosenOffer) {
+        const clonedPayload =
+          typeof nextFunnel.blocks === 'object' && nextFunnel.blocks ? nextFunnel.blocks : {}
+        const clonedPayloadBlocks = Array.isArray((clonedPayload as Record<string, unknown>).blocks)
+          ? ((clonedPayload as Record<string, unknown>).blocks as Array<Record<string, unknown>>)
+          : []
+        const relinked = injectOfferTrackingIntoBlocks(clonedPayloadBlocks, newFunnelId, chosenOffer.id)
+
+        const relinkResponse = await fetch(`/api/funnels/${encodeURIComponent(newFunnelId)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            blocks: {
+              ...(clonedPayload as Record<string, unknown>),
+              blocks: relinked,
+              offer: {
+                id: chosenOffer.id,
+                name: chosenOffer.name,
+                affiliate_link: chosenOffer.affiliate_link,
+              },
+            },
+          }),
+        })
+        const relinkPayload = await relinkResponse.json().catch(() => ({}))
+        if (relinkResponse.ok && relinkPayload?.funnel) {
+          nextFunnel = relinkPayload.funnel
+        }
+      }
+
+      setCreatedFunnel({
+        funnel: nextFunnel,
+        funnelId: nextFunnel.funnel_id,
+        slug: nextFunnel.slug,
+      })
+      setOperationNotice(`Funnel duplicated as "${nextFunnel.name}" with tracking reset.`)
+      await loadUserData()
+      await loadDuplicateFunnels()
+    } catch (error) {
+      console.error('Failed to duplicate funnel:', error)
+      setStepValidationError('One-click duplication failed.')
+    } finally {
+      setDuplicatingFunnel(false)
+    }
+  }
+
+  const swapOfferLinksForFunnel = async () => {
+    if (!swapTargetFunnelId) {
+      setStepValidationError('Select a funnel to update.')
+      return
+    }
+    if (!swapToOfferId) {
+      setStepValidationError('Select the replacement offer.')
+      return
+    }
+
+    try {
+      setSwappingOfferLinks(true)
+      setStepValidationError(null)
+
+      const funnelResponse = await fetch(`/api/funnels/${encodeURIComponent(swapTargetFunnelId)}`, { cache: 'no-store' })
+      const funnelPayload = await funnelResponse.json().catch(() => ({}))
+      if (!funnelResponse.ok || !funnelPayload?.funnel) {
+        setStepValidationError(funnelPayload?.error || 'Failed to load funnel for offer swap.')
+        return
+      }
+
+      const funnel = funnelPayload.funnel as Record<string, unknown>
+      const funnelId = String(funnel.funnel_id || swapTargetFunnelId)
+      const { payload, blocks } = readFunnelBlocksPayload(funnel)
+      const fromOfferId = (typeof payload.offer === 'object' && payload.offer && typeof (payload.offer as Record<string, unknown>).id === 'string')
+        ? String((payload.offer as Record<string, unknown>).id)
+        : undefined
+      const rewrite = rewriteOfferLinksInBlocks({
+        inputBlocks: blocks,
+        funnelId,
+        toOfferId: swapToOfferId,
+        fromOfferId,
+        campaign: 'offer_swap',
+      })
+
+      if (rewrite.rewiredCount === 0) {
+        setStepValidationError('No governed redirect links found in this funnel to swap.')
+        return
+      }
+
+      const targetOffer = getOfferById(swapToOfferId)
+      const updateResponse = await fetch(`/api/funnels/${encodeURIComponent(funnelId)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          blocks: {
+            ...payload,
+            blocks: rewrite.blocks,
+            offer: targetOffer
+              ? {
+                  id: targetOffer.id,
+                  name: targetOffer.name,
+                  affiliate_link: targetOffer.affiliate_link,
+                }
+              : payload.offer,
+            monetization: {
+              linkGoverned: true,
+              lastOfferSwapAt: new Date().toISOString(),
+            },
+          },
+        }),
+      })
+
+      const updatePayload = await updateResponse.json().catch(() => ({}))
+      if (!updateResponse.ok || !updatePayload?.funnel) {
+        setStepValidationError(updatePayload?.error || 'Failed to update funnel offer links.')
+        return
+      }
+
+      setCreatedFunnel({
+        funnel: updatePayload.funnel,
+        funnelId: updatePayload.funnel.funnel_id,
+        slug: updatePayload.funnel.slug,
+      })
+      setOperationNotice(`Offer links swapped on funnel. ${rewrite.rewiredCount} link field(s) updated.`)
+      await loadDuplicateFunnels()
+    } catch (error) {
+      console.error('Failed offer link swap:', error)
+      setStepValidationError('Offer swap failed.')
+    } finally {
+      setSwappingOfferLinks(false)
+    }
+  }
+
+  const applyOutboundLinkGovernance = async () => {
+    if (!governanceSourceOfferId || !governanceTargetOfferId) {
+      setStepValidationError('Choose source and target offers for governance.')
+      return
+    }
+    if (governanceSourceOfferId === governanceTargetOfferId) {
+      setStepValidationError('Source and target offers must be different.')
+      return
+    }
+
+    try {
+      setGovernanceRunning(true)
+      setStepValidationError(null)
+
+      const funnelRows = duplicateFunnels
+      let touchedFunnels = 0
+      let touchedLinks = 0
+
+      for (const row of funnelRows) {
+        const funnelResponse = await fetch(`/api/funnels/${encodeURIComponent(row.funnel_id)}`, { cache: 'no-store' })
+        const funnelPayload = await funnelResponse.json().catch(() => ({}))
+        if (!funnelResponse.ok || !funnelPayload?.funnel) continue
+
+        const funnel = funnelPayload.funnel as Record<string, unknown>
+        const funnelId = String(funnel.funnel_id || row.funnel_id)
+        const { payload, blocks } = readFunnelBlocksPayload(funnel)
+
+        const rewrite = rewriteOfferLinksInBlocks({
+          inputBlocks: blocks,
+          funnelId,
+          toOfferId: governanceTargetOfferId,
+          fromOfferId: governanceSourceOfferId,
+          campaign: 'governance',
+        })
+
+        if (rewrite.rewiredCount === 0) continue
+
+        const targetOffer = getOfferById(governanceTargetOfferId)
+        const updateResponse = await fetch(`/api/funnels/${encodeURIComponent(funnelId)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            blocks: {
+              ...payload,
+              blocks: rewrite.blocks,
+              offer: targetOffer
+                ? {
+                    id: targetOffer.id,
+                    name: targetOffer.name,
+                    affiliate_link: targetOffer.affiliate_link,
+                  }
+                : payload.offer,
+              monetization: {
+                linkGoverned: true,
+                governedFromOfferId: governanceSourceOfferId,
+                governedToOfferId: governanceTargetOfferId,
+                updatedAt: new Date().toISOString(),
+              },
+            },
+          }),
+        })
+
+        if (!updateResponse.ok) continue
+        touchedFunnels += 1
+        touchedLinks += rewrite.rewiredCount
+      }
+
+      if (touchedFunnels === 0) {
+        setStepValidationError('No funnels contained the selected source offer links.')
+        return
+      }
+
+      setOperationNotice(`Governance applied: ${touchedLinks} outbound link field(s) updated across ${touchedFunnels} funnel(s).`)
+      await loadDuplicateFunnels()
+    } catch (error) {
+      console.error('Failed outbound link governance update:', error)
+      setStepValidationError('Outbound link governance update failed.')
+    } finally {
+      setGovernanceRunning(false)
+    }
+  }
+
   const getFunnelUrl = () => {
     if (!createdFunnel || typeof window === 'undefined') return ''
     const path = getPublicFunnelPath()
@@ -1073,6 +1851,304 @@ export default function LaunchpadPage() {
                 {operationNotice}
               </p>
             )}
+            {stepValidationError && (
+              <p className="mt-3 inline-flex rounded-lg border border-red-400/35 bg-red-500/10 px-3 py-1 text-sm text-red-200">
+                {stepValidationError}
+              </p>
+            )}
+          </div>
+
+          <div className="mb-12 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <section className="card-premium rounded-xl border border-[var(--border-elevated)] p-6">
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-bold text-text-primary">Quick-Start Funnel Generator</h2>
+                  <p className="mt-1 text-sm text-text-secondary">
+                    Single-screen setup: choose product type, traffic source, and goal. We generate a working funnel structure instantly.
+                  </p>
+                </div>
+                <span className="rounded-full border border-cyan-300/35 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-100">
+                  Smart Defaults
+                </span>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-3">
+                <label className="text-left text-xs text-text-secondary">
+                  Product Type
+                  <select
+                    value={quickProductType}
+                    onChange={(event) => setQuickProductType(event.target.value as QuickProductType)}
+                    className="hud-select mt-1 w-full"
+                  >
+                    {QUICK_PRODUCT_TYPES.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-left text-xs text-text-secondary">
+                  Traffic Source
+                  <select
+                    value={quickTrafficSource}
+                    onChange={(event) => setQuickTrafficSource(event.target.value as QuickTrafficSource)}
+                    className="hud-select mt-1 w-full"
+                  >
+                    {QUICK_TRAFFIC_SOURCES.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-left text-xs text-text-secondary">
+                  Goal
+                  <select
+                    value={quickGoal}
+                    onChange={(event) => setQuickGoal(event.target.value as QuickGoal)}
+                    className="hud-select mt-1 w-full"
+                  >
+                    {QUICK_GOALS.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <div className="mt-3 grid gap-2 md:grid-cols-4">
+                {(Object.entries(TRAFFIC_SOURCE_PROFILES) as Array<[QuickTrafficSource, (typeof TRAFFIC_SOURCE_PROFILES)[QuickTrafficSource]]>).map(
+                  ([profileId, profile]) => (
+                    <button
+                      key={profileId}
+                      type="button"
+                      onClick={() => setQuickTrafficSource(profileId)}
+                      className={`rounded-lg border p-3 text-left transition ${
+                        quickTrafficSource === profileId
+                          ? 'border-rocket-500 bg-[var(--accent-soft)]'
+                          : 'border-[var(--border-elevated)] hover:border-[var(--border-focus)]'
+                      }`}
+                    >
+                      <p className="text-xs font-semibold text-text-primary">{profile.label}</p>
+                      <p className="mt-1 text-[11px] text-text-secondary">{profile.headline}</p>
+                    </button>
+                  )
+                )}
+              </div>
+
+              <div className="mt-3 grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
+                <label className="text-left text-xs text-text-secondary">
+                  Optional: relink CTA to offer
+                  <select
+                    value={selectedOfferId}
+                    onChange={(event) => setSelectedOfferId(event.target.value)}
+                    className="hud-select mt-1 w-full"
+                  >
+                    <option value="">No offer selected</option>
+                    {offers.map((offer) => (
+                      <option key={offer.id} value={offer.id}>
+                        {offer.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  onClick={createQuickStartFunnel}
+                  disabled={quickStartCreating}
+                  className="btn-launch-premium rounded-lg px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {quickStartCreating ? 'Generating...' : 'Generate Funnel'}
+                </button>
+              </div>
+
+              <p className="mt-3 text-xs text-text-secondary">
+                Defaults selected: <strong>{GOAL_TO_TEMPLATE[quickGoal]}</strong> layout, goal-matched copy blocks, and conversion flow.
+              </p>
+              <p className="mt-1 text-xs text-text-secondary">
+                Traffic profile: <strong>{TRAFFIC_SOURCE_PROFILES[quickTrafficSource].headline}</strong>
+              </p>
+            </section>
+
+            <section className="card-premium rounded-xl border border-[var(--border-elevated)] p-6">
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-bold text-text-primary">One-Click Funnel Duplication</h2>
+                  <p className="mt-1 text-sm text-text-secondary">
+                    Clone funnels across niches or offers. We auto-rename, relink, and reset tracking metadata.
+                  </p>
+                </div>
+                <span className="inline-flex items-center gap-1 rounded-full border border-violet-300/35 bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-100">
+                  <Copy size={12} /> Clone
+                </span>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="text-left text-xs text-text-secondary md:col-span-2">
+                  Source Funnel
+                  <select
+                    value={duplicateSourceFunnelId}
+                    onChange={(event) => setDuplicateSourceFunnelId(event.target.value)}
+                    className="hud-select mt-1 w-full"
+                    disabled={duplicateFunnelsLoading}
+                  >
+                    <option value="">{duplicateFunnelsLoading ? 'Loading funnels...' : 'Select a funnel'}</option>
+                    {duplicateFunnels.map((funnel) => (
+                      <option key={funnel.funnel_id} value={funnel.funnel_id}>
+                        {funnel.name} {funnel.slug ? `(/f/${funnel.slug})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="text-left text-xs text-text-secondary">
+                  Target Niche
+                  <select
+                    value={duplicateTargetNiche}
+                    onChange={(event) => setDuplicateTargetNiche(event.target.value)}
+                    className="hud-select mt-1 w-full"
+                  >
+                    {NICHE_OPTIONS.map((niche) => (
+                      <option key={niche.id} value={niche.id}>
+                        {niche.emoji} {niche.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="text-left text-xs text-text-secondary">
+                  Offer Relink
+                  <select
+                    value={duplicateOfferId}
+                    onChange={(event) => setDuplicateOfferId(event.target.value)}
+                    className="hud-select mt-1 w-full"
+                  >
+                    <option value="">Keep existing links (tracking reset)</option>
+                    {offers.map((offer) => (
+                      <option key={offer.id} value={offer.id}>
+                        {offer.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <button
+                type="button"
+                onClick={duplicateFunnel}
+                disabled={duplicatingFunnel || duplicateFunnelsLoading}
+                className="btn-launch-premium mt-4 rounded-lg px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {duplicatingFunnel ? 'Duplicating...' : 'Duplicate Funnel'}
+              </button>
+            </section>
+          </div>
+
+          <div className="mb-12 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <section className="card-premium rounded-xl border border-[var(--border-elevated)] p-6">
+              <div className="mb-4">
+                <h2 className="text-xl font-bold text-text-primary">Affiliate Offer Swapping</h2>
+                <p className="mt-1 text-sm text-text-secondary">
+                  Replace an offer inside an existing funnel without rebuilding layout or copy.
+                </p>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="text-left text-xs text-text-secondary md:col-span-2">
+                  Target Funnel
+                  <select
+                    value={swapTargetFunnelId}
+                    onChange={(event) => setSwapTargetFunnelId(event.target.value)}
+                    className="hud-select mt-1 w-full"
+                    disabled={duplicateFunnelsLoading}
+                  >
+                    <option value="">{duplicateFunnelsLoading ? 'Loading funnels...' : 'Select a funnel'}</option>
+                    {duplicateFunnels.map((funnel) => (
+                      <option key={funnel.funnel_id} value={funnel.funnel_id}>
+                        {funnel.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="text-left text-xs text-text-secondary md:col-span-2">
+                  Replacement Offer
+                  <select
+                    value={swapToOfferId}
+                    onChange={(event) => setSwapToOfferId(event.target.value)}
+                    className="hud-select mt-1 w-full"
+                  >
+                    <option value="">Select an offer</option>
+                    {offers.map((offer) => (
+                      <option key={offer.id} value={offer.id}>
+                        {offer.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <button
+                type="button"
+                onClick={swapOfferLinksForFunnel}
+                disabled={swappingOfferLinks || duplicateFunnelsLoading}
+                className="btn-launch-premium mt-4 rounded-lg px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {swappingOfferLinks ? 'Swapping...' : 'Swap Offer Without Rebuild'}
+              </button>
+            </section>
+
+            <section className="card-premium rounded-xl border border-[var(--border-elevated)] p-6">
+              <div className="mb-4">
+                <h2 className="text-xl font-bold text-text-primary">Outbound Link Governance</h2>
+                <p className="mt-1 text-sm text-text-secondary">
+                  Central control for affiliate redirects: replace one offer link footprint across all funnels in one action.
+                </p>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="text-left text-xs text-text-secondary">
+                  Source Offer
+                  <select
+                    value={governanceSourceOfferId}
+                    onChange={(event) => setGovernanceSourceOfferId(event.target.value)}
+                    className="hud-select mt-1 w-full"
+                  >
+                    <option value="">Select source</option>
+                    {offers.map((offer) => (
+                      <option key={offer.id} value={offer.id}>
+                        {offer.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-left text-xs text-text-secondary">
+                  Replacement Offer
+                  <select
+                    value={governanceTargetOfferId}
+                    onChange={(event) => setGovernanceTargetOfferId(event.target.value)}
+                    className="hud-select mt-1 w-full"
+                  >
+                    <option value="">Select replacement</option>
+                    {offers.map((offer) => (
+                      <option key={offer.id} value={offer.id}>
+                        {offer.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <button
+                type="button"
+                onClick={applyOutboundLinkGovernance}
+                disabled={governanceRunning || duplicateFunnelsLoading}
+                className="btn-launch-premium mt-4 rounded-lg px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {governanceRunning ? 'Applying...' : 'Apply Governance'}
+              </button>
+            </section>
           </div>
 
           {/* Stats Grid */}
