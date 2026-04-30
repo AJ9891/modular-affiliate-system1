@@ -23,6 +23,11 @@ import {
   type StartupTrafficGoal,
 } from '@/lib/launchpad/startupChecklist'
 import type { LaunchpadCopilotTargetStep } from '@/lib/launchpad/copilot'
+import {
+  getUnlockedMilestones,
+  type LaunchpadMilestone,
+  type LaunchpadMilestoneId,
+} from '@/lib/launchpad/milestones'
 
 export const runtime = 'edge'
 
@@ -63,6 +68,7 @@ const QUICK_PRODUCT_TYPES = [
 const PREFLIGHT_COMPLETE_KEY = 'launchpad_preflight_complete'
 const PREFLIGHT_INTENT_KEY = 'launchpad_intent'
 const STARTUP_CHECKLIST_COMPLETE_KEY = 'launchpad_startup_checklist_complete'
+const LAUNCHPAD_SEEN_MILESTONES_KEY = 'launchpad_seen_milestones'
 
 const QUICK_TRAFFIC_SOURCES = [
   { id: 'paid', label: 'Paid Traffic' },
@@ -302,6 +308,7 @@ export default function LaunchpadPage() {
   const [showSuccessScreen, setShowSuccessScreen] = useState(false)
   const [stats, setStats] = useState({
     funnels: 0,
+    visitors: 0,
     leads: 0,
     revenue: 0,
     conversions: 0
@@ -362,6 +369,8 @@ export default function LaunchpadPage() {
   const [campaignName, setCampaignName] = useState('')
   const [startupFunnelType, setStartupFunnelType] = useState<StartupFunnelType | ''>('lead-gen')
   const [startupTrafficGoal, setStartupTrafficGoal] = useState<StartupTrafficGoal | ''>('first-100-visitors')
+  const [seenMilestones, setSeenMilestones] = useState<LaunchpadMilestoneId[]>([])
+  const [milestoneQueue, setMilestoneQueue] = useState<LaunchpadMilestone[]>([])
   const [quickProductType, setQuickProductType] = useState<QuickProductType>('digital-product')
   const [quickTrafficSource, setQuickTrafficSource] = useState<QuickTrafficSource>('organic')
   const [quickGoal, setQuickGoal] = useState<QuickGoal>('lead-capture')
@@ -408,6 +417,21 @@ export default function LaunchpadPage() {
       const savedNiche = localStorage.getItem('launchpad_selected_niche')
       if (savedNiche) {
         setSelectedNiche(savedNiche)
+      }
+      const seenMilestonesRaw = localStorage.getItem(LAUNCHPAD_SEEN_MILESTONES_KEY)
+      if (seenMilestonesRaw) {
+        try {
+          const parsed = JSON.parse(seenMilestonesRaw)
+          if (Array.isArray(parsed)) {
+            const valid = parsed.filter(
+              (value): value is LaunchpadMilestoneId =>
+                value === 'first-100-visitors' || value === 'first-conversion'
+            )
+            setSeenMilestones(valid)
+          }
+        } catch {
+          // ignore malformed storage
+        }
       }
     }
   }, [searchParams])
@@ -461,6 +485,7 @@ export default function LaunchpadPage() {
           const statsData = await statsResponse.json()
           setStats({
             funnels: statsData.totalFunnels || 0,
+            visitors: statsData.stats?.totalClicks || 0,
             leads: statsData.stats?.totalLeads || 0,
             revenue: statsData.stats?.totalRevenue || 0,
             conversions: statsData.stats?.totalConversions || 0
@@ -1785,6 +1810,30 @@ export default function LaunchpadPage() {
     }
   }
 
+  useEffect(() => {
+    if (loadingUserData) return
+    if (!(setupComplete || stats.funnels > 0)) return
+
+    const unlocked = getUnlockedMilestones(
+      { visitors: stats.visitors, conversions: stats.conversions },
+      new Set(seenMilestones)
+    )
+
+    if (unlocked.length === 0) return
+
+    setMilestoneQueue((previous) => [...previous, ...unlocked])
+    const nextSeen = [...new Set([...seenMilestones, ...unlocked.map((item) => item.id)])]
+    setSeenMilestones(nextSeen)
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(LAUNCHPAD_SEEN_MILESTONES_KEY, JSON.stringify(nextSeen))
+    }
+  }, [loadingUserData, setupComplete, stats.funnels, stats.visitors, stats.conversions, seenMilestones])
+
+  const dismissMilestone = () => {
+    setMilestoneQueue((previous) => previous.slice(1))
+  }
+
   const jumpToCopilotStep = (targetStep: LaunchpadCopilotTargetStep) => {
     const targetIndex = launchSteps.findIndex((step) => step.id === targetStep)
     if (targetIndex < 0) return
@@ -1926,6 +1975,9 @@ export default function LaunchpadPage() {
   }
 
   if (setupComplete || stats.funnels > 0) {
+    const conversionRate = stats.visitors > 0 ? (stats.conversions / stats.visitors) * 100 : 0
+    const activeMilestone = milestoneQueue[0] || null
+
     // Main dashboard for returning users
     return (
       <div className="cockpit-container min-h-screen py-12">
@@ -1948,6 +2000,28 @@ export default function LaunchpadPage() {
               </p>
             )}
           </div>
+
+          <section className="mb-8 rounded-xl border border-[var(--border-elevated)] bg-[rgba(255,255,255,0.03)] p-6">
+            <div className="mb-4">
+              <p className="text-xs uppercase tracking-system text-text-secondary">Cockpit Dashboard</p>
+              <h2 className="text-2xl font-semibold text-text-primary">Instrument Panel</h2>
+              <p className="mt-1 text-sm text-text-secondary">Calm signal, clear trajectory, next action visibility.</p>
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="rounded-lg border border-[var(--border-elevated)] bg-[rgba(10,16,24,0.55)] p-4">
+                <p className="text-xs uppercase tracking-system text-text-secondary">Visitor Count</p>
+                <p className="mt-2 text-3xl font-semibold text-text-primary">{stats.visitors.toLocaleString()}</p>
+              </div>
+              <div className="rounded-lg border border-[var(--border-elevated)] bg-[rgba(10,16,24,0.55)] p-4">
+                <p className="text-xs uppercase tracking-system text-text-secondary">Conversion Rate</p>
+                <p className="mt-2 text-3xl font-semibold text-text-primary">{conversionRate.toFixed(2)}%</p>
+              </div>
+              <div className="rounded-lg border border-[var(--border-elevated)] bg-[rgba(10,16,24,0.55)] p-4">
+                <p className="text-xs uppercase tracking-system text-text-secondary">Active Funnels</p>
+                <p className="mt-2 text-3xl font-semibold text-text-primary">{stats.funnels}</p>
+              </div>
+            </div>
+          </section>
 
           <div className="mb-12 grid grid-cols-1 gap-6 lg:grid-cols-2">
             <section className="card-premium rounded-xl border border-[var(--border-elevated)] p-6">
@@ -2242,7 +2316,7 @@ export default function LaunchpadPage() {
             </section>
           </div>
 
-          {/* Stats Grid */}
+          {/* Secondary Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
             <div className="card-premium rounded-xl border border-[var(--border-elevated)] p-6">
               <div className="flex items-center justify-between mb-2">
@@ -2361,6 +2435,25 @@ export default function LaunchpadPage() {
             </div>
           </div>
         </div>
+        {activeMilestone ? (
+          <div className="fixed right-4 top-4 z-50 w-[min(92vw,360px)] rounded-xl border border-emerald-300/40 bg-[rgba(7,26,16,0.92)] p-4 shadow-2xl backdrop-blur">
+            <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl">
+              <span className="absolute left-6 top-2 h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-200" />
+              <span className="absolute right-8 top-5 h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-200" />
+              <span className="absolute left-1/2 top-3 h-1.5 w-1.5 animate-pulse rounded-full bg-amber-200" />
+            </div>
+            <p className="text-xs uppercase tracking-system text-emerald-200">Milestone Unlocked</p>
+            <h3 className="mt-1 text-lg font-semibold text-emerald-100">{activeMilestone.title}</h3>
+            <p className="mt-2 text-sm text-emerald-50">{activeMilestone.message}</p>
+            <button
+              type="button"
+              onClick={dismissMilestone}
+              className="mt-3 rounded-md border border-emerald-300/40 px-3 py-1.5 text-xs text-emerald-100 hover:bg-emerald-400/10"
+            >
+              Continue
+            </button>
+          </div>
+        ) : null}
       </div>
     )
   }
