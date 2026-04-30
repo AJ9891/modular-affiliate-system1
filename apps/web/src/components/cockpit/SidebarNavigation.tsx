@@ -25,6 +25,7 @@ interface NavItem {
 const MODULE_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Funnels', href: '/funnels', icon: PenSquare },
+  { label: 'Content Automation', href: '/content-automation', icon: Rocket },
   { label: 'Analytics', href: '/analytics', icon: BarChart3 },
   { label: 'Email', href: '/email', icon: Mail },
   { label: 'Affiliates', href: '/affiliates', icon: Link2 },

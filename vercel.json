@@ -8,6 +8,10 @@
     {
       "path": "/api/email/autoresponder/run",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/publish/run",
+      "schedule": "0 3 * * *"
     }
   ]
 }

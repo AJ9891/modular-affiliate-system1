@@ -319,3 +319,19 @@
 | AI | OpenAI | Content Generation |
 | Hosting | Vercel | Deployment |
 | Analytics | Custom | Tracking & Reporting |
+
+## Content Automation (MVP)
+
+The Content Automation MVP adds three integrated workflows:
+
+1. Google keyword lookup (`/api/integrations/google/keywords`)
+2. AI generation for article + funnel payload (`/api/content/generate`)
+3. Scheduled posting via CMS/webhook integrations (`/api/publish/schedule`, `/api/publish/run`)
+
+Primary persistence tables:
+
+- `google_keyword_projects`
+- `google_keywords`
+- `cms_integrations`
+- `content_schedule`
+- `publish_jobs`

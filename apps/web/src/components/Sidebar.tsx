@@ -53,6 +53,7 @@ const sections: NavigationSection[] = [
       { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
       { name: 'Funnels', href: '/funnels', icon: PenSquare },
       { name: 'AI Link Builder', href: '/link-funnel', icon: Sparkles },
+      { name: 'Content Automation', href: '/content-automation', icon: Sparkles },
       { name: 'Templates', href: '/templates', icon: FileStack },
     ],
   },

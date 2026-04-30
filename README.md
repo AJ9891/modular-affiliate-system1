@@ -11,6 +11,7 @@ A complete, production-ready affiliate marketing platform combining powerful fun
 - **7 Block Types** - Hero, Features, CTA, Testimonials, Pricing, FAQ, Email Capture
 - **Theme Customization** - Real-time color and font adjustments
 - **AI Content Generation** - Powered by OpenAI for headlines, copy, and full pages
+- **Content Automation Workspace** - Generate article + funnel payloads, schedule publication, and manage publishing integrations
 - **Lead Magnets** - Upload ebooks, PDFs, and digital downloads with email capture
 
 ### Email Marketing (Built-In Autoresponder + SES)
@@ -44,6 +45,8 @@ A complete, production-ready affiliate marketing platform combining powerful fun
 - **[Integration Summary](./INTEGRATION_SUMMARY.md)** - What's new and how to use it
 - **[Full Documentation](./docs/INTEGRATION.md)** - Complete feature guide
 - **[Email Setup](./apps/web/.env.example)** - Built-in autoresponder + SES configuration
+- **[Content Automation Scope](./docs/CONTENT_AUTOMATION_SCOPE.md)** - MVP scope and implementation boundaries
+- **[Content Automation Runbook](./docs/CONTENT_AUTOMATION_RUNBOOK.md)** - Setup and operations guide
 - **[Deployment Guide](./DEPLOYMENT.md)** - Production deployment steps
 
 ## 🏃 Getting Started
@@ -80,6 +83,7 @@ OPENAI_API_KEY=sk-xxx
 EMAIL_PROVIDER=autoresponder
 AUTORESPONDER_CRON_SECRET=replace_with_strong_secret
 CRON_SECRET=replace_with_same_strong_secret
+PUBLISH_CRON_SECRET=replace_with_strong_secret
 ```
 
 ### 3. Database Setup
@@ -103,6 +107,7 @@ Visit:
 - **Dashboard**: <http://localhost:3000/dashboard>
 - **AI Generator**: <http://localhost:3000/ai-generator>
 - **Downloads**: <http://localhost:3000/downloads>
+- **Content Automation**: <http://localhost:3000/content-automation>
 
 ## 🎯 Key Pages
 
@@ -116,6 +121,7 @@ Visit:
 | Offers | `/offers` | Manage affiliate offers |
 | Analytics | `/analytics` | Deep-dive analytics |
 | AI Generator | `/ai-generator` | AI-powered content creation |
+| Content Automation | `/content-automation` | Google keyword lookup, AI generation, and scheduled posting |
 
 ## 🔧 API Endpoints
 
@@ -142,6 +148,14 @@ Visit:
 - `GET /api/funnels` - List all funnels
 - `POST /api/funnels` - Create new funnel
 - `PUT /api/funnels/:id` - Update funnel
+
+### Content Automation
+
+- `POST /api/content/generate` - Generate article + funnel payloads
+- `GET/POST /api/integrations/google/keywords` - Lookup and store Google keyword ideas
+- `GET/POST /api/integrations/cms` - Save/list CMS or webhook integrations
+- `GET/POST /api/publish/schedule` - Manage scheduled content publish entries
+- `GET/POST /api/publish/run` - Execute due publish jobs (cron/secured)
 
 ## 📊 Tech Stack
 
