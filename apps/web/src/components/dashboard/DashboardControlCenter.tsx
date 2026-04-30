@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import { Moon, RefreshCw, SlidersHorizontal, Sun } from 'lucide-react'
 import { getDashboardData, type DashboardData } from '@/lib/api/dashboard'
 import { getAlerts, getGrowthSnapshot, getRecommendations } from '@/lib/api/growth-assistant'
@@ -437,6 +438,13 @@ export default function DashboardControlCenter() {
             </div>
 
             <div className="flex flex-wrap items-center justify-start gap-2 xl:justify-end">
+              <Link href="/offers?new=1" className="hud-button-primary px-3 py-2 text-sm">
+                Create Offer
+              </Link>
+              <Link href="/offers" className="hud-button-secondary px-3 py-2 text-sm">
+                Manage Offers
+              </Link>
+
               <div className="inline-flex rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface-elevated)] p-1">
                 {ranges.map((option) => (
                   <button

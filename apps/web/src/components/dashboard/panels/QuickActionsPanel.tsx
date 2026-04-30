@@ -5,6 +5,8 @@ import { ArrowRight } from 'lucide-react'
 import DashboardPanel from '@/components/cockpit/DashboardPanel'
 
 const actions = [
+  { label: 'Create Offer', href: '/offers?new=1' },
+  { label: 'Manage Offers', href: '/offers' },
   { label: 'Create Funnel', href: '/funnels' },
   { label: 'Open Analytics', href: '/analytics' },
   { label: 'Launch Email Campaign', href: '/email' },

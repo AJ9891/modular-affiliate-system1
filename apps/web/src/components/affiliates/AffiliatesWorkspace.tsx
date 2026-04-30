@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import { buildTrackingLink, getAffiliateOverview, type AffiliateOverview } from '@/lib/api/affiliates'
 import { CockpitEmptyState } from '@/components/ui/CockpitEmptyState'
 import AffiliatesSkeleton from './AffiliatesSkeleton'
@@ -70,9 +71,21 @@ export default function AffiliatesWorkspace() {
     <main className="cockpit-shell page-fuel-management py-8">
       <div className="cockpit-container max-w-6xl space-y-6">
         <section className="hud-panel">
-          <p className="text-xs uppercase tracking-system text-text-secondary">Affiliates</p>
-          <h1 className="text-3xl font-semibold text-text-primary md:text-4xl">Referral and Commission Tracking</h1>
-          <p className="mt-2 text-sm text-text-secondary">Track referral links, estimated commissions, and affiliate analytics.</p>
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-system text-text-secondary">Affiliates</p>
+              <h1 className="text-3xl font-semibold text-text-primary md:text-4xl">Referral and Commission Tracking</h1>
+              <p className="mt-2 text-sm text-text-secondary">Track referral links, estimated commissions, and affiliate analytics.</p>
+            </div>
+            <div className="flex gap-2">
+              <Link href="/offers?new=1" className="hud-button-primary px-4 py-2 text-sm">
+                Create Offer
+              </Link>
+              <Link href="/offers" className="hud-button-secondary px-4 py-2 text-sm">
+                Manage Offers
+              </Link>
+            </div>
+          </div>
         </section>
 
         {error && <section className="rounded-lg border border-red-400/35 bg-red-500/12 p-4 text-red-200">{error}</section>}

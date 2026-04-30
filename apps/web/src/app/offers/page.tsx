@@ -114,6 +114,12 @@ export default function OffersPage() {
     loadOffers()
   }, [])
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('new') === '1') {
+      setShowAddForm(true)
+    }
+  }, [])
+
   const sortedOffers = useMemo(
     () => [...offers].sort((a, b) => Number(isOfferActive(b)) - Number(isOfferActive(a))),
     [offers]

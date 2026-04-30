@@ -31,6 +31,32 @@ function isRecoverableOffersReadError(issue: unknown): boolean {
   )
 }
 
+function isPermissionDeniedError(issue: unknown): boolean {
+  if (!issue || typeof issue !== 'object') return false
+
+  const candidate = issue as {
+    code?: string
+    message?: string
+    details?: string | null
+    hint?: string | null
+  }
+
+  const code = (candidate.code || '').toUpperCase()
+  const combined = [candidate.message, candidate.details, candidate.hint]
+    .filter((part): part is string => typeof part === 'string' && part.length > 0)
+    .join(' ')
+    .toLowerCase()
+
+  return (
+    code === '42501' ||
+    code === 'PGRST301' ||
+    code === 'PGRST302' ||
+    combined.includes('permission denied') ||
+    combined.includes('row-level security') ||
+    combined.includes('rls')
+  )
+}
+
 function isColumnMismatchError(issue: unknown): boolean {
   if (!issue || typeof issue !== 'object') return false
 
@@ -146,9 +172,6 @@ export async function POST(request: NextRequest) {
       niche_id,
     })
 
-    // Use service role client to bypass RLS
-    const adminClient = createServiceRoleClient()
-
     const baseInsert = {
       name,
       description,
@@ -171,7 +194,7 @@ export async function POST(request: NextRequest) {
     let data: any[] | null = null
     let error: any = null
 
-    const primaryInsert = await adminClient
+    const primaryInsert = await supabase
       .from('offers')
       .insert(extendedInsert)
       .select()
@@ -180,13 +203,35 @@ export async function POST(request: NextRequest) {
     error = primaryInsert.error
 
     if (error && isColumnMismatchError(error)) {
-      const fallbackInsert = await adminClient
+      const fallbackInsert = await supabase
         .from('offers')
         .insert(baseInsert)
         .select()
 
       data = fallbackInsert.data
       error = fallbackInsert.error
+    }
+
+    if (error && isPermissionDeniedError(error)) {
+      const adminClient = createServiceRoleClient()
+
+      const adminInsert = await adminClient
+        .from('offers')
+        .insert(extendedInsert)
+        .select()
+
+      data = adminInsert.data
+      error = adminInsert.error
+
+      if (error && isColumnMismatchError(error)) {
+        const adminFallbackInsert = await adminClient
+          .from('offers')
+          .insert(baseInsert)
+          .select()
+
+        data = adminFallbackInsert.data
+        error = adminFallbackInsert.error
+      }
     }
 
     if (error) {
