@@ -11,6 +11,7 @@ import { createClient as createSsrMiddlewareClient } from './utils/supabase/midd
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
+  const allowSameOriginFrame = pathname === '/f' || pathname.startsWith('/f/')
   const supabasePublicKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -64,7 +65,7 @@ export async function proxy(req: NextRequest) {
   // Allow public pages without auth and still attach security headers
   if (isPublicPath(pathname)) {
     const res = NextResponse.next()
-    return addSecurityHeaders(res)
+    return addSecurityHeaders(res, { allowSameOriginFrame })
   }
 
   const { isSubdomain, subdomain } = parseSubdomain(req)
@@ -84,12 +85,12 @@ export async function proxy(req: NextRequest) {
   if (!supabaseEnvReady) {
     // In local/preview runs without Supabase creds, skip auth enforcement but keep security headers.
     const res = NextResponse.next()
-    return addSecurityHeaders(res)
+    return addSecurityHeaders(res, { allowSameOriginFrame })
   }
 
   const { supabase, response: res } = createSsrMiddlewareClient(req)
   if (!supabase) {
-    return addSecurityHeaders(res)
+    return addSecurityHeaders(res, { allowSameOriginFrame })
   }
 
   // Single auth check path to avoid duplicate refresh-token consumption in the same request.
@@ -115,10 +116,10 @@ export async function proxy(req: NextRequest) {
 
   // For subdomain requests, allow unauthenticated access to public content
   if (isSubdomain) {
-    return addSecurityHeaders(res)
+    return addSecurityHeaders(res, { allowSameOriginFrame })
   }
 
-  return addSecurityHeaders(res)
+  return addSecurityHeaders(res, { allowSameOriginFrame })
 }
 
 export const config = {

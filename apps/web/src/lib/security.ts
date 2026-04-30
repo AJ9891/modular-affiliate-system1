@@ -58,6 +58,10 @@ export const aiGenerationSchema = z.object({
   content_type: z.enum(['headline', 'subcopy', 'full_page', 'email']).optional(),
 })
 
+interface SecurityHeaderOptions {
+  allowSameOriginFrame?: boolean
+}
+
 export function validateInput<T>(
   schema: z.ZodSchema<T>,
   data: unknown
@@ -120,9 +124,12 @@ export function validateFileUpload(file: File): {
 }
 
 // Security headers
-export function addSecurityHeaders(response: NextResponse): NextResponse {
+export function addSecurityHeaders(
+  response: NextResponse,
+  options: SecurityHeaderOptions = {}
+): NextResponse {
   response.headers.set('X-Content-Type-Options', 'nosniff')
-  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('X-Frame-Options', options.allowSameOriginFrame ? 'SAMEORIGIN' : 'DENY')
   response.headers.set('X-XSS-Protection', '0')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')

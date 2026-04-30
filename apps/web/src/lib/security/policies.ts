@@ -29,7 +29,7 @@ export function buildContentSecurityPolicy() {
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https:",
     "connect-src 'self' https://*.supabase.co https://api.openai.com https://api.stripe.com wss://*.supabase.co",
-    'frame-src https://js.stripe.com',
+    "frame-src 'self' https://js.stripe.com",
     "media-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",
