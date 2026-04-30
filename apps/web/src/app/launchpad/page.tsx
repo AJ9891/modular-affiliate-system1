@@ -3,6 +3,13 @@
 import React, { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import PreflightIntentScreen from '@/components/launchpad/PreflightIntentScreen'
+import {
+  LAUNCHPAD_INTENT_OPTIONS,
+  getIntentPreset,
+  isLaunchpadIntentId,
+  type LaunchpadIntentId,
+} from '@/lib/launchpad/preflight'
 
 export const runtime = 'edge'
 
@@ -39,6 +46,9 @@ const QUICK_PRODUCT_TYPES = [
   { id: 'affiliate-offer', label: 'Affiliate Offer', defaultNiche: 'general' },
   { id: 'launchpad-platform', label: 'Platform-as-Product (Launchpad)', defaultNiche: 'technology' },
 ] as const
+
+const PREFLIGHT_COMPLETE_KEY = 'launchpad_preflight_complete'
+const PREFLIGHT_INTENT_KEY = 'launchpad_intent'
 
 const QUICK_TRAFFIC_SOURCES = [
   { id: 'paid', label: 'Paid Traffic' },
@@ -331,6 +341,8 @@ export default function LaunchpadPage() {
     affiliate_link: '',
     commission_rate: 30,
   })
+  const [preflightComplete, setPreflightComplete] = useState(false)
+  const [launchIntent, setLaunchIntent] = useState<LaunchpadIntentId>('first-funnel')
   const [quickProductType, setQuickProductType] = useState<QuickProductType>('digital-product')
   const [quickTrafficSource, setQuickTrafficSource] = useState<QuickTrafficSource>('organic')
   const [quickGoal, setQuickGoal] = useState<QuickGoal>('lead-capture')
@@ -362,6 +374,14 @@ export default function LaunchpadPage() {
     }
 
     if (typeof window !== 'undefined') {
+      const savedIntent = localStorage.getItem(PREFLIGHT_INTENT_KEY)
+      if (savedIntent && isLaunchpadIntentId(savedIntent)) {
+        setLaunchIntent(savedIntent)
+      }
+      const preflightSaved = localStorage.getItem(PREFLIGHT_COMPLETE_KEY)
+      if (preflightSaved === '1') {
+        setPreflightComplete(true)
+      }
       const savedNiche = localStorage.getItem('launchpad_selected_niche')
       if (savedNiche) {
         setSelectedNiche(savedNiche)
@@ -1702,6 +1722,20 @@ export default function LaunchpadPage() {
     window.location.href = '/cockpit?skip_onboarding=1'
   }
 
+  const completePreflight = () => {
+    const preset = getIntentPreset(launchIntent)
+    setSelectedNiche((previous) => previous || preset.suggestedNiche)
+    setSelectedTemplate((previous) => previous || preset.suggestedTemplate)
+    setOperationNotice(preset.notice)
+    setCurrentStep(preset.nextStep)
+    setPreflightComplete(true)
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(PREFLIGHT_COMPLETE_KEY, '1')
+      localStorage.setItem(PREFLIGHT_INTENT_KEY, launchIntent)
+    }
+  }
+
   if (loadingUserData) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -2271,6 +2305,17 @@ export default function LaunchpadPage() {
           </div>
         </div>
       </div>
+    )
+  }
+
+  if (!preflightComplete) {
+    return (
+      <PreflightIntentScreen
+        options={LAUNCHPAD_INTENT_OPTIONS}
+        selectedIntent={launchIntent}
+        onSelectIntent={setLaunchIntent}
+        onContinue={completePreflight}
+      />
     )
   }
 
