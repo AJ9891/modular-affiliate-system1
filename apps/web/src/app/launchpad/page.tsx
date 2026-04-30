@@ -4,12 +4,22 @@ import React, { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import PreflightIntentScreen from '@/components/launchpad/PreflightIntentScreen'
+import StartupChecklistScreen from '@/components/launchpad/StartupChecklistScreen'
 import {
   LAUNCHPAD_INTENT_OPTIONS,
   getIntentPreset,
   isLaunchpadIntentId,
   type LaunchpadIntentId,
 } from '@/lib/launchpad/preflight'
+import {
+  getMissingStartupChecklistFields,
+  getStartupChecklistProgress,
+  getStartupDefaultsFromIntent,
+  mapTrafficGoalToSource,
+  type StartupChecklistField,
+  type StartupFunnelType,
+  type StartupTrafficGoal,
+} from '@/lib/launchpad/startupChecklist'
 
 export const runtime = 'edge'
 
@@ -49,6 +59,7 @@ const QUICK_PRODUCT_TYPES = [
 
 const PREFLIGHT_COMPLETE_KEY = 'launchpad_preflight_complete'
 const PREFLIGHT_INTENT_KEY = 'launchpad_intent'
+const STARTUP_CHECKLIST_COMPLETE_KEY = 'launchpad_startup_checklist_complete'
 
 const QUICK_TRAFFIC_SOURCES = [
   { id: 'paid', label: 'Paid Traffic' },
@@ -343,6 +354,11 @@ export default function LaunchpadPage() {
   })
   const [preflightComplete, setPreflightComplete] = useState(false)
   const [launchIntent, setLaunchIntent] = useState<LaunchpadIntentId>('first-funnel')
+  const [startupChecklistComplete, setStartupChecklistComplete] = useState(false)
+  const [startupChecklistMissingFields, setStartupChecklistMissingFields] = useState<StartupChecklistField[]>([])
+  const [campaignName, setCampaignName] = useState('')
+  const [startupFunnelType, setStartupFunnelType] = useState<StartupFunnelType | ''>('lead-gen')
+  const [startupTrafficGoal, setStartupTrafficGoal] = useState<StartupTrafficGoal | ''>('first-100-visitors')
   const [quickProductType, setQuickProductType] = useState<QuickProductType>('digital-product')
   const [quickTrafficSource, setQuickTrafficSource] = useState<QuickTrafficSource>('organic')
   const [quickGoal, setQuickGoal] = useState<QuickGoal>('lead-capture')
@@ -381,6 +397,10 @@ export default function LaunchpadPage() {
       const preflightSaved = localStorage.getItem(PREFLIGHT_COMPLETE_KEY)
       if (preflightSaved === '1') {
         setPreflightComplete(true)
+      }
+      const startupChecklistSaved = localStorage.getItem(STARTUP_CHECKLIST_COMPLETE_KEY)
+      if (startupChecklistSaved === '1') {
+        setStartupChecklistComplete(true)
       }
       const savedNiche = localStorage.getItem('launchpad_selected_niche')
       if (savedNiche) {
@@ -1724,8 +1744,11 @@ export default function LaunchpadPage() {
 
   const completePreflight = () => {
     const preset = getIntentPreset(launchIntent)
+    const startupDefaults = getStartupDefaultsFromIntent(launchIntent)
     setSelectedNiche((previous) => previous || preset.suggestedNiche)
     setSelectedTemplate((previous) => previous || preset.suggestedTemplate)
+    setStartupFunnelType(startupDefaults.funnelType)
+    setStartupTrafficGoal(startupDefaults.trafficGoal)
     setOperationNotice(preset.notice)
     setCurrentStep(preset.nextStep)
     setPreflightComplete(true)
@@ -1733,6 +1756,29 @@ export default function LaunchpadPage() {
     if (typeof window !== 'undefined') {
       localStorage.setItem(PREFLIGHT_COMPLETE_KEY, '1')
       localStorage.setItem(PREFLIGHT_INTENT_KEY, launchIntent)
+    }
+  }
+
+  const completeStartupChecklist = () => {
+    const checklistState = {
+      campaignName,
+      funnelType: startupFunnelType,
+      trafficGoal: startupTrafficGoal,
+    }
+    const missing = getMissingStartupChecklistFields(checklistState)
+    setStartupChecklistMissingFields(missing)
+
+    if (missing.length > 0) return
+
+    const sourceProfile = mapTrafficGoalToSource(startupTrafficGoal as StartupTrafficGoal)
+    setSelectedTemplate(startupFunnelType as string)
+    setQuickTrafficSource(sourceProfile)
+    setStartupChecklistComplete(true)
+    setCurrentStep(1)
+    setOperationNotice(`Checklist complete for "${campaignName.trim()}". Guided launch is ready.`)
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STARTUP_CHECKLIST_COMPLETE_KEY, '1')
     }
   }
 
@@ -2315,6 +2361,28 @@ export default function LaunchpadPage() {
         selectedIntent={launchIntent}
         onSelectIntent={setLaunchIntent}
         onContinue={completePreflight}
+      />
+    )
+  }
+
+  if (!startupChecklistComplete) {
+    const throttle = getStartupChecklistProgress({
+      campaignName,
+      funnelType: startupFunnelType,
+      trafficGoal: startupTrafficGoal,
+    })
+
+    return (
+      <StartupChecklistScreen
+        campaignName={campaignName}
+        funnelType={startupFunnelType}
+        trafficGoal={startupTrafficGoal}
+        missingFields={startupChecklistMissingFields}
+        throttleLabel={throttle.label}
+        onCampaignNameChange={setCampaignName}
+        onFunnelTypeChange={setStartupFunnelType}
+        onTrafficGoalChange={setStartupTrafficGoal}
+        onContinue={completeStartupChecklist}
       />
     )
   }
