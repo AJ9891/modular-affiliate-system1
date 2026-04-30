@@ -33,6 +33,12 @@ import {
   getStepUnlockMessage,
   isLaunchpadStepId,
 } from '@/lib/launchpad/contextualGuidance'
+import {
+  buildFlightReportCopy,
+  getDaysSinceLastVisit,
+  getJourneyRecommendation,
+  shouldShowJourneyCheckIn,
+} from '@/lib/launchpad/journeySupport'
 
 export const runtime = 'edge'
 
@@ -74,6 +80,7 @@ const PREFLIGHT_COMPLETE_KEY = 'launchpad_preflight_complete'
 const PREFLIGHT_INTENT_KEY = 'launchpad_intent'
 const STARTUP_CHECKLIST_COMPLETE_KEY = 'launchpad_startup_checklist_complete'
 const LAUNCHPAD_SEEN_MILESTONES_KEY = 'launchpad_seen_milestones'
+const LAUNCHPAD_LAST_VISIT_AT_KEY = 'launchpad_last_visit_at'
 
 const QUICK_TRAFFIC_SOURCES = [
   { id: 'paid', label: 'Paid Traffic' },
@@ -376,6 +383,8 @@ export default function LaunchpadPage() {
   const [startupTrafficGoal, setStartupTrafficGoal] = useState<StartupTrafficGoal | ''>('first-100-visitors')
   const [seenMilestones, setSeenMilestones] = useState<LaunchpadMilestoneId[]>([])
   const [milestoneQueue, setMilestoneQueue] = useState<LaunchpadMilestone[]>([])
+  const [daysSinceLastVisit, setDaysSinceLastVisit] = useState(0)
+  const [showJourneyCheckIn, setShowJourneyCheckIn] = useState(false)
   const [stepUnlockMessage, setStepUnlockMessage] = useState('')
   const [showHesitationTip, setShowHesitationTip] = useState(false)
   const [quickProductType, setQuickProductType] = useState<QuickProductType>('digital-product')
@@ -442,6 +451,12 @@ export default function LaunchpadPage() {
           // ignore malformed storage
         }
       }
+
+      const lastVisitAt = localStorage.getItem(LAUNCHPAD_LAST_VISIT_AT_KEY)
+      const daysAway = getDaysSinceLastVisit(lastVisitAt)
+      setDaysSinceLastVisit(daysAway)
+      setShowJourneyCheckIn(shouldShowJourneyCheckIn(lastVisitAt))
+      localStorage.setItem(LAUNCHPAD_LAST_VISIT_AT_KEY, new Date().toISOString())
     }
   }, [searchParams])
 
@@ -2025,6 +2040,12 @@ export default function LaunchpadPage() {
   if (setupComplete || stats.funnels > 0) {
     const conversionRate = stats.visitors > 0 ? (stats.conversions / stats.visitors) * 100 : 0
     const activeMilestone = milestoneQueue[0] || null
+    const journeyRecommendation = getJourneyRecommendation({
+      visitors: stats.visitors,
+      conversions: stats.conversions,
+      funnels: stats.funnels,
+    })
+    const flightReport = buildFlightReportCopy(daysSinceLastVisit, journeyRecommendation)
 
     // Main dashboard for returning users
     return (
@@ -2048,6 +2069,32 @@ export default function LaunchpadPage() {
               </p>
             )}
           </div>
+
+          {showJourneyCheckIn ? (
+            <section className="mb-8 rounded-xl border border-cyan-300/35 bg-cyan-500/10 p-6">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="max-w-3xl">
+                  <p className="text-xs uppercase tracking-system text-cyan-100">Journey Support</p>
+                  <h2 className="mt-1 text-xl font-semibold text-cyan-50">{flightReport.title}</h2>
+                  <p className="mt-2 text-sm text-cyan-50">{flightReport.summary}</p>
+                  <p className="mt-2 text-sm text-cyan-100">{flightReport.detail}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowJourneyCheckIn(false)}
+                  className="rounded-md border border-cyan-300/35 px-3 py-1.5 text-xs text-cyan-100 hover:bg-cyan-400/10"
+                >
+                  Dismiss
+                </button>
+              </div>
+              <div className="mt-4 rounded-lg border border-cyan-300/25 bg-[rgba(10,16,24,0.45)] p-3 text-sm">
+                <p className="text-cyan-100">
+                  Next recommended step: <strong>{journeyRecommendation.nextStep}</strong>
+                </p>
+                <p className="mt-1 text-cyan-100/90">Estimated effort: {journeyRecommendation.effort}</p>
+              </div>
+            </section>
+          ) : null}
 
           <section className="mb-8 rounded-xl border border-[var(--border-elevated)] bg-[rgba(255,255,255,0.03)] p-6">
             <div className="mb-4">
