@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import PreflightIntentScreen from '@/components/launchpad/PreflightIntentScreen'
 import StartupChecklistScreen from '@/components/launchpad/StartupChecklistScreen'
 import GuidedBuilderFlight from '@/components/launchpad/GuidedBuilderFlight'
+import LaunchpadCopilotAssist from '@/components/launchpad/LaunchpadCopilotAssist'
 import {
   LAUNCHPAD_INTENT_OPTIONS,
   getIntentPreset,
@@ -21,6 +22,7 @@ import {
   type StartupFunnelType,
   type StartupTrafficGoal,
 } from '@/lib/launchpad/startupChecklist'
+import type { LaunchpadCopilotTargetStep } from '@/lib/launchpad/copilot'
 
 export const runtime = 'edge'
 
@@ -1783,6 +1785,14 @@ export default function LaunchpadPage() {
     }
   }
 
+  const jumpToCopilotStep = (targetStep: LaunchpadCopilotTargetStep) => {
+    const targetIndex = launchSteps.findIndex((step) => step.id === targetStep)
+    if (targetIndex < 0) return
+    setCurrentStep(targetIndex)
+    setStepValidationError(null)
+    setOperationNotice(`Copilot rerouted you to ${targetStep}.`)
+  }
+
   if (loadingUserData) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -2392,6 +2402,15 @@ export default function LaunchpadPage() {
   const step = launchSteps[currentStep]
   const StepIcon = step.icon
   const selectedOffer = getSelectedOffer()
+  const copilotContext = {
+    stepId: step.id,
+    hasFunnel: Boolean(createdFunnel),
+    offerAttached,
+    emailReady: emailAutomationReady,
+    launchChecksPassed: launchChecks.previewOk && launchChecks.ctaOk,
+    funnelPublished,
+    selectedTemplate,
+  }
   const isNextDisabled =
     creatingTemplate !== null ||
     attachingOffer ||
@@ -2770,6 +2789,7 @@ export default function LaunchpadPage() {
           </p>
         </div>
       </div>
+      <LaunchpadCopilotAssist context={copilotContext} onJumpToStep={jumpToCopilotStep} />
     </div>
   )
 }
