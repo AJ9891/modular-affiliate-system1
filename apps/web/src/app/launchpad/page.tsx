@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import PreflightIntentScreen from '@/components/launchpad/PreflightIntentScreen'
 import StartupChecklistScreen from '@/components/launchpad/StartupChecklistScreen'
+import GuidedBuilderFlight from '@/components/launchpad/GuidedBuilderFlight'
 import {
   LAUNCHPAD_INTENT_OPTIONS,
   getIntentPreset,
@@ -2512,51 +2513,12 @@ export default function LaunchpadPage() {
           )}
 
           {step.id === 'funnel' && (
-            <>
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                {funnelTemplates.map((template, index) => (
-                  <div
-                    key={index}
-                    onClick={() => selectTemplate(template)}
-                    className={`
-                      p-6 border-2 rounded-lg cursor-pointer transition-all
-                      ${selectedTemplate === template.category
-                        ? 'border-rocket-500 bg-[var(--accent-soft)] shadow-lg'
-                        : 'border-[var(--border-elevated)] hover:border-[var(--border-focus)]'
-                      }
-                    `}
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-bold">{template.name}</h4>
-                      {selectedTemplate === template.category && (
-                        <CheckCircle size={20} className="text-rocket-500" />
-                      )}
-                    </div>
-                    <p className="text-sm text-text-secondary mb-3">{template.description}</p>
-                    <div className="flex justify-between text-xs text-text-secondary">
-                      <span>{template.blocks} blocks</span>
-                      <span className="font-semibold text-emerald-300">{template.conversions} CVR</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {createdFunnel && (
-                <div className="mb-8 rounded-lg border border-emerald-300/35 bg-emerald-500/10 p-4 text-left">
-                  <p className="text-sm font-semibold text-emerald-200">Working draft created</p>
-                  <p className="mt-1 text-xs text-emerald-100">Preview URL: {getPublicFunnelPath() || 'Unavailable until slug is ready'}</p>
-                  {getPublicFunnelPath() && (
-                    <a
-                      href={getPublicFunnelPath()}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-3 inline-flex rounded-md border border-emerald-300/40 px-3 py-1.5 text-xs font-semibold text-emerald-100 hover:bg-emerald-400/10"
-                    >
-                      Open Preview
-                    </a>
-                  )}
-                </div>
-              )}
-            </>
+            <GuidedBuilderFlight
+              templates={funnelTemplates}
+              selectedTemplate={selectedTemplate}
+              createdFunnelPath={getPublicFunnelPath()}
+              onSelectTemplate={selectTemplate}
+            />
           )}
 
           {step.id === 'offers' && (
