@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import PreflightIntentScreen from '@/components/launchpad/PreflightIntentScreen'
@@ -28,6 +28,11 @@ import {
   type LaunchpadMilestone,
   type LaunchpadMilestoneId,
 } from '@/lib/launchpad/milestones'
+import {
+  getHesitationTip,
+  getStepUnlockMessage,
+  isLaunchpadStepId,
+} from '@/lib/launchpad/contextualGuidance'
 
 export const runtime = 'edge'
 
@@ -371,6 +376,8 @@ export default function LaunchpadPage() {
   const [startupTrafficGoal, setStartupTrafficGoal] = useState<StartupTrafficGoal | ''>('first-100-visitors')
   const [seenMilestones, setSeenMilestones] = useState<LaunchpadMilestoneId[]>([])
   const [milestoneQueue, setMilestoneQueue] = useState<LaunchpadMilestone[]>([])
+  const [stepUnlockMessage, setStepUnlockMessage] = useState('')
+  const [showHesitationTip, setShowHesitationTip] = useState(false)
   const [quickProductType, setQuickProductType] = useState<QuickProductType>('digital-product')
   const [quickTrafficSource, setQuickTrafficSource] = useState<QuickTrafficSource>('organic')
   const [quickGoal, setQuickGoal] = useState<QuickGoal>('lead-capture')
@@ -387,6 +394,8 @@ export default function LaunchpadPage() {
   const [governanceSourceOfferId, setGovernanceSourceOfferId] = useState('')
   const [governanceTargetOfferId, setGovernanceTargetOfferId] = useState('')
   const [governanceRunning, setGovernanceRunning] = useState(false)
+  const lastInteractionAtRef = useRef<number>(Date.now())
+  const hesitationShownForStepRef = useRef<Set<string>>(new Set())
 
   useEffect(() => {
     loadUserData()
@@ -704,6 +713,45 @@ export default function LaunchpadPage() {
     email: 'Most visitors do not buy on first click. Follow-up email recovers intent and compounds conversion rate.',
     launch: 'Publishing is where tracking starts. You need a real URL live so clicks, leads, and revenue can be measured.',
   }
+
+  const isOnboardingFlightActive =
+    preflightComplete && startupChecklistComplete && !setupComplete && !showSuccessScreen
+
+  useEffect(() => {
+    if (!isOnboardingFlightActive) return
+    const stepId = launchSteps[currentStep]?.id
+    if (!stepId || !isLaunchpadStepId(stepId)) return
+
+    setStepUnlockMessage(getStepUnlockMessage(stepId))
+    setShowHesitationTip(false)
+    lastInteractionAtRef.current = Date.now()
+  }, [currentStep, isOnboardingFlightActive])
+
+  useEffect(() => {
+    if (!isOnboardingFlightActive) return
+    const stepId = launchSteps[currentStep]?.id
+    if (!stepId || !isLaunchpadStepId(stepId)) return
+
+    const markInteraction = () => {
+      lastInteractionAtRef.current = Date.now()
+    }
+
+    const listeners: Array<keyof WindowEventMap> = ['click', 'keydown', 'mousemove', 'touchstart']
+    listeners.forEach((name) => window.addEventListener(name, markInteraction, { passive: true }))
+
+    const interval = window.setInterval(() => {
+      const idleForMs = Date.now() - lastInteractionAtRef.current
+      if (idleForMs < 15000) return
+      if (hesitationShownForStepRef.current.has(stepId)) return
+      hesitationShownForStepRef.current.add(stepId)
+      setShowHesitationTip(true)
+    }, 1000)
+
+    return () => {
+      listeners.forEach((name) => window.removeEventListener(name, markInteraction))
+      window.clearInterval(interval)
+    }
+  }, [currentStep, isOnboardingFlightActive])
 
   const getCreatedFunnelId = () =>
     createdFunnel?.funnel?.funnel_id || createdFunnel?.funnelId || null
@@ -2495,6 +2543,7 @@ export default function LaunchpadPage() {
   const step = launchSteps[currentStep]
   const StepIcon = step.icon
   const selectedOffer = getSelectedOffer()
+  const hesitationTip = isLaunchpadStepId(step.id) ? getHesitationTip(step.id) : ''
   const copilotContext = {
     stepId: step.id,
     hasFunnel: Boolean(createdFunnel),
@@ -2574,6 +2623,27 @@ export default function LaunchpadPage() {
             <p className="text-xs font-semibold uppercase tracking-wide text-amber-200">Why this step matters</p>
             <p className="mt-1 text-sm text-amber-100">{stepPurpose[step.id]}</p>
           </div>
+
+          {stepUnlockMessage ? (
+            <div className="mx-auto mb-6 max-w-2xl rounded-lg border border-cyan-300/35 bg-cyan-500/10 px-4 py-3 text-left">
+              <p className="text-xs font-semibold uppercase tracking-wide text-cyan-100">Unlocked by this action</p>
+              <p className="mt-1 text-sm text-cyan-50">{stepUnlockMessage}</p>
+            </div>
+          ) : null}
+
+          {showHesitationTip && hesitationTip ? (
+            <div className="mx-auto mb-6 max-w-2xl rounded-lg border border-emerald-300/35 bg-emerald-500/10 px-4 py-3 text-left">
+              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-100">Guidance Ping</p>
+              <p className="mt-1 text-sm text-emerald-50">{hesitationTip}</p>
+              <button
+                type="button"
+                onClick={() => setShowHesitationTip(false)}
+                className="mt-2 rounded-md border border-emerald-300/35 px-2.5 py-1 text-xs text-emerald-100 hover:bg-emerald-400/10"
+              >
+                Dismiss
+              </button>
+            </div>
+          ) : null}
 
           {/* Step-specific content */}
           {step.id === 'welcome' && (
