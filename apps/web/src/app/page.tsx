@@ -1,16 +1,5 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Space_Grotesk, IBM_Plex_Sans } from 'next/font/google'
-
-const displayFont = Space_Grotesk({
-  subsets: ['latin'],
-  weight: ['500', '600', '700'],
-})
-
-const bodyFont = IBM_Plex_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
-})
 
 export const metadata: Metadata = {
   title: 'Launchpad4Success.pro | AI Funnels That Ship Fast',
@@ -68,13 +57,13 @@ const plans = [
 export default function HomePage() {
   return (
     <main
-      className={`relative isolate min-h-screen overflow-hidden px-6 pb-20 pt-6 text-text-primary sm:px-10 lg:px-16 ${bodyFont.className}`}
+      className="relative isolate min-h-screen overflow-hidden px-6 pb-20 pt-6 text-text-primary sm:px-10 lg:px-16"
     >
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_18%_15%,rgba(46,230,194,0.24),transparent_35%),radial-gradient(circle_at_84%_14%,rgba(84,142,255,0.20),transparent_34%),linear-gradient(180deg,#050913_0%,#0b1320_55%,#050913_100%)]" />
       <div className="pointer-events-none absolute inset-0 -z-10 opacity-30 [background-image:linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:48px_48px]" />
 
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 rounded-2xl border border-[var(--border-elevated)] bg-[rgba(10,16,24,0.55)] px-4 py-3 backdrop-blur">
-        <p className={`text-sm tracking-[0.2em] text-rocket-500 ${displayFont.className}`}>
+        <p className="text-sm tracking-[0.2em] text-rocket-500">
           LAUNCHPAD4SUCCESS.PRO
         </p>
         <div className="flex items-center gap-3 text-sm">
@@ -95,7 +84,7 @@ export default function HomePage() {
           <p className="mb-4 inline-flex rounded-full border border-rocket-500/40 bg-rocket-500/10 px-3 py-1 text-xs uppercase tracking-[0.16em] text-rocket-500">
             Mission Control For Affiliate Growth
           </p>
-          <h1 className={`max-w-3xl text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl ${displayFont.className}`}>
+          <h1 className="max-w-3xl text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
             Build your funnel system once. Let it sell on repeat.
           </h1>
           <p className="mt-5 max-w-2xl text-lg text-text-secondary">
@@ -122,29 +111,29 @@ export default function HomePage() {
           <div className="mt-5 space-y-4">
             <div className="rounded-xl border border-[var(--border-subtle)] bg-[rgba(4,9,19,0.6)] p-4">
               <p className="text-xs uppercase tracking-[0.1em] text-text-muted">Lead Conversion</p>
-              <p className={`mt-1 text-3xl font-semibold text-rocket-500 ${displayFont.className}`}>+31.4%</p>
+              <p className="mt-1 text-3xl font-semibold text-rocket-500">+31.4%</p>
             </div>
             <div className="rounded-xl border border-[var(--border-subtle)] bg-[rgba(4,9,19,0.6)] p-4">
               <p className="text-xs uppercase tracking-[0.1em] text-text-muted">Email Open Rate</p>
-              <p className={`mt-1 text-3xl font-semibold text-text-primary ${displayFont.className}`}>48.2%</p>
+              <p className="mt-1 text-3xl font-semibold text-text-primary">48.2%</p>
             </div>
             <div className="rounded-xl border border-[var(--border-subtle)] bg-[rgba(4,9,19,0.6)] p-4">
               <p className="text-xs uppercase tracking-[0.1em] text-text-muted">Time To Publish</p>
-              <p className={`mt-1 text-3xl font-semibold text-text-primary ${displayFont.className}`}>22 min</p>
+              <p className="mt-1 text-3xl font-semibold text-text-primary">22 min</p>
             </div>
           </div>
         </div>
       </section>
 
       <section id="features" className="mx-auto mt-20 w-full max-w-6xl">
-        <h2 className={`text-3xl font-semibold sm:text-4xl ${displayFont.className}`}>Everything needed to ship and scale</h2>
+        <h2 className="text-3xl font-semibold sm:text-4xl">Everything needed to ship and scale</h2>
         <div className="mt-8 grid gap-5 md:grid-cols-3">
           {featureCards.map((feature) => (
             <article
               key={feature.title}
               className="rounded-2xl border border-[var(--border-elevated)] bg-[rgba(8,14,24,0.62)] p-6 backdrop-blur transition hover:-translate-y-1 hover:border-rocket-500/45"
             >
-              <h3 className={`text-xl font-semibold ${displayFont.className}`}>{feature.title}</h3>
+              <h3 className="text-xl font-semibold">{feature.title}</h3>
               <p className="mt-3 text-sm leading-relaxed text-text-secondary">{feature.description}</p>
             </article>
           ))}
@@ -152,7 +141,7 @@ export default function HomePage() {
       </section>
 
       <section id="tiers" className="mx-auto mt-20 w-full max-w-6xl">
-        <h2 className={`text-3xl font-semibold sm:text-4xl ${displayFont.className}`}>Choose your launch tier</h2>
+        <h2 className="text-3xl font-semibold sm:text-4xl">Choose your launch tier</h2>
         <p className="mt-3 text-text-secondary">Start free, then upgrade when your funnel velocity grows. Annual plans include 20% off.</p>
         <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           {plans.map((plan) => (
@@ -164,8 +153,8 @@ export default function HomePage() {
                   : 'border-[var(--border-elevated)] bg-[rgba(8,14,24,0.62)]'
               }`}
             >
-              <h3 className={`text-2xl font-semibold ${displayFont.className}`}>{plan.name}</h3>
-              <p className={`mt-2 text-3xl font-semibold ${displayFont.className}`}>{plan.price}</p>
+              <h3 className="text-2xl font-semibold">{plan.name}</h3>
+              <p className="mt-2 text-3xl font-semibold">{plan.price}</p>
               <p className="mt-1 text-xs text-rocket-500">{plan.annual}</p>
               <p className="mt-2 text-sm text-text-secondary">{plan.details}</p>
               <ul className="mt-5 space-y-2 text-sm text-text-secondary">
@@ -179,7 +168,7 @@ export default function HomePage() {
       </section>
 
       <section className="mx-auto mt-20 w-full max-w-6xl rounded-3xl border border-rocket-500/35 bg-[linear-gradient(140deg,rgba(46,230,194,0.14),rgba(8,14,24,0.72))] p-8 text-center">
-        <h2 className={`text-3xl font-semibold sm:text-4xl ${displayFont.className}`}>Ready to deploy your first converting funnel?</h2>
+        <h2 className="text-3xl font-semibold sm:text-4xl">Ready to deploy your first converting funnel?</h2>
         <p className="mx-auto mt-4 max-w-2xl text-text-secondary">
           Open your launchpad, choose your objective, and publish a complete funnel flow with AI guidance.
         </p>

@@ -80,17 +80,6 @@ const nextConfig = {
         source: '/_next/:path*',
         destination: '/_next/:path*',
       },
-      // Handle subdomain routing
-      {
-        source: '/:path*',
-        has: [
-          {
-            type: 'host',
-            value: '(?!www\\.)(?<subdomain>[^.]+)\\.launchpad4success\\.pro',
-          },
-        ],
-        destination: '/subdomain/:subdomain/:path*',
-      },
     ]
   },
   env: {
