@@ -12,6 +12,7 @@ import { createClient as createSsrMiddlewareClient } from './utils/supabase/midd
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
   const host = req.headers.get('host') || ''
+  const hostname = host.split(':')[0]?.toLowerCase() || ''
   const allowSameOriginFrame = pathname === '/f' || pathname.startsWith('/f/')
   const supabasePublicKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
@@ -21,7 +22,7 @@ export async function proxy(req: NextRequest) {
     !!supabasePublicKey
 
   // Canonicalize www host to apex so visitors land on the marketing homepage.
-  if (host === 'www.launchpad4success.pro') {
+  if (hostname === 'www.launchpad4success.pro') {
     const redirectUrl = req.nextUrl.clone()
     redirectUrl.host = 'launchpad4success.pro'
     return NextResponse.redirect(redirectUrl, 308)

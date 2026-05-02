@@ -53,6 +53,21 @@ const nextConfig = {
       ]
     }
   },
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'www.launchpad4success.pro',
+          },
+        ],
+        destination: 'https://launchpad4success.pro/:path*',
+        permanent: true,
+      },
+    ]
+  },
   async rewrites() {
     return [
       // Preserve API routes on subdomains
@@ -71,7 +86,7 @@ const nextConfig = {
         has: [
           {
             type: 'host',
-            value: '(?<subdomain>.*)\.launchpad4success\.pro',
+            value: '(?<subdomain>(?!www$)[^.]+)\.launchpad4success\.pro',
           },
         ],
         destination: '/subdomain/:subdomain/:path*',
