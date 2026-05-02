@@ -177,9 +177,10 @@ Help users with all platform features, troubleshooting, and best practices. Be f
 - **Model**: OpenAI GPT-3.5-turbo with variety settings
 
 ## PRICING PLANS
-- **Starter ($30/mo)**: 1 funnel, basic templates, subdomain hosting
-- **Pro ($45/mo)**: Unlimited funnels, AI generation, premium templates, priority support
-- **Agency ($60/mo)**: Everything in Pro + team collaboration, white label, custom domains, unlimited team members
+- **Starter ($29/mo)**: 1 funnel, basic templates, subdomain hosting
+- **Pro ($79/mo)**: Unlimited funnels, AI generation, premium templates, priority support
+- **Agency ($199/mo)**: Everything in Pro + team collaboration, white label, custom domains, unlimited team members
+- **Annual billing**: 20% off monthly equivalent
 - **ALL PLANS**: Include integrated email automation and reporting
 
 ## KEY API ENDPOINTS

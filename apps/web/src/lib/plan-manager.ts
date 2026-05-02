@@ -64,7 +64,7 @@ export const PLAN_DEFINITIONS: Record<string, PlanDefinition> = {
   starter: {
     tier: 'starter',
     name: 'Launchpad Starter',
-    price: 30,
+    price: 29,
     billingPeriod: 'month',
     limits: {
       maxFunnels: 3,
@@ -101,7 +101,7 @@ export const PLAN_DEFINITIONS: Record<string, PlanDefinition> = {
   pro: {
     tier: 'pro',
     name: 'Launchpad Pro',
-    price: 45,
+    price: 79,
     billingPeriod: 'month',
     limits: {
       maxFunnels: 'unlimited',
@@ -138,7 +138,7 @@ export const PLAN_DEFINITIONS: Record<string, PlanDefinition> = {
   agency: {
     tier: 'agency',
     name: 'Launchpad Agency',
-    price: 60,
+    price: 199,
     billingPeriod: 'month',
     limits: {
       maxFunnels: 'unlimited',

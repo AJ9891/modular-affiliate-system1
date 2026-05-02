@@ -23,7 +23,7 @@ export const STRIPE_PLANS = {
     priceId: process.env.STRIPE_STARTER_PRICE_ID || '',
     price: PLAN_MONTHLY_PRICE_USD.starter,
     features: [
-      '1 Active Funnel',
+      '3 Active Funnels',
       'Basic Templates',
       'Analytics Dashboard',
       'Email Support',

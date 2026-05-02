@@ -8,6 +8,7 @@ export const createCheckoutSchema = z.object({
 
 export const subscriptionCheckoutSchema = z.object({
   plan: z.enum(['starter', 'pro', 'agency']),
+  billingCycle: z.enum(['monthly', 'annual']).optional().default('monthly'),
   userId: z.string().uuid().optional(),
   email: z.string().email()
 })
