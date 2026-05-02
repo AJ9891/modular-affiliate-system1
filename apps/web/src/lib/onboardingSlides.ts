@@ -17,7 +17,7 @@ export const onboardingSlides = [
   },
   {
     title: 'Email Is Part of the Mission',
-    body: 'Funnels work best with follow-up. SendShark email automation is included and activated when you\'re ready.',
+    body: 'Funnels work best with follow-up. Email automation is included and activated when you\'re ready.',
   },
   {
     title: 'Free, Starter, and Pro—By Design',

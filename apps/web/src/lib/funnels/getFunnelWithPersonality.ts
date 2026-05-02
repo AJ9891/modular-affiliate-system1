@@ -1,6 +1,6 @@
 import { createServerClient } from '@/lib/supabase-server';
-import { getBrandPersonality } from '@/lib/ai-generator';
-import { BrandModeId } from '@/lib/ai-generator';
+import { resolvePersonality } from '@/lib/personality';
+import type { BrandMode } from '@/lib/personality/types';
 
 export async function getFunnelWithPersonality(funnelId: string) {
   const supabase = await createServerClient();
@@ -16,8 +16,8 @@ export async function getFunnelWithPersonality(funnelId: string) {
   }
 
   // Default to 'rocket_future' if brand_mode is not set
-  const brandMode = (funnel.brand_mode as BrandModeId) || 'rocket_future';
-  const personality = getBrandPersonality(brandMode);
+  const brandMode = (funnel.brand_mode as BrandMode) || 'rocket_future';
+  const personality = resolvePersonality(brandMode);
 
   return {
     funnel,

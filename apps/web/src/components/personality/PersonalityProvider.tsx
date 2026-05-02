@@ -1,22 +1,21 @@
 'use client';
 
 import { createContext, useContext } from 'react';
-import { BrandPersonality } from '@/lib/ai-generator';
+import type { PersonalityProfile } from '@/lib/personality/types';
 
-const PersonalityContext = createContext<BrandPersonality | null>(null);
+const PersonalityContext = createContext<PersonalityProfile | null>(null);
 
 export function PersonalityProvider({
   personality,
   children,
 }: {
-  personality: BrandPersonality;
+  personality: PersonalityProfile;
   children: React.ReactNode;
 }) {
   return (
     <PersonalityContext.Provider value={personality}>
       <div
-        data-brand={personality.id}
-        style={{ '--accent': personality.visuals.accentColor } as React.CSSProperties}
+        data-brand={personality.mode}
         className="min-h-screen"
       >
         {children}

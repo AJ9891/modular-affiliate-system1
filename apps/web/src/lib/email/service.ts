@@ -10,13 +10,6 @@ function resolveProviderKey(): ProviderKey {
     return configured
   }
 
-  if (configured === 'sendshark') {
-    console.warn(
-      '[Email] EMAIL_PROVIDER=sendshark is deprecated. Falling back to built-in autoresponder.'
-    )
-    return 'autoresponder'
-  }
-
   return 'autoresponder'
 }
 

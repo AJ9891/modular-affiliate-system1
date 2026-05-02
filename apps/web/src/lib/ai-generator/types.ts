@@ -5,11 +5,6 @@
  * This separates behavior from prose.
  */
 
-export type BrandModeId =
-  | 'ai_meltdown'
-  | 'anti_guru'
-  | 'rocket_future';
-
 /**
  * AI Prompt Profile
  * 
@@ -46,44 +41,6 @@ export interface AIPromptProfile {
    * This is how you enforce brand integrity.
    */
   forbidden: string[]
-}
-
-// Legacy types (deprecated - use AIPromptProfile)
-export interface BrandPersonality {
-  id: BrandModeId;
-
-  uiTone: {
-    voiceHint: string;
-    helperTextStyle: 'sarcastic' | 'neutral' | 'encouraging';
-  };
-
-  visuals: {
-    background: 'dark' | 'light' | 'gradient';
-    accentColor: string;
-    borderStyle: 'soft' | 'sharp' | 'glitch';
-  };
-
-  motion: {
-    hover: 'none' | 'subtle' | 'playful';
-    transitions: 'instant' | 'smooth' | 'energetic';
-  };
-
-  copyRules: {
-    avoids: string[];
-    favors: string[];
-  };
-}
-
-export interface PromptContext {
-  productName: string;
-  audience: string;
-  goal: string;
-  pageType: 'hero' | 'section' | 'cta';
-}
-
-export interface ResolvedPrompt {
-  system: string;
-  user: string;
 }
 
 /**

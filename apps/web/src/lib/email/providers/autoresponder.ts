@@ -514,7 +514,7 @@ export class AutoresponderEmailProvider implements EmailProvider {
     const admin = this.getAdminClient()
     if (admin) {
       const { error } = await admin.from('email_campaigns').insert({
-        sendshark_id: campaignId,
+        provider_campaign_id: campaignId,
         user_id: campaign.userId || null,
         name: campaign.name,
         subject: campaign.subject,
@@ -571,7 +571,7 @@ export class AutoresponderEmailProvider implements EmailProvider {
             stats: finalStats,
             updated_at: new Date().toISOString(),
           })
-          .eq('sendshark_id', campaignId)
+          .eq('provider_campaign_id', campaignId)
 
         if (error && !isSchemaError(error)) {
           throw new Error(error.message || 'Failed to finalize campaign status')
@@ -590,7 +590,7 @@ export class AutoresponderEmailProvider implements EmailProvider {
       const { data, error } = await admin
         .from('email_campaigns')
         .select('stats')
-        .eq('sendshark_id', campaignId)
+        .eq('provider_campaign_id', campaignId)
         .single()
 
       if (!error && data?.stats) {

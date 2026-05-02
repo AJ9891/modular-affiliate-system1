@@ -24,14 +24,14 @@ export async function trackAffiliateClick(
 }
 
 /**
- * Get SendShark activation link with affiliate tracking
+ * Get email automation activation link with affiliate tracking
  */
-export function getSendSharkLink(userId?: string | null, source: string = 'dashboard') {
-  const affiliateLink = process.env.NEXT_PUBLIC_SENDSHARK_AFFILIATE_LINK || 'https://sendshark.com'
+export function getEmailAutomationLink(userId?: string | null, source: string = 'dashboard') {
+  const affiliateLink = process.env.NEXT_PUBLIC_EMAIL_AUTOMATION_AFFILIATE_LINK || 'https://launchpad4success.pro/email'
   
   // Track the click
   if (typeof window !== 'undefined') {
-    trackAffiliateClick('sendshark', source, userId)
+    trackAffiliateClick('email_automation', source, userId)
   }
   
   return affiliateLink

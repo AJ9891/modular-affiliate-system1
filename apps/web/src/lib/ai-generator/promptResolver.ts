@@ -13,10 +13,10 @@
  */
 
 import type { PersonalityProfile } from '@/lib/personality/types'
-import { BrandModeId, PromptContext, ResolvedPrompt, AIPromptProfile } from './types';
-import { aiMeltdown, aiMeltdownPrompt } from './brandModes/aiMeltdown';
-import { antiGuru, antiGuruPrompt } from './brandModes/antiGuru';
-import { rocketFuture, rocketFuturePrompt } from './brandModes/rocketFuture';
+import { AIPromptProfile } from './types';
+import { aiMeltdown } from './brandModes/aiMeltdown';
+import { antiGuru } from './brandModes/antiGuru';
+import { rocketFuture } from './brandModes/rocketFuture';
 
 /**
  * Resolve AI Prompt from Personality
@@ -42,28 +42,5 @@ export function resolveAIPrompt(
 
     default:
       return antiGuru
-  }
-}
-
-/**
- * Legacy resolver (deprecated - use resolveAIPrompt instead)
- * 
- * @deprecated Use resolveAIPrompt with PersonalityProfile
- */
-export function resolvePrompt(
-  brandMode: BrandModeId,
-  context: PromptContext
-): ResolvedPrompt {
-  switch (brandMode) {
-    case 'ai_meltdown':
-      return aiMeltdownPrompt(context);
-    case 'anti_guru':
-      return antiGuruPrompt(context);
-    case 'rocket_future':
-      return rocketFuturePrompt(context);
-    default: {
-      const _exhaustiveCheck: never = brandMode;
-      throw new Error(`Unhandled brand mode: ${brandMode}`);
-    }
   }
 }

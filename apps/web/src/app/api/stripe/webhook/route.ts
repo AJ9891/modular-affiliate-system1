@@ -244,7 +244,6 @@ async function provisionEmailAutomation(userId: string, email: string, plan: str
         .update({
           email_automation_provisioned: true,
           email_automation_email: email,
-          sendshark_provisioned: true,
           updated_at: new Date().toISOString(),
         })
         .eq('id', userId)
@@ -252,15 +251,6 @@ async function provisionEmailAutomation(userId: string, email: string, plan: str
       if (updateError) {
         console.warn('Failed to persist email provisioning status:', updateError)
       }
-
-      // Best-effort legacy field update for environments where this column still exists.
-      await adminClient
-        .from('users')
-        .update({
-          sendshark_email: email,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', userId)
 
       // Send welcome email with provider-agnostic setup info.
       await sendWelcomeEmail(email, listName)
@@ -363,7 +353,7 @@ async function handleInvoicePaymentSucceeded(invoice: any) {
     // Get user info
     const { data: userData } = await adminClient
       .from('users')
-      .select('id, email, subscription_plan, email_automation_provisioned, sendshark_provisioned')
+      .select('id, email, subscription_plan, email_automation_provisioned')
       .eq('stripe_customer_id', customerId)
       .single()
 
@@ -381,9 +371,7 @@ async function handleInvoicePaymentSucceeded(invoice: any) {
       console.log(`Payment succeeded for customer ${customerId}`)
       
       // If email provisioning has not run yet, run it now.
-      const alreadyProvisioned = Boolean(
-        userData?.email_automation_provisioned || userData?.sendshark_provisioned
-      )
+      const alreadyProvisioned = Boolean(userData?.email_automation_provisioned)
       if (userData && !alreadyProvisioned && userData.email) {
         await provisionEmailAutomation(userData.id, userData.email, userData.subscription_plan)
       }

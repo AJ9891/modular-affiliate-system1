@@ -187,6 +187,7 @@ create table if not exists public.automations (
 create table if not exists public.email_campaigns (
   id uuid default gen_random_uuid() primary key,
   sendshark_id text unique not null,
+  provider_campaign_id text unique,
   user_id uuid references public.users(id),
   name text not null,
   subject text not null,

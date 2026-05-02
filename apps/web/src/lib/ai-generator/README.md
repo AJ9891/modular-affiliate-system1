@@ -149,19 +149,9 @@ antiGuru.forbidden = [
 
 The AI cannot violate these rules because they're baked into the system prompt.
 
-## Migration from Legacy API
-
-**Old:**
-
-```typescript
-const prompt = resolvePrompt(brandMode, context)
-```
-
-**New:**
+## Personality-Driven Prompt Resolution
 
 ```typescript
 const personality = resolvePersonality(brandMode)
 const promptProfile = resolveAIPrompt(personality)
 ```
-
-The legacy API still works but is deprecated.
