@@ -8,6 +8,7 @@ import { getGrowthSnapshot } from '@/lib/api/growth-assistant'
 import DashboardPanel from '@/components/cockpit/DashboardPanel'
 import WorkspacePanel from '@/components/cockpit/WorkspacePanel'
 import { CockpitEmptyState } from '@/components/ui/CockpitEmptyState'
+import SystemExplanationToggle from '@/components/ui/SystemExplanationToggle'
 import { PageHeader, StatsGrid } from '@/features/shared/ui'
 import AnalyticsSkeleton from './AnalyticsSkeleton'
 
@@ -93,6 +94,25 @@ export default function AnalyticsWorkspace() {
     return [...(summary?.clicksBySource || [])].sort((a, b) => b.count - a.count).slice(0, 6)
   }, [summary?.clicksBySource])
 
+  const plainEnglishSummary = useMemo(() => {
+    const entered = summary?.stats.totalClicks || 0
+    const converted = summary?.stats.totalConversions || 0
+    const left = Math.max(0, entered - converted)
+    const topLeakSource = topSources.length > 0 ? topSources[0] : null
+
+    const weakestFunnel = performanceRows
+      .filter((row) => row.performance.totalClicks > 0)
+      .sort((a, b) => a.performance.conversionRate - b.performance.conversionRate)[0]
+
+    return {
+      entered,
+      converted,
+      left,
+      topLeakSource,
+      weakestFunnel,
+    }
+  }, [summary?.stats.totalClicks, summary?.stats.totalConversions, topSources, performanceRows])
+
   if (loading && !summary) {
     return <AnalyticsSkeleton />
   }
@@ -158,8 +178,56 @@ export default function AnalyticsWorkspace() {
           </DashboardPanel>
         </StatsGrid>
 
+        <WorkspacePanel
+          title="Plain-English Analytics"
+          description="No vanity metrics. Just movement, drop-off, and where to act."
+          titleAccessory={
+            <SystemExplanationToggle explanation="This panel translates metrics into one readable flow so teams can decide what to fix next without dashboard interpretation overhead." />
+          }
+          expandable
+        >
+          <div className="rounded-lg border border-[var(--border-subtle)] bg-[rgba(10,16,24,0.55)] p-4">
+            <p className="text-sm text-text-primary">
+              {plainEnglishSummary.entered.toLocaleString()} people entered. {plainEnglishSummary.left.toLocaleString()} left. Here is where.
+            </p>
+            <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+              <div className="rounded-lg border border-[var(--border-subtle)] p-3">
+                <p className="text-xs uppercase tracking-system text-text-secondary">Entered</p>
+                <p className="mt-1 text-xl font-semibold text-text-primary">{plainEnglishSummary.entered.toLocaleString()}</p>
+              </div>
+              <div className="rounded-lg border border-[var(--border-subtle)] p-3">
+                <p className="text-xs uppercase tracking-system text-text-secondary">Converted</p>
+                <p className="mt-1 text-xl font-semibold text-text-primary">{plainEnglishSummary.converted.toLocaleString()}</p>
+              </div>
+              <div className="rounded-lg border border-[var(--border-subtle)] p-3">
+                <p className="text-xs uppercase tracking-system text-text-secondary">Left</p>
+                <p className="mt-1 text-xl font-semibold text-text-primary">{plainEnglishSummary.left.toLocaleString()}</p>
+              </div>
+            </div>
+            <div className="mt-4 space-y-2 text-sm text-text-secondary">
+              <p>
+                Main traffic source: <span className="text-text-primary">{plainEnglishSummary.topLeakSource?.source || 'No source data yet'}</span>
+                {plainEnglishSummary.topLeakSource ? ` (${plainEnglishSummary.topLeakSource.count.toLocaleString()} entries)` : ''}
+              </p>
+              <p>
+                Weakest funnel in this range: <span className="text-text-primary">{plainEnglishSummary.weakestFunnel?.funnel.name || 'Not enough funnel data'}</span>
+                {plainEnglishSummary.weakestFunnel
+                  ? ` (${plainEnglishSummary.weakestFunnel.performance.conversionRate.toFixed(2)}% conversion rate)`
+                  : ''}
+              </p>
+            </div>
+          </div>
+        </WorkspacePanel>
+
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <WorkspacePanel title="Traffic Sources" description="Source attribution and channel concentration." expandable>
+          <WorkspacePanel
+            title="Traffic Sources"
+            description="Source attribution and channel concentration."
+            titleAccessory={
+              <SystemExplanationToggle explanation="Traffic-source concentration shows channel risk. If one source dominates and underperforms, your funnel volatility increases." />
+            }
+            expandable
+          >
             <div className="space-y-3">
               {topSources.length === 0 ? (
                 <CockpitEmptyState
@@ -187,7 +255,14 @@ export default function AnalyticsWorkspace() {
             </div>
           </WorkspacePanel>
 
-          <WorkspacePanel title="Trend Modules" description="Secondary engagement indicators." expandable>
+          <WorkspacePanel
+            title="Trend Modules"
+            description="Secondary engagement indicators."
+            titleAccessory={
+              <SystemExplanationToggle explanation="These support metrics tell you if pipeline quality is improving before revenue changes become visible." />
+            }
+            expandable
+          >
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="rounded-lg border border-[var(--border-subtle)] bg-[rgba(10,16,24,0.55)] p-3">
                 <p className="text-xs uppercase tracking-system text-text-secondary">Leads</p>
@@ -205,7 +280,14 @@ export default function AnalyticsWorkspace() {
           </WorkspacePanel>
         </section>
 
-        <WorkspacePanel title="Funnel Performance Table" description="Comparative performance by funnel." expandable>
+        <WorkspacePanel
+          title="Funnel Performance Table"
+          description="Comparative performance by funnel."
+          titleAccessory={
+            <SystemExplanationToggle explanation="This table ranks outcomes, not aesthetics. Use it to identify the funnel with the largest avoidable loss." />
+          }
+          expandable
+        >
           {performanceRows.length === 0 ? (
             <CockpitEmptyState
               compact

@@ -2,15 +2,22 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Layers, Shapes, Mail } from 'lucide-react'
-import type { BrandVoice, TemplateCategory } from '@/config/funnelTemplates'
+import { ALL_TEMPLATES, type BrandVoice, type FunnelTemplate, type TemplateCategory } from '@/config/funnelTemplates'
 import { getTemplateGallery, type TemplateQuery } from '@/lib/api/templates'
 import DashboardPanel from '@/components/cockpit/DashboardPanel'
 import WorkspacePanel from '@/components/cockpit/WorkspacePanel'
 import { CockpitEmptyState } from '@/components/ui/CockpitEmptyState'
+import SystemExplanationToggle from '@/components/ui/SystemExplanationToggle'
 import TemplatesSkeleton from './TemplatesSkeleton'
 
 const voiceOptions: Array<'all' | BrandVoice> = ['all', 'glitch', 'anchor', 'boost']
 const categoryOptions: Array<'all' | TemplateCategory> = ['all', 'lead_magnet', 'product_launch', 'webinar', 'affiliate_review', 'sales_page']
+
+function getParodyLabel(template: FunnelTemplate) {
+  if (template.brandVoice === 'glitch') return 'Glitch AI'
+  if (template.brandVoice === 'anchor') return 'Anti-guru / Deadpan'
+  return 'Parody Adjacent'
+}
 
 export default function TemplatesWorkspace() {
   const [loading, setLoading] = useState(true)
@@ -56,6 +63,10 @@ export default function TemplatesWorkspace() {
     return gallery?.landingTemplates || []
   }, [gallery?.landingTemplates])
 
+  const parodyTemplates = useMemo(() => {
+    return ALL_TEMPLATES.filter((template) => template.brandVoice === 'glitch' || template.brandVoice === 'anchor').slice(0, 12)
+  }, [])
+
   if (loading) {
     return <TemplatesSkeleton />
   }
@@ -83,7 +94,14 @@ export default function TemplatesWorkspace() {
           </DashboardPanel>
         </section>
 
-        <WorkspacePanel title="Template Filters" description="Select voice mode and category for focused browsing." expandable>
+        <WorkspacePanel
+          title="Template Filters"
+          description="Select voice mode and category for focused browsing."
+          titleAccessory={
+            <SystemExplanationToggle explanation="Filters prevent context drift. They keep template selection aligned to one voice and one conversion intent at a time." />
+          }
+          expandable
+        >
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <select className="hud-select" value={voice} onChange={(event) => setVoice(event.target.value as 'all' | BrandVoice)}>
               {voiceOptions.map((option) => (
@@ -102,7 +120,39 @@ export default function TemplatesWorkspace() {
           </div>
         </WorkspacePanel>
 
-        <WorkspacePanel title="Landing Template Grid" description="Reusable landing modules for funnel composition." expandable>
+        <WorkspacePanel
+          title="Parody Template Library"
+          description="Conversion-ready templates for anti-guru tone, glitch AI satire, and deadpan honesty."
+          titleAccessory={
+            <SystemExplanationToggle explanation="These templates convert by disarming skepticism. They replace hype with clarity and strong offer framing." />
+          }
+          expandable
+        >
+          <div className="mb-3 rounded-lg border border-[var(--border-subtle)] bg-[rgba(10,16,24,0.55)] p-3 text-sm text-text-secondary">
+            Tone rails: <span className="text-text-primary">Anti-guru</span>, <span className="text-text-primary">Glitch AI</span>, <span className="text-text-primary">Deadpan honesty</span>.
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {parodyTemplates.map((template) => (
+              <article key={`parody-${template.id}`} className="rounded-lg border border-[var(--border-subtle)] bg-[rgba(10,16,24,0.55)] p-4">
+                <p className="text-xs uppercase tracking-system text-text-secondary">
+                  {getParodyLabel(template)} · {template.category}
+                </p>
+                <h3 className="mt-2 text-lg font-semibold text-text-primary">{template.name}</h3>
+                <p className="mt-1 text-sm text-text-secondary">{template.description}</p>
+                <p className="mt-3 text-xs text-text-secondary">{template.blocks.length} blocks</p>
+              </article>
+            ))}
+          </div>
+        </WorkspacePanel>
+
+        <WorkspacePanel
+          title="Landing Template Grid"
+          description="Reusable landing modules for funnel composition."
+          titleAccessory={
+            <SystemExplanationToggle explanation="The landing grid is your deployment inventory. Start from known structures instead of rebuilding funnel scaffolding each time." />
+          }
+          expandable
+        >
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {filteredLanding.length === 0 ? (
               <div className="md:col-span-2 xl:col-span-3">
@@ -126,7 +176,14 @@ export default function TemplatesWorkspace() {
           </div>
         </WorkspacePanel>
 
-        <WorkspacePanel title="Email Template Library" description="Subject-line and content templates for campaigns." expandable>
+        <WorkspacePanel
+          title="Email Template Library"
+          description="Subject-line and content templates for campaigns."
+          titleAccessory={
+            <SystemExplanationToggle explanation="Email templates preserve follow-up continuity so leads do not drop between click and conversion." />
+          }
+          expandable
+        >
           {(gallery?.emailTemplates || []).length === 0 ? (
             <CockpitEmptyState
               compact
