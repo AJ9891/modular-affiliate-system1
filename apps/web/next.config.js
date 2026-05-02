@@ -86,7 +86,7 @@ const nextConfig = {
         has: [
           {
             type: 'host',
-            value: '(?<subdomain>(?!www$)[^.]+)\.launchpad4success\.pro',
+            value: '(?!www\\.)(?<subdomain>[^.]+)\\.launchpad4success\\.pro',
           },
         ],
         destination: '/subdomain/:subdomain/:path*',
