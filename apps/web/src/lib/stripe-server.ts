@@ -26,10 +26,18 @@ function parseOrigin(value?: string) {
 }
 
 export function resolveAppBaseUrl(request: NextRequest) {
+  const forwardedHost = request.headers.get('x-forwarded-host')
+  const forwardedProto = request.headers.get('x-forwarded-proto') || 'https'
+  const forwardedOrigin =
+    forwardedHost && forwardedHost.trim().length > 0
+      ? `${forwardedProto}://${forwardedHost}`
+      : null
+
   return (
+    parseOrigin(forwardedOrigin || undefined) ||
+    parseOrigin(request.nextUrl.origin) ||
     parseOrigin(process.env.NEXT_PUBLIC_APP_URL) ||
     parseOrigin(process.env.NEXT_PUBLIC_SITE_URL) ||
-    parseOrigin(request.nextUrl.origin) ||
     LOCALHOST_FALLBACK_URL
   )
 }
