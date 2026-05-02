@@ -20,6 +20,9 @@ jobs:
           node-version: 20.11
           cache: npm
 
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Install
         run: npm install --no-optional --force
 
