@@ -198,25 +198,6 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
-
-      <style jsx>{`
-        .animate-rise {
-          animation: rise 600ms ease-out both;
-        }
-        .animate-rise-delayed {
-          animation: rise 800ms ease-out both;
-        }
-        @keyframes rise {
-          from {
-            opacity: 0;
-            transform: translateY(24px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
     </main>
   )
 }

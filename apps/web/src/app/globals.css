@@ -1075,3 +1075,23 @@
     grid-template-columns: 1fr;
   }
 }
+
+@keyframes lp-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-rise {
+  animation: lp-rise 600ms ease-out both;
+}
+
+.animate-rise-delayed {
+  animation: lp-rise 800ms ease-out both;
+}
