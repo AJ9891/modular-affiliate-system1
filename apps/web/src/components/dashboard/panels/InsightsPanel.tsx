@@ -23,9 +23,9 @@ export default function InsightsPanel({ insights }: { insights: GrowthInsight[] 
               key={item.id}
               className={`rounded-lg border px-3 py-2 ${
                 toneFromSeverity(item.severity) === 'warning'
-                  ? 'border-amber-400/35'
+                  ? 'instrument-status-caution'
                   : toneFromSeverity(item.severity) === 'info'
-                    ? 'border-cyan-400/35'
+                    ? 'instrument-status-info'
                     : 'border-[var(--border-subtle)]'
               }`}
             >

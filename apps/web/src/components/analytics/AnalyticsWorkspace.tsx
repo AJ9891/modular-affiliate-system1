@@ -118,12 +118,12 @@ export default function AnalyticsWorkspace() {
   }
 
   return (
-    <main className="cockpit-shell page-telemetry py-8">
+    <main className="cockpit-shell calm-instruments page-telemetry py-8">
       <div className="cockpit-container max-w-7xl space-y-6">
         <PageHeader
           eyebrow="Analytics"
-          title="Traffic and Conversion Command"
-          description="Inspect traffic quality, funnel conversion efficiency, and revenue movement."
+          title="Traffic and Conversion Instruments"
+          description="Inspect traffic quality, funnel efficiency, and revenue movement."
           actions={
             <>
               {ranges.map((value) => (
@@ -133,8 +133,8 @@ export default function AnalyticsWorkspace() {
                   onClick={() => setRange(value)}
                   className={`rounded-lg px-3 py-2 text-sm ${
                     value === range
-                      ? 'bg-rocket-500 text-slate-950'
-                      : 'border border-[var(--border-subtle)] text-text-secondary hover:text-text-primary'
+                      ? 'instrument-segment-active'
+                      : 'instrument-segment border text-text-secondary hover:text-text-primary'
                   }`}
                 >
                   {value}
@@ -186,20 +186,20 @@ export default function AnalyticsWorkspace() {
           }
           expandable
         >
-          <div className="rounded-lg border border-[var(--border-subtle)] bg-[rgba(10,16,24,0.55)] p-4">
+          <div className="rounded-lg border border-[var(--border-subtle)] bg-[color:var(--hud-tight-bg)] p-4">
             <p className="text-sm text-text-primary">
               {plainEnglishSummary.entered.toLocaleString()} people entered. {plainEnglishSummary.left.toLocaleString()} left. Here is where.
             </p>
             <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
-              <div className="rounded-lg border border-[var(--border-subtle)] p-3">
+              <div className="rounded-lg border border-[var(--border-subtle)] bg-[color:var(--bg-surface)] p-3">
                 <p className="text-xs uppercase tracking-system text-text-secondary">Entered</p>
                 <p className="mt-1 text-xl font-semibold text-text-primary">{plainEnglishSummary.entered.toLocaleString()}</p>
               </div>
-              <div className="rounded-lg border border-[var(--border-subtle)] p-3">
+              <div className="rounded-lg border border-[var(--border-subtle)] bg-[color:var(--bg-surface)] p-3">
                 <p className="text-xs uppercase tracking-system text-text-secondary">Converted</p>
                 <p className="mt-1 text-xl font-semibold text-text-primary">{plainEnglishSummary.converted.toLocaleString()}</p>
               </div>
-              <div className="rounded-lg border border-[var(--border-subtle)] p-3">
+              <div className="rounded-lg border border-[var(--border-subtle)] bg-[color:var(--bg-surface)] p-3">
                 <p className="text-xs uppercase tracking-system text-text-secondary">Left</p>
                 <p className="mt-1 text-xl font-semibold text-text-primary">{plainEnglishSummary.left.toLocaleString()}</p>
               </div>
@@ -246,7 +246,7 @@ export default function AnalyticsWorkspace() {
                         <span className="text-text-secondary">{source.count}</span>
                       </div>
                       <div className="h-2 rounded-full bg-[rgba(10,16,24,0.65)]">
-                        <div className="h-2 rounded-full bg-gradient-to-r from-sky-500 to-cyan-300" style={{ width: `${width}%` }} />
+                        <div className="h-2 rounded-full bg-[color:var(--status-info-border)]" style={{ width: `${width}%` }} />
                       </div>
                     </div>
                   )
@@ -264,15 +264,15 @@ export default function AnalyticsWorkspace() {
             expandable
           >
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <div className="rounded-lg border border-[var(--border-subtle)] bg-[rgba(10,16,24,0.55)] p-3">
+              <div className="rounded-lg border border-[var(--border-subtle)] bg-[color:var(--hud-tight-bg)] p-3">
                 <p className="text-xs uppercase tracking-system text-text-secondary">Leads</p>
                 <p className="mt-2 text-2xl font-semibold text-text-primary">{summary?.stats.totalLeads || 0}</p>
               </div>
-              <div className="rounded-lg border border-[var(--border-subtle)] bg-[rgba(10,16,24,0.55)] p-3">
+              <div className="rounded-lg border border-[var(--border-subtle)] bg-[color:var(--hud-tight-bg)] p-3">
                 <p className="text-xs uppercase tracking-system text-text-secondary">Emails</p>
                 <p className="mt-2 text-2xl font-semibold text-text-primary">{summary?.stats.emailsSent || 0}</p>
               </div>
-              <div className="rounded-lg border border-[var(--border-subtle)] bg-[rgba(10,16,24,0.55)] p-3">
+              <div className="rounded-lg border border-[var(--border-subtle)] bg-[color:var(--hud-tight-bg)] p-3">
                 <p className="text-xs uppercase tracking-system text-text-secondary">Open Rate</p>
                 <p className="mt-2 text-2xl font-semibold text-text-primary">{(summary?.stats.emailOpenRate || 0).toFixed(2)}%</p>
               </div>

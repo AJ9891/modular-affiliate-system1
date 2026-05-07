@@ -22,7 +22,7 @@ export default function PerformanceForecastPanel({ forecasts }: { forecasts: Per
                   <p className="text-sm font-medium text-text-primary">{item.funnelName}</p>
                   <span
                     className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-system ${
-                      conversionDecline ? 'border-amber-400/35 text-amber-100' : 'border-emerald-400/35 text-emerald-100'
+                      conversionDecline ? 'instrument-status-caution' : 'instrument-status-ok'
                     }`}
                   >
                     {conversionDecline ? 'At Risk' : 'Stable'}

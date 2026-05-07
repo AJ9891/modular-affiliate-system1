@@ -417,21 +417,21 @@ export default function DashboardControlCenter() {
   }
 
   return (
-    <main className={`${themeClass} cockpit-shell page-mission-control py-8`}>
+    <main className={`${themeClass} cockpit-shell calm-instruments page-mission-control py-8`}>
       <div className="cockpit-container max-w-7xl space-y-6">
         <header className="hud-panel">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div>
               <p className="text-xs uppercase tracking-system text-text-secondary">Command Center</p>
-              <h1 className="text-3xl font-semibold text-text-primary md:text-4xl">Dashboard Control Panel</h1>
-              <p className="mt-2 text-sm text-text-secondary">Monitor traffic, funnels, earnings, and operational signals at a glance.</p>
+              <h1 className="text-3xl font-semibold text-text-primary md:text-4xl">Flight Instruments</h1>
+              <p className="mt-2 text-sm text-text-secondary">Monitor traffic, conversion health, and revenue signals with minimal noise.</p>
               {lastUpdated && <p className="mt-2 text-xs text-text-secondary">Last updated {lastUpdated.toLocaleTimeString()}</p>}
               <div className="mt-3 flex flex-wrap gap-2 text-xs">
                 <span className="rounded-full border border-[var(--border-subtle)] px-2 py-1 text-text-secondary">
                   Conv Rate {(data?.totals.conversionRate || 0).toFixed(2)}%
                 </span>
-                <span className="rounded-full border border-amber-400/30 px-2 py-1 text-amber-100">{alerts.length} active alerts</span>
-                <span className="rounded-full border border-cyan-400/30 px-2 py-1 text-cyan-100">
+                <span className="instrument-status-caution rounded-full border px-2 py-1">{alerts.length} active alerts</span>
+                <span className="instrument-status-info rounded-full border px-2 py-1">
                   {atRiskForecastCount} at-risk forecasts
                 </span>
               </div>
@@ -453,8 +453,8 @@ export default function DashboardControlCenter() {
                     onClick={() => setRange(option.value)}
                     className={`min-h-[40px] min-w-[52px] rounded-lg px-3 py-2 text-sm font-medium transition ${
                       range === option.value
-                        ? 'bg-rocket-500 text-slate-950'
-                        : 'text-text-secondary hover:text-text-primary'
+                        ? 'instrument-segment-active'
+                        : 'instrument-segment border hover:text-text-primary'
                     }`}
                     aria-label={`Set range to ${option.value}`}
                     aria-pressed={range === option.value}
@@ -487,7 +487,7 @@ export default function DashboardControlCenter() {
                 aria-controls="widget-customization-panel"
               >
                 <SlidersHorizontal size={14} className="mr-1 inline" />
-                Customize widgets
+                Configure layout
               </button>
             </div>
           </div>
@@ -527,7 +527,7 @@ export default function DashboardControlCenter() {
                             onClick={() => toggleWidgetVisibility(widget.id)}
                             className={`w-full rounded-lg border px-3 py-2 text-left transition ${
                               visible
-                                ? 'border-emerald-400/40 bg-emerald-500/10'
+                                ? 'instrument-status-ok bg-[color:var(--hud-tight-bg)]'
                                 : 'border-[var(--border-subtle)] hover:border-[var(--border-elevated)]'
                             }`}
                           >
@@ -539,7 +539,7 @@ export default function DashboardControlCenter() {
                               <span
                                 className={`rounded-full border px-2 py-0.5 text-[11px] uppercase tracking-system ${
                                   visible
-                                    ? 'border-emerald-400/30 text-emerald-100'
+                                    ? 'instrument-status-ok'
                                     : 'border-[var(--border-subtle)] text-text-secondary'
                                 }`}
                               >
@@ -563,8 +563,8 @@ export default function DashboardControlCenter() {
         )}
 
         {visibleWidgetCount === 0 && (
-          <section className="rounded-lg border border-amber-400/35 bg-amber-500/10 p-4">
-            <p className="text-sm text-amber-100">All widgets are hidden. Enable widgets from Customize widgets to continue.</p>
+          <section className="instrument-status-caution rounded-lg border bg-[color:var(--hud-tight-bg)] p-4">
+            <p className="text-sm text-text-primary">All widgets are hidden. Enable widgets from Configure layout to continue.</p>
           </section>
         )}
 
@@ -638,10 +638,10 @@ export default function DashboardControlCenter() {
                           key={`${item.title}-${index}`}
                           className={`rounded-lg border px-3 py-2 text-xs ${
                             item.tone === 'warning'
-                              ? 'border-amber-400/35'
+                              ? 'instrument-status-caution'
                               : item.tone === 'success'
-                                ? 'border-emerald-400/35'
-                                : 'border-cyan-400/35'
+                                ? 'instrument-status-ok'
+                                : 'instrument-status-info'
                           }`}
                         >
                           <p className="font-semibold text-text-primary">{item.title}</p>

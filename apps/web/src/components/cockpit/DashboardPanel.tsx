@@ -17,9 +17,9 @@ interface DashboardPanelProps extends Omit<WorkspacePanelProps, 'className'> {
 
 const toneClassMap: Record<DashboardTone, string> = {
   neutral: 'border-[var(--border-elevated)]',
-  success: 'border-emerald-400/35',
-  info: 'border-cyan-400/35',
-  warning: 'border-amber-400/35',
+  success: 'border-[color:var(--status-ok-border)]',
+  info: 'border-[color:var(--status-info-border)]',
+  warning: 'border-[color:var(--status-caution-border)]',
 }
 
 export default function DashboardPanel({
@@ -35,7 +35,7 @@ export default function DashboardPanel({
     <WorkspacePanel
       {...rest}
       titleAccessory={tooltip ? <HoverAnalyticsTooltip content={tooltip} /> : undefined}
-      className={cn('transition-[border-color,transform] duration-200 hover:-translate-y-0.5', toneClassMap[tone], className)}
+      className={cn('transition-[border-color,background-color] duration-200 hover:bg-[color:var(--bg-surface)]', toneClassMap[tone], className)}
     >
       {value !== undefined && (
         <div className="mb-4">

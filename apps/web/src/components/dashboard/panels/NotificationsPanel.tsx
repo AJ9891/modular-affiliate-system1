@@ -8,9 +8,9 @@ interface NotificationItem {
 }
 
 function levelStyle(level: NotificationItem['level']) {
-  if (level === 'warning') return 'border-amber-400/40 text-amber-200'
-  if (level === 'success') return 'border-emerald-400/40 text-emerald-200'
-  return 'border-cyan-400/40 text-cyan-200'
+  if (level === 'warning') return 'instrument-status-caution'
+  if (level === 'success') return 'instrument-status-ok'
+  return 'instrument-status-info'
 }
 
 export default function NotificationsPanel({ notifications }: { notifications: NotificationItem[] }) {

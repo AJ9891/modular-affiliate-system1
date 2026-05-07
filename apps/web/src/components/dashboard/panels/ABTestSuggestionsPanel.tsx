@@ -4,8 +4,8 @@ import DashboardPanel from '@/components/cockpit/DashboardPanel'
 import type { ABTestSuggestion } from '@/lib/growth-assistant/types'
 
 const sourceClass: Record<ABTestSuggestion['source'], string> = {
-  ai: 'border-emerald-400/35 text-emerald-100',
-  rule_engine: 'border-cyan-400/35 text-cyan-100',
+  ai: 'instrument-status-ok',
+  rule_engine: 'instrument-status-info',
 }
 
 const objectiveLabel: Record<ABTestSuggestion['objective'], string> = {

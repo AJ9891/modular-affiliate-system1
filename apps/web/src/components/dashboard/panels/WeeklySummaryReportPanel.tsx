@@ -47,7 +47,7 @@ export default function WeeklySummaryReportPanel({ summary }: { summary: WeeklyP
 
         {summary.keyWins.length > 0 && (
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-system text-emerald-100">Key Wins</p>
+            <p className="text-[11px] font-semibold uppercase tracking-system text-text-primary">Key Wins</p>
             {summary.keyWins.slice(0, 3).map((item, index) => (
               <p key={`win-${index}`} className="mt-1 text-xs text-text-secondary">• {item}</p>
             ))}
@@ -56,7 +56,7 @@ export default function WeeklySummaryReportPanel({ summary }: { summary: WeeklyP
 
         {summary.watchouts.length > 0 && (
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-system text-amber-100">Watchouts</p>
+            <p className="text-[11px] font-semibold uppercase tracking-system text-text-primary">Watchouts</p>
             {summary.watchouts.slice(0, 3).map((item, index) => (
               <p key={`watchout-${index}`} className="mt-1 text-xs text-text-secondary">• {item}</p>
             ))}

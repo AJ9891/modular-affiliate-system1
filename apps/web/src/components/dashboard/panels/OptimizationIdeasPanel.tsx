@@ -4,9 +4,9 @@ import DashboardPanel from '@/components/cockpit/DashboardPanel'
 import type { FunnelOptimizationIdea } from '@/lib/growth-assistant/types'
 
 const priorityClass: Record<FunnelOptimizationIdea['priority'], string> = {
-  critical: 'border-red-400/35 text-red-100',
-  high: 'border-amber-400/35 text-amber-100',
-  medium: 'border-cyan-400/35 text-cyan-100',
+  critical: 'instrument-status-critical',
+  high: 'instrument-status-caution',
+  medium: 'instrument-status-info',
   low: 'border-[var(--border-subtle)] text-text-secondary',
 }
 

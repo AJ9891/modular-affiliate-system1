@@ -29,7 +29,7 @@ export default function TrafficChartPanel({ sources }: { sources: SourcePoint[] 
                 <span>{source.count.toLocaleString()}</span>
               </div>
               <div className="h-2 rounded-full bg-[rgba(10,16,24,0.65)]">
-                <div className="h-2 rounded-full bg-gradient-to-r from-cyan-400 to-rocket-500" style={{ width: `${width}%` }} />
+                <div className="h-2 rounded-full bg-[color:var(--status-info-border)]" style={{ width: `${width}%` }} />
               </div>
             </div>
           )

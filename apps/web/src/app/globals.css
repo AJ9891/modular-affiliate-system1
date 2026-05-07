@@ -35,6 +35,10 @@
     --hud-shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.02), 0 8px 26px rgba(0, 0, 0, 0.26);
     --hud-tight-bg: rgba(14, 22, 30, 0.62);
     --hud-input-bg: rgba(10, 16, 24, 0.55);
+    --status-critical-border: rgba(248, 113, 113, 0.45);
+    --status-caution-border: rgba(251, 191, 36, 0.4);
+    --status-info-border: rgba(125, 211, 252, 0.34);
+    --status-ok-border: rgba(134, 239, 172, 0.34);
 
     /* Enhanced UI Variables */
     --radius-sm: 8px;
@@ -122,6 +126,10 @@
     --hud-shadow-card: 0 0 0 1px rgba(0, 0, 0, 0.02), 0 8px 20px rgba(0, 0, 0, 0.1);
     --hud-tight-bg: rgba(255, 255, 255, 0.72);
     --hud-input-bg: rgba(255, 255, 255, 0.65);
+    --status-critical-border: rgba(220, 38, 38, 0.42);
+    --status-caution-border: rgba(202, 138, 4, 0.4);
+    --status-info-border: rgba(14, 116, 144, 0.35);
+    --status-ok-border: rgba(22, 163, 74, 0.35);
 
     --accent-soft: rgba(31, 199, 167, 0.12);
     --accent-hover: rgba(31, 199, 167, 0.2);
@@ -487,6 +495,45 @@
   .hud-button-secondary:hover {
     background: rgba(20, 30, 40, 0.64);
     border-color: rgba(var(--accent-rgb), 0.35);
+  }
+
+  .instrument-segment {
+    border-color: var(--border-subtle);
+    color: var(--text-secondary);
+  }
+
+  .instrument-segment-active {
+    background: var(--bg-surface-subtle);
+    border: 1px solid var(--border-elevated);
+    color: var(--text-primary);
+  }
+
+  .instrument-status-critical {
+    border-color: var(--status-critical-border);
+    color: var(--text-primary);
+  }
+
+  .instrument-status-caution {
+    border-color: var(--status-caution-border);
+    color: var(--text-primary);
+  }
+
+  .instrument-status-info {
+    border-color: var(--status-info-border);
+    color: var(--text-primary);
+  }
+
+  .instrument-status-ok {
+    border-color: var(--status-ok-border);
+    color: var(--text-primary);
+  }
+
+  .calm-instruments.cockpit-shell {
+    background-image:
+      linear-gradient(180deg, rgba(3, 7, 15, 0.92), rgba(3, 7, 15, 0.95)),
+      radial-gradient(circle at 48% 16%, rgba(var(--accent-rgb), 0.09), transparent 40%),
+      radial-gradient(circle at 76% 84%, rgba(var(--accent-rgb), 0.05), transparent 34%),
+      radial-gradient(circle at 50% 120%, rgba(10, 18, 28, 0.5), transparent 52%);
   }
 
   .hud-button-danger {

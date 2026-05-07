@@ -4,8 +4,9 @@ import DashboardPanel from '@/components/cockpit/DashboardPanel'
 import type { PlainEnglishInsight } from '@/lib/growth-assistant/types'
 
 function severityClass(severity: PlainEnglishInsight['severity']) {
-  if (severity === 'critical' || severity === 'high') return 'border-amber-400/35'
-  if (severity === 'medium') return 'border-cyan-400/35'
+  if (severity === 'critical') return 'instrument-status-critical'
+  if (severity === 'high') return 'instrument-status-caution'
+  if (severity === 'medium') return 'instrument-status-info'
   return 'border-[var(--border-subtle)]'
 }
 

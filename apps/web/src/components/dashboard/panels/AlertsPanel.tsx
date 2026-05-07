@@ -4,9 +4,9 @@ import DashboardPanel from '@/components/cockpit/DashboardPanel'
 import type { GrowthAlert } from '@/lib/growth-assistant/types'
 
 const severityStyle: Record<GrowthAlert['severity'], string> = {
-  critical: 'border-red-400/45 text-red-100',
-  high: 'border-amber-400/45 text-amber-100',
-  medium: 'border-cyan-400/35 text-cyan-100',
+  critical: 'instrument-status-critical',
+  high: 'instrument-status-caution',
+  medium: 'instrument-status-info',
   low: 'border-[var(--border-subtle)] text-text-secondary',
 }
 
