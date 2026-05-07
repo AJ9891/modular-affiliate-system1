@@ -106,6 +106,10 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+        <meta name="author" content="Abbigal Jurek" />
+        <meta name="publisher" content="Launchpad4Success.pro" />
+        <meta name="creator" content="Launchpad4Success.pro" />
+        <meta name="format-detection" content="telephone=no, address=no, email=no" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
