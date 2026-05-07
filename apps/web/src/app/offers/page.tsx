@@ -21,6 +21,7 @@ export default function OffersPage() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [copiedType, setCopiedType] = useState<'tracking' | 'affiliate' | null>(null)
+  const [origin, setOrigin] = useState('')
   const [newOffer, setNewOffer] = useState({
     name: '',
     description: '',
@@ -29,6 +30,10 @@ export default function OffersPage() {
   })
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setOrigin(window.location.origin)
+    }
+
     checkAuth()
     loadOffers()
   }, [])
@@ -57,7 +62,7 @@ export default function OffersPage() {
 
   async function handleAddOffer(e: React.FormEvent) {
     e.preventDefault()
-    
+
     try {
       const res = await fetch('/api/offers', {
         method: 'POST',
@@ -98,7 +103,7 @@ export default function OffersPage() {
   }
 
   function copyTrackingLink(offerId: string) {
-    const trackingLink = `${window.location.origin}/api/redirect/${offerId}`
+    const trackingLink = `${origin}/api/redirect/${offerId}`
     navigator.clipboard.writeText(trackingLink)
     setCopiedId(offerId)
     setCopiedType('tracking')
@@ -123,7 +128,6 @@ export default function OffersPage() {
       }, 2000)
     } catch (error) {
       console.error('Error building affiliate link:', error)
-      // Fallback: just copy the base URL
       navigator.clipboard.writeText(baseUrl)
       setCopiedId(offerId)
       setCopiedType('affiliate')
@@ -136,185 +140,168 @@ export default function OffersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-green-900 flex items-center justify-center">
-        <div className="text-white text-xl">Loading offers...</div>
+      <div className="theme-fuel cockpit-shell page-fuel-management flex items-center justify-center">
+        <div className="text-xl text-text-secondary">Loading offers...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-green-900 py-12 px-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold text-white mb-2">
-              Affiliate Offers
-            </h1>
-            <p className="text-blue-200">Manage your affiliate offers and tracking links</p>
-          </div>
-          
+    <div className="theme-fuel cockpit-shell page-fuel-management py-8">
+      <div className="cockpit-container max-w-6xl">
+        <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-lg font-bold transition"
+            onClick={() => router.push('/dashboard')}
+            className="hud-button-secondary w-fit px-4 py-2"
+          >
+            ← Back to Dashboard
+          </button>
+
+          <button
+            onClick={() => setShowAddForm((prev) => !prev)}
+            className="hud-button-primary w-fit px-6 py-2"
           >
             {showAddForm ? 'Cancel' : '+ Add Offer'}
           </button>
         </div>
 
-        {/* Add Offer Form */}
+        <section className="hud-panel mb-8">
+          <h1 className="mb-2 text-4xl font-semibold text-text-primary">Affiliate Offers</h1>
+          <p className="text-text-secondary">Manage your affiliate offers and tracking links.</p>
+        </section>
+
         {showAddForm && (
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 mb-8">
-            <h2 className="text-2xl font-bold text-white mb-4">Add New Offer</h2>
+          <section className="hud-card mb-8">
+            <h2 className="mb-4 text-2xl font-semibold text-text-primary">Add New Offer</h2>
             <form onSubmit={handleAddOffer} className="space-y-4">
               <div>
-                <label className="block text-white mb-2">Offer Name</label>
+                <label className="mb-2 block text-sm font-medium text-text-secondary">Offer Name</label>
                 <input
                   type="text"
                   value={newOffer.name}
                   onChange={(e) => setNewOffer({ ...newOffer, name: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg bg-white/20 text-white border border-white/30 focus:border-yellow-400 focus:outline-none"
+                  className="hud-input"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-white mb-2">Description</label>
+                <label className="mb-2 block text-sm font-medium text-text-secondary">Description</label>
                 <textarea
                   value={newOffer.description}
                   onChange={(e) => setNewOffer({ ...newOffer, description: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg bg-white/20 text-white border border-white/30 focus:border-yellow-400 focus:outline-none"
-                  rows={3}
+                  className="hud-textarea min-h-28"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-white mb-2">Affiliate Link</label>
+                <label className="mb-2 block text-sm font-medium text-text-secondary">Affiliate Link</label>
                 <input
                   type="url"
                   value={newOffer.affiliate_link}
                   onChange={(e) => setNewOffer({ ...newOffer, affiliate_link: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg bg-white/20 text-white border border-white/30 focus:border-yellow-400 focus:outline-none"
+                  className="hud-input"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-white mb-2">Commission Rate (%)</label>
+                <label className="mb-2 block text-sm font-medium text-text-secondary">Commission Rate (%)</label>
                 <input
                   type="number"
                   step="0.01"
+                  min="0"
                   value={newOffer.commission_rate}
-                  onChange={(e) => setNewOffer({ ...newOffer, commission_rate: parseFloat(e.target.value) })}
-                  className="w-full px-4 py-3 rounded-lg bg-white/20 text-white border border-white/30 focus:border-yellow-400 focus:outline-none"
+                  onChange={(e) => {
+                    const value = Number.parseFloat(e.target.value)
+                    setNewOffer({ ...newOffer, commission_rate: Number.isNaN(value) ? 0 : value })
+                  }}
+                  className="hud-input"
                   required
                 />
               </div>
 
-              <button
-                type="submit"
-                className="w-full px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-lg font-bold transition"
-              >
+              <button type="submit" className="hud-button-primary w-full py-2.5">
                 Add Offer
               </button>
             </form>
-          </div>
+          </section>
         )}
 
-        {/* Offers List */}
-        <div className="space-y-4">
+        <section className="space-y-4">
           {offers.length > 0 ? (
-            offers.map((offer) => (
-              <div
-                key={offer.id}
-                className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="text-2xl font-bold text-white mb-2">{offer.name}</h3>
-                    <p className="text-blue-200 mb-2">{offer.description}</p>
-                    <div className="text-sm text-blue-200">
-                      Commission: <span className="text-yellow-400 font-bold">{offer.commission_rate}%</span>
+            offers.map((offer) => {
+              const trackingLink = `${origin}/api/redirect/${offer.id}`
+              return (
+                <article key={offer.id} className="hud-card">
+                  <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div>
+                      <h3 className="mb-1 text-2xl font-semibold text-text-primary">{offer.name}</h3>
+                      <p className="mb-2 text-text-secondary">{offer.description}</p>
+                      <p className="text-sm text-text-secondary">
+                        Commission: <span className="font-semibold text-rocket-500">{offer.commission_rate}%</span>
+                      </p>
                     </div>
-                  </div>
-                  
-                  <button
-                    onClick={() => handleToggleActive(offer.id, offer.is_active)}
-                    className={`px-4 py-2 rounded-lg font-semibold transition ${
-                      offer.is_active
-                        ? 'bg-green-500 text-white'
-                        : 'bg-gray-500 text-white'
-                    }`}
-                  >
-                    {offer.is_active ? 'Active' : 'Inactive'}
-                  </button>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-sm text-blue-200 mb-2">Tracking Link (redirects & tracks)</div>
-                    <div className="flex gap-2">
-                      <code className="flex-1 px-3 py-2 bg-black/30 rounded text-white text-sm break-all">
-                        {`${typeof window !== 'undefined' ? window.location.origin : ''}/api/redirect/${offer.id}`}
-                      </code>
+                    <button
+                      onClick={() => handleToggleActive(offer.id, offer.is_active)}
+                      className={
+                        offer.is_active
+                          ? 'rounded-full border border-emerald-300/30 bg-emerald-500/15 px-4 py-2 text-sm font-semibold text-emerald-200'
+                          : 'rounded-full border border-slate-300/25 bg-slate-500/15 px-4 py-2 text-sm font-semibold text-slate-200'
+                      }
+                    >
+                      {offer.is_active ? 'Active' : 'Inactive'}
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="hud-card-tight space-y-2">
+                      <p className="text-xs uppercase tracking-system text-text-secondary">Tracking Link</p>
+                      <code className="block break-all text-sm text-text-primary">{trackingLink}</code>
                       <button
                         onClick={() => copyTrackingLink(offer.id)}
-                        className={`px-4 py-2 rounded font-semibold transition ${
+                        className={
                           copiedId === offer.id && copiedType === 'tracking'
-                            ? 'bg-green-500 text-white'
-                            : 'bg-yellow-400 hover:bg-yellow-500 text-gray-900'
-                        }`}
+                            ? 'hud-button-primary px-3 py-1.5 text-xs'
+                            : 'hud-button-secondary px-3 py-1.5 text-xs'
+                        }
                       >
                         {copiedId === offer.id && copiedType === 'tracking' ? 'Copied!' : 'Copy'}
                       </button>
                     </div>
-                  </div>
 
-                  <div>
-                    <div className="text-sm text-blue-200 mb-2">Direct Affiliate Link</div>
-                    <div className="flex gap-2">
-                      <code className="flex-1 px-3 py-2 bg-black/30 rounded text-white text-sm break-all">
-                        {offer.affiliate_link}
-                      </code>
+                    <div className="hud-card-tight space-y-2">
+                      <p className="text-xs uppercase tracking-system text-text-secondary">Direct Affiliate Link</p>
+                      <code className="block break-all text-sm text-text-primary">{offer.affiliate_link}</code>
                       <button
                         onClick={() => copyAffiliateLink(offer.affiliate_link, offer.id)}
-                        className={`px-4 py-2 rounded font-semibold transition ${
+                        className={
                           copiedId === offer.id && copiedType === 'affiliate'
-                            ? 'bg-green-500 text-white'
-                            : 'bg-white/20 hover:bg-white/30 text-white'
-                        }`}
+                            ? 'hud-button-primary px-3 py-1.5 text-xs'
+                            : 'hud-button-secondary px-3 py-1.5 text-xs'
+                        }
                       >
                         {copiedId === offer.id && copiedType === 'affiliate' ? 'Copied!' : 'Copy'}
                       </button>
                     </div>
                   </div>
-                </div>
-              </div>
-            ))
+                </article>
+              )
+            })
           ) : (
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-12 border border-white/20 text-center">
-              <div className="text-white text-xl mb-4">No offers yet</div>
-              <p className="text-blue-200 mb-6">Add your first affiliate offer to start tracking clicks and conversions</p>
-              <button
-                onClick={() => setShowAddForm(true)}
-                className="px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-lg font-bold transition"
-              >
+            <article className="hud-card text-center">
+              <div className="mb-3 text-xl font-semibold text-text-primary">No offers yet</div>
+              <p className="mb-6 text-text-secondary">
+                Add your first affiliate offer to start tracking clicks and conversions.
+              </p>
+              <button onClick={() => setShowAddForm(true)} className="hud-button-primary px-6 py-2.5">
                 Add Your First Offer
               </button>
-            </div>
+            </article>
           )}
-        </div>
-
-        {/* Back to Dashboard */}
-        <div className="mt-8 text-center">
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="px-8 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg font-semibold transition border border-white/20"
-          >
-            ← Back to Dashboard
-          </button>
-        </div>
+        </section>
       </div>
     </div>
   )

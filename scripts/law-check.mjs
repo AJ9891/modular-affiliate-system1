@@ -47,9 +47,41 @@ requireText('docs/architecture/laws.md', [
   'Evolution Law',
 ])
 
+requireText('docs/codex/AI_RULES.md', ['Required Output Envelope', 'policy_flags'])
+requireText('docs/codex/VOICE_RULES.md', ['Voice Contract', 'fallback_style'])
+requireText('docs/codex/ONBOARDING_RULES.md', ['state machine', 'Step completion'])
+requireText('docs/codex/TEMPLATE_RULES.md', ['Template Contract', 'version'])
+
 requireText('packages/contracts/src/index.ts', [
   "export * from './plans'",
   "export * from './events'",
+  "export * from './voice'",
+  "export * from './template-metadata'",
+  "export * from './onboarding'",
+])
+
+requireText('packages/contracts/src/ai.ts', [
+  'AiDecisionEnvelope',
+  'confidence',
+  'policyFlags',
+])
+
+requireText('packages/contracts/src/voice.ts', [
+  'VOICE_IDS',
+  'VoiceContract',
+  'fallbackStyle',
+])
+
+requireText('packages/contracts/template-metadata.schema.json', [
+  'templateId',
+  'requiredInputs',
+  'outputShape',
+  'capabilityRequirements',
+])
+
+requireText('apps/web/eslint.config.mjs', [
+  "'@typescript-eslint/consistent-type-imports'",
+  "'no-restricted-imports'",
 ])
 
 requireImport('apps/web/src/app/api/profile/plan/route.ts', "from '@contracts/plans'")

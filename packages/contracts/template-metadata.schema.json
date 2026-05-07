@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://modular-affiliate/contracts/template-metadata.schema.json",
+  "title": "TemplateMetadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "templateId",
+    "name",
+    "category",
+    "version",
+    "requiredInputs",
+    "optionalInputs",
+    "outputShape",
+    "capabilityRequirements"
+  ],
+  "properties": {
+    "templateId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "category": {
+      "type": "string",
+      "enum": ["landing-page", "email", "ad-copy", "automation"]
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "requiredInputs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "optionalInputs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "outputShape": {
+      "type": "string",
+      "enum": ["html", "json", "markdown", "text"]
+    },
+    "capabilityRequirements": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  }
+}
