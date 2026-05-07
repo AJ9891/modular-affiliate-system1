@@ -513,6 +513,15 @@ export default function LaunchpadPage() {
     void loadDuplicateFunnels()
   }, [currentStep, duplicateFunnels.length, duplicateFunnelsLoading])
 
+  useEffect(() => {
+    const stepId = launchSteps[currentStep]?.id
+    if (stepId !== 'launch') return
+    if (createdFunnel) return
+    if (!selectedPublishDraftId) return
+    if (selectingDraftFunnel) return
+    void selectSavedDraftForLaunch(selectedPublishDraftId)
+  }, [currentStep, createdFunnel, selectedPublishDraftId, selectingDraftFunnel])
+
   const loadUserData = async () => {
     try {
       setLoadingUserData(true)
