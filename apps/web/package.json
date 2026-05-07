@@ -17,7 +17,7 @@
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "analyze": "ANALYZE=true npm run build",
-    "type-check": "tsc --noEmit",
+    "type-check": "next typegen && tsc --noEmit --incremental false",
     "prepare": "husky"
   },
   "dependencies": {

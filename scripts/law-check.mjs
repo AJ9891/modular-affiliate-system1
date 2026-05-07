@@ -1,0 +1,78 @@
+import fs from 'node:fs'
+import path from 'node:path'
+
+const repoRoot = process.cwd()
+const errors = []
+
+function readFile(relativePath) {
+  const fullPath = path.join(repoRoot, relativePath)
+  if (!fs.existsSync(fullPath)) {
+    errors.push(`Missing required file: ${relativePath}`)
+    return ''
+  }
+  return fs.readFileSync(fullPath, 'utf8')
+}
+
+function requireText(relativePath, snippets) {
+  const body = readFile(relativePath)
+  for (const snippet of snippets) {
+    if (!body.includes(snippet)) {
+      errors.push(`${relativePath} is missing required text: ${snippet}`)
+    }
+  }
+}
+
+function requireImport(relativePath, importSnippet) {
+  const body = readFile(relativePath)
+  if (!body.includes(importSnippet)) {
+    errors.push(`${relativePath} must import shared contracts via: ${importSnippet}`)
+  }
+}
+
+function banPattern(relativePath, pattern, reason) {
+  const body = readFile(relativePath)
+  if (pattern.test(body)) {
+    errors.push(`${relativePath} violates law guard: ${reason}`)
+  }
+}
+
+requireText('docs/architecture/laws.md', [
+  'Identity Law',
+  'State Law',
+  'Capability Law',
+  'Contract Law',
+  'Event Law',
+  'Decision Law',
+  'Composition Law',
+  'Evolution Law',
+])
+
+requireText('packages/contracts/src/index.ts', [
+  "export * from './plans'",
+  "export * from './events'",
+])
+
+requireImport('apps/web/src/app/api/profile/plan/route.ts', "from '@contracts/plans'")
+requireImport('apps/web/src/lib/api/settings.ts', "from '@contracts/plans'")
+
+banPattern(
+  'apps/web/src/app/api/profile/plan/route.ts',
+  /\[['\"]free['\"],\s*['\"]starter['\"],\s*['\"]pro['\"],\s*['\"]agency['\"]\]/,
+  'hard-coded plan tuple detected; use @contracts/plans constants'
+)
+
+banPattern(
+  'apps/web/src/lib/api/settings.ts',
+  /plan\s*===\s*['\"]free['\"]\s*\|\|\s*plan\s*===\s*['\"]starter['\"]/,
+  'hard-coded plan branching detected; use isPlanId from @contracts/plans'
+)
+
+if (errors.length > 0) {
+  console.error('Law check failed:')
+  for (const error of errors) {
+    console.error(`- ${error}`)
+  }
+  process.exit(1)
+}
+
+console.log('Law check passed.')

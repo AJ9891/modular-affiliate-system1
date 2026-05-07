@@ -28,6 +28,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@contracts/*": [
+        "../../packages/contracts/src/*"
       ]
     }
   },

@@ -1,4 +1,5 @@
 import { api } from './client'
+import { isPlanId, type PlanId } from '@contracts/plans'
 
 export interface CurrentUser {
   id: string
@@ -16,7 +17,7 @@ export interface PlanSettings {
   launchpad_stage?: string
 }
 
-export type UserPlan = 'free' | 'starter' | 'pro' | 'agency'
+export type UserPlan = PlanId
 
 export interface StripeConnectStatus {
   connected: boolean
@@ -37,8 +38,7 @@ export async function getCurrentUser(): Promise<CurrentUser> {
 export async function getPlanSettings(): Promise<PlanSettings> {
   const payload = await api.get<{ plan?: string; launchpad_stage?: string }>('/api/profile/plan')
   const plan = payload.plan
-  const safePlan: UserPlan | undefined =
-    plan === 'free' || plan === 'starter' || plan === 'pro' || plan === 'agency' ? plan : undefined
+  const safePlan: UserPlan | undefined = isPlanId(plan) ? plan : undefined
 
   return {
     plan: safePlan,

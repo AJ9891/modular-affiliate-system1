@@ -21,6 +21,9 @@ jobs:
       
       - name: Install dependencies
         run: npm ci --no-optional --force
+
+      - name: Law Check
+        run: npm run law:check
       
       - name: Lint
         run: npm run lint

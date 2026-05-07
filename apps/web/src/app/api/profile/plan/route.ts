@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+import { PLAN_IDS, isPlanId, type PlanId } from '@contracts/plans'
 
 export const dynamic = 'force-dynamic'
-const ALL_PLANS = ['free', 'starter', 'pro', 'agency'] as const
-type UserPlan = (typeof ALL_PLANS)[number]
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,9 +14,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { plan } = await req.json() as { plan?: UserPlan }
+    const { plan } = await req.json() as { plan?: PlanId }
     
-    if (!plan || !ALL_PLANS.includes(plan)) {
+    if (!isPlanId(plan)) {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
     }
 
@@ -62,9 +61,9 @@ export async function GET(req: NextRequest) {
 
     const plan = (profile?.plan ??
       profile?.plan_tier ??
-      'free') as UserPlan
+      'free') as PlanId
 
-    const normalizedPlan = ALL_PLANS.includes(plan) ? plan : 'free'
+    const normalizedPlan = isPlanId(plan) ? plan : PLAN_IDS[0]
 
     return NextResponse.json({
       plan: normalizedPlan,
