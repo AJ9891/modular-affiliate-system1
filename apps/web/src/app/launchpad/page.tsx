@@ -175,6 +175,10 @@ function extractRedirectOfferId(urlValue: string) {
   }
 }
 
+function normalizeFunnelStatus(value: unknown) {
+  return typeof value === 'string' ? value.trim().toLowerCase() : ''
+}
+
 function createSmartDefaultBlocks({
   productType,
   trafficSource,
@@ -348,6 +352,8 @@ export default function LaunchpadPage() {
     funnel_id: string
     name: string
     slug?: string | null
+    status?: string | null
+    updated_at?: string | null
     blocks?: unknown
   }
 
@@ -393,6 +399,8 @@ export default function LaunchpadPage() {
   const [quickStartCreating, setQuickStartCreating] = useState(false)
   const [duplicateFunnels, setDuplicateFunnels] = useState<FunnelRecord[]>([])
   const [duplicateFunnelsLoading, setDuplicateFunnelsLoading] = useState(false)
+  const [selectingDraftFunnel, setSelectingDraftFunnel] = useState(false)
+  const [selectedPublishDraftId, setSelectedPublishDraftId] = useState('')
   const [duplicateSourceFunnelId, setDuplicateSourceFunnelId] = useState('')
   const [duplicateTargetNiche, setDuplicateTargetNiche] = useState('general')
   const [duplicateOfferId, setDuplicateOfferId] = useState('')
@@ -474,6 +482,10 @@ export default function LaunchpadPage() {
   useEffect(() => {
     const status = `${createdFunnel?.funnel?.status || ''}`.toLowerCase()
     setFunnelPublished(status === 'published')
+    const currentId = createdFunnel?.funnel?.funnel_id || createdFunnel?.funnelId || ''
+    if (currentId) {
+      setSelectedPublishDraftId(String(currentId))
+    }
   }, [createdFunnel])
 
   useEffect(() => {
@@ -492,6 +504,14 @@ export default function LaunchpadPage() {
     void loadDuplicateFunnels()
     void loadOffers()
   }, [setupComplete, stats.funnels])
+
+  useEffect(() => {
+    const stepId = launchSteps[currentStep]?.id
+    if (stepId !== 'launch') return
+    if (duplicateFunnelsLoading) return
+    if (duplicateFunnels.length > 0) return
+    void loadDuplicateFunnels()
+  }, [currentStep, duplicateFunnels.length, duplicateFunnelsLoading])
 
   const loadUserData = async () => {
     try {
@@ -536,10 +556,21 @@ export default function LaunchpadPage() {
           funnel_id: String(row.funnel_id || ''),
           name: String(row.name || ''),
           slug: typeof row.slug === 'string' ? row.slug : null,
+          status: typeof row.status === 'string' ? row.status : null,
+          updated_at: typeof row.updated_at === 'string' ? row.updated_at : null,
           blocks: row.blocks,
         }))
         .filter((row: FunnelRecord) => row.funnel_id.length > 0 && row.name.length > 0)
+        .sort((a, b) => {
+          const aTime = a.updated_at ? Date.parse(a.updated_at) : 0
+          const bTime = b.updated_at ? Date.parse(b.updated_at) : 0
+          return bTime - aTime
+        })
       setDuplicateFunnels(normalized)
+      const draftCandidates = normalized.filter((row) => normalizeFunnelStatus(row.status) !== 'published')
+      if (!selectedPublishDraftId && draftCandidates.length > 0) {
+        setSelectedPublishDraftId(draftCandidates[0].funnel_id)
+      }
       if (!duplicateSourceFunnelId && normalized.length > 0) {
         setDuplicateSourceFunnelId(normalized[0].funnel_id)
       }
@@ -1781,6 +1812,87 @@ export default function LaunchpadPage() {
     }
   }
 
+  const selectSavedDraftForLaunch = async (funnelId: string) => {
+    if (!funnelId) {
+      setSelectedPublishDraftId('')
+      return
+    }
+
+    try {
+      setSelectingDraftFunnel(true)
+      setStepValidationError(null)
+      setSelectedPublishDraftId(funnelId)
+
+      const response = await fetch(`/api/funnels/${encodeURIComponent(funnelId)}`, { cache: 'no-store' })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok || !payload?.funnel) {
+        setStepValidationError(payload?.error || 'Unable to load selected draft funnel.')
+        return
+      }
+
+      const funnel = payload.funnel as Record<string, unknown>
+      const parsedBlocks =
+        typeof funnel.blocks === 'string'
+          ? JSON.parse(funnel.blocks)
+          : (funnel.blocks || {})
+      const blocksPayload =
+        typeof parsedBlocks === 'object' && parsedBlocks ? (parsedBlocks as Record<string, unknown>) : {}
+      const blocks =
+        Array.isArray(blocksPayload.blocks) ? (blocksPayload.blocks as Array<Record<string, unknown>>) : []
+
+      const payloadOfferId =
+        typeof blocksPayload.offer === 'object' &&
+        blocksPayload.offer &&
+        typeof (blocksPayload.offer as Record<string, unknown>).id === 'string'
+          ? String((blocksPayload.offer as Record<string, unknown>).id)
+          : null
+
+      const derivedOfferId =
+        payloadOfferId ||
+        blocks
+          .map((block) => {
+            const content =
+              typeof block.content === 'object' && block.content ? (block.content as Record<string, unknown>) : {}
+            const candidates = [content.ctaLink, content.buttonLink, content.affiliateLink, content.affiliate_link]
+            const first = candidates.find((value) => typeof value === 'string' && value.trim().length > 0)
+            return typeof first === 'string' ? extractRedirectOfferId(first) : null
+          })
+          .find((value) => typeof value === 'string' && value.length > 0) || null
+
+      const nextNiche = typeof blocksPayload.niche === 'string' ? blocksPayload.niche : ''
+      const nextTemplate = typeof blocksPayload.template === 'string' ? blocksPayload.template : ''
+
+      setCreatedFunnel({
+        funnel,
+        funnelId: String(funnel.funnel_id || funnelId),
+        slug: typeof funnel.slug === 'string' ? funnel.slug : '',
+      })
+
+      if (nextNiche) {
+        setSelectedNiche(nextNiche)
+      }
+      if (nextTemplate) {
+        setSelectedTemplate(nextTemplate)
+      }
+
+      setAttachedOfferId(derivedOfferId)
+      setOfferAttached(Boolean(derivedOfferId))
+      if (derivedOfferId) {
+        setSelectedOfferId(derivedOfferId)
+      }
+
+      // Existing drafts may already be launch-ready; keep launch flow unblocked after selection.
+      setEmailAutomationReady(true)
+      resetLaunchChecks()
+      setOperationNotice(`Draft "${String(funnel.name || 'Untitled funnel')}" selected for launch.`)
+    } catch (error) {
+      console.error('Failed to select saved draft funnel:', error)
+      setStepValidationError('Unable to load selected draft funnel.')
+    } finally {
+      setSelectingDraftFunnel(false)
+    }
+  }
+
   const shareToSocial = (platform: string) => {
     const url = encodeURIComponent(getFunnelUrl())
     const text = encodeURIComponent(`Check out my new ${selectedNiche} funnel!`)
@@ -2609,6 +2721,7 @@ export default function LaunchpadPage() {
     (step.id === 'offers' && !offerAttached) ||
     (step.id === 'email' && !emailAutomationReady) ||
     (step.id === 'launch' && (!launchChecks.previewOk || !launchChecks.ctaOk))
+  const draftFunnels = duplicateFunnels.filter((row) => normalizeFunnelStatus(row.status) !== 'published')
 
   return (
     <div className="cockpit-container min-h-screen py-12">
@@ -2864,6 +2977,28 @@ export default function LaunchpadPage() {
 
           {step.id === 'launch' && (
             <div className="mb-8 rounded-lg border border-[var(--border-elevated)] bg-[var(--accent-soft)] p-6">
+              <div className="mb-4 rounded-lg border border-[var(--border-elevated)] bg-[rgba(255,255,255,0.03)] p-4 text-left">
+                <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Select Saved Draft</p>
+                <p className="mt-1 text-xs text-text-secondary">
+                  Choose any saved draft funnel and publish it from here.
+                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <select
+                    value={selectedPublishDraftId}
+                    onChange={(event) => void selectSavedDraftForLaunch(event.target.value)}
+                    className="hud-select min-w-[280px]"
+                    disabled={duplicateFunnelsLoading || selectingDraftFunnel}
+                  >
+                    <option value="">{duplicateFunnelsLoading ? 'Loading drafts...' : 'Select a saved draft'}</option>
+                    {draftFunnels.map((funnel) => (
+                      <option key={funnel.funnel_id} value={funnel.funnel_id}>
+                        {funnel.name} {funnel.slug ? `(/f/${funnel.slug})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  {selectingDraftFunnel && <span className="text-xs text-text-secondary">Loading draft...</span>}
+                </div>
+              </div>
               <p className="text-text-primary mb-4 font-semibold">🎉 You&apos;re all set!</p>
               <div className="text-left space-y-2 mb-4">
                 <div className="flex items-center gap-2 text-sm text-text-secondary">
