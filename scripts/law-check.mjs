@@ -36,6 +36,44 @@ function banPattern(relativePath, pattern, reason) {
   }
 }
 
+function assertNoRootCaptureArtifacts() {
+  const rootEntries = fs.readdirSync(repoRoot, { withFileTypes: true })
+  const blockedPatterns = [
+    /^Dashboard (dark|light)\.png$/,
+    /^saved_resource\.html$/,
+    /^Web App Reverse Engineering\.html$/,
+    /^profile_picture\.thumbnail\.jpeg$/,
+    /^main-.*\.css$/,
+    /^root-.*\.css$/,
+    /^conversation-small-.*\.css$/,
+    /^code-block-.*\.css$/,
+    /^codemirror-.*\.css$/,
+    /^product-variants-.*\.css$/,
+    /^prosemirror-.*\.css$/,
+    /^writing-block-editor-.*\.css$/,
+    /^ansi-.*\.css$/,
+    /^table-components-.*\.css$/,
+    /^silk-hq-.*\.css$/,
+    /^index-.*\.css$/,
+  ]
+
+  for (const entry of rootEntries) {
+    if (!entry.isFile()) continue
+    const fileName = entry.name
+    if (fileName.endsWith('.download')) {
+      errors.push(`Root capture artifact detected: ${fileName}`)
+      continue
+    }
+    if (fileName.length >= 80 && !fileName.endsWith('.md')) {
+      errors.push(`Suspicious long root filename detected: ${fileName}`)
+      continue
+    }
+    if (blockedPatterns.some((pattern) => pattern.test(fileName))) {
+      errors.push(`Blocked root artifact detected: ${fileName}`)
+    }
+  }
+}
+
 requireText('docs/architecture/laws.md', [
   'Identity Law',
   'State Law',
@@ -98,6 +136,8 @@ banPattern(
   /plan\s*===\s*['\"]free['\"]\s*\|\|\s*plan\s*===\s*['\"]starter['\"]/,
   'hard-coded plan branching detected; use isPlanId from @contracts/plans'
 )
+
+assertNoRootCaptureArtifacts()
 
 if (errors.length > 0) {
   console.error('Law check failed:')

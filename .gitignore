@@ -52,3 +52,23 @@ coverage/
 # Misc
 .turbo
 .vercel
+
+# Week 2 stabilization: block root-level capture artifacts
+/*.download
+/saved_resource.html
+/Web App Reverse Engineering.html
+/Dashboard dark.png
+/Dashboard light.png
+/profile_picture.thumbnail.jpeg
+/ansi-*.css
+/code-block-*.css
+/codemirror-*.css
+/conversation-small-*.css
+/index-*.css
+/main-*.css
+/product-variants-*.css
+/prosemirror-*.css
+/root-*.css
+/silk-hq-*.css
+/table-components-*.css
+/writing-block-editor-*.css

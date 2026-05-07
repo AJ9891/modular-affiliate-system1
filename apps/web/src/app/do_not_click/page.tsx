@@ -182,7 +182,7 @@ export default function DoNotClickPage() {
               <div className="relative card-premium overflow-hidden transition-all duration-300 hover:scale-[1.02]">
                 <div className="relative w-full aspect-[4/3]">
                   <Image
-                    src="/problem/PERFECT_ TIRED_BEACH.png"
+                    src="/problem/PERFECT_TIRED_BEACH.png"
                     alt="Beach life"
                     fill
                     className="object-contain"
