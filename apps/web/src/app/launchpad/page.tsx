@@ -61,6 +61,10 @@ export default function LaunchpadPage() {
       // Skip to the funnel creation step
       setCurrentStep(2)
     }
+
+    if (searchParams.get('first_launch') === '1') {
+      setOperationNotice('Preflight locked. Start with one launch path and finish the guided setup.')
+    }
   }, [searchParams])
 
   useEffect(() => {

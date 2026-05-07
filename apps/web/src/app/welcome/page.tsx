@@ -2,14 +2,17 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import OnboardingSlideshow from '@/components/OnboardingSlides'
+import PreflightOnboarding from '@/components/onboarding/PreflightOnboarding'
 import { supabase } from '@/lib/supabase'
-
-const ONBOARDING_COMPLETE = 8
+import {
+  ONBOARDING_COMPLETE_STEP,
+  createDefaultPreflightState,
+  type PreflightState,
+} from '@/lib/onboarding/preflight'
 
 export default function WelcomePage() {
   const router = useRouter()
-  const [userId, setUserId] = useState<string | null>(null)
+  const [state, setState] = useState<PreflightState | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -24,19 +27,28 @@ export default function WelcomePage() {
           return
         }
 
-        const { data: profile, error } = await supabase
-          .from('users')
-          .select('onboarding_seen, onboarding_step')
-          .eq('id', user.id)
-          .maybeSingle()
+        const response = await fetch('/api/onboarding/state', { cache: 'no-store' })
 
-        if (!error && profile?.onboarding_seen) {
-          const step = profile.onboarding_step ?? 0
-          router.replace(step < ONBOARDING_COMPLETE ? '/launchpad' : '/cockpit')
+        if (!response.ok) {
+          setState(createDefaultPreflightState())
           return
         }
 
-        setUserId(user.id)
+        const nextState = (await response.json()) as PreflightState
+
+        if (nextState.onboardingComplete || nextState.onboardingStep >= ONBOARDING_COMPLETE_STEP) {
+          router.replace('/cockpit')
+          return
+        }
+
+        if (nextState.preflightComplete || nextState.onboardingSeen) {
+          router.replace('/launchpad?first_launch=1')
+          return
+        }
+
+        setState(nextState)
+      } catch {
+        setState(createDefaultPreflightState())
       } finally {
         setLoading(false)
       }
@@ -48,14 +60,14 @@ export default function WelcomePage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-100">
-        <div className="text-sm text-slate-300">Preparing welcome sequence...</div>
+        <div className="text-sm text-slate-300">Calibrating preflight sequence...</div>
       </div>
     )
   }
 
-  if (!userId) {
+  if (!state) {
     return null
   }
 
-  return <OnboardingSlideshow userId={userId} />
+  return <PreflightOnboarding initialState={state} onComplete={() => router.replace('/launchpad?first_launch=1')} />
 }
