@@ -20,6 +20,39 @@ export default function FunnelRenderer({ blocks }: FunnelRendererProps) {
     return typeof first === 'string' ? first : null
   }
 
+  const normalizeBenefits = (content: Record<string, any>) => {
+    const source = content.items ?? content.benefits ?? []
+    if (!Array.isArray(source)) return []
+
+    return source
+      .map((item: any, index: number) => {
+        if (typeof item === 'string') {
+          const text = item.trim()
+          if (!text) return null
+          return {
+            title: `Benefit ${index + 1}`,
+            description: text,
+          }
+        }
+
+        if (item && typeof item === 'object') {
+          const title =
+            (typeof item.title === 'string' && item.title.trim()) ||
+            (typeof item.headline === 'string' && item.headline.trim()) ||
+            `Benefit ${index + 1}`
+          const description =
+            (typeof item.description === 'string' && item.description.trim()) ||
+            (typeof item.text === 'string' && item.text.trim()) ||
+            (typeof item.body === 'string' && item.body.trim()) ||
+            ''
+          return { title, description }
+        }
+
+        return null
+      })
+      .filter(Boolean)
+  }
+
   const renderBlock = (block: FunnelBlock) => {
     switch (block.type) {
       case 'hero':
@@ -74,6 +107,32 @@ export default function FunnelRenderer({ blocks }: FunnelRendererProps) {
             </div>
           </section>
         )
+
+      case 'benefits':
+        {
+          const title = block.content.title || block.content.headline || 'Key Benefits'
+          const items = normalizeBenefits(block.content || {})
+
+          return (
+            <section className="py-16 px-6" style={block.style}>
+              <div className="max-w-6xl mx-auto">
+                <h2 className="text-3xl font-bold text-center mb-12">{title}</h2>
+                {items.length === 0 ? (
+                  <p className="text-center text-gray-600">No benefits provided.</p>
+                ) : (
+                  <div className="grid md:grid-cols-3 gap-8">
+                    {items.map((item: any, index: number) => (
+                      <article key={`${item.title}-${index}`} className="rounded-xl border border-gray-200 p-6 bg-white">
+                        <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
+                        {item.description && <p className="text-gray-600">{item.description}</p>}
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+          )
+        }
 
       case 'email-capture':
         return (
