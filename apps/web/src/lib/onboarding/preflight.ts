@@ -1,4 +1,5 @@
 export const PREFLIGHT_TOTAL_STEPS = 4
+export const LAUNCHPAD_TOTAL_STEPS = 6
 export const ONBOARDING_COMPLETE_STEP = 8
 export const MIN_LAUNCHPAD_STEP = 2
 
@@ -22,6 +23,7 @@ export type PreflightChecklist = Record<PreflightStepId, boolean>
 
 export interface PreflightState {
   currentStep: number
+  launchpadStep: number
   intent: OnboardingIntent | null
   campaignName: string
   checklist: PreflightChecklist
@@ -45,6 +47,7 @@ export function defaultPreflightChecklist(): PreflightChecklist {
 export function createDefaultPreflightState(): PreflightState {
   return {
     currentStep: 1,
+    launchpadStep: 0,
     intent: null,
     campaignName: '',
     checklist: defaultPreflightChecklist(),
@@ -60,6 +63,15 @@ export function createDefaultPreflightState(): PreflightState {
 export function clampPreflightStep(value: number): number {
   if (!Number.isFinite(value)) return 1
   return Math.min(PREFLIGHT_TOTAL_STEPS, Math.max(1, Math.floor(value)))
+}
+
+export function clampLaunchpadStep(value: number): number {
+  if (!Number.isFinite(value)) return 0
+  return Math.min(LAUNCHPAD_TOTAL_STEPS - 1, Math.max(0, Math.floor(value)))
+}
+
+export function launchpadStepToOnboardingStep(launchpadStep: number): number {
+  return Math.min(ONBOARDING_COMPLETE_STEP - 1, MIN_LAUNCHPAD_STEP + clampLaunchpadStep(launchpadStep))
 }
 
 export function isOnboardingIntent(value: unknown): value is OnboardingIntent {

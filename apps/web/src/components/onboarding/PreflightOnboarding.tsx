@@ -35,26 +35,26 @@ const STEPS: StepConfig[] = [
   {
     id: 'identity',
     title: 'Preflight identity check',
-    summary: 'Confirm your workspace intent before we arm the launch systems.',
-    boost: 'You only need one clear direction right now. We will keep the rest lightweight.',
+    summary: 'Confirm your workspace intent before we arm launch systems.',
+    boost: 'You only need one clear direction right now. Keep this first pass simple.',
   },
   {
     id: 'intent',
     title: 'Choose your first objective',
     summary: 'Pick the one motion you want Launchpad to optimize first.',
-    boost: 'One focused objective beats three half-starts. Pick the smallest path to momentum.',
+    boost: 'One focused objective beats three half-starts. Choose the smallest useful win.',
   },
   {
     id: 'campaign',
     title: 'Name your first launch',
-    summary: 'Set the campaign label so every module references the same mission.',
-    boost: 'Short, literal names keep the cockpit readable when analytics and AI logs pile up.',
+    summary: 'Set a stable campaign name so every module tracks the same mission.',
+    boost: 'Short, literal names keep your cockpit readable once analytics history grows.',
   },
   {
     id: 'ready',
     title: 'Commit preflight and enter launchpad',
     summary: 'Lock this setup and move into guided launch execution.',
-    boost: 'You do not need perfection. You need a stable first pass with clear feedback loops.',
+    boost: 'You do not need perfect setup. You need a stable baseline and clean feedback loops.',
   },
 ]
 
@@ -230,157 +230,164 @@ export default function PreflightOnboarding({ initialState, onComplete }: Prefli
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.16),rgba(10,14,26,0.95)_55%)] px-4 py-8 text-slate-100 sm:px-6 lg:px-8">
-      <div className="mx-auto grid w-full max-w-6xl gap-5 lg:grid-cols-[1.1fr_2fr_1.2fr]">
-        <section className="rounded-2xl border border-cyan-300/20 bg-slate-950/65 p-5 shadow-2xl backdrop-blur">
-          <div className="mb-4 flex items-center gap-2 text-cyan-200">
-            <Compass size={18} />
-            <p className="text-xs uppercase tracking-[0.18em]">Preflight Checklist</p>
+    <main className="theme-dark cockpit-shell page-flight-deck">
+      <div className="cockpit-container max-w-6xl py-6 sm:py-8">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.2em] text-text-secondary">First Launch Experience</p>
+            <h1 className="mt-2 text-2xl font-semibold tracking-[-0.02em] text-text-primary sm:text-3xl">Launchpad Preflight</h1>
           </div>
+          <div className="hud-strip rounded-full px-3 py-1 text-xs text-text-secondary">Step {currentStep} of {STEPS.length}</div>
+        </div>
 
-          <div className="mb-4 h-2 overflow-hidden rounded-full bg-slate-800">
-            <div
-              className="h-full bg-gradient-to-r from-cyan-400 to-emerald-300 transition-all duration-300"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-
-          <div className="space-y-3">
-            {STEPS.map((item, idx) => {
-              const complete = derivedChecklist[item.id]
-              const active = idx + 1 === currentStep
-
-              return (
-                <div
-                  key={item.id}
-                  className={`rounded-xl border px-3 py-3 transition ${
-                    active
-                      ? 'border-cyan-300/50 bg-cyan-500/10'
-                      : 'border-slate-800 bg-slate-900/55'
-                  }`}
-                >
-                  <p className="flex items-center gap-2 text-sm font-medium text-slate-100">
-                    {complete ? <CheckCircle2 size={16} className="text-emerald-300" /> : <Circle size={16} className="text-slate-500" />}
-                    Step {idx + 1}
-                  </p>
-                  <p className="mt-1 text-xs text-slate-300">{item.title}</p>
-                </div>
-              )
-            })}
-          </div>
-        </section>
-
-        <section className="rounded-2xl border border-white/10 bg-slate-950/75 p-7 shadow-2xl backdrop-blur">
-          <div className="mb-6">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">First Launch Experience</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white">{step.title}</h1>
-            <p className="mt-2 max-w-xl text-sm text-slate-300">{step.summary}</p>
-          </div>
-
-          {step.id === 'identity' && (
-            <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
-              <p className="mb-3 text-sm text-slate-200">This cockpit will coordinate your launch modules:</p>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-3 text-sm text-slate-300">Templates and page builder</div>
-                <div className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-3 text-sm text-slate-300">Offer wiring and tracking</div>
-                <div className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-3 text-sm text-slate-300">Email sequences and automation</div>
-                <div className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-3 text-sm text-slate-300">Analytics and optimization loops</div>
-              </div>
+        <div className="grid gap-4 lg:grid-cols-[17rem_minmax(0,1fr)_18rem]">
+          <section className="hud-panel p-4 sm:p-5 lg:sticky lg:top-5 lg:h-fit">
+            <div className="mb-4 flex items-center gap-2 text-text-secondary">
+              <Compass size={16} className="text-rocket-500" />
+              <p className="text-xs uppercase tracking-[0.18em]">Checklist</p>
             </div>
-          )}
 
-          {step.id === 'intent' && (
-            <div className="grid gap-3">
-              {OBJECTIVES.map((objective) => {
-                const selected = intent === objective.id
+            <div className="mb-4 h-2 overflow-hidden rounded-full bg-[rgba(10,16,24,0.72)]">
+              <div
+                className="h-full bg-gradient-to-r from-rocket-600 to-rocket-500 transition-all duration-300"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+
+            <div className="space-y-2">
+              {STEPS.map((item, idx) => {
+                const complete = derivedChecklist[item.id]
+                const active = idx + 1 === currentStep
 
                 return (
-                  <button
-                    key={objective.id}
-                    type="button"
-                    onClick={() => handleObjectiveSelect(objective.id)}
-                    disabled={saving}
-                    className={`rounded-xl border px-4 py-4 text-left transition ${
-                      selected
-                        ? 'border-cyan-300/60 bg-cyan-500/10 text-white'
-                        : 'border-slate-700 bg-slate-900/60 text-slate-300 hover:border-slate-500'
+                  <div
+                    key={item.id}
+                    className={`rounded-lg border px-3 py-3 transition ${
+                      active
+                        ? 'border-[var(--border-focus)] bg-[var(--accent-soft)]'
+                        : 'border-[var(--border-subtle)] bg-[rgba(12,18,28,0.45)]'
                     }`}
                   >
-                    <p className="text-sm font-semibold">{objective.title}</p>
-                    <p className="mt-1 text-xs text-slate-300">{objective.description}</p>
-                  </button>
+                    <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.08em] text-text-secondary">
+                      {complete ? <CheckCircle2 size={15} className="text-rocket-500" /> : <Circle size={15} className="text-text-muted" />}
+                      Step {idx + 1}
+                    </p>
+                    <p className="mt-1 text-sm text-text-primary">{item.title}</p>
+                  </div>
                 )
               })}
             </div>
-          )}
+          </section>
 
-          {step.id === 'campaign' && (
-            <div className="rounded-xl border border-slate-700 bg-slate-900/65 p-4">
-              <label htmlFor="campaignName" className="mb-2 block text-sm font-medium text-slate-200">
-                Campaign name
-              </label>
-              <input
-                id="campaignName"
-                type="text"
-                maxLength={80}
-                value={campaignName}
-                onChange={(event) => setCampaignName(event.target.value)}
-                placeholder="Example: spring-ai-audit"
-                className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-cyan-300"
-              />
-              <p className="mt-2 text-xs text-slate-400">Use 3-80 characters. Keep it literal and searchable.</p>
+          <section className="hud-panel p-5 sm:p-6">
+            <div className="mb-5">
+              <p className="text-xs uppercase tracking-[0.2em] text-text-secondary">Current Step</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-[-0.02em] text-text-primary">{step.title}</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-text-secondary">{step.summary}</p>
             </div>
-          )}
 
-          {step.id === 'ready' && (
-            <div className="rounded-xl border border-emerald-300/30 bg-emerald-500/10 p-5">
-              <p className="text-sm text-emerald-100">Preflight checks complete. Continue to launchpad and execute your first guided build.</p>
+            {step.id === 'identity' && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="hud-card-tight text-sm text-text-secondary">Templates and page builder</div>
+                <div className="hud-card-tight text-sm text-text-secondary">Offer wiring and tracking</div>
+                <div className="hud-card-tight text-sm text-text-secondary">Email automation loops</div>
+                <div className="hud-card-tight text-sm text-text-secondary">Telemetry and optimization</div>
+              </div>
+            )}
+
+            {step.id === 'intent' && (
+              <div className="grid gap-2.5">
+                {OBJECTIVES.map((objective) => {
+                  const selected = intent === objective.id
+
+                  return (
+                    <button
+                      key={objective.id}
+                      type="button"
+                      onClick={() => handleObjectiveSelect(objective.id)}
+                      disabled={saving}
+                      className={`rounded-lg border px-4 py-3 text-left transition ${
+                        selected
+                          ? 'border-[var(--border-focus)] bg-[var(--accent-soft)] text-text-primary'
+                          : 'border-[var(--border-subtle)] bg-[rgba(12,18,28,0.42)] text-text-secondary hover:border-[var(--border-elevated)] hover:text-text-primary'
+                      }`}
+                    >
+                      <p className="text-sm font-semibold">{objective.title}</p>
+                      <p className="mt-1 text-xs text-text-muted">{objective.description}</p>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+
+            {step.id === 'campaign' && (
+              <div className="rounded-lg border border-[var(--border-elevated)] bg-[var(--hud-input-bg)] p-4">
+                <label htmlFor="campaignName" className="mb-2 block text-sm font-medium text-text-primary">
+                  Campaign name
+                </label>
+                <input
+                  id="campaignName"
+                  type="text"
+                  maxLength={80}
+                  value={campaignName}
+                  onChange={(event) => setCampaignName(event.target.value)}
+                  placeholder="example: spring-ai-audit"
+                  className="w-full rounded-lg border border-[var(--border-subtle)] bg-[rgba(8,12,20,0.62)] px-3 py-2 text-sm text-text-primary outline-none transition focus:border-[var(--border-focus)]"
+                />
+                <p className="mt-2 text-xs text-text-muted">Use 3-80 characters. Keep it literal and searchable.</p>
+              </div>
+            )}
+
+            {step.id === 'ready' && (
+              <div className="rounded-lg border border-[var(--border-focus)] bg-[var(--accent-soft)] p-4">
+                <p className="text-sm text-text-primary">Preflight checks are complete. Continue to Launchpad to execute your first guided build.</p>
+              </div>
+            )}
+
+            {error && (
+              <p className="mt-5 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-100">{error}</p>
+            )}
+
+            <div className="mt-7 flex flex-col-reverse gap-2 border-t border-[var(--border-subtle)] pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <button
+                type="button"
+                onClick={handleBack}
+                disabled={currentStep === 1 || saving}
+                className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[var(--border-elevated)] px-4 py-2 text-sm text-text-secondary transition hover:border-[var(--border-focus)] hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <ArrowLeft size={16} />
+                Back
+              </button>
+
+              <button
+                type="button"
+                onClick={handleContinue}
+                disabled={saving}
+                className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-rocket-600 to-rocket-500 px-5 py-2 text-sm font-semibold text-[var(--bg-primary)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {saving ? 'Saving...' : step.id === 'ready' ? 'Continue to Launchpad' : 'Continue'}
+                <ArrowRight size={16} />
+              </button>
             </div>
-          )}
+          </section>
 
-          {error && (
-            <p className="mt-5 rounded-lg border border-red-300/35 bg-red-500/10 px-3 py-2 text-sm text-red-100">{error}</p>
-          )}
+          <section className="hud-panel p-4 sm:p-5 lg:sticky lg:top-5 lg:h-fit">
+            <div className="mb-3 flex items-center gap-2 text-text-secondary">
+              <Rocket size={16} className="text-rocket-500" />
+              <p className="text-xs uppercase tracking-[0.18em]">Boost Guidance</p>
+            </div>
 
-          <div className="mt-8 flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={handleBack}
-              disabled={currentStep === 1 || saving}
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-600 px-4 py-2 text-sm text-slate-200 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <ArrowLeft size={16} />
-              Back
-            </button>
+            <p className="rounded-lg border border-[var(--border-subtle)] bg-[rgba(12,18,28,0.45)] px-3 py-3 text-sm leading-relaxed text-text-primary">
+              {step.boost}
+            </p>
 
-            <button
-              type="button"
-              onClick={handleContinue}
-              disabled={saving}
-              className="inline-flex items-center gap-2 rounded-lg bg-cyan-400 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {saving ? 'Saving...' : step.id === 'ready' ? 'Continue to Launchpad' : 'Continue'}
-              <ArrowRight size={16} />
-            </button>
-          </div>
-        </section>
-
-        <section className="rounded-2xl border border-emerald-300/25 bg-emerald-500/10 p-5 shadow-2xl backdrop-blur">
-          <div className="mb-4 flex items-center gap-2 text-emerald-200">
-            <Rocket size={17} />
-            <p className="text-xs uppercase tracking-[0.18em]">Boost Guidance</p>
-          </div>
-
-          <p className="rounded-xl border border-emerald-300/25 bg-emerald-500/10 px-4 py-4 text-sm leading-relaxed text-emerald-50">
-            {step.boost}
-          </p>
-
-          <div className="mt-4 space-y-2 text-xs text-emerald-100/90">
-            <p className="flex items-start gap-2"><Target size={14} className="mt-0.5" /> Keep one clear objective for this session.</p>
-            <p className="flex items-start gap-2"><Flag size={14} className="mt-0.5" /> Save state after each step so context follows you.</p>
-            <p className="flex items-start gap-2"><ShieldCheck size={14} className="mt-0.5" /> You can revise details later without breaking routing.</p>
-          </div>
-        </section>
+            <div className="mt-4 space-y-2 text-xs text-text-secondary">
+              <p className="flex items-start gap-2"><Target size={14} className="mt-0.5 text-rocket-500" /> Keep one objective for this session.</p>
+              <p className="flex items-start gap-2"><Flag size={14} className="mt-0.5 text-rocket-500" /> Save progress after each step so context follows you.</p>
+              <p className="flex items-start gap-2"><ShieldCheck size={14} className="mt-0.5 text-rocket-500" /> You can revise details later without breaking routing.</p>
+            </div>
+          </section>
+        </div>
       </div>
     </main>
   )

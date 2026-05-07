@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { generateAIResponse } from '@/lib/openai'
+import { lintAIResponse, prepareAIRequest } from '@modular-affiliate/ai'
 import { 
   validateAITone, 
   validateAIBehavior, 
@@ -133,6 +134,22 @@ export async function POST(request: NextRequest) {
       .eq('conversation_id', activeConversationId)
       .order('created_at', { ascending: true })
 
+    const pipeline = prepareAIRequest({
+      componentId: 'OnboardingAssistant',
+      pageMode: 'onboarding',
+      userLevel: 'active',
+      voice: 'boost',
+      riskLevel: 'low',
+      contractKey: 'onboarding',
+      componentInstructions: 'Answer with concrete next actions and avoid hype language.',
+      content: message,
+      metadata: { route: '/api/chat', conversationId: activeConversationId, userId: user.id },
+    })
+
+    if (pipeline.blocked) {
+      return NextResponse.json({ error: pipeline.reason || 'AI middleware blocked request' }, { status: 400 })
+    }
+
     // Generate AI response with full context
     const systemPrompt = `You are a helpful AI support agent for Launchpad4Success, a complete affiliate marketing platform with funnel building, email automation, and analytics.
 
@@ -239,13 +256,40 @@ Help users with all platform features, troubleshooting, and best practices. Be f
 5. **Offer next steps**: Always end with a clear action they can take
 6. **Escalate when needed**: Suggest human support for billing, bugs, or complex custom requests
 
-Always maintain a helpful, professional tone. Users are building their business with this platform - make them feel supported!`
+Always maintain a helpful, professional tone. Users are building their business with this platform - make them feel supported!
+
+AI GOVERNANCE CONTEXT:
+${pipeline.prompt}`
 
     const aiResponse = await generateAIResponse({
       systemPrompt,
       messages: messages || [],
       userMessage: message
     })
+
+    const lintEnvelope = lintAIResponse(aiResponse)
+    if (lintEnvelope.blocked) {
+      const fallbackResponse = 'I can help with that. Let us narrow the next action to one step and then continue.'
+      const { data: assistantMsg, error: aiMsgError } = await supabase
+        .from('chat_messages')
+        .insert({
+          conversation_id: activeConversationId,
+          role: 'assistant',
+          content: fallbackResponse
+        })
+        .select()
+        .single()
+
+      if (aiMsgError) {
+        return NextResponse.json({ error: aiMsgError.message }, { status: 500 })
+      }
+
+      return NextResponse.json({
+        conversationId: activeConversationId,
+        message: assistantMsg,
+        validation: { lint: lintEnvelope.result }
+      })
+    }
 
     // Validate AI response tone
     const toneValidation = validateAITone(aiResponse)
@@ -299,7 +343,8 @@ Always maintain a helpful, professional tone. Users are building their business 
 
     return NextResponse.json({
       conversationId: activeConversationId,
-      message: assistantMsg
+      message: assistantMsg,
+      validation: { lint: lintEnvelope.result }
     })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })

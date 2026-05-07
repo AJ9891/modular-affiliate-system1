@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { generateContent, GenerateContentParams } from '@/lib/openai'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+import { prepareAIRequest, lintAIResponse, type PipelineContractKey, type ComponentId, type RiskLevel } from '@modular-affiliate/ai'
 import { 
   validateAITone, 
   validateAIBehavior, 
@@ -20,6 +21,56 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+
+    const contractByType: Record<string, PipelineContractKey> = {
+      headline: 'hero',
+      subheadline: 'hero',
+      cta: 'cta',
+      'bullet-points': 'template',
+      'full-page': 'funnel',
+      email: 'template',
+    }
+
+    const componentByType: Record<string, ComponentId> = {
+      headline: 'HeroBlock',
+      subheadline: 'HeroBlock',
+      cta: 'CTAEditor',
+      'bullet-points': 'TemplateCopy',
+      'full-page': 'FunnelComposer',
+      email: 'TemplateCopy',
+    }
+
+    const riskByType: Record<string, RiskLevel> = {
+      headline: 'medium',
+      subheadline: 'medium',
+      cta: 'high',
+      'bullet-points': 'medium',
+      'full-page': 'high',
+      email: 'medium',
+    }
+
+    const pipeline = prepareAIRequest({
+      componentId: componentByType[body.type] ?? 'TemplateCopy',
+      pageMode: 'builder',
+      userLevel: 'active',
+      voice: 'boost',
+      riskLevel: riskByType[body.type] ?? 'medium',
+      contractKey: contractByType[body.type] ?? 'template',
+      componentInstructions: 'Generate copy only for the requested artifact. Keep claims grounded and specific.',
+      content: JSON.stringify({
+        type: body.type,
+        niche: body.niche,
+        productName: body.productName,
+        audience: body.audience,
+        tone: body.tone,
+        context: body.context,
+      }),
+      metadata: { route: '/api/ai/generate-content', userId: user.id },
+    })
+
+    if (pipeline.blocked) {
+      return NextResponse.json({ error: pipeline.reason || 'AI middleware blocked request' }, { status: 400 })
+    }
     
     // Validate behavior before proceeding
     const action: AIAction = 'generate'
@@ -64,11 +115,19 @@ export async function POST(request: NextRequest) {
       productName: body.productName,
       audience: body.audience,
       tone: body.tone,
-      context: body.context,
+      context: [body.context, `AI GOVERNANCE CONTEXT:\n${pipeline.prompt}`].filter(Boolean).join('\n\n'),
       brandBrain: brandBrain,
     }
 
     const content = await generateContent(params)
+
+    const lintEnvelope = lintAIResponse(content)
+    if (lintEnvelope.blocked) {
+      return NextResponse.json({
+        error: 'Generated content failed response linting',
+        findings: lintEnvelope.result.findings,
+      }, { status: 400 })
+    }
 
     // Validate AI tone
     const toneValidation = validateAITone(content)
@@ -99,8 +158,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ 
       content: wrappedResponse.content,
       metadata: wrappedResponse.metadata,
+      middleware: {
+        voice: pipeline.voiceHeader.id,
+        contract: pipeline.contract,
+        context: pipeline.context,
+      },
       validation: {
         tone: toneValidation,
+        lint: lintEnvelope.result,
         compliance: body.type === 'cta' || body.type === 'link' ? { passed: true } : undefined
       }
     })

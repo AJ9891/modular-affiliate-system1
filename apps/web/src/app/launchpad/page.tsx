@@ -32,6 +32,7 @@ import {
  */
 export default function LaunchpadPage() {
   const searchParams = useSearchParams()
+  const MAX_LAUNCHPAD_STEP = 5
   const [currentStep, setCurrentStep] = useState(0)
   const [setupComplete, setSetupComplete] = useState(false)
   const [_userProfile, setUserProfile] = useState<any>(null)
@@ -52,14 +53,15 @@ export default function LaunchpadPage() {
   })
 
   useEffect(() => {
-    loadUserData()
-    
-    // Check if a niche was selected
     const niche = searchParams.get('niche')
+    const hasNicheOverride = Boolean(niche)
+
+    loadUserData(hasNicheOverride)
+
     if (niche) {
       setSelectedNiche(niche)
-      // Skip to the funnel creation step
       setCurrentStep(2)
+      void persistLaunchpadState(2)
     }
 
     if (searchParams.get('first_launch') === '1') {
@@ -71,13 +73,40 @@ export default function LaunchpadPage() {
     setStepValidationError(null)
   }, [currentStep])
 
-  const loadUserData = async () => {
+  const persistLaunchpadState = async (step: number, completed = false) => {
+    const launchpadStep = Math.max(0, Math.min(MAX_LAUNCHPAD_STEP, Math.floor(step)))
+
+    try {
+      await fetch('/api/onboarding/state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: 'launchpad',
+          launchpadStep,
+          launchpadCompleted: completed,
+        }),
+      })
+    } catch (error) {
+      console.warn('Unable to persist launchpad progress:', error)
+    }
+  }
+
+  const loadUserData = async (preserveStep = false) => {
     try {
       setLoadingUserData(true)
       const response = await fetch('/api/auth/me')
       if (response.ok) {
         const data = await response.json()
         setUserProfile(data.user)
+
+        const onboardingStateResponse = await fetch('/api/onboarding/state', { cache: 'no-store' })
+        if (onboardingStateResponse.ok && !preserveStep) {
+          const onboardingState = await onboardingStateResponse.json() as { launchpadStep?: number }
+          if (typeof onboardingState.launchpadStep === 'number') {
+            const safeStep = Math.max(0, Math.min(MAX_LAUNCHPAD_STEP, Math.floor(onboardingState.launchpadStep)))
+            setCurrentStep(safeStep)
+          }
+        }
         
         const statsResponse = await fetch('/api/analytics?range=30d')
         if (statsResponse.ok) {
@@ -219,6 +248,7 @@ export default function LaunchpadPage() {
     setStepValidationError(null)
     
     if (stepId === 'launch') {
+      await persistLaunchpadState(currentStep, true)
       setOperationNotice('Routing you to cockpit...')
       if (typeof window !== 'undefined') {
         localStorage.setItem('lp_skip_onboarding', '1')
@@ -227,7 +257,9 @@ export default function LaunchpadPage() {
       window.location.href = '/cockpit?skip_onboarding=1'
       return
     } else {
-      setCurrentStep(prev => prev + 1)
+      const nextStep = Math.max(0, Math.min(MAX_LAUNCHPAD_STEP, currentStep + 1))
+      setCurrentStep(nextStep)
+      void persistLaunchpadState(nextStep)
     }
   }
 
@@ -341,10 +373,12 @@ export default function LaunchpadPage() {
   }
 
   const closeOnboarding = () => {
+    void persistLaunchpadState(currentStep)
     window.location.href = '/cockpit?skip_onboarding=1'
   }
 
   const skipOnboarding = () => {
+    void persistLaunchpadState(currentStep)
     if (typeof window !== 'undefined') {
       localStorage.setItem('lp_skip_onboarding', '1')
       document.cookie = 'lp_skip_onboarding=1; Path=/; Max-Age=2592000; SameSite=Lax'
@@ -800,7 +834,11 @@ export default function LaunchpadPage() {
           <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 pt-6">
             <button
               type="button"
-              onClick={() => setCurrentStep(prev => Math.max(0, prev - 1))}
+              onClick={() => {
+                const nextStep = Math.max(0, currentStep - 1)
+                setCurrentStep(nextStep)
+                void persistLaunchpadState(nextStep)
+              }}
               disabled={currentStep === 0}
               className={`
                 rounded-lg border px-4 py-2 text-sm font-semibold transition

@@ -2,12 +2,14 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { createServerRouteClient } from '@/lib/supabase-server'
 import { AuthError, requireUser } from '@/lib/authz'
 import {
-  ONBOARDING_COMPLETE_STEP,
   MIN_LAUNCHPAD_STEP,
+  ONBOARDING_COMPLETE_STEP,
+  clampLaunchpadStep,
   clampPreflightStep,
   createDefaultPreflightState,
   defaultPreflightChecklist,
   isOnboardingIntent,
+  launchpadStepToOnboardingStep,
   sanitizeCampaignName,
   type OnboardingIntent,
   type PreflightChecklist,
@@ -32,19 +34,26 @@ type OnboardingProgressRow = {
   updated_at: string | null
 }
 
+type OnboardingMode = 'preflight' | 'launchpad'
+type ProgressChecklist = Record<string, unknown>
+
 function isMissingTableError(error: { code?: string; message?: string } | null): boolean {
   if (!error) return false
   return error.code === '42P01' || error.message?.includes('onboarding_progress') === true
 }
 
-function normalizeChecklist(input: unknown): PreflightChecklist {
-  const base = defaultPreflightChecklist()
-
-  if (!input || typeof input !== 'object') {
-    return base
+function asChecklistObject(input: unknown): ProgressChecklist {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    return {}
   }
 
-  const raw = input as Record<string, unknown>
+  return input as ProgressChecklist
+}
+
+function normalizeChecklist(input: unknown): PreflightChecklist {
+  const base = defaultPreflightChecklist()
+  const raw = asChecklistObject(input)
+
   return {
     identity: Boolean(raw.identity),
     intent: Boolean(raw.intent),
@@ -66,11 +75,30 @@ function toLaunchpadStage(value: number | null): number | null {
   return Math.max(1, Math.floor(value))
 }
 
+function toOnboardingMode(value: unknown): OnboardingMode {
+  return value === 'launchpad' ? 'launchpad' : 'preflight'
+}
+
+function deriveLaunchpadStep(profile: UsersRow, checklist: ProgressChecklist): number {
+  const fromChecklist = Number(checklist.launchpad_step)
+  if (Number.isFinite(fromChecklist)) {
+    return clampLaunchpadStep(fromChecklist)
+  }
+
+  const onboardingStep = Math.max(0, Number(profile.onboarding_step ?? 0))
+  if (onboardingStep < MIN_LAUNCHPAD_STEP) {
+    return 0
+  }
+
+  return clampLaunchpadStep(onboardingStep - MIN_LAUNCHPAD_STEP)
+}
+
 function buildState(
   profile: UsersRow,
   progress: OnboardingProgressRow | null,
 ): PreflightState {
   const fallback = createDefaultPreflightState()
+  const checklistObject = asChecklistObject(progress?.checklist)
   const checklist = progress ? normalizeChecklist(progress.checklist) : fallback.checklist
 
   const onboardingSeen = Boolean(profile.onboarding_seen)
@@ -79,13 +107,11 @@ function buildState(
   const currentStep = clampPreflightStep(Number(progress?.current_step ?? 1))
   const progressCompleted = Boolean(progress?.completed)
 
-  const preflightComplete =
-    onboardingSeen ||
-    progressCompleted ||
-    (currentStep >= 4 && checklist.ready)
+  const preflightComplete = onboardingSeen || progressCompleted || (currentStep >= 4 && checklist.ready)
 
   return {
     currentStep,
+    launchpadStep: deriveLaunchpadStep(profile, checklistObject),
     intent: toIntent(progress?.intent ?? null),
     campaignName: sanitizeCampaignName(progress?.campaign_name),
     checklist,
@@ -165,25 +191,98 @@ export async function POST(req: NextRequest) {
     const user = await requireUser(supabase)
 
     const profile = await getProfile(supabase, user.id)
+    const currentProgress = await getProgress(supabase, user.id)
     const payload = (await req.json().catch(() => ({}))) as Record<string, unknown>
+    const mode = toOnboardingMode(payload.mode)
 
-    const incomingStep = clampPreflightStep(Number(payload.currentStep ?? 1))
-    const incomingChecklist = normalizeChecklist(payload.checklist)
-    const incomingIntent = toIntent(payload.intent)
-    const incomingCampaignName = sanitizeCampaignName(payload.campaignName)
+    const currentChecklist = asChecklistObject(currentProgress?.checklist)
 
-    const preflightComplete =
-      Boolean(payload.preflightComplete) ||
-      (incomingStep >= 4 && incomingChecklist.ready)
+    let progressRecord: {
+      user_id: string
+      intent: OnboardingIntent | null
+      campaign_name: string | null
+      checklist: ProgressChecklist
+      current_step: number
+      completed: boolean
+      updated_at: string
+    }
 
-    const progressRecord = {
-      user_id: user.id,
-      intent: incomingIntent,
-      campaign_name: incomingCampaignName || null,
-      checklist: incomingChecklist,
-      current_step: preflightComplete ? 4 : incomingStep,
-      completed: preflightComplete,
-      updated_at: new Date().toISOString(),
+    const currentOnboardingStep = Number(profile.onboarding_step ?? 0)
+    const launchpadCompleted = Boolean(payload.launchpadCompleted)
+
+    let userUpdate = {
+      onboarding_seen: Boolean(profile.onboarding_seen),
+      onboarding_step: currentOnboardingStep,
+      onboarding_complete: Boolean(profile.onboarding_complete),
+      launchpad_stage: Math.max(Number(profile.launchpad_stage ?? 1), 1),
+    }
+
+    if (mode === 'launchpad') {
+      const launchpadStep = clampLaunchpadStep(Number(payload.launchpadStep ?? 0))
+      const preflightChecklist = normalizeChecklist(currentChecklist)
+      const completed = launchpadCompleted || Boolean(currentProgress?.completed)
+
+      progressRecord = {
+        user_id: user.id,
+        intent: toIntent(currentProgress?.intent ?? payload.intent),
+        campaign_name: sanitizeCampaignName(currentProgress?.campaign_name ?? payload.campaignName) || null,
+        checklist: {
+          ...currentChecklist,
+          ...preflightChecklist,
+          ready: true,
+          launchpad_step: launchpadStep,
+          launchpad_completed: launchpadCompleted,
+        },
+        current_step: 4,
+        completed,
+        updated_at: new Date().toISOString(),
+      }
+
+      const nextOnboardingStep = launchpadCompleted
+        ? ONBOARDING_COMPLETE_STEP
+        : Math.max(currentOnboardingStep, launchpadStepToOnboardingStep(launchpadStep))
+
+      userUpdate = {
+        onboarding_seen: true,
+        onboarding_step: nextOnboardingStep,
+        onboarding_complete: Boolean(profile.onboarding_complete) || launchpadCompleted,
+        launchpad_stage: launchpadCompleted
+          ? Math.max(Number(profile.launchpad_stage ?? 1), 4)
+          : Math.max(Number(profile.launchpad_stage ?? 1), 2),
+      }
+    } else {
+      const incomingStep = clampPreflightStep(Number(payload.currentStep ?? 1))
+      const incomingChecklist = normalizeChecklist(payload.checklist)
+      const incomingIntent = toIntent(payload.intent)
+      const incomingCampaignName = sanitizeCampaignName(payload.campaignName)
+
+      const preflightComplete = Boolean(payload.preflightComplete) || (incomingStep >= 4 && incomingChecklist.ready)
+
+      progressRecord = {
+        user_id: user.id,
+        intent: incomingIntent,
+        campaign_name: incomingCampaignName || null,
+        checklist: {
+          ...currentChecklist,
+          ...incomingChecklist,
+        },
+        current_step: preflightComplete ? 4 : incomingStep,
+        completed: preflightComplete,
+        updated_at: new Date().toISOString(),
+      }
+
+      const nextOnboardingStep = preflightComplete
+        ? Math.max(currentOnboardingStep, MIN_LAUNCHPAD_STEP)
+        : Math.max(currentOnboardingStep, 1)
+
+      userUpdate = {
+        onboarding_seen: Boolean(profile.onboarding_seen) || preflightComplete,
+        onboarding_step: nextOnboardingStep,
+        onboarding_complete: Boolean(profile.onboarding_complete),
+        launchpad_stage: preflightComplete
+          ? Math.max(Number(profile.launchpad_stage ?? 1), 2)
+          : Math.max(Number(profile.launchpad_stage ?? 1), 1),
+      }
     }
 
     const { error: progressError } = await supabase
@@ -192,22 +291,6 @@ export async function POST(req: NextRequest) {
 
     if (progressError && !isMissingTableError(progressError)) {
       throw new Error(progressError.message)
-    }
-
-    const currentOnboardingStep = Number(profile.onboarding_step ?? 0)
-    const nextOnboardingStep = preflightComplete
-      ? Math.max(currentOnboardingStep, MIN_LAUNCHPAD_STEP)
-      : Math.max(currentOnboardingStep, 1)
-
-    const nextLaunchpadStage = preflightComplete
-      ? Math.max(Number(profile.launchpad_stage ?? 1), 2)
-      : Math.max(Number(profile.launchpad_stage ?? 1), 1)
-
-    const userUpdate = {
-      onboarding_seen: Boolean(profile.onboarding_seen) || preflightComplete,
-      onboarding_step: nextOnboardingStep,
-      onboarding_complete: Boolean(profile.onboarding_complete),
-      launchpad_stage: nextLaunchpadStage,
     }
 
     const { error: userUpdateError } = await supabase
