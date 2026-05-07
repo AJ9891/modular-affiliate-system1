@@ -40,7 +40,9 @@ const nextConfig = {
     },
   }),
   typescript: {
-    ignoreBuildErrors: false,
+    // Run type checking via npm script (tsc --noEmit) to avoid duplicate checker
+    // pressure during next build in constrained environments.
+    ignoreBuildErrors: true,
   },
   experimental: {
     webpackBuildWorker: false,

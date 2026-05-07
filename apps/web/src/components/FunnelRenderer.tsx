@@ -53,8 +53,21 @@ export default function FunnelRenderer({ blocks }: FunnelRendererProps) {
       .filter(Boolean)
   }
 
+  const normalizeBlockType = (type: unknown) => {
+    if (typeof type !== 'string') return ''
+
+    const normalized = type.trim().toLowerCase().replace(/_/g, '-')
+
+    if (normalized === 'benefit') return 'benefits'
+    if (normalized === 'testimonials') return 'testimonial'
+
+    return normalized
+  }
+
   const renderBlock = (block: FunnelBlock) => {
-    switch (block.type) {
+    const blockType = normalizeBlockType(block.type)
+
+    switch (blockType) {
       case 'hero':
         {
           const ctaHref = resolveCtaHref(block.content || {})
@@ -129,6 +142,33 @@ export default function FunnelRenderer({ blocks }: FunnelRendererProps) {
                     ))}
                   </div>
                 )}
+              </div>
+            </section>
+          )
+        }
+
+      case 'testimonial':
+        {
+          const items = Array.isArray(block.content.testimonials)
+            ? block.content.testimonials
+            : Array.isArray(block.content.items)
+              ? block.content.items
+              : [block.content]
+
+          return (
+            <section className="py-16 px-6" style={block.style}>
+              <div className="max-w-5xl mx-auto">
+                <h2 className="text-3xl font-bold text-center mb-12">{block.content.headline || 'Testimonials'}</h2>
+                <div className="grid gap-6 md:grid-cols-2">
+                  {items.map((item: any, index: number) => (
+                    <article key={`${item?.author || 'testimonial'}-${index}`} className="rounded-xl border border-gray-200 p-6 bg-white">
+                      <p className="text-gray-700">“{item?.quote || item?.text || 'Great results.'}”</p>
+                      {(item?.author || item?.name) && (
+                        <p className="mt-3 text-sm font-semibold text-gray-900">- {item.author || item.name}</p>
+                      )}
+                    </article>
+                  ))}
+                </div>
               </div>
             </section>
           )
