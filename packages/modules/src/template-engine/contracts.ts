@@ -1,0 +1,40 @@
+import type { TemplateMetadataContract } from './types'
+
+export const templateMetadataContracts: TemplateMetadataContract[] = [
+  {
+    id: 'boost-launch-template',
+    version: '1.0.0',
+    name: 'Boost Launch Template',
+    owner: 'template-engine',
+    channel: 'landing-page',
+    voice: 'boost',
+    risk: 'low',
+    audience: 'new affiliate operators',
+    aiAllowed: true,
+    tags: ['launch', 'onboarding', 'conversion'],
+  },
+  {
+    id: 'anti-guru-audit-template',
+    version: '1.0.0',
+    name: 'Anti-Guru Audit Template',
+    owner: 'template-engine',
+    channel: 'email',
+    voice: 'anti-guru',
+    risk: 'medium',
+    audience: 'skeptical decision makers',
+    aiAllowed: true,
+    tags: ['audit', 'email', 'realistic'],
+  },
+  {
+    id: 'glitch-preview-template',
+    version: '1.0.0',
+    name: 'Glitch Preview Template',
+    owner: 'template-engine',
+    channel: 'ad',
+    voice: 'glitch',
+    risk: 'high',
+    audience: 'parody-ready segments',
+    aiAllowed: false,
+    tags: ['preview', 'parody', 'experimental'],
+  },
+]

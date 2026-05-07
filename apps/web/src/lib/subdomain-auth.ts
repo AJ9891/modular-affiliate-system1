@@ -65,13 +65,14 @@ function createSubdomainRouteHandlerClientWithCookieWriter(request: NextRequest)
   }
 
   const pendingCookies = new Map<string, { value: string; options?: Record<string, unknown> }>()
+  const pendingHeaders = new Map<string, string>()
 
   const supabase = createServerClient(supabaseUrl, supabasePublicKey, {
     cookies: {
       getAll() {
         return request.cookies.getAll()
       },
-      setAll(cookiesToSet) {
+      setAll(cookiesToSet, headers) {
         cookiesToSet.forEach(({ name, value, options }) => {
           try {
             request.cookies.set(name, value)
@@ -84,11 +85,27 @@ function createSubdomainRouteHandlerClientWithCookieWriter(request: NextRequest)
             options: options as unknown as Record<string, unknown> | undefined,
           })
         })
+
+        if (headers) {
+          const maybeHeaders = headers as unknown as { forEach?: (cb: (value: string, key: string) => void) => void }
+          if (typeof maybeHeaders.forEach === 'function') {
+            maybeHeaders.forEach((value, key) => {
+              pendingHeaders.set(key, value)
+            })
+          } else {
+            Object.entries(headers as Record<string, string>).forEach(([key, value]) => {
+              pendingHeaders.set(key, value)
+            })
+          }
+        }
       },
     },
   })
 
   const applyCookies = (response: NextResponse) => {
+    pendingHeaders.forEach((value, key) => {
+      response.headers.set(key, value)
+    })
     pendingCookies.forEach(({ value, options }, name) => {
       response.cookies.set(name, value, options)
     })

@@ -5,6 +5,16 @@ import { createServiceRoleClient, loadSupabaseEnv } from '@/lib/supabase-server'
 import { log } from '@/lib/log'
 import { withTrace } from '@/lib/observability/tracing'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+function withNoStore(response: NextResponse) {
+  response.headers.set('Cache-Control', 'private, no-store, max-age=0, must-revalidate')
+  response.headers.set('Pragma', 'no-cache')
+  response.headers.set('Expires', '0')
+  return response
+}
+
 function getSupabaseAdminClient() {
   try {
     loadSupabaseEnv(true)
@@ -32,7 +42,7 @@ function shouldAutoGrantAdmin(email?: string | null): boolean {
 
 export async function POST(request: NextRequest) {
   const check = checkSupabase()
-  if (check) return check
+  if (check) return withNoStore(check)
   
   const { supabase, applyCookies } = createSubdomainRouteHandlerClientWithResponse(request)
   
@@ -42,19 +52,19 @@ export async function POST(request: NextRequest) {
       body = await request.json()
     } catch (parseError) {
       log.warn('Failed to parse request body', { error: String(parseError) })
-      return applyCookies(NextResponse.json(
+      return applyCookies(withNoStore(NextResponse.json(
         { error: 'Invalid request body' },
         { status: 400 }
-      ))
+      )))
     }
 
     const { email, password } = body
 
     if (!email || !password) {
-      return applyCookies(NextResponse.json(
+      return applyCookies(withNoStore(NextResponse.json(
         { error: 'Email and password are required' },
         { status: 400 }
-      ))
+      )))
     }
 
     const { data, error } = await withTrace(
@@ -69,15 +79,15 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       log.warn('Supabase auth error', { error: error?.message })
-      return applyCookies(NextResponse.json({ 
+      return applyCookies(withNoStore(NextResponse.json({ 
         error: error.message || 'Invalid email or password' 
-      }, { status: 401 }))
+      }, { status: 401 })))
     }
 
     if (!data.user) {
-      return applyCookies(NextResponse.json({ 
+      return applyCookies(withNoStore(NextResponse.json({ 
         error: 'Authentication failed' 
-      }, { status: 401 }))
+      }, { status: 401 })))
     }
 
     // Best effort: ensure user exists in public.users table if service key is configured.
@@ -86,7 +96,7 @@ export async function POST(request: NextRequest) {
         const adminClient = getSupabaseAdminClient()
         if (!adminClient) {
           // Continue without blocking auth when service role is not configured.
-          return applyCookies(createLoginSuccessResponse(data))
+          return applyCookies(withNoStore(createLoginSuccessResponse(data)))
         }
 
         const { error: upsertError } = await adminClient.from('users').upsert({
@@ -135,13 +145,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return applyCookies(createLoginSuccessResponse(data))
+    return applyCookies(withNoStore(createLoginSuccessResponse(data)))
   } catch (error: any) {
     log.error('Login error', { error: error?.message })
-    return applyCookies(NextResponse.json(
+    return applyCookies(withNoStore(NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }
-    ))
+    )))
   }
 }
 

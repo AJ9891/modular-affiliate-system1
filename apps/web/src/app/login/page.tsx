@@ -8,6 +8,27 @@ import { hasAdminAccess } from '@/lib/admin-access'
 
 const ONBOARDING_COMPLETE = 8
 
+function getSafeRedirectTarget(value: string | null): string | null {
+  if (!value) return null
+  const target = value.trim()
+
+  // Prevent open redirects and login loops.
+  if (!target.startsWith('/') || target.startsWith('//') || target.startsWith('/login')) {
+    return null
+  }
+
+  return target
+}
+
+function getRequestedRedirectFromWindow(): string | null {
+  if (typeof window === 'undefined') return null
+  const params = new URLSearchParams(window.location.search)
+  return (
+    getSafeRedirectTarget(params.get('redirect')) ??
+    getSafeRedirectTarget(params.get('redirectTo'))
+  )
+}
+
 export default function Login() {
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
@@ -30,6 +51,7 @@ export default function Login() {
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       })
@@ -54,6 +76,19 @@ export default function Login() {
           access_token: data.session.access_token,
           refresh_token: data.session.refresh_token
         })
+      }
+
+      // Confirm the server can see the auth cookie before leaving /login.
+      const authCheck = await fetch('/api/auth/me', {
+        method: 'GET',
+        credentials: 'include',
+        cache: 'no-store',
+      })
+
+      if (!authCheck.ok) {
+        setError('Login succeeded, but your session cookie was not established. Please try again.')
+        setLoading(false)
+        return
       }
 
       let destination = '/cockpit'
@@ -81,7 +116,15 @@ export default function Login() {
         }
       }
 
-      router.push(destination)
+      const requestedRedirect = getRequestedRedirectFromWindow()
+
+      const finalDestination = requestedRedirect || destination
+      if (typeof window !== 'undefined') {
+        window.location.assign(finalDestination)
+        return
+      }
+
+      router.push(finalDestination)
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred. Please try again.')
     } finally {
