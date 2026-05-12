@@ -1,5 +1,9 @@
 # Onboarding Rules
 
+## Source Of Truth
+This file is Launchpad's constitutional authority for onboarding behavior.
+Onboarding must prioritize momentum while preserving state integrity.
+
 ## Purpose
 Ensure onboarding is consistent, stateful, and recoverable across all modules.
 
@@ -26,13 +30,24 @@ Optional fields:
 - Show clear current step and next action.
 - Provide deterministic back/forward semantics.
 - Never hide blocking requirements.
+- Keep onboarding momentum-first, not tutorial-heavy.
+
+## Flow Rules
+Preflight flow should progress through:
+- Welcome
+- Destination selection
+- Funnel type
+- First launch
+- Cockpit reveal
 
 ## Prohibited
 - Client-only transitions without persistence.
 - Skipping required steps without explicit override policy.
 - Step completion inferred only from UI interaction.
+- Feature-overload onboarding that delays first launch momentum.
 
 ## Enforcement Hooks
 - Route guard checks against onboarding state.
 - Integration tests for stage progression.
-- Event assertions for step completion.
+- Event assertions for Step completion.
+- Flow contracts in `packages/onboarding/flows`.

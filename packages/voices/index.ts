@@ -31,3 +31,5 @@ entries.forEach(entry => {
 
 export { voiceRegistry }
 export * from './Voice.types'
+export * from './contracts/VoiceCompatibility'
+export * from './contracts/VoiceEnforcement'

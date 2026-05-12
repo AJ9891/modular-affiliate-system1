@@ -1,5 +1,9 @@
 # Voice Rules
 
+## Source Of Truth
+This file is Launchpad's constitutional authority for voice behavior.
+Voice is an enforced architecture layer, not a stylistic preference.
+
 ## Purpose
 Ensure all voice/personality systems remain consistent, composable, and policy-safe.
 
@@ -17,6 +21,11 @@ Each voice profile must define:
 - `forbidden_patterns`
 - `fallback_style`
 
+## Compatibility Rules
+- Every generation surface must declare allowed voices.
+- Incompatible voice/surface pairs must fail closed.
+- Fallback voice selection must be deterministic and logged.
+
 ## Content Rules
 - Preserve factual parity across voice variants.
 - Avoid manipulative, deceptive, or coercive language.
@@ -31,3 +40,4 @@ Each voice profile must define:
 - Type-level voice profile registry.
 - Prompt builder tests for factual parity.
 - Lint rule for forbidden voice strings/patterns.
+- Compatibility checks in `packages/voices/contracts`.

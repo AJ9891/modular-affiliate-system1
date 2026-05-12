@@ -1,5 +1,9 @@
 # AI Rules
 
+## Source Of Truth
+This file is Launchpad's constitutional authority for AI behavior.
+If implementation and memory conflict, this document wins.
+
 ## Purpose
 Define non-negotiable constraints for AI behavior across generation, recommendations, and automated actions.
 
@@ -21,13 +25,16 @@ Every action-capable AI response should include:
 - Keep deterministic prompts for critical flows.
 - Log prompt version, model, and output envelope in telemetry.
 - Fail closed when validation fails.
+- Do not auto-overwrite user intent without an explicit confirmation gate.
 
 ## Prohibited
 - Hidden prompt-side business logic that bypasses code-level rules.
 - Returning untyped free-form JSON where contracts are required.
 - Silent retries that change semantics without logging.
+- Persuasion pressure tactics that replace user goals with platform goals.
 
 ## Enforcement Hooks
 - Contract checks in shared types package.
 - Runtime schema validation in API routes.
 - CI checks that disallow untyped AI action handlers.
+- Middleware + validators in `packages/ai` must run before delivery.

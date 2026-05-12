@@ -13,6 +13,13 @@ function readFile(relativePath) {
   return fs.readFileSync(fullPath, 'utf8')
 }
 
+function requireDirectory(relativePath) {
+  const fullPath = path.join(repoRoot, relativePath)
+  if (!fs.existsSync(fullPath) || !fs.statSync(fullPath).isDirectory()) {
+    errors.push(`Missing required directory: ${relativePath}`)
+  }
+}
+
 function requireText(relativePath, snippets) {
   const body = readFile(relativePath)
   for (const snippet of snippets) {
@@ -89,6 +96,70 @@ requireText('docs/codex/AI_RULES.md', ['Required Output Envelope', 'policy_flags
 requireText('docs/codex/VOICE_RULES.md', ['Voice Contract', 'fallback_style'])
 requireText('docs/codex/ONBOARDING_RULES.md', ['state machine', 'Step completion'])
 requireText('docs/codex/TEMPLATE_RULES.md', ['Template Contract', 'version'])
+
+requireDirectory('archive')
+requireDirectory('generated')
+requireDirectory('tmp')
+
+requireDirectory('packages/ai/contracts')
+requireDirectory('packages/ai/middleware')
+requireDirectory('packages/ai/orchestration')
+requireDirectory('packages/ai/validators')
+requireDirectory('packages/ai/telemetry')
+
+requireText('packages/ai/contracts/AIFlightContract.ts', [
+  'allowedActions',
+  'overwritePolicy',
+  'persuasionLimits',
+  'compatibleVoices',
+])
+
+requireText('packages/ai/middleware/index.ts', [
+  'ContextMiddleware',
+  'VoiceMiddleware',
+  'TemplateConstraintMiddleware',
+  'OnboardingStateMiddleware',
+])
+
+requireText('packages/ai/validators/index.ts', [
+  'findHypeCreep',
+  'findVoiceDrift',
+  'findUnsafeCopy',
+  'findIntentMutation',
+])
+
+requireText('packages/ai/telemetry/types.ts', [
+  'whatChanged',
+  'whyItMatters',
+  'nextStep',
+])
+
+requireDirectory('packages/voices/contracts')
+requireText('packages/voices/contracts/VoiceCompatibility.ts', ['VOICE_COMPATIBILITY', 'isVoiceCompatible'])
+requireText('packages/voices/contracts/VoiceEnforcement.ts', ['enforceVoiceSurfaceCompatibility'])
+
+requireDirectory('packages/onboarding')
+requireDirectory('packages/onboarding/flows')
+requireDirectory('packages/onboarding/steps')
+requireDirectory('packages/onboarding/copy')
+requireDirectory('packages/onboarding/motion')
+requireText('packages/onboarding/steps/types.ts', [
+  'destination_selection',
+  'funnel_type',
+  'first_launch',
+  'cockpit_reveal',
+])
+requireText('packages/onboarding/copy/preflight.copy.ts', ['Welcome aboard', 'Launch now', 'Enter cockpit'])
+
+requireDirectory('packages/templates')
+requireDirectory('packages/templates/contracts')
+requireText('packages/templates/contracts/TemplateMetadata.ts', [
+  'voice',
+  'risk',
+  'audience',
+  'goal',
+  'experienceLevel',
+])
 
 requireText('packages/contracts/src/index.ts', [
   "export * from './plans'",

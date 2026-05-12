@@ -1,5 +1,9 @@
 # Architecture Rules
 
+## Source Of Truth
+This file is Launchpad's constitutional authority for system architecture.
+All modules must conform to these boundaries.
+
 ## Purpose
 Maintain one coherent modular cognitive operating system instead of siloed feature logic.
 
@@ -24,13 +28,16 @@ Maintain one coherent modular cognitive operating system instead of siloed featu
 ## State Rules
 - Identity, plan, stage, and capabilities must be canonical.
 - Derived state should be computed, not persisted when avoidable.
+- AI orchestration cannot bypass canonical onboarding or plan state.
 
 ## Prohibited
 - Circular dependencies between modules.
 - Hard-coded plan/capability logic in components.
 - Hidden side effects in utility helpers.
+- Parallel AI orchestration systems that diverge in policy behavior.
 
 ## Enforcement Hooks
 - CI law checks and type checks.
 - Static dependency checks.
 - Mandatory migration notes for schema/contract changes.
+- Required package structure under `packages/ai`, `packages/voices`, `packages/onboarding`, and `packages/templates`.

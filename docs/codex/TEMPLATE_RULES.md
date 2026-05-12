@@ -1,5 +1,9 @@
 # Template Rules
 
+## Source Of Truth
+This file is Launchpad's constitutional authority for template behavior.
+Template metadata and rendering must align to this document.
+
 ## Purpose
 Keep templates reusable, safe, and aligned with platform capabilities.
 
@@ -17,6 +21,11 @@ Each template must define:
 - `optional_inputs`
 - `output_shape`
 - `version`
+- `voice`
+- `risk`
+- `audience`
+- `goal`
+- `experienceLevel`
 
 ## Authoring Rules
 - Separate content structure from visual theme tokens.
@@ -32,3 +41,4 @@ Each template must define:
 - Schema validation at load and publish time.
 - Snapshot tests for output stability.
 - CI check for contract version and required fields.
+- Metadata validation in `packages/templates/contracts`.
