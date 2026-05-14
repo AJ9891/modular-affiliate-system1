@@ -115,11 +115,17 @@ requireText('packages/ai/contracts/AIFlightContract.ts', [
 ])
 
 requireText('packages/ai/middleware/index.ts', [
+  'ContextResolver',
+  'VoiceInjector',
+  'ResponseLinter',
   'ContextMiddleware',
   'VoiceMiddleware',
   'TemplateConstraintMiddleware',
   'OnboardingStateMiddleware',
 ])
+requireText('packages/ai/middleware/ContextResolver.ts', ['resolveMiddlewareContext'])
+requireText('packages/ai/middleware/VoiceInjector.ts', ['injectMiddlewareVoice', 'enforceVoiceSurfaceCompatibility'])
+requireText('packages/ai/middleware/ResponseLinter.ts', ['lintMiddlewareResponse'])
 
 requireText('packages/ai/validators/index.ts', [
   'findHypeCreep',

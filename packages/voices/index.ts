@@ -20,7 +20,6 @@ const entries: Entry[] = [
 
 entries.forEach(entry => {
   voiceRegistry.register({
-    // @ts-expect-error allowing hyphenated id per docs; normalize in real implementation
     id: entry.id,
     header: { header: entry.header, rules: entry.rules },
     rules: { header: entry.header, rules: entry.rules },

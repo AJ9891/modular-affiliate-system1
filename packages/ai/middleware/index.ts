@@ -1,4 +1,7 @@
 export * from './types'
+export * from './ContextResolver'
+export * from './VoiceInjector'
+export * from './ResponseLinter'
 export * from './ContextMiddleware'
 export * from './VoiceMiddleware'
 export * from './TemplateConstraintMiddleware'
