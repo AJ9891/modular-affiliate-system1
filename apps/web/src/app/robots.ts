@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/api/", "/admin/", "/dashboard/"],
+      disallow: ["/api/", "/admin", "/admin/", "/dashboard", "/dashboard/"],
     },
     sitemap: "https://www.launchpad4success.pro/sitemap.xml",
     host: "https://www.launchpad4success.pro",

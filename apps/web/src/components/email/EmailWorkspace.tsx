@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Mail, Users, Bot } from 'lucide-react'
 import {
   createAutomation,
@@ -31,8 +32,10 @@ function personalityLabel(personality: EmailPersonality): string {
 
 export default function EmailWorkspace() {
   const { mode } = useBrandMode()
+  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
   const [templates, setTemplates] = useState<EmailTemplate[]>([])
   const [subscribers, setSubscribers] = useState<SubscriberLead[]>([])
 
@@ -42,6 +45,7 @@ export default function EmailWorkspace() {
 
   const [savingAutomation, setSavingAutomation] = useState(false)
   const [savingCampaign, setSavingCampaign] = useState(false)
+  const [selectedTemplateKey, setSelectedTemplateKey] = useState<string | null>(null)
 
   useEffect(() => {
     let active = true
@@ -119,6 +123,23 @@ export default function EmailWorkspace() {
   }, [selectedPersonality, templatesByPersonality])
   const selectedPersonalityLabel = useMemo(() => personalityLabel(selectedPersonality), [selectedPersonality])
 
+  useEffect(() => {
+    const templateId = searchParams.get('templateId')
+    if (!templateId || templates.length === 0 || selectedTemplateKey === templateId) {
+      return
+    }
+
+    const chosenTemplate = templates.find((template) => (template.id || template.name) === templateId)
+    if (!chosenTemplate) {
+      return
+    }
+
+    setCampaignSubject(chosenTemplate.subject)
+    setCampaignHtml(chosenTemplate.html || chosenTemplate.text || campaignHtml)
+    setSelectedTemplateKey(templateId)
+    setNotice(`Loaded template: ${chosenTemplate.name}`)
+  }, [campaignHtml, searchParams, selectedTemplateKey, templates])
+
   async function handleSetupDefaultAutomations() {
     try {
       setSavingAutomation(true)
@@ -189,6 +210,7 @@ export default function EmailWorkspace() {
         </section>
 
         {error && <section className="rounded-lg border border-red-400/35 bg-red-500/12 p-4 text-red-200">{error}</section>}
+        {notice && <section className="rounded-lg border border-cyan-400/35 bg-cyan-500/12 p-4 text-cyan-100">{notice}</section>}
 
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <DashboardPanel title="Templates" icon={<Mail size={16} />} value={selectedPersonalityTemplates.length} tone="info">

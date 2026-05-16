@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { getAdminOverview, getAdminProviderTotals, getAdminUsers, type AdminAnalyticsTotals, type AdminOverview, type AdminUserRecord } from '@/lib/api/admin'
 import AdminSkeleton from './AdminSkeleton'
 
@@ -97,6 +98,14 @@ export default function AdminWorkspace() {
         <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
           <article className="hud-card overflow-x-auto">
             <h2 className="mb-4 text-xl font-semibold text-text-primary">User Management</h2>
+            <div className="mb-4">
+              <Link
+                href="/admin/beta-testers"
+                className="inline-flex rounded-lg border border-rocket-500/45 bg-[rgba(46,230,194,0.12)] px-3 py-2 text-sm font-medium text-rocket-500 transition hover:bg-[rgba(46,230,194,0.2)]"
+              >
+                Open Beta Tester Roster
+              </Link>
+            </div>
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="border-b border-[var(--border-subtle)] text-left text-text-secondary">

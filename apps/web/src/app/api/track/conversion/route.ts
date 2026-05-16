@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+import {
+  appendAttributionAuditEvent,
+  ATTRIBUTION_CLICK_COOKIE,
+  ATTRIBUTION_SESSION_COOKIE,
+} from '@/lib/attribution-audit'
 
 export async function POST(request: NextRequest) {
   const cookieStore = await cookies()
@@ -19,7 +24,8 @@ export async function POST(request: NextRequest) {
     const { offer_id, amount, order_id } = body
 
     // Get click ID from cookie for attribution
-    const click_id = cookieStore.get('aff_click_id')?.value
+    const click_id = cookieStore.get(ATTRIBUTION_CLICK_COOKIE)?.value
+    const attributionSessionId = cookieStore.get(ATTRIBUTION_SESSION_COOKIE)?.value || null
 
     const { data, error } = await supabase
       .from('conversions')
@@ -37,9 +43,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
-    return NextResponse.json({ 
-      conversion: data[0],
-      tracked: true 
+    const conversion = data[0]
+    await appendAttributionAuditEvent({
+      eventType: 'conversion_tracked',
+      clickId: click_id || null,
+      conversionId: conversion?.conversion_id || null,
+      attributionSessionId,
+      offerId: offer_id || null,
+      amount: typeof amount === 'number' ? amount : null,
+      currency: 'usd',
+      source: 'api.track.conversion',
+      metadata: {
+        order_id: order_id || null,
+      },
+    })
+
+    return NextResponse.json({
+      conversion,
+      tracked: true
     }, { status: 201 })
   } catch (error) {
     return NextResponse.json(

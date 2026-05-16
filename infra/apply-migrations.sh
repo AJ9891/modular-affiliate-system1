@@ -47,6 +47,9 @@ MIGRATIONS=(
   "add_ai_support_chat.sql"
   "add_brand_modes.sql"
   "add_brand_brain_tables.sql"
+  "20260514_add_attribution_audit_events.sql"
+  "20260516_add_beta_testers.sql"
+  "20260516_add_beta_tester_invite_tokens.sql"
   "optimize_rls_and_performance.sql"
   "add_funnel_rls_policies.sql"
 )

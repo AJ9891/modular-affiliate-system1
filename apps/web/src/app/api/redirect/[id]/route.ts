@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { checkSupabase } from '@/lib/check-supabase'
+import {
+  appendAttributionAuditEvent,
+  ATTRIBUTION_CLICK_COOKIE,
+  ATTRIBUTION_COOKIE_MAX_AGE,
+  ATTRIBUTION_SESSION_COOKIE,
+} from '@/lib/attribution-audit'
 
 /**
  * Redirect handler for affiliate links
@@ -69,13 +75,56 @@ export async function GET(
 
     // Create redirect response with attribution cookie
     const response = NextResponse.redirect(redirectUrl.toString())
-    
-    response.cookies.set('aff_click_id', clickId, {
-      maxAge: 30 * 24 * 60 * 60, // 30 days
+
+    const existingSessionId = request.cookies.get(ATTRIBUTION_SESSION_COOKIE)?.value
+    const attributionSessionId = existingSessionId || crypto.randomUUID()
+    const isNewSession = !existingSessionId
+
+    response.cookies.set(ATTRIBUTION_CLICK_COOKIE, clickId, {
+      maxAge: ATTRIBUTION_COOKIE_MAX_AGE,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
     })
+
+    response.cookies.set(ATTRIBUTION_SESSION_COOKIE, attributionSessionId, {
+      maxAge: ATTRIBUTION_COOKIE_MAX_AGE,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+    })
+
+    if (isNewSession) {
+      await appendAttributionAuditEvent({
+        eventType: 'session_started',
+        clickId: clickId,
+        attributionSessionId,
+        offerId,
+        funnelId: funnelId || null,
+        source: 'api.redirect',
+        metadata: {
+          utm_source: utmSource || null,
+          utm_medium: utmMedium || null,
+          utm_campaign: utmCampaign || null,
+        },
+      })
+    }
+
+    if (!clickError) {
+      await appendAttributionAuditEvent({
+        eventType: 'click_tracked',
+        clickId,
+        attributionSessionId,
+        offerId,
+        funnelId: funnelId || null,
+        source: 'api.redirect',
+        metadata: {
+          utm_source: utmSource || null,
+          utm_medium: utmMedium || null,
+          utm_campaign: utmCampaign || null,
+        },
+      })
+    }
 
     return response
   } catch (error) {
