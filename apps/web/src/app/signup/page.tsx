@@ -1,11 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
-export default function Signup() {
+function SignupContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [formData, setFormData] = useState({
@@ -214,5 +214,24 @@ export default function Signup() {
         </div>
       </div>
     </main>
+  )
+}
+
+export default function Signup() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-brand-gradient launch-pad flex items-center justify-center p-8">
+          <div className="max-w-md w-full">
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-10 border-2 border-brand-purple/20">
+              <h1 className="text-3xl font-bold mb-2 text-center text-brand-navy">Create Your Account</h1>
+              <p className="text-brand-purple text-center mb-2">Loading signup…</p>
+            </div>
+          </div>
+        </main>
+      }
+    >
+      <SignupContent />
+    </Suspense>
   )
 }
