@@ -72,7 +72,7 @@ export default function StripeConnectSection() {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-xl font-bold text-gray-900">💳 Stripe Connect</h2>
-          <p className="text-sm text-gray-600">Connect your bank account to receive affiliate payouts</p>
+          <p className="text-sm text-gray-600">Set up your Stripe payout account to receive affiliate commissions</p>
         </div>
         <div className="flex items-center gap-2">
           {status?.connected && status?.onboardingComplete && status?.payoutsEnabled ? (
@@ -95,14 +95,14 @@ export default function StripeConnectSection() {
         {!status?.connected ? (
           <div>
             <p className="text-sm text-gray-600 mb-3">
-              To receive payments from your affiliate commissions, you need to connect your bank account through Stripe.
+              To receive affiliate commission payouts, connect your Stripe payout account.
             </p>
             <button
               onClick={handleConnect}
               disabled={connecting}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
-              {connecting ? 'Connecting...' : 'Connect Bank Account'}
+              {connecting ? 'Connecting...' : 'Connect Stripe Payouts'}
             </button>
           </div>
         ) : !status?.onboardingComplete ? (

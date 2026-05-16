@@ -11,6 +11,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
 
+function getAppBaseUrl(request: NextRequest): string {
+  const configuredBaseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_BASE_URL
+  const baseUrl = configuredBaseUrl && configuredBaseUrl.trim().length > 0 ? configuredBaseUrl : request.nextUrl.origin
+  return baseUrl.replace(/\/$/, '')
+}
+
 export async function POST(request: NextRequest) {
   const check = checkSupabase()
   if (check) return check
@@ -57,10 +63,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Create an account link for onboarding
+    const appBaseUrl = getAppBaseUrl(request)
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
-      refresh_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+      refresh_url: `${appBaseUrl}/subscription`,
+      return_url: `${appBaseUrl}/subscription`,
       type: 'account_onboarding',
     })
 
