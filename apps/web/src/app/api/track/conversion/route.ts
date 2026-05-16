@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+import {
+  appendAttributionAuditEvent,
+  ATTRIBUTION_CLICK_COOKIE,
+  ATTRIBUTION_SESSION_COOKIE,
+} from '@/lib/attribution-audit'
 
 function isRecoverableDbError(issue: unknown): boolean {
   if (!issue || typeof issue !== 'object') return false
@@ -34,30 +39,8 @@ export async function POST(request: NextRequest) {
     const { offer_id, amount, order_id, funnel_id, generation_id, variant_id } = body
 
     // Get click ID from cookie for attribution
-    const click_id = cookieStore.get('aff_click_id')?.value
-    const {
-      data: { user: sessionUser },
-    } = await supabase.auth.getUser()
-
-    let ownerUserId: string | null = sessionUser?.id || null
-    let ownerFunnelId: string | null = funnel_id || null
-    let ownerGenerationId: string | null = generation_id || null
-    let ownerVariantId: string | null = variant_id || null
-
-    if (click_id) {
-      const { data: clickData } = await supabase
-        .from('clicks')
-        .select('user_id,funnel_id,generation_id,variant_id')
-        .eq('click_id', click_id)
-        .maybeSingle()
-
-      if (clickData) {
-        ownerUserId = clickData.user_id || ownerUserId
-        ownerFunnelId = clickData.funnel_id || ownerFunnelId
-        ownerGenerationId = clickData.generation_id || ownerGenerationId
-        ownerVariantId = clickData.variant_id || ownerVariantId
-      }
-    }
+    const click_id = cookieStore.get(ATTRIBUTION_CLICK_COOKIE)?.value
+    const attributionSessionId = cookieStore.get(ATTRIBUTION_SESSION_COOKIE)?.value || null
 
     const { data, error } = await supabase
       .from('conversions')
@@ -79,32 +62,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
-    const sessionId = cookieStore.get('lp_session_id')?.value || null
-    const { error: analyticsError } = await supabase
-      .from('analytics_events')
-      .insert({
-        user_id: ownerUserId,
-        funnel_id: ownerFunnelId,
-        session_id: sessionId,
-        event_type: 'conversion',
-        metadata: {
-          click_id: click_id || null,
-          offer_id: offer_id || null,
-          order_id: order_id || null,
-          amount: amount || null,
-          generation_id: ownerGenerationId || null,
-          variant_id: ownerVariantId || null,
-        },
-        occurred_at: new Date().toISOString(),
-      })
+    const conversion = data[0]
+    await appendAttributionAuditEvent({
+      eventType: 'conversion_tracked',
+      clickId: click_id || null,
+      conversionId: conversion?.conversion_id || null,
+      attributionSessionId,
+      offerId: offer_id || null,
+      amount: typeof amount === 'number' ? amount : null,
+      currency: 'usd',
+      source: 'api.track.conversion',
+      metadata: {
+        order_id: order_id || null,
+      },
+    })
 
-    if (analyticsError && !isRecoverableDbError(analyticsError)) {
-      console.warn('Failed to log analytics conversion event:', analyticsError)
-    }
-
-    return NextResponse.json({ 
-      conversion: data[0],
-      tracked: true 
+    return NextResponse.json({
+      conversion,
+      tracked: true
     }, { status: 201 })
   } catch (error) {
     return NextResponse.json(

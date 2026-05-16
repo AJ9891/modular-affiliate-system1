@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { FolderKanban, TimerReset, FileText, CheckCircle2 } from 'lucide-react'
 import { createFunnel, deleteFunnel, listFunnels, type FunnelRecord } from '@/lib/api/funnels'
+import { ALL_TEMPLATES } from '@/config/funnelTemplates'
 import DashboardPanel from '@/components/cockpit/DashboardPanel'
 import WorkspacePanel from '@/components/cockpit/WorkspacePanel'
 import { CockpitEmptyState } from '@/components/ui/CockpitEmptyState'
@@ -17,10 +18,15 @@ export default function FunnelsWorkspace() {
 
   const [showCreate, setShowCreate] = useState(false)
   const [name, setName] = useState('')
-  const [template, setTemplate] = useState('lead_magnet')
+  const [template, setTemplate] = useState(ALL_TEMPLATES[0]?.id || '')
   const [niche, setNiche] = useState('general')
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  const selectedTemplate = useMemo(
+    () => ALL_TEMPLATES.find((item) => item.id === template) || null,
+    [template]
+  )
 
   async function loadFunnels() {
     try {
@@ -40,7 +46,7 @@ export default function FunnelsWorkspace() {
   }, [])
 
   async function handleCreate() {
-    if (!name.trim()) {
+    if (!name.trim() || !selectedTemplate) {
       setError('Funnel name is required')
       return
     }
@@ -50,8 +56,10 @@ export default function FunnelsWorkspace() {
       setError(null)
       const response = await createFunnel({
         name,
-        template,
-        niche,
+        template: selectedTemplate.id,
+        niche: selectedTemplate.category || niche,
+        blocks: selectedTemplate.blocks as unknown as Array<Record<string, unknown>>,
+        theme: selectedTemplate.theme as unknown as Record<string, unknown>,
       })
       setShowCreate(false)
       setName('')
@@ -165,14 +173,19 @@ export default function FunnelsWorkspace() {
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
               <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Funnel name" className="hud-input" />
               <select value={template} onChange={(event) => setTemplate(event.target.value)} className="hud-select">
-                <option value="lead_magnet">Lead Magnet</option>
-                <option value="product_launch">Product Launch</option>
-                <option value="webinar">Webinar</option>
-                <option value="affiliate_review">Affiliate Review</option>
-                <option value="sales_page">Sales Page</option>
+                {ALL_TEMPLATES.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name} ({item.brandVoice}/{item.category})
+                  </option>
+                ))}
               </select>
               <input value={niche} onChange={(event) => setNiche(event.target.value)} placeholder="Niche" className="hud-input" />
             </div>
+            {selectedTemplate && (
+              <p className="mt-3 text-xs text-text-secondary">
+                Selected template includes {selectedTemplate.blocks.length} blocks and applies its default theme.
+              </p>
+            )}
           </WorkspacePanel>
         )}
 

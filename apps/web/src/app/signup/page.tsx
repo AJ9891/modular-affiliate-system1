@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { hasAdminAccess } from '@/lib/admin-access'
 
@@ -10,7 +10,7 @@ const ONBOARDING_COMPLETE = 8
 
 export default function Signup() {
   const router = useRouter()
-  const [mounted, setMounted] = useState(false)
+  const searchParams = useSearchParams()
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -18,11 +18,61 @@ export default function Signup() {
   })
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [betaInviteToken, setBetaInviteToken] = useState('')
+  const [betaInviteEmailLocked, setBetaInviteEmailLocked] = useState(false)
+  const [betaInviteLoading, setBetaInviteLoading] = useState(false)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    const token = searchParams.get('betaInvite')
+    if (!token) return
+
+    let active = true
+    setBetaInviteToken(token)
+    setBetaInviteLoading(true)
+
+    async function resolveInvite() {
+      try {
+        const response = await fetch(`/api/beta/invite?token=${encodeURIComponent(token)}`)
+        const data = (await response.json().catch(() => ({}))) as {
+          valid?: boolean
+          email?: string
+          full_name?: string
+          alreadyAccepted?: boolean
+          error?: string
+        }
+
+        if (!active) return
+
+        if (!response.ok || !data.valid || !data.email) {
+          setError(data.error || 'Invalid beta invite link')
+          return
+        }
+
+        setFormData((prev) => ({
+          ...prev,
+          email: data.email || prev.email,
+          fullName: prev.fullName || data.full_name || prev.fullName,
+        }))
+        setBetaInviteEmailLocked(true)
+
+        if (data.alreadyAccepted) {
+          setNotice('This invite was already accepted. If you already have an account, log in instead.')
+        } else {
+          setNotice('Beta invite confirmed. Complete signup to activate your tester access.')
+        }
+      } catch {
+        if (active) setError('Unable to validate beta invite')
+      } finally {
+        if (active) setBetaInviteLoading(false)
+      }
+    }
+
+    resolveInvite()
+    return () => {
+      active = false
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,7 +87,8 @@ export default function Signup() {
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
-          fullName: formData.fullName
+          fullName: formData.fullName,
+          betaInvite: betaInviteToken || undefined
         })
       })
 
@@ -163,8 +214,12 @@ export default function Signup() {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
-                className="hud-input"
+                readOnly={betaInviteEmailLocked}
+                className="w-full px-4 py-3 border-2 border-brand-purple/30 rounded-lg focus:border-brand-cyan focus:outline-none"
               />
+              {betaInviteEmailLocked && (
+                <p className="text-xs text-brand-purple mt-1">Email is locked to the invite recipient.</p>
+              )}
             </div>
             
             <div>
@@ -183,10 +238,10 @@ export default function Signup() {
             
             <button
               type="submit"
-              disabled={loading}
-              className="btn-launch-premium w-full py-4 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={loading || betaInviteLoading}
+              className="w-full btn-launch py-4 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Creating Account...' : '3...2...1... LAUNCH! 🚀'}
+              {loading || betaInviteLoading ? 'Creating Account...' : '3...2...1... LAUNCH! 🚀'}
             </button>
           </form>
           

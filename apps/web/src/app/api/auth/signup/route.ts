@@ -36,10 +36,43 @@ export async function POST(request: NextRequest) {
   const { supabase, applyCookies } = createSubdomainRouteHandlerClientWithResponse(request)
   
   try {
-    const { email, password } = await request.json()
+    const { email, password, betaInvite } = await request.json()
+
+    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : ''
+    const betaInviteToken = typeof betaInvite === 'string' ? betaInvite.trim() : ''
+
+    let betaTesterId: string | null = null
+    let adminClient = null
+
+    if (betaInviteToken) {
+      adminClient = getSupabaseAdminClient()
+      if (!adminClient) {
+        return NextResponse.json({ error: 'Beta invite validation is unavailable right now' }, { status: 500 })
+      }
+
+      const { data: betaRecord, error: betaError } = await adminClient
+        .from('beta_testers')
+        .select('id,email,status')
+        .eq('invite_token', betaInviteToken)
+        .single<{ id: string; email: string; status: string }>()
+
+      if (betaError || !betaRecord) {
+        return NextResponse.json({ error: 'Invalid beta invite token' }, { status: 400 })
+      }
+
+      if (betaRecord.status === 'paused') {
+        return NextResponse.json({ error: 'This beta invite is paused' }, { status: 403 })
+      }
+
+      if (betaRecord.email.trim().toLowerCase() !== normalizedEmail) {
+        return NextResponse.json({ error: 'Invite email does not match signup email' }, { status: 400 })
+      }
+
+      betaTesterId = betaRecord.id
+    }
 
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: normalizedEmail,
       password,
     })
 
@@ -51,14 +84,14 @@ export async function POST(request: NextRequest) {
     // Best effort: create user in public.users table if service key is configured.
     if (data.user) {
       try {
-        const adminClient = getSupabaseAdminClient()
+        adminClient = adminClient || getSupabaseAdminClient()
         if (!adminClient) {
           return applyCookies(NextResponse.json({ user: data.user }, { status: 201 }))
         }
 
         const { error: insertError } = await adminClient.from('users').upsert({
           id: data.user.id,
-          email: data.user.email || email,
+          email: data.user.email || normalizedEmail,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }, {
@@ -69,31 +102,19 @@ export async function POST(request: NextRequest) {
           log.error('Failed to create user in public.users', { error: insertError.message })
         }
 
-        const autoAdmin = shouldAutoGrantAdmin(data.user.email || email)
-        if (autoAdmin) {
-          const { error: adminError } = await adminClient
-            .from('users')
-            .update({ is_admin: true })
-            .eq('id', data.user.id)
-
-          if (adminError) {
-            log.error('Failed to auto-grant admin role on signup', { error: adminError.message, email: data.user.email })
-          }
-
-          const { error: onboardingError } = await adminClient
-            .from('users')
+        if (betaTesterId) {
+          const { error: betaUpdateError } = await adminClient
+            .from('beta_testers')
             .update({
-              onboarding_seen: true,
-              onboarding_complete: true,
-              onboarding_step: 99,
+              status: 'active',
+              accepted_user_id: data.user.id,
+              invite_accepted_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
             })
-            .eq('id', data.user.id)
+            .eq('id', betaTesterId)
 
-          if (onboardingError) {
-            log.warn('Unable to mark onboarding complete for admin user on signup', {
-              error: onboardingError.message,
-              email: data.user.email,
-            })
+          if (betaUpdateError) {
+            log.error('Failed to mark beta tester invite accepted', { error: betaUpdateError.message })
           }
         }
       } catch (err) {

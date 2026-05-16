@@ -3,8 +3,11 @@ import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
 import { checkSupabase } from '@/lib/check-supabase'
 import { payoutSchema } from '@/lib/validators/stripe'
 import { log } from '@/lib/log'
-import { getStripeServerClient } from '@/lib/stripe-server'
-import { hasAdminAccess } from '@/lib/admin-access'
+import { appendAttributionAuditEvent } from '@/lib/attribution-audit'
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2025-12-15.clover',
+})
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
@@ -12,6 +15,8 @@ export const dynamic = 'force-dynamic'
 export async function POST(request: NextRequest) {
   const check = checkSupabase()
   if (check) return check
+
+  let payoutId: string | null = null
 
   try {
     const stripe = getStripeServerClient()
@@ -92,41 +97,104 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Could not record payout' }, { status: 500 })
     }
 
-    const payoutId = pendingRows?.[0]?.id
+    payoutId = pendingRows?.[0]?.id || null
+
+    await appendAttributionAuditEvent({
+      eventType: 'commission_pending',
+      payoutId,
+      affiliateUserId: affiliateId,
+      amount,
+      currency: 'usd',
+      source: 'api.stripe.connect.payout',
+      metadata: {
+        idempotency_key: idempotencyKey || null,
+      },
+    })
 
     // Create transfer to affiliate's Stripe Connect account
-    const transfer = await stripe.transfers.create({
-      amount: Math.round(amount * 100), // Convert to cents
-      currency: 'usd',
-      destination: affiliateData.stripe_connect_account_id,
-      description: description || 'Affiliate commission payout',
-      transfer_group: payoutId ? `payout_${payoutId}` : undefined
-    })
-
-    // Record the payout in database
-    const { error: payoutError } = await supabase
-      .from('affiliate_payouts')
-      .insert({
-        id: payoutId,
-        user_id: affiliateId,
-        amount: amount,
+    try {
+      const transfer = await stripe.transfers.create({
+        amount: Math.round(amount * 100), // Convert to cents
         currency: 'usd',
+        destination: affiliateData.stripe_connect_account_id,
+        description: description || 'Affiliate commission payout',
+        transfer_group: payoutId ? `payout_${payoutId}` : undefined
+      })
+
+      // Record the paid status for the payout
+      const payoutPayload = {
         stripe_transfer_id: transfer.id,
         status: 'paid',
-        payout_date: new Date().toISOString()
+        payout_date: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+      const { error: payoutError } = payoutId
+        ? await supabase
+          .from('affiliate_payouts')
+          .update(payoutPayload)
+          .eq('id', payoutId)
+        : await supabase
+          .from('affiliate_payouts')
+          .insert({
+            user_id: affiliateId,
+            amount,
+            currency: 'usd',
+            ...payoutPayload,
+          })
+
+      if (payoutError) {
+        log.error('Error recording payout', { error: payoutError.message })
+        // Don't fail the request if database update fails, but log it
+      }
+
+      await appendAttributionAuditEvent({
+        eventType: 'commission_paid',
+        payoutId,
+        affiliateUserId: affiliateId,
+        amount,
+        currency: 'usd',
+        source: 'api.stripe.connect.payout',
+        metadata: {
+          stripe_transfer_id: transfer.id,
+          idempotency_key: idempotencyKey || null,
+        },
       })
-      .select()
 
-    if (payoutError) {
-      log.error('Error recording payout', { error: payoutError.message })
-      // Don't fail the request if database insert fails, but log it
+      return NextResponse.json({
+        success: true,
+        transferId: transfer.id,
+        amount: amount
+      })
+    } catch (transferError: any) {
+      if (payoutId) {
+        const { error: updateError } = await supabase
+          .from('affiliate_payouts')
+          .update({
+            status: 'failed',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', payoutId)
+
+        if (updateError) {
+          log.error('Failed to mark payout as failed', { error: updateError.message, payoutId })
+        }
+      }
+
+      await appendAttributionAuditEvent({
+        eventType: 'commission_failed',
+        payoutId,
+        affiliateUserId: affiliateId,
+        amount,
+        currency: 'usd',
+        source: 'api.stripe.connect.payout',
+        metadata: {
+          idempotency_key: idempotencyKey || null,
+          error: transferError?.message || 'Stripe transfer failed',
+        },
+      })
+
+      throw transferError
     }
-
-    return NextResponse.json({
-      success: true,
-      transferId: transfer.id,
-      amount: amount
-    })
   } catch (error: any) {
     log.error('Stripe payout error', { error: error?.message })
     return NextResponse.json({ error: error.message }, { status: 500 })

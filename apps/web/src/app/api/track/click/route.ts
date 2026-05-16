@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
 import { checkSupabase } from '@/lib/check-supabase'
+import {
+  appendAttributionAuditEvent,
+  ATTRIBUTION_CLICK_COOKIE,
+  ATTRIBUTION_COOKIE_MAX_AGE,
+  ATTRIBUTION_SESSION_COOKIE,
+} from '@/lib/attribution-audit'
 
 function isRecoverableDbError(issue: unknown): boolean {
   if (!issue || typeof issue !== 'object') return false
@@ -96,16 +102,57 @@ export async function POST(request: NextRequest) {
     }
 
     // Set 30-day attribution cookie
-    const response = NextResponse.json({ 
+    const response = NextResponse.json({
       click_id,
-      tracked: true 
+      tracked: true
     }, { status: 200 })
 
-    response.cookies.set('aff_click_id', click_id, {
-      maxAge: 30 * 24 * 60 * 60, // 30 days
+    const existingSessionId = request.cookies.get(ATTRIBUTION_SESSION_COOKIE)?.value
+    const attributionSessionId = existingSessionId || crypto.randomUUID()
+    const isNewSession = !existingSessionId
+
+    response.cookies.set(ATTRIBUTION_CLICK_COOKIE, click_id, {
+      maxAge: ATTRIBUTION_COOKIE_MAX_AGE,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
+    })
+
+    response.cookies.set(ATTRIBUTION_SESSION_COOKIE, attributionSessionId, {
+      maxAge: ATTRIBUTION_COOKIE_MAX_AGE,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+    })
+
+    if (isNewSession) {
+      await appendAttributionAuditEvent({
+        eventType: 'session_started',
+        clickId: click_id,
+        attributionSessionId,
+        offerId: offer_id || null,
+        funnelId: funnel_id || null,
+        source: 'api.track.click',
+        metadata: {
+          utm_source: utm_source || null,
+          utm_medium: utm_medium || null,
+          utm_campaign: utm_campaign || null,
+        },
+      })
+    }
+
+    await appendAttributionAuditEvent({
+      eventType: 'click_tracked',
+      clickId: click_id,
+      attributionSessionId,
+      offerId: offer_id || null,
+      funnelId: funnel_id || null,
+      source: 'api.track.click',
+      metadata: {
+        utm_source: utm_source || null,
+        utm_medium: utm_medium || null,
+        utm_campaign: utm_campaign || null,
+      },
     })
 
     return response
