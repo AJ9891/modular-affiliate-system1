@@ -21,10 +21,25 @@ interface TeamData {
   isOwner: boolean
 }
 
+interface TeamActivity {
+  id: string
+  action: string
+  resource_type: string
+  resource_id: string | null
+  created_at: string
+  description: string | null
+  user?: {
+    email?: string | null
+    subdomain?: string | null
+  } | null
+}
+
 export default function TeamPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [teamData, setTeamData] = useState<TeamData | null>(null)
+  const [activityLoading, setActivityLoading] = useState(true)
+  const [teamActivity, setTeamActivity] = useState<TeamActivity[]>([])
   const [showInviteForm, setShowInviteForm] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'viewer' | 'editor' | 'admin'>('viewer')
@@ -35,6 +50,7 @@ export default function TeamPage() {
   useEffect(() => {
     checkAuth()
     loadTeam()
+    loadTeamActivity()
   }, [])
 
   async function checkAuth() {
@@ -60,6 +76,23 @@ export default function TeamPage() {
       setError(error.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function loadTeamActivity() {
+    setActivityLoading(true)
+    try {
+      const response = await fetch('/api/team/activity?limit=20')
+      if (!response.ok) {
+        throw new Error('Failed to load team activity')
+      }
+      const data = await response.json()
+      setTeamActivity(Array.isArray(data.activities) ? data.activities : [])
+    } catch (activityError) {
+      console.error('Failed to load team activity:', activityError)
+      setTeamActivity([])
+    } finally {
+      setActivityLoading(false)
     }
   }
 
@@ -90,6 +123,7 @@ export default function TeamPage() {
       setInviteEmail('')
       setShowInviteForm(false)
       loadTeam()
+      loadTeamActivity()
     } catch (error: any) {
       setError(error.message)
     }
@@ -111,6 +145,7 @@ export default function TeamPage() {
 
       setSuccess('Team member removed')
       loadTeam()
+      loadTeamActivity()
     } catch (error: any) {
       setError(error.message)
     }
@@ -130,6 +165,7 @@ export default function TeamPage() {
 
       setSuccess('Role updated')
       loadTeam()
+      loadTeamActivity()
     } catch (error: any) {
       setError(error.message)
     }
@@ -327,6 +363,40 @@ export default function TeamPage() {
             </div>
           </div>
         )}
+
+        <div className="hud-card mt-8">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-text-primary">Team Activity</h2>
+            <button
+              onClick={loadTeamActivity}
+              className="hud-button-secondary px-3 py-1 text-sm"
+            >
+              Refresh
+            </button>
+          </div>
+
+          {activityLoading ? (
+            <p className="text-sm text-text-secondary">Loading activity feed...</p>
+          ) : teamActivity.length === 0 ? (
+            <p className="text-sm text-text-secondary">No activity recorded yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {teamActivity.map((event) => (
+                <div
+                  key={event.id}
+                  className="rounded-lg border border-[var(--border-subtle)] bg-[rgba(12,18,26,0.5)] p-3"
+                >
+                  <p className="text-sm text-text-primary">
+                    {event.description || `${event.action} ${event.resource_type}`}
+                  </p>
+                  <p className="mt-1 text-xs text-text-secondary">
+                    {new Date(event.created_at).toLocaleString()} · {event.user?.email || event.user?.subdomain || 'Unknown user'}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Empty State */}
         {teamData && !teamData.isOwner && teamData.memberOf.length === 0 && (
