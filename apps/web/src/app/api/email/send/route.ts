@@ -9,17 +9,37 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { to, subject, html, text, template, type = 'single' } = body
+    const hasSendshark = Boolean(process.env.SENDSHARK_API_KEY)
 
     if (type === 'campaign') {
+      const campaignName = body.name || `Campaign ${Date.now()}`
+      const scheduledAt = body.scheduledAt ? new Date(body.scheduledAt) : undefined
+
+      // Draft/scheduling should not hard-fail when provider credentials are missing.
+      if (!hasSendshark) {
+        return NextResponse.json({
+          success: true,
+          campaignId: `draft_${Date.now()}`,
+          provider: 'local-draft',
+          message: 'Campaign draft created. Configure SENDSHARK_API_KEY to enable provider delivery.',
+          campaign: {
+            name: campaignName,
+            subject,
+            recipients: Array.isArray(body.recipients) ? body.recipients.length : 0,
+            scheduledAt: scheduledAt?.toISOString() ?? null,
+          },
+        })
+      }
+
       // Send campaign
       const campaign = await sendshark.createCampaign({
-        name: body.name || `Campaign ${Date.now()}`,
+        name: campaignName,
         fromEmail: body.fromEmail || 'noreply@affiliatelaunchpad.com',
         fromName: body.fromName || 'Affiliate Launchpad',
         subject,
         template: template || { name: 'Custom', subject, html, text },
         recipients: body.recipients || [],
-        scheduledAt: body.scheduledAt ? new Date(body.scheduledAt) : undefined,
+        scheduledAt,
       })
 
       return NextResponse.json({ 
@@ -27,6 +47,16 @@ export async function POST(request: NextRequest) {
         campaignId: campaign.id,
         message: 'Campaign created successfully' 
       })
+    }
+
+    if (!hasSendshark) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Email delivery is not configured. Set SENDSHARK_API_KEY to send individual emails.',
+        },
+        { status: 503 }
+      )
     }
 
     // Send single email

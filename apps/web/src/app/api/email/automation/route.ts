@@ -10,8 +10,19 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { action, ...data } = body
+    const hasSendshark = Boolean(process.env.SENDSHARK_API_KEY)
 
     if (action === 'trigger') {
+      if (!hasSendshark) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Automation trigger requires SENDSHARK_API_KEY.',
+          },
+          { status: 503 }
+        )
+      }
+
       // Trigger automation for a user
       const { automationId, recipient } = data
       const result = await sendshark.triggerAutomation(automationId, recipient)
@@ -20,6 +31,19 @@ export async function POST(request: NextRequest) {
         success: true, 
         message: 'Automation triggered successfully',
         result 
+      })
+    }
+
+    if (!hasSendshark) {
+      // Keep UX unblocked in local/staging by creating a local placeholder.
+      return NextResponse.json({
+        success: true,
+        automation: {
+          id: `local_${Date.now()}`,
+          ...data,
+          provider: 'local-draft',
+        },
+        message: 'Automation draft created locally. Configure SENDSHARK_API_KEY to activate provider delivery.',
       })
     }
 
@@ -49,6 +73,16 @@ export async function POST(request: NextRequest) {
  */
 export async function PUT(_request: NextRequest) {
   try {
+    const hasSendshark = Boolean(process.env.SENDSHARK_API_KEY)
+    if (!hasSendshark) {
+      return NextResponse.json({
+        success: true,
+        automations: [],
+        provider: 'local-draft',
+        message: 'Default automation setup is in local draft mode. Configure SENDSHARK_API_KEY to sync with provider.',
+      })
+    }
+
     const automations = await sendshark.setupDefaultAutomations()
     
     return NextResponse.json({ 
