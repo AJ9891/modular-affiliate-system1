@@ -883,11 +883,11 @@ export default function LaunchpadPage() {
         <div className="mt-8 text-center">
           <p className="text-gray-600">
             Need help? Check out our{' '}
-            <a href="/docs" className="text-orange-700 hover:text-orange-800 hover:underline">
+            <a href="/features" className="text-orange-700 hover:text-orange-800 hover:underline">
               documentation
             </a>{' '}
             or{' '}
-            <a href="/support" className="text-orange-700 hover:text-orange-800 hover:underline">
+            <a href="mailto:support@affiliatelaunchpad.com" className="text-orange-700 hover:text-orange-800 hover:underline">
               contact support
             </a>
           </p>
