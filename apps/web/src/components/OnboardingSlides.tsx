@@ -12,12 +12,8 @@ export default function OnboardingSlideshow({ userId }: { userId: string }) {
   const isLastSlide = index === onboardingSlides.length - 1
   const progressPercent = Math.round(((index + 1) / onboardingSlides.length) * 100)
 
-  const goToCockpit = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('lp_skip_onboarding', '1')
-      document.cookie = 'lp_skip_onboarding=1; Path=/; Max-Age=2592000; SameSite=Lax'
-    }
-    window.location.href = '/cockpit?skip_onboarding=1'
+  const goToOnboardingFlow = () => {
+    window.location.href = '/welcome'
   }
 
   const completeOnboarding = async () => {
@@ -37,7 +33,7 @@ export default function OnboardingSlideshow({ userId }: { userId: string }) {
       setSubmitting(true)
       try {
         await completeOnboarding()
-        goToCockpit()
+        goToOnboardingFlow()
       } finally {
         setSubmitting(false)
       }
@@ -52,7 +48,7 @@ export default function OnboardingSlideshow({ userId }: { userId: string }) {
     setSubmitting(true)
     try {
       await completeOnboarding()
-      goToCockpit()
+      goToOnboardingFlow()
     } finally {
       setSubmitting(false)
     }
@@ -99,7 +95,7 @@ export default function OnboardingSlideshow({ userId }: { userId: string }) {
             disabled={submitting}
             className="rounded-lg bg-orange-600 px-6 py-3 font-semibold text-white transition hover:bg-orange-500 disabled:opacity-60"
           >
-            {submitting ? 'Finishing...' : isLastSlide ? 'Go to Cockpit' : (slide.cta ?? 'Next')}
+            {submitting ? 'Finishing...' : isLastSlide ? 'Complete Onboarding' : (slide.cta ?? 'Next')}
           </button>
         </div>
 

@@ -167,7 +167,7 @@ export default function LaunchpadPage() {
       title: 'Launch & Track',
       description: 'Go live and monitor your performance',
       icon: TrendingUp,
-      action: 'Go to Cockpit'
+      action: 'Complete Onboarding'
     }
   ]
 
@@ -248,13 +248,9 @@ export default function LaunchpadPage() {
     setStepValidationError(null)
     
     if (stepId === 'launch') {
-      await persistLaunchpadState(currentStep, true)
-      setOperationNotice('Routing you to cockpit...')
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('lp_skip_onboarding', '1')
-        document.cookie = 'lp_skip_onboarding=1; Path=/; Max-Age=2592000; SameSite=Lax'
-      }
-      window.location.href = '/cockpit?skip_onboarding=1'
+      await persistLaunchpadState(currentStep)
+      setOperationNotice('Continuing onboarding flow...')
+      window.location.href = '/welcome'
       return
     } else {
       const nextStep = Math.max(0, Math.min(MAX_LAUNCHPAD_STEP, currentStep + 1))
@@ -827,7 +823,7 @@ export default function LaunchpadPage() {
                   <span>Template ready: <strong>{funnelTemplates.find(t => t.category === selectedTemplate)?.name || 'Custom'}</strong></span>
                 </div>
               </div>
-              <p className="text-sm text-slate-700">Click below to access cockpit navigation.</p>
+              <p className="text-sm text-slate-700">Click below to complete onboarding and continue.</p>
             </div>
           )}
 
