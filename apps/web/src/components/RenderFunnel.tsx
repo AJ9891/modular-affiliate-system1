@@ -5,13 +5,33 @@ interface RenderFunnelProps {
   funnel: any
 }
 
-export default function RenderFunnel({ funnel }: RenderFunnelProps) {
-  // Parse blocks from the funnel data
-  const blocksData = typeof funnel.blocks === 'string'
-    ? JSON.parse(funnel.blocks)
-    : funnel.blocks
+function extractBlocks(rawBlocks: unknown): FunnelBlock[] {
+  let parsed: unknown = rawBlocks
 
-  const blocks: FunnelBlock[] = blocksData.blocks || []
+  if (typeof parsed === 'string') {
+    try {
+      parsed = JSON.parse(parsed)
+    } catch {
+      return []
+    }
+  }
+
+  if (Array.isArray(parsed)) {
+    return parsed as FunnelBlock[]
+  }
+
+  if (parsed && typeof parsed === 'object') {
+    const candidate = (parsed as { blocks?: unknown }).blocks
+    if (Array.isArray(candidate)) {
+      return candidate as FunnelBlock[]
+    }
+  }
+
+  return []
+}
+
+export default function RenderFunnel({ funnel }: RenderFunnelProps) {
+  const blocks = extractBlocks(funnel?.blocks)
 
   return <FunnelRenderer blocks={blocks} />
 }

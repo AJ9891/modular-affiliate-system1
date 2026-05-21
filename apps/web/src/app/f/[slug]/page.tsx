@@ -16,14 +16,16 @@ interface FunnelPageProps {
 
 export default async function FunnelPage({ params }: FunnelPageProps) {
   const { slug } = await params
-  const { data: funnel } = await supabase
+  const { data: funnel, error } = await supabase
     .from('funnels')
     .select('*')
     .eq('slug', slug)
     .eq('active', true)
-    .single()
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
 
-  if (!funnel) {
+  if (error || !funnel) {
     return <div>Funnel not found</div>
   }
 

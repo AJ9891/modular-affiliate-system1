@@ -17,16 +17,22 @@ export async function GET(
       .select('*')
       .eq('slug', slug)
       .eq('active', true)
-      .single()
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
 
     if (error || !funnel) {
       return NextResponse.json({ error: 'Funnel not found' }, { status: 404 })
     }
 
-    // Parse blocks JSON
-    const blocks = typeof funnel.blocks === 'string' 
-      ? JSON.parse(funnel.blocks) 
-      : funnel.blocks
+    let blocks = funnel.blocks
+    if (typeof blocks === 'string') {
+      try {
+        blocks = JSON.parse(blocks)
+      } catch {
+        blocks = { blocks: [] }
+      }
+    }
 
     return NextResponse.json({ 
       funnel: {
