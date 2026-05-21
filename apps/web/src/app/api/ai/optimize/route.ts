@@ -112,6 +112,7 @@ async function autoOptimize(request: NextRequest) {
 async function generateABTest(request: NextRequest) {
   const supabase = await createServerRouteClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
   
   const { funnelId, blockId, testType } = await request.json()
 
@@ -164,6 +165,7 @@ async function generateABTest(request: NextRequest) {
 async function getOptimizationHistory(request: NextRequest) {
   const supabase = await createServerRouteClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
   
   const { searchParams } = new URL(request.url)
   const funnelId = searchParams.get('funnelId')
@@ -206,16 +208,18 @@ async function getOptimizationHistory(request: NextRequest) {
 
 export const POST = withErrorHandling(withAuth(withRateLimit(async (request: NextRequest) => {
   const { pathname } = new URL(request.url)
+  const body = await request.clone().json().catch(() => ({} as Record<string, unknown>))
+  const action = typeof body.action === 'string' ? body.action : null
   
-  if (pathname.endsWith('/optimize-funnel')) {
+  if (pathname.endsWith('/optimize-funnel') || action === 'optimize-funnel' || action === null) {
     return optimizeFunnel(request)
-  } else if (pathname.endsWith('/auto-optimize')) {
+  } else if (pathname.endsWith('/auto-optimize') || action === 'auto-optimize') {
     return autoOptimize(request)
-  } else if (pathname.endsWith('/generate-ab-test')) {
+  } else if (pathname.endsWith('/generate-ab-test') || action === 'generate-ab-test') {
     return generateABTest(request)
   }
   
-  throw new Error('Invalid endpoint')
+  throw new Error('Invalid endpoint action')
 })))
 
 export const GET = withErrorHandling(withAuth(withRateLimit(getOptimizationHistory)))

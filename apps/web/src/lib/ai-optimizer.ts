@@ -1,5 +1,4 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createServerRouteClient } from '@/lib/supabase-server'
 import { generateContent } from '@/lib/ai'
 import { resolvePersonality, resolveAIPrompt, isBrandMode } from '@/lib/personality'
 
@@ -38,10 +37,18 @@ export interface ABTestVariation {
 }
 
 export class AIOptimizer {
-  private supabase
-  
+  private supabase: Awaited<ReturnType<typeof createServerRouteClient>> | null
+
   constructor() {
-    this.supabase = createRouteHandlerClient({ cookies })
+    this.supabase = null
+  }
+
+  private async getSupabase() {
+    if (!this.supabase) {
+      this.supabase = await createServerRouteClient()
+    }
+
+    return this.supabase
   }
 
   // Analyze funnel performance and generate optimization suggestions
@@ -187,7 +194,8 @@ export class AIOptimizer {
   }
 
   private async getFunnelData(funnelId: string) {
-    const { data, error } = await this.supabase
+    const supabase = await this.getSupabase()
+    const { data, error } = await supabase
       .from('funnels')
       .select(`
         *,
@@ -201,24 +209,25 @@ export class AIOptimizer {
   }
 
   private async getFunnelAnalytics(funnelId: string, days: number): Promise<OptimizationMetrics> {
+    const supabase = await this.getSupabase()
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - days)
 
     const [leads, clicks, views] = await Promise.all([
-      this.supabase
+      supabase
         .from('leads')
         .select('id')
         .eq('funnel_id', funnelId)
         .gte('created_at', startDate.toISOString()),
       
-      this.supabase
+      supabase
         .from('clicks')
         .select('id')
         .eq('funnel_id', funnelId)
         .gte('created_at', startDate.toISOString()),
       
       // Approximate views from clicks (would need actual page view tracking)
-      this.supabase
+      supabase
         .from('clicks')
         .select('id')
         .eq('funnel_id', funnelId)
@@ -496,7 +505,8 @@ Return only the optimized CTA (under 25 characters).`
   }
 
   private async logOptimization(funnelId: string, blockId: string, suggestion: OptimizationSuggestion) {
-    const { error } = await this.supabase
+    const supabase = await this.getSupabase()
+    const { error } = await supabase
       .from('optimization_log')
       .insert({
         funnel_id: funnelId,
