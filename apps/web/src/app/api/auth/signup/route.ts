@@ -92,6 +92,7 @@ export async function POST(request: NextRequest) {
         const { error: insertError } = await adminClient.from('users').upsert({
           id: data.user.id,
           email: data.user.email || normalizedEmail,
+          ...(betaTesterId ? { plan: 'pro' } : {}),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }, {

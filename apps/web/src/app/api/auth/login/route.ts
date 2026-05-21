@@ -112,6 +112,34 @@ export async function POST(request: NextRequest) {
           log.error('Failed to upsert user in public.users', { error: upsertError?.message })
         }
 
+        // Beta testers should always have at least Pro access.
+        const { data: betaTester } = await adminClient
+          .from('beta_testers')
+          .select('id,status')
+          .eq('accepted_user_id', data.user.id)
+          .in('status', ['active', 'invited'])
+          .maybeSingle<{ id: string; status: string }>()
+
+        if (betaTester) {
+          const { data: profile } = await adminClient
+            .from('users')
+            .select('plan')
+            .eq('id', data.user.id)
+            .maybeSingle<{ plan?: string | null }>()
+
+          const plan = (profile?.plan || '').toLowerCase()
+          if (plan !== 'pro' && plan !== 'agency') {
+            const { error: betaPlanError } = await adminClient
+              .from('users')
+              .update({ plan: 'pro', updated_at: new Date().toISOString() })
+              .eq('id', data.user.id)
+
+            if (betaPlanError) {
+              log.error('Failed to grant beta tester Pro plan', { error: betaPlanError.message, userId: data.user.id })
+            }
+          }
+        }
+
         const autoAdmin = shouldAutoGrantAdmin(data.user.email || email)
         if (autoAdmin) {
           const { error: adminError } = await adminClient
