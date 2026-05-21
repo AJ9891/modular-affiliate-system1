@@ -12,6 +12,15 @@ function isMissingTableError(error: ApiError | null | undefined, table: string):
   return (error.message || '').includes(`Could not find the table 'public.${table}'`)
 }
 
+function chunkArray<T>(items: T[], chunkSize: number): T[][] {
+  if (items.length === 0) return []
+  const chunks: T[][] = []
+  for (let i = 0; i < items.length; i += chunkSize) {
+    chunks.push(items.slice(i, i + chunkSize))
+  }
+  return chunks
+}
+
 export async function GET(request: NextRequest) {
   try {
     const check = checkSupabase()
@@ -122,18 +131,27 @@ export async function GET(request: NextRequest) {
     let conversions: any[] = []
 
     if (clickIds.length > 0) {
-      const { data: conversionsData, error: conversionsError } = await supabase
-        .from('conversions')
-        .select('conversion_id,click_id,amount,order_id,converted_at')
-        .in('click_id', clickIds)
-        .gte('converted_at', startDate.toISOString())
+      const clickIdChunks = chunkArray(clickIds, 200)
+      const conversionResults = await Promise.all(
+        clickIdChunks.map((ids) =>
+          supabase
+            .from('conversions')
+            .select('conversion_id,click_id,amount,order_id,converted_at')
+            .in('click_id', ids)
+            .gte('converted_at', startDate.toISOString()),
+        ),
+      )
 
-      if (conversionsError && !isMissingTableError(conversionsError, 'conversions')) {
-        console.error('Analytics conversions error:', conversionsError)
+      const fatalError = conversionResults.find(
+        (result) => result.error && !isMissingTableError(result.error, 'conversions'),
+      )?.error
+
+      if (fatalError) {
+        console.error('Analytics conversions error:', fatalError)
         return NextResponse.json({ error: 'Failed to fetch conversions data' }, { status: 500 })
       }
 
-      conversions = (isMissingTableError(conversionsError, 'conversions') ? [] : conversionsData) ?? []
+      conversions = conversionResults.flatMap((result) => result.data || [])
     }
 
     // Calculate metrics
