@@ -24,6 +24,20 @@ export interface PlanDefinition {
   upgradeHooks: string[]
 }
 
+const ADMIN_LIMITS: PlanLimits = {
+  maxFunnels: 'unlimited',
+  maxLeadsPerMonth: 'unlimited',
+  maxAIGenerationsPerMonth: 'unlimited',
+  maxEmailSequences: 'unlimited',
+  analyticsRetentionDays: 3650,
+  canUseCustomDomains: true,
+  canABTest: true,
+  canAutoOptimize: true,
+  canWhiteLabel: true,
+  maxTeamMembers: 100,
+  supportLevel: 'email',
+}
+
 export const PLAN_DEFINITIONS: Record<string, PlanDefinition> = {
   free: {
     tier: 'free',
@@ -174,25 +188,86 @@ export class PlanManager {
     this.supabase = client
   }
 
+  private async getUserAccess(userId: string): Promise<{ isAdmin: boolean; plan: string }> {
+    const { data, error } = await this.supabase
+      .from('users')
+      .select('is_admin, plan')
+      .eq('id', userId)
+      .single()
+
+    if (error) throw error
+
+    const isAdmin = data?.is_admin === true
+    const plan = typeof data?.plan === 'string' && data.plan.length > 0 ? data.plan : 'free'
+
+    return { isAdmin, plan }
+  }
+
+  private getPlanDefinition(plan: string): PlanDefinition {
+    return PLAN_DEFINITIONS[plan] || PLAN_DEFINITIONS.free
+  }
+
+  private async checkLimitFromLocalData(userId: string, plan: string, limitType: keyof PlanLimits): Promise<boolean> {
+    const limits = this.getPlanDefinition(plan).limits
+    const limitValue = limits[limitType]
+
+    if (limitValue === 'unlimited') return true
+    if (typeof limitValue === 'boolean') return limitValue
+
+    switch (limitType) {
+      case 'maxFunnels': {
+        const { count, error } = await this.supabase
+          .from('funnels')
+          .select('funnel_id', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .eq('active', true)
+
+        if (error) {
+          console.warn('[PLAN] Funnel count lookup failed, allowing action:', error.message)
+          return true
+        }
+
+        return (count || 0) < limitValue
+      }
+      default:
+        // For limits that rely on optional/missing usage tables, fail open.
+        return true
+    }
+  }
+
   // Check if user can perform action based on their plan limits
   async checkLimit(userId: string, limitType: keyof PlanLimits): Promise<boolean> {
     try {
+      const access = await this.getUserAccess(userId)
+      if (access.isAdmin) {
+        return true
+      }
+
       const { data, error } = await this.supabase.rpc('check_plan_limit', {
         user_id_param: userId,
         feature_name_param: this.limitTypeToFeatureName(limitType)
       })
 
-      if (error) throw error
+      if (error) {
+        console.warn('[PLAN] check_plan_limit RPC unavailable, using local fallback:', error.message)
+        return await this.checkLimitFromLocalData(userId, access.plan, limitType)
+      }
+
       return data
     } catch (error) {
       console.error('Error checking plan limit:', error)
-      return false
+      return true
     }
   }
 
   // Increment usage counter for plan limit tracking
   async incrementUsage(userId: string, usageType: 'ai_generation' | 'lead_capture' | 'funnel_creation'): Promise<void> {
     try {
+      const access = await this.getUserAccess(userId)
+      if (access.isAdmin) {
+        return
+      }
+
       const { error } = await this.supabase.rpc('increment_usage', {
         user_id_param: userId,
         usage_type_param: usageType
@@ -209,28 +284,47 @@ export class PlanManager {
     try {
       const { data: user, error: userError } = await this.supabase
         .from('users')
-        .select('plan_tier, max_funnels, max_leads_per_month, max_ai_generations_per_month, can_use_custom_domains, can_ab_test, can_auto_optimize')
+        .select('plan, is_admin')
         .eq('id', userId)
         .single()
 
       if (userError) throw userError
 
+      const isAdmin = user?.is_admin === true
+      if (isAdmin) {
+        return {
+          plan: 'admin',
+          limits: ADMIN_LIMITS,
+          currentUsage: {
+            aiGenerations: 0,
+            leadCaptures: 0,
+            funnelCreations: 0
+          }
+        }
+      }
+
+      let currentUsage: Record<string, number> = {}
       const { data: usage, error: usageError } = await this.supabase
         .from('user_usage_tracking')
         .select('usage_type, usage_count')
         .eq('user_id', userId)
         .eq('reset_date', new Date().toISOString().split('T')[0])
 
-      if (usageError) throw usageError
+      if (!usageError && usage) {
+        currentUsage = usage.reduce((acc, item) => {
+          acc[item.usage_type] = item.usage_count
+          return acc
+        }, {} as Record<string, number>)
+      } else if (usageError) {
+        console.warn('[PLAN] user_usage_tracking unavailable:', usageError.message)
+      }
 
-      const currentUsage = usage.reduce((acc, item) => {
-        acc[item.usage_type] = item.usage_count
-        return acc
-      }, {} as Record<string, number>)
+      const planTier = typeof user?.plan === 'string' ? user.plan : 'free'
+      const planDefinition = this.getPlanDefinition(planTier)
 
       return {
-        plan: user.plan_tier,
-        limits: PLAN_DEFINITIONS[user.plan_tier]?.limits || PLAN_DEFINITIONS.free.limits,
+        plan: planDefinition.tier,
+        limits: planDefinition.limits,
         currentUsage: {
           aiGenerations: currentUsage.ai_generation || 0,
           leadCaptures: currentUsage.lead_capture || 0,

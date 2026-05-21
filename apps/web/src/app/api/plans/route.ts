@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
 import { withRateLimit, withAuth, withErrorHandling } from '@/lib/api-middleware'
-import { PLAN_DEFINITIONS } from '@/lib/plan-manager'
+import { PLAN_DEFINITIONS, checkUserCanPerform, incrementUserUsage } from '@/lib/plan-manager'
 
 // GET /api/plans - Get all available plans
 async function getPlans(request: NextRequest) {
@@ -31,7 +31,7 @@ async function getCurrentPlan(request: NextRequest) {
   // Get user's current plan and usage
   const { data: userData, error } = await supabase
     .from('users')
-    .select('plan_tier')
+    .select('plan, is_admin')
     .eq('id', user!.id)
     .single()
 
@@ -39,7 +39,10 @@ async function getCurrentPlan(request: NextRequest) {
     throw new Error(`Failed to get user plan: ${error.message}`)
   }
 
-  const currentPlan = PLAN_DEFINITIONS[userData.plan_tier] || PLAN_DEFINITIONS.free
+  const isAdmin = userData?.is_admin === true
+  const currentPlan = isAdmin
+    ? PLAN_DEFINITIONS.agency
+    : PLAN_DEFINITIONS[userData?.plan || 'free'] || PLAN_DEFINITIONS.free
 
   // Get current month's usage
   const today = new Date().toISOString().split('T')[0]
@@ -95,15 +98,27 @@ async function checkLimit(request: NextRequest) {
     throw new Error('Action is required')
   }
 
-  const { data: result, error } = await supabase.rpc('check_plan_limit', {
-    user_id_param: user!.id,
-    feature_name_param: action
-  })
-
-  if (error) {
-    throw new Error(`Failed to check limit: ${error.message}`)
+  const actionToLimit: Record<string, Parameters<typeof checkUserCanPerform>[1]> = {
+    maxFunnels: 'maxFunnels',
+    max_funnels: 'maxFunnels',
+    maxLeadsPerMonth: 'maxLeadsPerMonth',
+    max_leads_per_month: 'maxLeadsPerMonth',
+    maxAIGenerationsPerMonth: 'maxAIGenerationsPerMonth',
+    max_ai_generations_per_month: 'maxAIGenerationsPerMonth',
+    canUseCustomDomains: 'canUseCustomDomains',
+    can_use_custom_domains: 'canUseCustomDomains',
+    canABTest: 'canABTest',
+    can_ab_test: 'canABTest',
+    canAutoOptimize: 'canAutoOptimize',
+    can_auto_optimize: 'canAutoOptimize',
   }
 
+  const mapped = actionToLimit[action]
+  if (!mapped) {
+    throw new Error(`Unsupported action: ${action}`)
+  }
+
+  const result = await checkUserCanPerform(user!.id, mapped)
   return NextResponse.json({ canPerform: result })
 }
 
@@ -118,14 +133,7 @@ async function incrementUsage(request: NextRequest) {
     throw new Error('Valid usageType is required (ai_generation, lead_capture, funnel_creation)')
   }
 
-  const { error } = await supabase.rpc('increment_usage', {
-    user_id_param: user!.id,
-    usage_type_param: usageType
-  })
-
-  if (error) {
-    throw new Error(`Failed to increment usage: ${error.message}`)
-  }
+  await incrementUserUsage(user!.id, usageType)
 
   return NextResponse.json({ success: true })
 }
