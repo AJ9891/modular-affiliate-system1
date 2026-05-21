@@ -9,15 +9,45 @@ export const GET = withRouteHandler(async ({ request, supabase, user }) => {
   const range = searchParams.get('range') || '7d'
   const funnelId = searchParams.get('funnelId')
 
-  const { payload, cache } = await getAnalyticsSummary(supabase, {
-    userId: user!.id,
-    range,
-    funnelId,
-  })
+  try {
+    const { payload, cache } = await getAnalyticsSummary(supabase, {
+      userId: user!.id,
+      range,
+      funnelId,
+    })
 
-  return NextResponse.json(payload, {
-    headers: {
-      'X-Cache': cache,
-    },
-  })
+    return NextResponse.json(payload, {
+      headers: {
+        'X-Cache': cache,
+      },
+    })
+  } catch (error) {
+    console.error('Analytics summary failed, returning degraded payload:', error)
+
+    return NextResponse.json(
+      {
+        success: true,
+        stats: {
+          totalLeads: 0,
+          totalClicks: 0,
+          totalConversions: 0,
+          totalRevenue: 0,
+          conversionRate: 0,
+          avgRevenuePerLead: 0,
+          emailsSent: 0,
+          emailOpenRate: 0,
+        },
+        clicksBySource: {},
+        clicksByOffer: {},
+        recentClicks: [],
+        recentActivity: [],
+      },
+      {
+        headers: {
+          'X-Cache': 'MISS',
+          'X-Analytics-Degraded': '1',
+        },
+      },
+    )
+  }
 })
