@@ -64,6 +64,15 @@ function rangeToStartDate(range: string) {
   return startDate
 }
 
+function chunkArray<T>(items: T[], size: number): T[][] {
+  if (items.length === 0) return []
+  const chunks: T[][] = []
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size))
+  }
+  return chunks
+}
+
 export async function getAnalyticsSummary(
   supabase: SupabaseClient,
   input: GetAnalyticsSummaryInput
@@ -160,20 +169,33 @@ export async function getAnalyticsSummary(
   let conversions: Array<{ amount?: number | null; converted_at?: string | null; click_id?: string | null }> = []
 
   if (clickIds.length > 0) {
-    const { data: conversionsData, error: conversionsError } = await reader
-      .from('conversions')
-      .select('conversion_id,click_id,amount,converted_at')
-      .in('click_id', clickIds)
-      .gte('converted_at', startDate.toISOString())
+    const clickIdChunks = chunkArray(clickIds, 200)
+    const conversionResults = await Promise.all(
+      clickIdChunks.map((batch) =>
+        reader
+          .from('conversions')
+          .select('conversion_id,click_id,amount,converted_at')
+          .in('click_id', batch)
+          .gte('converted_at', startDate.toISOString()),
+      ),
+    )
 
-    if (conversionsError && !isRecoverableAnalyticsError(conversionsError)) {
-      throw conversionsError
+    const fatalError = conversionResults.find(
+      (result) => result.error && !isRecoverableAnalyticsError(result.error),
+    )?.error
+    if (fatalError) {
+      throw fatalError
     }
 
-    if (conversionsError) {
-      console.warn('Analytics conversions degraded:', conversionsError)
+    const recoverableError = conversionResults.find((result) => result.error)?.error
+    if (recoverableError) {
+      console.warn('Analytics conversions degraded:', recoverableError)
     } else {
-      conversions = (conversionsData || []) as Array<{ amount?: number | null; converted_at?: string | null; click_id?: string | null }>
+      conversions = conversionResults.flatMap((result) => result.data || []) as Array<{
+        amount?: number | null
+        converted_at?: string | null
+        click_id?: string | null
+      }>
     }
   }
 
