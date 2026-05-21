@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createServerRouteClient } from '@/lib/supabase-server'
 import { AIOptimizer } from '@/lib/ai-optimizer'
 import { withRateLimit, withAuth, withErrorHandling } from '@/lib/api-middleware'
 import { checkUserCanPerform, incrementUserUsage } from '@/lib/plan-manager'
 
 // POST /api/ai/optimize-funnel - Analyze and get optimization suggestions
 async function optimizeFunnel(request: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabase = await createServerRouteClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
@@ -50,7 +49,7 @@ async function optimizeFunnel(request: NextRequest) {
 
 // POST /api/ai/auto-optimize - Auto-apply optimization to a block
 async function autoOptimize(request: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabase = await createServerRouteClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
   
@@ -111,7 +110,7 @@ async function autoOptimize(request: NextRequest) {
 
 // POST /api/ai/generate-ab-test - Generate A/B test variations
 async function generateABTest(request: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabase = await createServerRouteClient()
   const { data: { user } } = await supabase.auth.getUser()
   
   const { funnelId, blockId, testType } = await request.json()
@@ -163,7 +162,7 @@ async function generateABTest(request: NextRequest) {
 
 // GET /api/ai/optimization-history - Get optimization history for a funnel
 async function getOptimizationHistory(request: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabase = await createServerRouteClient()
   const { data: { user } } = await supabase.auth.getUser()
   
   const { searchParams } = new URL(request.url)

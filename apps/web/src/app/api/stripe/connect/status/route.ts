@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createServerRouteClient } from '@/lib/supabase-server'
 import Stripe from 'stripe'
 import { checkSupabase } from '@/lib/check-supabase'
 
@@ -16,7 +15,7 @@ export async function GET(request: NextRequest) {
   if (check) return check
 
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createServerRouteClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {

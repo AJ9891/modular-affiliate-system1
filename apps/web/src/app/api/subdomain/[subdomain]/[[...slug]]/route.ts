@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createServerRouteClient } from '@/lib/supabase-server'
 
 export async function GET(
   request: NextRequest,
@@ -11,7 +10,7 @@ export async function GET(
     const slug = slugParam || []
     
     // Create Supabase client
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createServerRouteClient()
     
     // Get the subdomain's user data
     const { data: user, error } = await supabase

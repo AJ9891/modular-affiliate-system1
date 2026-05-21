@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createServerRouteClient } from '@/lib/supabase-server'
 import { generateAIResponse } from '@/lib/openai'
 import { lintAIResponse, prepareAIRequest } from '@modular-affiliate/ai'
 import { 
@@ -12,7 +11,7 @@ import {
 // GET /api/chat?conversationId=xxx - Get conversation history
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createServerRouteClient()
     const accessToken = request.cookies.get('sb-access-token')?.value
     
     if (!accessToken) {
@@ -74,7 +73,7 @@ export async function GET(request: NextRequest) {
 // POST /api/chat - Send a message and get AI response
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createServerRouteClient()
     const accessToken = request.cookies.get('sb-access-token')?.value
     
     if (!accessToken) {
@@ -354,7 +353,7 @@ ${pipeline.prompt}`
 // PATCH /api/chat?conversationId=xxx - Update conversation status (e.g., escalate to human support)
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createServerRouteClient()
     const accessToken = request.cookies.get('sb-access-token')?.value
     
     if (!accessToken) {

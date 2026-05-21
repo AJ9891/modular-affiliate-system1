@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendshark } from '@/lib/sendshark'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createServerRouteClient } from '@/lib/supabase-server'
 
 /**
  * Email Reports API Endpoint
@@ -10,7 +9,7 @@ import { cookies } from 'next/headers'
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createServerRouteClient()
     const { recipientEmail, funnelId, dateRange } = await request.json()
 
     // Get funnel analytics from database
@@ -78,7 +77,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createServerRouteClient()
     const url = new URL(request.url)
     const campaignId = url.searchParams.get('campaignId')
 

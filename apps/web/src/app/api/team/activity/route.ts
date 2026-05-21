@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createServerRouteClient } from '@/lib/supabase-server'
 import { withRateLimit, withAuth, withErrorHandling } from '@/lib/api-middleware'
 
 // GET /api/team/activity - Get team activity log
 async function getTeamActivity(request: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabase = await createServerRouteClient()
   const { data: { user } } = await supabase.auth.getUser()
   
   const { searchParams } = new URL(request.url)
@@ -71,7 +70,7 @@ async function getTeamActivity(request: NextRequest) {
 
 // POST /api/team/activity - Log team activity
 async function logTeamActivity(request: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabase = await createServerRouteClient()
   const { data: { user } } = await supabase.auth.getUser()
   
   const { action, resourceType, resourceId, description } = await request.json()

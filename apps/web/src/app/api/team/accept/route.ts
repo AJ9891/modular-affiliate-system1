@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createServerRouteClient } from '@/lib/supabase-server'
 
 // GET /api/team/accept?token=xxx - Accept team invite
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createServerRouteClient()
     const { searchParams } = new URL(request.url)
     const token = searchParams.get('token')
 
@@ -80,7 +79,7 @@ export async function GET(request: NextRequest) {
 // POST /api/team/accept - Accept invite (alternative method with body)
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createServerRouteClient()
     const body = await request.json()
     const { token } = body
 

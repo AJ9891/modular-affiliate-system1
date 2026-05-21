@@ -1,15 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createServerRouteClient } from '@/lib/supabase-server'
 import Stripe from 'stripe'
 import { checkSupabase } from '@/lib/check-supabase'
 import { payoutSchema } from '@/lib/validators/stripe'
 import { log } from '@/lib/log'
 import { appendAttributionAuditEvent } from '@/lib/attribution-audit'
+import { ZodError } from 'zod'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-12-15.clover',
-})
+function getStripeClient() {
+  const secretKey = process.env.STRIPE_SECRET_KEY
+  if (!secretKey) {
+    return null
+  }
+
+  return new Stripe(secretKey, {
+    apiVersion: '2025-12-15.clover',
+  })
+}
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
@@ -21,7 +28,12 @@ export async function POST(request: NextRequest) {
   let payoutId: string | null = null
 
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const stripe = getStripeClient()
+    if (!stripe) {
+      return NextResponse.json({ error: 'Stripe is not configured' }, { status: 503 })
+    }
+
+    const supabase = await createServerRouteClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
@@ -39,7 +51,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
-    const { affiliateId, amount, description, idempotencyKey } = payoutSchema.parse(await request.json())
+    const payload = await request.json().catch(() => null)
+    const parsed = payoutSchema.safeParse(payload)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid payout payload', issues: parsed.error.flatten() },
+        { status: 400 },
+      )
+    }
+    const { affiliateId, amount, description, idempotencyKey } = parsed.data
 
     if (!affiliateId || !amount) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -197,6 +217,13 @@ export async function POST(request: NextRequest) {
       throw transferError
     }
   } catch (error: any) {
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        { error: 'Invalid payout payload', issues: error.flatten() },
+        { status: 400 },
+      )
+    }
+
     log.error('Stripe payout error', { error: error?.message })
     return NextResponse.json({ error: error.message }, { status: 500 })
   }

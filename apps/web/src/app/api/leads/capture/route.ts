@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createServerRouteClient } from '@/lib/supabase-server'
 import { withRateLimit, withValidation, withErrorHandling } from '@/lib/api-middleware'
 import { leadCaptureSchema } from '@/lib/security'
 import { sendshark } from '@/lib/sendshark'
@@ -12,7 +11,7 @@ import { sendshark } from '@/lib/sendshark'
 export const POST = withRateLimit(
   withErrorHandling(
     withValidation(async (req: NextRequest, validatedData: any) => {
-      const supabase = createRouteHandlerClient({ cookies })
+      const supabase = await createServerRouteClient()
       
       const { 
         email, 
@@ -102,7 +101,7 @@ export const POST = withRateLimit(
  */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createServerRouteClient()
     const url = new URL(request.url)
     const funnelId = url.searchParams.get('funnelId')
     const limit = parseInt(url.searchParams.get('limit') || '50')

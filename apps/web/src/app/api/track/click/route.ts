@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createServerRouteClient } from '@/lib/supabase-server'
 import { checkSupabase } from '@/lib/check-supabase'
 import {
   appendAttributionAuditEvent,
@@ -14,7 +13,7 @@ export async function POST(request: NextRequest) {
   if (check) return check
   
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createServerRouteClient()
     
     const body = await request.json()
     const { offer_id, funnel_id, utm_source, utm_medium, utm_campaign } = body

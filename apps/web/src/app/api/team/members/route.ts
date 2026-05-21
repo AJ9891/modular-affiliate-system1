@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createServerRouteClient } from '@/lib/supabase-server'
 import { withRateLimit, withAuth, withValidation, withErrorHandling } from '@/lib/api-middleware'
 import { teamInviteSchema } from '@/lib/security'
 
@@ -8,7 +7,7 @@ import { teamInviteSchema } from '@/lib/security'
 export const GET = withRateLimit(
   withErrorHandling(
     withAuth(async (req: NextRequest, userId: string) => {
-      const supabase = createRouteHandlerClient({ cookies })
+      const supabase = await createServerRouteClient()
       
       // Check if user is account owner or admin
       const { data: teamData, error } = await supabase
@@ -73,7 +72,7 @@ export const POST = withRateLimit(
       }
 
       const { email, role } = validation.data
-      const supabase = createRouteHandlerClient({ cookies })
+      const supabase = await createServerRouteClient()
 
       // Check if user is account owner or admin
       const { data: userTeamData } = await supabase
@@ -166,7 +165,7 @@ export async function DELETE(
   return withRateLimit(
     withErrorHandling(
       withAuth(async (req: NextRequest, userId: string) => {
-        const supabase = createRouteHandlerClient({ cookies })
+        const supabase = await createServerRouteClient()
 
         // Check permissions
         if (!await hasTeamPermission(userId, 'admin', supabase)) {

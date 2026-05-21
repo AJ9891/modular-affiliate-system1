@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
-import { createServiceRoleClient } from '@/lib/supabase-server'
+import { createServerRouteClient, createServiceRoleClient } from '@/lib/supabase-server'
 import { sendshark } from '@/lib/sendshark'
 
 type BetaTesterStatus = 'prospect' | 'invited' | 'active' | 'paused'
@@ -85,7 +83,7 @@ Launchpad4Success Team`
 }
 
 async function requireAdmin() {
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabase = await createServerRouteClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
