@@ -112,11 +112,14 @@ export async function proxy(req: NextRequest) {
     res.headers.set('x-user-id', user.id)
   }
 
-  // Protect authenticated routes
-  const protectedPaths = ['/launchpad', '/dashboard', '/admin', '/builder', '/domains', '/link-funnel']
-  const isProtectedPath = protectedPaths.some((path) => req.nextUrl.pathname.startsWith(path))
+  // Default-protect all non-public app routes on the apex domain.
+  // Subdomain content routes are handled separately and remain publicly accessible.
+  const requiresAuth =
+    !isSubdomain &&
+    !pathname.startsWith('/subdomain/') &&
+    !isPublicPath(pathname)
 
-  if (isProtectedPath && !user) {
+  if (requiresAuth && !user) {
     const redirectUrl = getSubdomainRedirectUrl(req, '/login')
     const loginUrl = new URL(redirectUrl)
     loginUrl.searchParams.set('redirect', req.nextUrl.pathname)
