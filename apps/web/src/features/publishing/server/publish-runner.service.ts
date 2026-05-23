@@ -4,6 +4,7 @@ import { createServiceRoleClient } from '@/lib/supabase-server'
 const DEFAULT_MAX_PUBLISH_ATTEMPTS = 3
 const DEFAULT_RETRY_BASE_SECONDS = 300
 const DEFAULT_RETRY_MAX_SECONDS = 6 * 60 * 60
+const DEFAULT_CLAIM_LOCK_SECONDS = 15 * 60
 
 export interface CreateScheduleInput {
   title: string
@@ -43,6 +44,11 @@ const RETRY_BASE_SECONDS = parsePositiveInt(
 const RETRY_MAX_SECONDS = parsePositiveInt(
   process.env.PUBLISH_RETRY_MAX_SECONDS,
   DEFAULT_RETRY_MAX_SECONDS
+)
+
+const CLAIM_LOCK_SECONDS = parsePositiveInt(
+  process.env.PUBLISH_CLAIM_LOCK_SECONDS,
+  DEFAULT_CLAIM_LOCK_SECONDS
 )
 
 function assertValidRunAt(value: string): string {
@@ -246,6 +252,32 @@ async function rescheduleQueuedSchedule(admin: SupabaseClient, scheduleId: strin
     .eq('id', scheduleId)
 }
 
+async function claimQueuedSchedule(
+  admin: SupabaseClient,
+  scheduleId: string,
+  dueCutoffIso: string
+): Promise<boolean> {
+  const now = new Date()
+  const claimUntil = new Date(now.getTime() + CLAIM_LOCK_SECONDS * 1000).toISOString()
+
+  const { data, error } = await admin
+    .from('content_schedule')
+    .update({
+      run_at: claimUntil,
+      updated_at: now.toISOString(),
+    })
+    .eq('id', scheduleId)
+    .eq('status', 'queued')
+    .lte('run_at', dueCutoffIso)
+    .select('id')
+
+  if (error) {
+    throw new Error(error.message || 'Failed to claim queued schedule')
+  }
+
+  return Array.isArray(data) && data.length > 0
+}
+
 async function getNextPublishAttempt(admin: SupabaseClient, scheduleId: string): Promise<number> {
   const { data, error } = await admin
     .from('publish_jobs')
@@ -329,6 +361,7 @@ export async function runDuePublishSchedules(limit = 25) {
   }
 
   const queue = schedules || []
+  let processed = 0
   let published = 0
   let failed = 0
   let retried = 0
@@ -337,6 +370,12 @@ export async function runDuePublishSchedules(limit = 25) {
   for (const schedule of queue) {
     const scheduleId = schedule.id as string
     const userId = schedule.user_id as string
+    const claimed = await claimQueuedSchedule(admin, scheduleId, nowIso)
+    if (!claimed) {
+      continue
+    }
+
+    processed += 1
     const attempt = await getNextPublishAttempt(admin, scheduleId)
 
     const { data: integration, error: integrationError } = await admin
@@ -469,7 +508,7 @@ export async function runDuePublishSchedules(limit = 25) {
 
   return {
     success: true,
-    processed: queue.length,
+    processed,
     published,
     failed,
     retried,
