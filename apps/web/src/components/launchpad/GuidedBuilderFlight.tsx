@@ -9,20 +9,14 @@ import {
   getGuidedBuilderHelpMessage,
   getNextGuidedBuilderModuleIndex,
 } from '@/lib/launchpad/guidedBuilder'
-
-type LaunchpadTemplate = {
-  name: string
-  description: string
-  blocks: number
-  conversions: string
-  category: string
-}
+import type { StartupFunnelType } from '@/lib/launchpad/startupChecklist'
+import type { LaunchpadTemplateCard } from '@/lib/launchpad/templateCatalog'
 
 interface GuidedBuilderFlightProps {
-  templates: LaunchpadTemplate[]
-  selectedTemplate: string
+  templates: LaunchpadTemplateCard[]
+  selectedTemplate: StartupFunnelType | ''
   createdFunnelPath: string
-  onSelectTemplate: (template: LaunchpadTemplate) => void
+  onSelectTemplate: (template: LaunchpadTemplateCard) => void
 }
 
 export default function GuidedBuilderFlight({
@@ -163,4 +157,3 @@ export default function GuidedBuilderFlight({
     </div>
   )
 }
-

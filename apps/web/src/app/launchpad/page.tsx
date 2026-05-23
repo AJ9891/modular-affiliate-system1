@@ -22,6 +22,10 @@ import {
   type StartupFunnelType,
   type StartupTrafficGoal,
 } from '@/lib/launchpad/startupChecklist'
+import {
+  LAUNCHPAD_TEMPLATE_CARDS,
+  type LaunchpadTemplateCard,
+} from '@/lib/launchpad/templateCatalog'
 import type { LaunchpadCopilotTargetStep } from '@/lib/launchpad/copilot'
 import {
   getUnlockedMilestones,
@@ -100,11 +104,29 @@ type QuickProductType = typeof QUICK_PRODUCT_TYPES[number]['id']
 type QuickTrafficSource = typeof QUICK_TRAFFIC_SOURCES[number]['id']
 type QuickGoal = typeof QUICK_GOALS[number]['id']
 
-const GOAL_TO_TEMPLATE: Record<QuickGoal, 'lead-gen' | 'review' | 'vsl' | 'webinar'> = {
+const GOAL_TO_TEMPLATE: Record<QuickGoal, StartupFunnelType> = {
   'lead-capture': 'lead-gen',
   'book-calls': 'vsl',
   'direct-sales': 'review',
   'webinar-signup': 'webinar',
+}
+
+const STARTUP_TEMPLATE_VALUES: readonly StartupFunnelType[] = ['lead-gen', 'review', 'vsl', 'webinar']
+
+function normalizeStartupTemplate(value: string): StartupFunnelType | '' {
+  const normalized = value.trim().toLowerCase()
+  if (!normalized) return ''
+
+  if (STARTUP_TEMPLATE_VALUES.includes(normalized as StartupFunnelType)) {
+    return normalized as StartupFunnelType
+  }
+
+  if (normalized.includes('webinar')) return 'webinar'
+  if (normalized.includes('review')) return 'review'
+  if (normalized.includes('lead')) return 'lead-gen'
+  if (normalized.includes('sales') || normalized.includes('launch') || normalized.includes('vsl')) return 'vsl'
+
+  return ''
 }
 
 const TRAFFIC_SOURCE_PROFILES: Record<
@@ -317,9 +339,9 @@ export default function LaunchpadPage() {
   const [stepValidationError, setStepValidationError] = useState<string | null>(null)
   const [operationNotice, setOperationNotice] = useState<string | null>(null)
   const [selectedNiche, setSelectedNiche] = useState<string>('')
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('')
+  const [selectedTemplate, setSelectedTemplate] = useState<StartupFunnelType | ''>('')
   const [createdFunnel, setCreatedFunnel] = useState<any>(null)
-  const [creatingTemplate, setCreatingTemplate] = useState<string | null>(null)
+  const [creatingTemplate, setCreatingTemplate] = useState<StartupFunnelType | null>(null)
   const [copiedUrl, setCopiedUrl] = useState(false)
   const [showSuccessScreen, setShowSuccessScreen] = useState(false)
   const [stats, setStats] = useState({
@@ -329,14 +351,6 @@ export default function LaunchpadPage() {
     revenue: 0,
     conversions: 0
   })
-
-  type LaunchpadTemplate = {
-    name: string
-    description: string
-    blocks: number
-    conversions: string
-    category: string
-  }
 
   type OfferRecord = {
     id: string
@@ -729,36 +743,7 @@ export default function LaunchpadPage() {
     }
   ]
 
-  const funnelTemplates: LaunchpadTemplate[] = [
-    {
-      name: 'Lead Magnet',
-      description: 'Capture emails with a free download',
-      blocks: 3,
-      conversions: '18-25%',
-      category: 'lead-gen'
-    },
-    {
-      name: 'Product Review',
-      description: 'Review and recommend affiliate products',
-      blocks: 5,
-      conversions: '8-15%',
-      category: 'review'
-    },
-    {
-      name: 'Video Sales Letter',
-      description: 'Video-first landing page',
-      blocks: 4,
-      conversions: '12-20%',
-      category: 'vsl'
-    },
-    {
-      name: 'Webinar Registration',
-      description: 'Collect registrations for live training',
-      blocks: 4,
-      conversions: '25-35%',
-      category: 'webinar'
-    }
-  ]
+  const funnelTemplates = LAUNCHPAD_TEMPLATE_CARDS
 
   const stepPurpose: Record<string, string> = {
     welcome: 'You will see the full flow before touching settings, so each action has context.',
@@ -1189,7 +1174,7 @@ export default function LaunchpadPage() {
     setOperationNotice(`Default niche set to "${nicheId}". You can change it anytime.`)
   }
 
-  const selectTemplate = (template: LaunchpadTemplate) => {
+  const selectTemplate = (template: LaunchpadTemplateCard) => {
     setStepValidationError(null)
     if (selectedTemplate !== template.category) {
       setCreatedFunnel(null)
@@ -1203,7 +1188,7 @@ export default function LaunchpadPage() {
   }
 
   const createFunnelFromTemplate = async (
-    template: LaunchpadTemplate,
+    template: LaunchpadTemplateCard,
     options: { showSuccessScreen?: boolean; redirectToBuilder?: boolean } = {}
   ) => {
     const { showSuccessScreen = false, redirectToBuilder = true } = options
@@ -1880,8 +1865,9 @@ export default function LaunchpadPage() {
       if (nextNiche) {
         setSelectedNiche(nextNiche)
       }
-      if (nextTemplate) {
-        setSelectedTemplate(nextTemplate)
+      const normalizedTemplate = normalizeStartupTemplate(nextTemplate)
+      if (normalizedTemplate) {
+        setSelectedTemplate(normalizedTemplate)
       }
 
       setAttachedOfferId(derivedOfferId)
@@ -1958,7 +1944,8 @@ export default function LaunchpadPage() {
     const preset = getIntentPreset(launchIntent)
     const startupDefaults = getStartupDefaultsFromIntent(launchIntent)
     setSelectedNiche((previous) => previous || preset.suggestedNiche)
-    setSelectedTemplate((previous) => previous || preset.suggestedTemplate)
+    const presetTemplate = normalizeStartupTemplate(preset.suggestedTemplate)
+    setSelectedTemplate((previous) => previous || presetTemplate)
     setStartupFunnelType(startupDefaults.funnelType)
     setStartupTrafficGoal(startupDefaults.trafficGoal)
     setOperationNotice(preset.notice)
@@ -1983,7 +1970,9 @@ export default function LaunchpadPage() {
     if (missing.length > 0) return
 
     const sourceProfile = mapTrafficGoalToSource(startupTrafficGoal as StartupTrafficGoal)
-    setSelectedTemplate(startupFunnelType as string)
+    if (startupFunnelType) {
+      setSelectedTemplate(startupFunnelType)
+    }
     setQuickTrafficSource(sourceProfile)
     setStartupChecklistComplete(true)
     setCurrentStep(1)
