@@ -22,18 +22,24 @@ function SignupContent() {
   const [betaInviteEmailLocked, setBetaInviteEmailLocked] = useState(false)
   const [betaInviteLoading, setBetaInviteLoading] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     const token = searchParams.get('betaInvite')
     if (!token) return
 
+    const inviteToken = token
     let active = true
-    setBetaInviteToken(token)
+    setBetaInviteToken(inviteToken)
     setBetaInviteLoading(true)
 
     async function resolveInvite() {
       try {
-        const response = await fetch(`/api/beta/invite?token=${encodeURIComponent(token)}`)
+        const response = await fetch(`/api/beta/invite?token=${encodeURIComponent(inviteToken)}`)
         const data = (await response.json().catch(() => ({}))) as {
           valid?: boolean
           email?: string

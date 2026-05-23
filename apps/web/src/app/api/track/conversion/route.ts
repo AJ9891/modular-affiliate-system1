@@ -42,6 +42,24 @@ export async function POST(request: NextRequest) {
     const click_id = cookieStore.get(ATTRIBUTION_CLICK_COOKIE)?.value
     const attributionSessionId = cookieStore.get(ATTRIBUTION_SESSION_COOKIE)?.value || null
 
+    const {
+      data: { user: sessionUser },
+    } = await supabase.auth.getUser()
+
+    let ownerUserId: string | null = sessionUser?.id || null
+    if (!ownerUserId && funnel_id) {
+      const { data: funnelOwner } = await supabase
+        .from('funnels')
+        .select('user_id')
+        .eq('funnel_id', funnel_id)
+        .maybeSingle()
+      ownerUserId = funnelOwner?.user_id || null
+    }
+
+    const ownerFunnelId: string | null = typeof funnel_id === 'string' ? funnel_id : null
+    const ownerGenerationId: string | null = typeof generation_id === 'string' ? generation_id : null
+    const ownerVariantId: string | null = typeof variant_id === 'string' ? variant_id : null
+
     const { data, error } = await supabase
       .from('conversions')
       .insert({

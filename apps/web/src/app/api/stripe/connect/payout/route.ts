@@ -4,10 +4,8 @@ import { checkSupabase } from '@/lib/check-supabase'
 import { payoutSchema } from '@/lib/validators/stripe'
 import { log } from '@/lib/log'
 import { appendAttributionAuditEvent } from '@/lib/attribution-audit'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-12-15.clover',
-})
+import { getStripeServerClient } from '@/lib/stripe-server'
+import { hasAdminAccess } from '@/lib/admin-access'
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'

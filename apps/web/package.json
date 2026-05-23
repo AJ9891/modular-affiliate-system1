@@ -24,7 +24,7 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@aws-sdk/client-sesv2": "^3.919.0",
+    "@aws-sdk/client-sesv2": "^3.1053.0",
     "@modular-affiliate/ai": "file:../../packages/ai",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-progress": "^1.1.8",

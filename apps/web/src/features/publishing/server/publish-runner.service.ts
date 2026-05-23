@@ -1,6 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createServiceRoleClient } from '@/lib/supabase-server'
 
+const DEFAULT_MAX_PUBLISH_ATTEMPTS = 3
+const DEFAULT_RETRY_BASE_SECONDS = 300
+const DEFAULT_RETRY_MAX_SECONDS = 6 * 60 * 60
+
 export interface CreateScheduleInput {
   title: string
   runAt: string
@@ -19,6 +23,27 @@ export interface CmsIntegrationInput {
   config?: Record<string, unknown>
   isActive?: boolean
 }
+
+function parsePositiveInt(raw: string | undefined, fallback: number): number {
+  const parsed = Number(raw)
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback
+  return Math.floor(parsed)
+}
+
+const MAX_PUBLISH_ATTEMPTS = parsePositiveInt(
+  process.env.PUBLISH_MAX_ATTEMPTS,
+  DEFAULT_MAX_PUBLISH_ATTEMPTS
+)
+
+const RETRY_BASE_SECONDS = parsePositiveInt(
+  process.env.PUBLISH_RETRY_BASE_SECONDS,
+  DEFAULT_RETRY_BASE_SECONDS
+)
+
+const RETRY_MAX_SECONDS = parsePositiveInt(
+  process.env.PUBLISH_RETRY_MAX_SECONDS,
+  DEFAULT_RETRY_MAX_SECONDS
+)
 
 function assertValidRunAt(value: string): string {
   const date = new Date(value)
@@ -164,6 +189,33 @@ export async function listCmsIntegrationsForUser(supabase: SupabaseClient, userI
   return data || []
 }
 
+function computeBackoffSeconds(attempt: number): number {
+  const exponent = Math.max(0, attempt - 1)
+  const uncapped = RETRY_BASE_SECONDS * 2 ** exponent
+  return Math.min(RETRY_MAX_SECONDS, uncapped)
+}
+
+function buildRetryState(attempt: number): {
+  isTerminal: boolean
+  retryAt: string | null
+  backoffSeconds: number | null
+} {
+  if (attempt >= MAX_PUBLISH_ATTEMPTS) {
+    return {
+      isTerminal: true,
+      retryAt: null,
+      backoffSeconds: null,
+    }
+  }
+
+  const backoffSeconds = computeBackoffSeconds(attempt)
+  return {
+    isTerminal: false,
+    retryAt: new Date(Date.now() + backoffSeconds * 1000).toISOString(),
+    backoffSeconds,
+  }
+}
+
 async function markScheduleStatus(
   admin: SupabaseClient,
   scheduleId: string,
@@ -182,6 +234,61 @@ async function markScheduleStatus(
   void errorMessage
 }
 
+async function rescheduleQueuedSchedule(admin: SupabaseClient, scheduleId: string, runAtIso: string) {
+  await admin
+    .from('content_schedule')
+    .update({
+      status: 'queued',
+      run_at: runAtIso,
+      updated_at: new Date().toISOString(),
+      published_at: null,
+    })
+    .eq('id', scheduleId)
+}
+
+async function getNextPublishAttempt(admin: SupabaseClient, scheduleId: string): Promise<number> {
+  const { data, error } = await admin
+    .from('publish_jobs')
+    .select('attempt')
+    .eq('schedule_id', scheduleId)
+    .order('attempt', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) {
+    if (isRecoverableDatabaseError(error)) return 1
+    throw new Error(error.message || 'Failed to resolve publish attempt')
+  }
+
+  const priorAttempt = Number((data as { attempt?: number } | null)?.attempt || 0)
+  return priorAttempt + 1
+}
+
+async function insertPublishJob(
+  admin: SupabaseClient,
+  payload: {
+    userId: string
+    scheduleId: string
+    integrationId: string | null
+    status: 'sent' | 'failed'
+    attempt: number
+    errorMessage?: string
+    responsePayload?: Record<string, unknown>
+  }
+) {
+  await admin.from('publish_jobs').insert({
+    user_id: payload.userId,
+    schedule_id: payload.scheduleId,
+    cms_integration_id: payload.integrationId,
+    status: payload.status,
+    attempt: payload.attempt,
+    error_message: payload.errorMessage || null,
+    response_payload: payload.responsePayload || null,
+    created_at: new Date().toISOString(),
+    ...(payload.status === 'sent' ? { published_at: new Date().toISOString() } : {}),
+  })
+}
+
 export async function runDuePublishSchedules(limit = 25) {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return {
@@ -189,6 +296,8 @@ export async function runDuePublishSchedules(limit = 25) {
       processed: 0,
       published: 0,
       failed: 0,
+      retried: 0,
+      deadLettered: 0,
       message: 'SUPABASE_SERVICE_ROLE_KEY is required for publish runner',
     }
   }
@@ -206,7 +315,15 @@ export async function runDuePublishSchedules(limit = 25) {
 
   if (scheduleError) {
     if (isRecoverableDatabaseError(scheduleError)) {
-      return { success: true, processed: 0, published: 0, failed: 0, message: 'No schedule tables found yet' }
+      return {
+        success: true,
+        processed: 0,
+        published: 0,
+        failed: 0,
+        retried: 0,
+        deadLettered: 0,
+        message: 'No schedule tables found yet'
+      }
     }
     throw new Error(scheduleError.message)
   }
@@ -214,10 +331,13 @@ export async function runDuePublishSchedules(limit = 25) {
   const queue = schedules || []
   let published = 0
   let failed = 0
+  let retried = 0
+  let deadLettered = 0
 
   for (const schedule of queue) {
     const scheduleId = schedule.id as string
     const userId = schedule.user_id as string
+    const attempt = await getNextPublishAttempt(admin, scheduleId)
 
     const { data: integration, error: integrationError } = await admin
       .from('cms_integrations')
@@ -230,16 +350,30 @@ export async function runDuePublishSchedules(limit = 25) {
 
     if (integrationError || !integration) {
       failed += 1
-      await admin.from('publish_jobs').insert({
-        user_id: userId,
-        schedule_id: scheduleId,
-        cms_integration_id: null,
+      const message = integrationError?.message || 'No active CMS integration found'
+      const retry = buildRetryState(attempt)
+
+      await insertPublishJob(admin, {
+        userId,
+        scheduleId,
+        integrationId: null,
         status: 'failed',
-        attempt: 1,
-        error_message: integrationError?.message || 'No active CMS integration found',
-        created_at: new Date().toISOString(),
+        attempt,
+        errorMessage: message,
+        responsePayload: {
+          terminal: retry.isTerminal,
+          retryAt: retry.retryAt,
+          backoffSeconds: retry.backoffSeconds,
+        },
       })
-      await markScheduleStatus(admin, scheduleId, 'failed', integrationError?.message || 'No active CMS integration found')
+
+      if (retry.isTerminal) {
+        deadLettered += 1
+        await markScheduleStatus(admin, scheduleId, 'failed', message)
+      } else if (retry.retryAt) {
+        retried += 1
+        await rescheduleQueuedSchedule(admin, scheduleId, retry.retryAt)
+      }
       continue
     }
 
@@ -263,51 +397,73 @@ export async function runDuePublishSchedules(limit = 25) {
 
       if (!response.ok) {
         failed += 1
+        const message = `Publish failed (${response.status}): ${responseText.slice(0, 500)}`
+        const retry = buildRetryState(attempt)
 
-        await admin.from('publish_jobs').insert({
-          user_id: userId,
-          schedule_id: scheduleId,
-          cms_integration_id: integration.id,
+        await insertPublishJob(admin, {
+          userId,
+          scheduleId,
+          integrationId: integration.id,
           status: 'failed',
-          attempt: 1,
-          error_message: `Publish failed (${response.status}): ${responseText.slice(0, 500)}`,
-          response_payload: { status: response.status, body: responseText.slice(0, 1000) },
-          created_at: new Date().toISOString(),
+          attempt,
+          errorMessage: message,
+          responsePayload: {
+            status: response.status,
+            body: responseText.slice(0, 1000),
+            terminal: retry.isTerminal,
+            retryAt: retry.retryAt,
+            backoffSeconds: retry.backoffSeconds,
+          },
         })
 
-        await markScheduleStatus(admin, scheduleId, 'failed', `Publish failed (${response.status})`)
+        if (retry.isTerminal) {
+          deadLettered += 1
+          await markScheduleStatus(admin, scheduleId, 'failed', `Publish failed (${response.status})`)
+        } else if (retry.retryAt) {
+          retried += 1
+          await rescheduleQueuedSchedule(admin, scheduleId, retry.retryAt)
+        }
         continue
       }
 
       published += 1
 
-      await admin.from('publish_jobs').insert({
-        user_id: userId,
-        schedule_id: scheduleId,
-        cms_integration_id: integration.id,
+      await insertPublishJob(admin, {
+        userId,
+        scheduleId,
+        integrationId: integration.id,
         status: 'sent',
-        attempt: 1,
-        response_payload: { status: response.status, body: responseText.slice(0, 1000) },
-        created_at: new Date().toISOString(),
-        published_at: new Date().toISOString(),
+        attempt,
+        responsePayload: { status: response.status, body: responseText.slice(0, 1000) },
       })
 
       await markScheduleStatus(admin, scheduleId, 'published')
     } catch (error) {
       failed += 1
       const message = error instanceof Error ? error.message : 'Unknown publish error'
+      const retry = buildRetryState(attempt)
 
-      await admin.from('publish_jobs').insert({
-        user_id: userId,
-        schedule_id: scheduleId,
-        cms_integration_id: integration.id,
+      await insertPublishJob(admin, {
+        userId,
+        scheduleId,
+        integrationId: integration.id,
         status: 'failed',
-        attempt: 1,
-        error_message: message,
-        created_at: new Date().toISOString(),
+        attempt,
+        errorMessage: message,
+        responsePayload: {
+          terminal: retry.isTerminal,
+          retryAt: retry.retryAt,
+          backoffSeconds: retry.backoffSeconds,
+        },
       })
 
-      await markScheduleStatus(admin, scheduleId, 'failed', message)
+      if (retry.isTerminal) {
+        deadLettered += 1
+        await markScheduleStatus(admin, scheduleId, 'failed', message)
+      } else if (retry.retryAt) {
+        retried += 1
+        await rescheduleQueuedSchedule(admin, scheduleId, retry.retryAt)
+      }
     }
   }
 
@@ -316,5 +472,7 @@ export async function runDuePublishSchedules(limit = 25) {
     processed: queue.length,
     published,
     failed,
+    retried,
+    deadLettered,
   }
 }

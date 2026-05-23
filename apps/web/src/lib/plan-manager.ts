@@ -216,6 +216,11 @@ export class PlanManager {
 
     switch (limitType) {
       case 'maxFunnels': {
+        const maxFunnelsLimit = limits.maxFunnels
+        if (maxFunnelsLimit === 'unlimited' || typeof maxFunnelsLimit !== 'number') {
+          return true
+        }
+
         const { count, error } = await this.supabase
           .from('funnels')
           .select('funnel_id', { count: 'exact', head: true })
@@ -227,7 +232,7 @@ export class PlanManager {
           return true
         }
 
-        return (count || 0) < limitValue
+        return (count || 0) < maxFunnelsLimit
       }
       default:
         // For limits that rely on optional/missing usage tables, fail open.

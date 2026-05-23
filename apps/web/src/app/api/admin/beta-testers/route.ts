@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { createServiceRoleClient } from '@/lib/supabase-server'
-import { sendshark } from '@/lib/sendshark'
+import { emailService } from '@/lib/email/service'
 
 type BetaTesterStatus = 'prospect' | 'invited' | 'active' | 'paused'
 
@@ -73,7 +73,7 @@ ${params.inviteUrl}
 Thanks,
 Launchpad4Success Team`
 
-  await sendshark.sendEmail({
+  await emailService.sendEmail({
     to: { email: params.toEmail, name: params.fullName || undefined },
     from: { email: 'noreply@affiliatelaunchpad.com', name: 'Launchpad4Success' },
     subject: 'Your Launchpad4Success beta invite',

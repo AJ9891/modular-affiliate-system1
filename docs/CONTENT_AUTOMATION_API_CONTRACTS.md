@@ -4,7 +4,7 @@
 
 Generate article and funnel payloads from URL or keyword.
 
-### Request
+### Generate Request
 
 ```json
 {
@@ -17,7 +17,7 @@ Generate article and funnel payloads from URL or keyword.
 }
 ```
 
-### Response
+### Generate Response
 
 ```json
 {
@@ -48,7 +48,7 @@ Generate article and funnel payloads from URL or keyword.
 
 Lookup related keywords via Google suggestion integration.
 
-### Request
+### Keyword Lookup Request
 
 ```json
 {
@@ -58,7 +58,7 @@ Lookup related keywords via Google suggestion integration.
 }
 ```
 
-### Response
+### Keyword Lookup Response
 
 ```json
 {
@@ -80,7 +80,7 @@ Lookup related keywords via Google suggestion integration.
 
 Manage publish integration settings.
 
-### POST Request
+### CMS Integration POST Request
 
 ```json
 {
@@ -96,7 +96,7 @@ Manage publish integration settings.
 
 Create and list scheduled publish runs.
 
-### POST Request
+### Publish Schedule POST Request
 
 ```json
 {
@@ -113,11 +113,11 @@ Create and list scheduled publish runs.
 
 Execute due scheduled publishes.
 
-### Auth
+### Publish Run Auth
 
 Requires `Authorization: Bearer <PUBLISH_CRON_SECRET>` or `x-publish-secret`.
 
-### POST Request
+### Publish Run POST Request
 
 ```json
 {
@@ -125,13 +125,21 @@ Requires `Authorization: Bearer <PUBLISH_CRON_SECRET>` or `x-publish-secret`.
 }
 ```
 
-### Response
+### Publish Run Response
 
 ```json
 {
   "success": true,
   "processed": 12,
   "published": 10,
-  "failed": 2
+  "failed": 2,
+  "retried": 1,
+  "deadLettered": 1
 }
 ```
+
+### Retry Semantics
+
+- `failed`: number of attempts that failed during this runner execution.
+- `retried`: failed attempts that were re-queued with a future `run_at`.
+- `deadLettered`: failed attempts that hit `PUBLISH_MAX_ATTEMPTS` and were marked terminal (`content_schedule.status='failed'`).
