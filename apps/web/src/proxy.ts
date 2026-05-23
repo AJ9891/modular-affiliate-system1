@@ -9,11 +9,6 @@ import { isPublicPath } from './config/publicPaths'
 import { getRateLimitKey, rateLimit, RATE_LIMIT_CONFIGS } from './lib/rate-limit'
 import { createClient as createSsrMiddlewareClient } from './utils/supabase/middleware'
 
-function withAuthGate(response: NextResponse, gate: string) {
-  response.headers.set('x-auth-gate', gate)
-  return response
-}
-
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
   const host = req.headers.get('host') || ''
@@ -30,7 +25,7 @@ export async function proxy(req: NextRequest) {
   if (hostname === 'www.launchpad4success.pro') {
     const redirectUrl = req.nextUrl.clone()
     redirectUrl.host = 'launchpad4success.pro'
-    return withAuthGate(NextResponse.redirect(redirectUrl, 308), 'redirect:www-to-apex')
+    return NextResponse.redirect(redirectUrl, 308)
   }
 
   // API rate limiting (covers auth + public abuse-prone endpoints)
@@ -79,7 +74,7 @@ export async function proxy(req: NextRequest) {
   // Allow public pages without auth and still attach security headers
   if (isPublicPath(pathname)) {
     const res = NextResponse.next()
-    return addSecurityHeaders(withAuthGate(res, 'allow:public'), { allowSameOriginFrame })
+    return addSecurityHeaders(res, { allowSameOriginFrame })
   }
 
   const { isSubdomain, subdomain } = parseSubdomain(req)
@@ -91,7 +86,7 @@ export async function proxy(req: NextRequest) {
       // Rewrite to subdomain route
       const url = req.nextUrl.clone()
       url.pathname = `/subdomain/${subdomain}${req.nextUrl.pathname}`
-      return withAuthGate(NextResponse.rewrite(url), 'allow:subdomain-rewrite')
+      return NextResponse.rewrite(url)
     }
   }
 
@@ -99,12 +94,12 @@ export async function proxy(req: NextRequest) {
   if (!supabaseEnvReady) {
     // In local/preview runs without Supabase creds, skip auth enforcement but keep security headers.
     const res = NextResponse.next()
-    return addSecurityHeaders(withAuthGate(res, 'allow:no-supabase-env'), { allowSameOriginFrame })
+    return addSecurityHeaders(res, { allowSameOriginFrame })
   }
 
   const { supabase, response: res } = createSsrMiddlewareClient(req)
   if (!supabase) {
-    return addSecurityHeaders(withAuthGate(res, 'allow:no-supabase-client'), { allowSameOriginFrame })
+    return addSecurityHeaders(res, { allowSameOriginFrame })
   }
 
   // Single auth check path to avoid duplicate refresh-token consumption in the same request.
@@ -128,15 +123,15 @@ export async function proxy(req: NextRequest) {
     const redirectUrl = getSubdomainRedirectUrl(req, '/login')
     const loginUrl = new URL(redirectUrl)
     loginUrl.searchParams.set('redirect', req.nextUrl.pathname)
-    return withAuthGate(NextResponse.redirect(loginUrl), 'redirect:auth-required')
+    return NextResponse.redirect(loginUrl)
   }
 
   // For subdomain requests, allow unauthenticated access to public content
   if (isSubdomain) {
-    return addSecurityHeaders(withAuthGate(res, 'allow:subdomain'), { allowSameOriginFrame })
+    return addSecurityHeaders(res, { allowSameOriginFrame })
   }
 
-  return addSecurityHeaders(withAuthGate(res, 'allow:authenticated'), { allowSameOriginFrame })
+  return addSecurityHeaders(res, { allowSameOriginFrame })
 }
 
 export const config = {
