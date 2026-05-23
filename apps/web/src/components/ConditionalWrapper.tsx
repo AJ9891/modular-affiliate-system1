@@ -2,14 +2,14 @@
 
 import { usePathname } from 'next/navigation'
 import { ReactNode, useEffect, useState } from 'react'
-import { isExactPublicPath } from '@/config/publicPaths'
+import { isPublicPath } from '@/config/publicPaths'
 
 export default function ConditionalWrapper({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   // Don't add sidebar offset on public pages or Launchpad onboarding route.
-  const shouldAddMargin = !isExactPublicPath(pathname) && pathname !== '/launchpad' && pathname !== '/welcome'
+  const shouldAddMargin = !isPublicPath(pathname) && pathname !== '/launchpad' && pathname !== '/welcome'
 
   // Listen for sidebar collapse state changes
   useEffect(() => {
