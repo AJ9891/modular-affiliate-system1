@@ -1,6 +1,7 @@
 'use client'
 
 import { Gauge, CheckCircle2 } from 'lucide-react'
+import TrafficEducationPanel from '@/components/launchpad/TrafficEducationPanel'
 import {
   STARTUP_FUNNEL_OPTIONS,
   STARTUP_TRAFFIC_GOAL_OPTIONS,
@@ -37,6 +38,8 @@ export default function StartupChecklistScreen({
   return (
     <div className="cockpit-container min-h-screen py-12">
       <div className="mx-auto max-w-4xl px-4 py-12">
+        <TrafficEducationPanel />
+
         <section className="card-premium rounded-3xl border border-[var(--border-elevated)] p-8 md:p-12">
           <div className="mb-6 text-center">
             <p className="text-xs uppercase tracking-system text-text-secondary">Startup Checklist</p>

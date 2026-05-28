@@ -7,6 +7,7 @@ import PreflightIntentScreen from '@/components/launchpad/PreflightIntentScreen'
 import StartupChecklistScreen from '@/components/launchpad/StartupChecklistScreen'
 import GuidedBuilderFlight from '@/components/launchpad/GuidedBuilderFlight'
 import LaunchpadCopilotAssist from '@/components/launchpad/LaunchpadCopilotAssist'
+import LaunchpadAutoSellSection from '@/components/launchpad/LaunchpadAutoSellSection'
 import {
   LAUNCHPAD_INTENT_OPTIONS,
   getIntentPreset,
@@ -2756,8 +2757,11 @@ export default function LaunchpadPage() {
           </div>
         </div>
 
+        {/* Auto-sell Launchpad */}
+        <LaunchpadAutoSellSection />
+
         {/* Step Content */}
-        <div className="card-premium rounded-2xl p-12 text-center">
+        <div className="card-premium rounded-2xl p-12 text-center"> 
           <div className="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-rocket-700 to-rocket-500">
             <StepIcon className="text-white" size={36} />
           </div>
