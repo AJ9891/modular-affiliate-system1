@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Launchpad4Success Platform Visual Map</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --ink: #16202a;
+      --muted: #5c6875;
+      --line: #cbd3dc;
+      --panel: #ffffff;
+      --navy: #16324f;
+      --teal: #147a78;
+      --green: #2e7d4f;
+      --gold: #9b6a12;
+      --rose: #a43d55;
+      --violet: #6651a6;
+      --blue: #3269a8;
+      --shadow: 0 18px 50px rgba(26, 35, 50, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+    }
+
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .hero {
+      width: min(1240px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 32px 0 26px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: end;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 4vw, 52px);
+      line-height: 1.02;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      max-width: 780px;
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid #23364a;
+      background: #172638;
+      color: #fff;
+      min-height: 42px;
+      padding: 0 14px;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: #fff;
+      color: #172638;
+    }
+
+    main {
+      width: min(1240px, calc(100% - 40px));
+      margin: 24px auto 44px;
+    }
+
+    .legend {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .map {
+      display: grid;
+      gap: 18px;
+    }
+
+    .cluster {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-left: 7px solid var(--accent);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .cluster-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid #e3e8ee;
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 21px;
+      letter-spacing: 0;
+    }
+
+    .cluster-note {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      min-height: 126px;
+      border: 1px solid #d8dee6;
+      border-radius: 8px;
+      padding: 13px;
+      background: #fbfcfd;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    .route {
+      color: var(--accent);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .api-strip {
+      margin-top: 18px;
+      padding: 16px;
+      border: 1px dashed #aeb8c4;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .api-strip h2 {
+      margin-bottom: 10px;
+    }
+
+    .api-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .api-grid div {
+      border: 1px solid #d8dee6;
+      border-radius: 6px;
+      padding: 10px;
+      background: #fbfcfd;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .api-grid strong {
+      display: block;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+
+    footer {
+      color: var(--muted);
+      text-align: center;
+      font-size: 12px;
+      padding: 0 0 36px;
+    }
+
+    @media (max-width: 920px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        justify-content: flex-start;
+      }
+
+      .cards,
+      .api-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 620px) {
+      .hero,
+      main {
+        width: min(100% - 24px, 1240px);
+      }
+
+      .cards,
+      .api-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .cluster-head {
+        display: block;
+      }
+
+      .cluster-note {
+        text-align: left;
+        margin-top: 6px;
+      }
+    }
+
+    @media print {
+      header,
+      main,
+      footer {
+        width: 100%;
+      }
+
+      .actions {
+        display: none;
+      }
+
+      .cluster {
+        break-inside: avoid;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <section class="hero">
+      <div>
+        <h1>Launchpad4Success Platform Visual Map</h1>
+        <p class="subtitle">
+          A browser-ready map of the platform pages, their primary jobs, and how the product surface groups into public, onboarding, builder, operations, automation, commerce, and admin areas.
+        </p>
+      </div>
+      <div class="actions">
+        <button type="button" onclick="downloadSvg()">Download SVG</button>
+        <button type="button" onclick="downloadPng()">Download PNG</button>
+        <button type="button" class="secondary" onclick="window.print()">Print or Save PDF</button>
+      </div>
+    </section>
+  </header>
+
+  <main>
+    <nav class="legend" aria-label="Map legend" id="legend"></nav>
+    <section class="map" id="map"></section>
+    <section class="api-strip">
+      <h2>Primary API Groups</h2>
+      <div class="api-grid" id="apiGrid"></div>
+    </section>
+  </main>
+
+  <footer>
+    Generated from the local repository structure and platform documentation. Open this file in a browser to export the map.
+  </footer>
+
+  <script>
+    const clusters = [
+      {
+        title: "Public Website",
+        note: "Acquisition and trust pages",
+        color: "#16324f",
+        pages: [
+          ["Home", "/", "Main product landing page for Launchpad4Success and the affiliate funnel platform."],
+          ["About", "/about", "Brand and creator context for the platform."],
+          ["Features", "/features", "Capability overview for funnels, email, analytics, AI, and automation."],
+          ["Pricing", "/pricing", "Plan and subscription comparison for monetization tiers."],
+          ["Support", "/support", "Help, contact, and support entry point."],
+          ["Docs", "/docs", "User-facing documentation and platform guidance."],
+          ["Get Started", "/get-started", "Conversion path into onboarding or account creation."],
+          ["Signup", "/signup", "New account registration flow."],
+          ["Login", "/login", "Existing user authentication flow."]
+        ]
+      },
+      {
+        title: "Onboarding and Launchpad",
+        note: "Guided first-run workflow",
+        color: "#147a78",
+        pages: [
+          ["Welcome", "/welcome", "Initial orientation after signup."],
+          ["Launchpad", "/launchpad", "Guided launch workflow from mission setup through publish."],
+          ["Cockpit", "/cockpit", "Focused command center layout for working through platform tasks."],
+          ["Fuel", "/fuel", "Launch preparation and enablement surface."],
+          ["Propulsion", "/propulsion", "Execution-oriented launch and growth workspace."],
+          ["Radar", "/radar", "Monitoring and opportunity awareness area."],
+          ["Navigation", "/navigation", "Route hub for moving through the application experience."],
+          ["System", "/system", "Platform status and internal system overview page."]
+        ]
+      },
+      {
+        title: "Funnel Building",
+        note: "Creation, editing, and previews",
+        color: "#2e7d4f",
+        pages: [
+          ["Funnels", "/funnels", "Manage funnels and generated funnel assets."],
+          ["Visual Builder", "/visual-builder", "Drag-and-drop funnel creation using reusable blocks."],
+          ["Code Builder", "/builder", "JSON and code-oriented funnel editing workflow."],
+          ["Builder V2", "/builder-v2", "Newer unified builder surface for structured funnel authoring."],
+          ["Example Funnel", "/example-funnel", "Demo funnel route for previewing rendering behavior."],
+          ["Link Funnel", "/link-funnel", "Generate or ingest funnel data from an external offer URL."],
+          ["Templates", "/templates", "Reusable funnel and content template library."],
+          ["Niches", "/niches", "Niche selection and configuration workspace."],
+          ["Offers", "/offers", "Affiliate offer catalog and offer management."]
+        ]
+      },
+      {
+        title: "Automation and AI",
+        note: "Generation, optimization, publishing",
+        color: "#6651a6",
+        pages: [
+          ["AI Generator", "/ai-generator", "Generate headlines, copy, funnel content, and page payloads."],
+          ["AI Optimizer", "/ai-optimizer", "Analyze and improve existing funnel or campaign assets."],
+          ["Intelligence", "/intelligence", "Insights surface for recommendations and decision support."],
+          ["Content Automation", "/content-automation", "Keyword lookup, AI content generation, CMS integration, and scheduled publishing."],
+          ["Communications", "/communications", "Messaging and communication control area."],
+          ["Email", "/email", "Campaigns, templates, automations, and autoresponder management."],
+          ["Subscribers", "/subscribers", "Subscriber list, segmentation, tags, and lead records."],
+          ["Downloads", "/downloads", "Lead magnet upload and gated download management."],
+          ["Check Downloads", "/check-downloads", "Operational check page for download configuration."]
+        ]
+      },
+      {
+        title: "Operations and Analytics",
+        note: "Performance and business control",
+        color: "#3269a8",
+        pages: [
+          ["Dashboard", "/dashboard", "Performance overview for leads, clicks, conversions, and revenue."],
+          ["Analytics", "/analytics", "Detailed analytics and funnel/event performance reporting."],
+          ["Affiliates", "/affiliates", "Affiliate tracking and partner-facing performance area."],
+          ["Domains", "/domains", "Custom domain and subdomain management."],
+          ["Monetization", "/monetization", "Revenue, billing, offer, and payout-related controls."],
+          ["Subscription", "/subscription", "Current plan, subscription state, and account billing details."],
+          ["Checkout", "/checkout", "Checkout entry point for plan purchase or upgrade."],
+          ["Settings", "/settings", "Account, workspace, and platform configuration."],
+          ["Team", "/team", "Team collaboration, invitations, permissions, and members."]
+        ]
+      },
+      {
+        title: "Admin and Diagnostics",
+        note: "Internal controls and debugging",
+        color: "#a43d55",
+        pages: [
+          ["Admin", "/admin", "Administrative overview for users, beta testers, and platform metrics."],
+          ["Debug React Error", "/debug-react-error", "Development utility for investigating React runtime failures."],
+          ["Supabase Example", "/supabase-example", "Supabase integration example and smoke-test page."],
+          ["Example Download", "/example-download", "Demo gated-download interaction."],
+          ["Do Not Click", "/do_not_click", "Special internal or experimental route."],
+          ["Error Page", "/_error", "Fallback error route used by the app."],
+          ["Robots", "/robots.txt", "Search engine crawler policy route."],
+          ["Sitemap", "/sitemap.xml", "Search engine sitemap route."]
+        ]
+      }
+    ];
+
+    const apiGroups = [
+      ["Funnels", "/api/funnels, /api/pages, /api/modules"],
+      ["Leads and Tracking", "/api/leads/capture, /api/track/*, /api/redirect/*"],
+      ["Email", "/api/email/send, /api/email/templates, /api/email/automation, /api/email/autoresponder/run"],
+      ["Analytics", "/api/analytics, /api/analytics/realtime, /api/insights"],
+      ["AI", "/api/ai/generate, /api/ai/generate-funnel, /api/chat"],
+      ["Content Automation", "/api/content/generate, /api/integrations/*, /api/publish/*"],
+      ["Commerce", "/api/stripe/*, /api/plans, /api/profile/plan"],
+      ["Workspace", "/api/team/*, /api/domains, /api/uploads, /api/admin/*"]
+    ];
+
+    function render() {
+      const legend = document.getElementById("legend");
+      const map = document.getElementById("map");
+      const apiGrid = document.getElementById("apiGrid");
+
+      legend.innerHTML = clusters.map((cluster) => (
+        `<span><i class="dot" style="background:${cluster.color}"></i>${cluster.title}</span>`
+      )).join("");
+
+      map.innerHTML = clusters.map((cluster) => `
+        <article class="cluster" style="--accent:${cluster.color}">
+          <div class="cluster-head">
+            <h2>${cluster.title}</h2>
+            <div class="cluster-note">${cluster.note}</div>
+          </div>
+          <div class="cards">
+            ${cluster.pages.map((page) => `
+              <section class="card">
+                <h3>${page[0]}</h3>
+                <div class="route">${page[1]}</div>
+                <p>${page[2]}</p>
+              </section>
+            `).join("")}
+          </div>
+        </article>
+      `).join("");
+
+      apiGrid.innerHTML = apiGroups.map((group) => (
+        `<div><strong>${group[0]}</strong>${group[1]}</div>`
+      )).join("");
+    }
+
+    function escapeXml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function wrapText(text, maxChars) {
+      const words = String(text).split(/\s+/);
+      const lines = [];
+      let line = "";
+      words.forEach((word) => {
+        const next = line ? `${line} ${word}` : word;
+        if (next.length > maxChars && line) {
+          lines.push(line);
+          line = word;
+        } else {
+          line = next;
+        }
+      });
+      if (line) lines.push(line);
+      return lines.slice(0, 4);
+    }
+
+    function buildSvg() {
+      const width = 1800;
+      const margin = 48;
+      const gap = 18;
+      const cardW = 540;
+      const cardH = 152;
+      const cardsPerRow = 3;
+      const clusterHeaderH = 66;
+      const clusterPad = 22;
+      let y = 54;
+      const parts = [];
+
+      parts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="HEIGHT_PLACEHOLDER" viewBox="0 0 ${width} HEIGHT_PLACEHOLDER">`);
+      parts.push(`<rect width="100%" height="100%" fill="#f6f7f9"/>`);
+      parts.push(`<text x="${margin}" y="${y}" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800" fill="#16202a">Launchpad4Success Platform Visual Map</text>`);
+      y += 36;
+      parts.push(`<text x="${margin}" y="${y}" font-family="Inter, Arial, sans-serif" font-size="18" fill="#5c6875">Page headers, routes, and descriptions grouped by platform function.</text>`);
+      y += 46;
+
+      clusters.forEach((cluster) => {
+        const rows = Math.ceil(cluster.pages.length / cardsPerRow);
+        const clusterH = clusterHeaderH + clusterPad + rows * cardH + (rows - 1) * gap + clusterPad;
+        parts.push(`<rect x="${margin}" y="${y}" width="${width - margin * 2}" height="${clusterH}" rx="14" fill="#ffffff" stroke="#cbd3dc"/>`);
+        parts.push(`<rect x="${margin}" y="${y}" width="10" height="${clusterH}" rx="5" fill="${cluster.color}"/>`);
+        parts.push(`<text x="${margin + 30}" y="${y + 40}" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="800" fill="#16202a">${escapeXml(cluster.title)}</text>`);
+        parts.push(`<text x="${width - margin - 22}" y="${y + 40}" text-anchor="end" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700" fill="#5c6875">${escapeXml(cluster.note)}</text>`);
+        parts.push(`<line x1="${margin + 22}" y1="${y + clusterHeaderH}" x2="${width - margin - 22}" y2="${y + clusterHeaderH}" stroke="#e3e8ee"/>`);
+
+        cluster.pages.forEach((page, index) => {
+          const row = Math.floor(index / cardsPerRow);
+          const col = index % cardsPerRow;
+          const x = margin + 30 + col * (cardW + gap);
+          const cy = y + clusterHeaderH + clusterPad + row * (cardH + gap);
+          parts.push(`<rect x="${x}" y="${cy}" width="${cardW}" height="${cardH}" rx="10" fill="#fbfcfd" stroke="#d8dee6"/>`);
+          parts.push(`<text x="${x + 18}" y="${cy + 32}" font-family="Inter, Arial, sans-serif" font-size="19" font-weight="800" fill="#16202a">${escapeXml(page[0])}</text>`);
+          parts.push(`<text x="${x + 18}" y="${cy + 58}" font-family="Menlo, Consolas, monospace" font-size="14" font-weight="800" fill="${cluster.color}">${escapeXml(page[1])}</text>`);
+          wrapText(page[2], 62).forEach((line, lineIndex) => {
+            parts.push(`<text x="${x + 18}" y="${cy + 88 + lineIndex * 20}" font-family="Inter, Arial, sans-serif" font-size="15" fill="#5c6875">${escapeXml(line)}</text>`);
+          });
+        });
+
+        y += clusterH + 22;
+      });
+
+      const apiRows = Math.ceil(apiGroups.length / 4);
+      const apiCardW = 407;
+      const apiH = 78 + apiRows * 88 + (apiRows - 1) * 14 + 26;
+      parts.push(`<rect x="${margin}" y="${y}" width="${width - margin * 2}" height="${apiH}" rx="14" fill="#ffffff" stroke="#aeb8c4" stroke-dasharray="8 7"/>`);
+      parts.push(`<text x="${margin + 24}" y="${y + 42}" font-family="Inter, Arial, sans-serif" font-size="27" font-weight="800" fill="#16202a">Primary API Groups</text>`);
+      apiGroups.forEach((group, index) => {
+        const row = Math.floor(index / 4);
+        const col = index % 4;
+        const x = margin + 24 + col * (apiCardW + 14);
+        const cy = y + 68 + row * 102;
+        parts.push(`<rect x="${x}" y="${cy}" width="${apiCardW}" height="88" rx="8" fill="#fbfcfd" stroke="#d8dee6"/>`);
+        parts.push(`<text x="${x + 14}" y="${cy + 28}" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="800" fill="#16202a">${escapeXml(group[0])}</text>`);
+        wrapText(group[1], 45).forEach((line, lineIndex) => {
+          parts.push(`<text x="${x + 14}" y="${cy + 52 + lineIndex * 17}" font-family="Inter, Arial, sans-serif" font-size="13" fill="#5c6875">${escapeXml(line)}</text>`);
+        });
+      });
+      y += apiH + 48;
+      parts.push(`</svg>`);
+      return parts.join("").replaceAll("HEIGHT_PLACEHOLDER", String(y));
+    }
+
+    function downloadBlob(name, type, content) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = name;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function downloadSvg() {
+      downloadBlob("launchpad4success-platform-visual-map.svg", "image/svg+xml", buildSvg());
+    }
+
+    function downloadPng() {
+      const svg = buildSvg();
+      const img = new Image();
+      const svgUrl = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#f6f7f9";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(svgUrl);
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "launchpad4success-platform-visual-map.png";
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          URL.revokeObjectURL(url);
+        }, "image/png");
+      };
+      img.src = svgUrl;
+    }
+
+    render();
+  </script>
+</body>
+</html>
