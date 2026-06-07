@@ -1,7 +1,7 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import { ChevronDown, ChevronUp, Headphones, Mic, Send, Volume2 } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { ChevronUp, Headphones, Mic, Minus, Send, Volume2, X } from 'lucide-react'
 import {
   getLaunchpadCopilotReply,
   type LaunchpadCopilotContext,
@@ -13,6 +13,8 @@ interface LaunchpadCopilotAssistProps {
   onJumpToStep: (targetStep: LaunchpadCopilotTargetStep) => void
 }
 
+const COPILOT_COLLAPSED_KEY = 'launchpad_copilot_collapsed'
+
 export default function LaunchpadCopilotAssist({
   context,
   onJumpToStep,
@@ -23,11 +25,23 @@ export default function LaunchpadCopilotAssist({
   )
   const [voiceEnabled, setVoiceEnabled] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isClosed, setIsClosed] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    setIsCollapsed(window.localStorage.getItem(COPILOT_COLLAPSED_KEY) === 'true')
+  }, [])
 
   const quickPrompts = useMemo(
     () => ['What is the best next step?', 'How do I improve this CTA?', 'Are we launch-ready?'],
     []
   )
+
+  const setCollapsed = (value: boolean) => {
+    setIsCollapsed(value)
+    if (typeof window === 'undefined') return
+    window.localStorage.setItem(COPILOT_COLLAPSED_KEY, String(value))
+  }
 
   const askCopilot = (text: string) => {
     const reply = getLaunchpadCopilotReply(text, context)
@@ -45,12 +59,14 @@ export default function LaunchpadCopilotAssist({
     window.speechSynthesis.speak(utterance)
   }
 
+  if (isClosed) return null
+
   if (isCollapsed) {
     return (
       <aside className="fixed bottom-4 right-4 z-40">
         <button
           type="button"
-          onClick={() => setIsCollapsed(false)}
+          onClick={() => setCollapsed(false)}
           className="inline-flex items-center gap-2 rounded-full border border-cyan-300/35 bg-[rgba(8,14,22,0.94)] px-4 py-3 text-sm font-semibold text-cyan-100 shadow-2xl backdrop-blur hover:border-cyan-200/70"
           aria-expanded="false"
           aria-label="Open AI Copilot Assist"
@@ -85,12 +101,20 @@ export default function LaunchpadCopilotAssist({
           </button>
           <button
             type="button"
-            onClick={() => setIsCollapsed(true)}
+            onClick={() => setCollapsed(true)}
             className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border-subtle)] text-text-secondary hover:text-text-primary"
             aria-expanded="true"
-            aria-label="Collapse AI Copilot Assist"
+            aria-label="Minimize AI Copilot Assist"
           >
-            <ChevronDown size={15} />
+            <Minus size={13} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsClosed(true)}
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border-subtle)] text-text-secondary hover:text-text-primary"
+            aria-label="Close AI Copilot Assist"
+          >
+            <X size={13} />
           </button>
         </div>
       </div>
