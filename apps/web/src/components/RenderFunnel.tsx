@@ -32,6 +32,7 @@ function extractBlocks(rawBlocks: unknown): FunnelBlock[] {
 
 export default function RenderFunnel({ funnel }: RenderFunnelProps) {
   const blocks = extractBlocks(funnel?.blocks)
+  const funnelId = funnel?.funnel_id || funnel?.id || null
 
-  return <FunnelRenderer blocks={blocks} />
+  return <FunnelRenderer blocks={blocks} funnelId={funnelId} />
 }
