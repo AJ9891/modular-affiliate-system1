@@ -16,21 +16,12 @@ function findFiles(dir, ext = SOURCE_EXTENSIONS) {
   for (const item of fs.readdirSync(dir, { withFileTypes: true })) {
     const fullPath = path.join(dir, item.name);
 
-    if (
-      item.name === 'node_modules' ||
-      item.name === '.next' ||
-      item.name === '__tests__' ||
-      item.name === 'coverage' ||
-      item.name === '.turbo'
-    ) {
+    if (['node_modules', '.next', '__tests__', 'coverage', '.turbo'].includes(item.name)) {
       continue;
     }
 
-    if (item.isDirectory()) {
-      files = files.concat(findFiles(fullPath, ext));
-    } else if (ext.some(e => item.name.endsWith(e))) {
-      files.push(fullPath);
-    }
+    if (item.isDirectory()) files = files.concat(findFiles(fullPath, ext));
+    else if (ext.some(e => item.name.endsWith(e))) files.push(fullPath);
   }
 
   return files;
@@ -81,12 +72,14 @@ function appFileToRouteInfo(filePath) {
   const rawSegments = relativeDir === '' ? [] : relativeDir.split(path.sep).filter(Boolean);
   const segments = rawSegments.filter(seg => !seg.startsWith('(') && !seg.startsWith('@'));
   const route = segments.length ? `/${segments.join('/')}` : '/';
-  const routeRegex = new RegExp(`^/${segments.map(segmentToRegex).join('/')}${segments.length ? '/?' : '?'}$`);
+  const dynamicCount = segments.filter(seg => seg.includes('[')).length;
 
   return {
     file: filePath,
     route: normalizeRoutePath(route),
-    routeRegex,
+    routeRegex: new RegExp(`^/${segments.map(segmentToRegex).join('/')}${segments.length ? '/?' : '?'}$`),
+    segmentCount: segments.length,
+    dynamicCount,
   };
 }
 
@@ -121,7 +114,13 @@ function buildRouteIndexes(allSourceFiles) {
     }
   }
 
-  return { pageRoutes, apiRoutes };
+  const bySpecificity = (a, b) =>
+    a.dynamicCount - b.dynamicCount || b.segmentCount - a.segmentCount || a.route.localeCompare(b.route);
+
+  return {
+    pageRoutes: pageRoutes.sort(bySpecificity),
+    apiRoutes: apiRoutes.sort(bySpecificity),
+  };
 }
 
 function routeExists(routeInfos, value) {
@@ -131,7 +130,11 @@ function routeExists(routeInfos, value) {
 
 function apiRouteForPath(apiRoutes, value) {
   const baseValue = normalizeRoutePath(value);
-  return apiRoutes.find(({ route, routeRegex }) => route === baseValue || routeRegex.test(baseValue));
+  return (
+    apiRoutes.find(({ route }) => route === baseValue) ||
+    apiRoutes.find(({ routeRegex }) => routeRegex.test(baseValue)) ||
+    null
+  );
 }
 
 function collectStringMatches(content, regex, groupIndex = 1) {
@@ -154,22 +157,23 @@ function collectPageLinks(content) {
 }
 
 function collectApiCalls(content) {
-  const calls = [];
+  const calls = new Map();
+  const addCall = (url, method, source) => {
+    const normalizedMethod = method ? method.toUpperCase() : 'GET';
+    calls.set(`${source}:${normalizedMethod}:${url}`, { url, method: normalizedMethod, source });
+  };
 
-  for (const url of collectStringMatches(content, /fetch\(\s*['"`]([^'"`]+)['"`]/g)) {
-    calls.push({ url, method: null, source: 'fetch' });
-  }
-
-  for (const match of content.matchAll(/fetch\(\s*['"`]([^'"`]+)['"`]\s*,\s*\{([\s\S]*?)\}\s*\)/g)) {
-    const methodMatch = match[2].match(/method\s*:\s*['"`]([A-Za-z]+)['"`]/);
-    calls.push({ url: match[1], method: methodMatch ? methodMatch[1].toUpperCase() : null, source: 'fetch' });
+  for (const match of content.matchAll(/fetch\(\s*['"`]([^'"`]+)['"`]\s*(?:,\s*(\{[\s\S]*?\}))?\s*\)/g)) {
+    const options = match[2] || '';
+    const methodMatch = options.match(/method\s*:\s*['"`]([A-Za-z]+)['"`]/);
+    addCall(match[1], methodMatch ? methodMatch[1] : 'GET', 'fetch');
   }
 
   for (const match of content.matchAll(/\b(?:api|axios)\.(get|post|put|patch|delete)\(\s*['"`]([^'"`]+)['"`]/g)) {
-    calls.push({ url: match[2], method: match[1].toUpperCase(), source: 'client' });
+    addCall(match[2], match[1], 'client');
   }
 
-  return calls;
+  return Array.from(calls.values());
 }
 
 function validatePageLink(file, href, pageRoutes) {
@@ -192,15 +196,14 @@ function validateApiCall(file, call, apiRoutes) {
     return;
   }
 
-  const expectedMethod = method || 'GET';
   if (route.methods.size === 0) {
     warnings.add(`File: ${route.file}\n  API route has no exported HTTP methods detected.`);
     return;
   }
 
-  if (!route.methods.has(expectedMethod)) {
+  if (!route.methods.has(method)) {
     errors.add(
-      `File: ${file}\n  API method mismatch: ${source} ${expectedMethod} ${url}\n  Route file: ${route.file}\n  Available: ${Array.from(route.methods).sort().join(', ')}`
+      `File: ${file}\n  API method mismatch: ${source} ${method} ${url}\n  Route file: ${route.file}\n  Available: ${Array.from(route.methods).sort().join(', ')}`
     );
   }
 }
@@ -212,13 +215,8 @@ const files = allSourceFiles.filter(file => SOURCE_EXTENSIONS.some(ext => file.e
 for (const file of files) {
   const content = fs.readFileSync(file, 'utf8');
 
-  for (const href of collectPageLinks(content)) {
-    validatePageLink(file, href, pageRoutes);
-  }
-
-  for (const call of collectApiCalls(content)) {
-    validateApiCall(file, call, apiRoutes);
-  }
+  for (const href of collectPageLinks(content)) validatePageLink(file, href, pageRoutes);
+  for (const call of collectApiCalls(content)) validateApiCall(file, call, apiRoutes);
 }
 
 if (warnings.size > 0) {
