@@ -1,12 +1,100 @@
 'use client'
 
+import { FormEvent, useState } from 'react'
 import { FunnelBlock } from '@/lib/types'
 
 interface FunnelRendererProps {
   blocks: FunnelBlock[]
+  funnelId?: string | null
 }
 
-export default function FunnelRenderer({ blocks }: FunnelRendererProps) {
+interface EmailCaptureFormProps {
+  block: FunnelBlock
+  funnelId?: string | null
+}
+
+function EmailCaptureForm({ block, funnelId }: EmailCaptureFormProps) {
+  const [email, setEmail] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setMessage(null)
+    setError(null)
+
+    const trimmedEmail = email.trim()
+    if (!trimmedEmail) {
+      setError('Enter your email first.')
+      return
+    }
+
+    setSubmitting(true)
+
+    try {
+      const searchParams = typeof window !== 'undefined'
+        ? new URLSearchParams(window.location.search)
+        : new URLSearchParams()
+
+      const response = await fetch('/api/leads/capture', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: trimmedEmail,
+          funnel_id: funnelId || undefined,
+          page_path: typeof window !== 'undefined' ? window.location.pathname : undefined,
+          source: block.content?.source || 'funnel-renderer',
+          utm_source: searchParams.get('utm_source') || undefined,
+          utm_medium: searchParams.get('utm_medium') || undefined,
+          utm_campaign: searchParams.get('utm_campaign') || undefined,
+          utm_content: searchParams.get('utm_content') || undefined,
+          utm_term: searchParams.get('utm_term') || undefined,
+        }),
+      })
+
+      const result = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        throw new Error(result?.error || result?.message || 'Could not save your email.')
+      }
+
+      setEmail('')
+      setMessage(block.content?.successMessage || 'Success! Check your inbox soon.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save your email.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <form className="flex flex-col gap-3 sm:flex-row" onSubmit={handleSubmit}>
+      <input
+        type="email"
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+        placeholder={block.content.placeholder || 'Enter your email'}
+        className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        required
+      />
+      <button
+        type="submit"
+        disabled={submitting}
+        className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {submitting ? (block.content?.loadingText || 'Saving...') : (block.content.buttonText || 'Subscribe')}
+      </button>
+      {(message || error) && (
+        <p className={`text-sm sm:basis-full ${error ? 'text-red-600' : 'text-green-700'}`}>
+          {error || message}
+        </p>
+      )}
+    </form>
+  )
+}
+
+export default function FunnelRenderer({ blocks, funnelId }: FunnelRendererProps) {
   const resolveCtaHref = (content: Record<string, any>) => {
     const candidates = [
       content.ctaLink,
@@ -184,19 +272,7 @@ export default function FunnelRenderer({ blocks }: FunnelRendererProps) {
               <p className="text-gray-600 mb-6">
                 {block.content.subheadline}
               </p>
-              <form className="flex gap-2">
-                <input
-                  type="email"
-                  placeholder={block.content.placeholder || "Enter your email"}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  type="submit"
-                  className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  {block.content.buttonText || "Subscribe"}
-                </button>
-              </form>
+              <EmailCaptureForm block={block} funnelId={funnelId} />
             </div>
           </section>
         )
