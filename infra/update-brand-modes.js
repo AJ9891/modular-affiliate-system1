@@ -1,7 +1,11 @@
 const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = 'https://urwrbjejcozbzgknbuhn.supabase.co';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_ZC86dxFB1L-Rwycj8mMxlg_uUrzU9fx';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseKey) {
+  throw new Error('SUPABASE_SERVICE_ROLE_KEY is required');
+}
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 

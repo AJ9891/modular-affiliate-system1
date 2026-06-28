@@ -60,7 +60,7 @@ async function getCurrentPlan(request: NextRequest) {
   // Get funnel count
   const { count: funnelCount } = await supabase
     .from('funnels')
-    .select('id', { count: 'exact', head: true })
+    .select('funnel_id', { count: 'exact', head: true })
     .eq('user_id', user!.id)
     .eq('active', true)
 

@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
+import { requireDebugAccess } from '@/lib/debug-access'
 import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
 
 export async function GET() {
+  const access = await requireDebugAccess()
+  if (!access.allowed) return access.response
+
   try {
     const supabase = await createRouteHandlerClientCompat()
     // Test environment variables

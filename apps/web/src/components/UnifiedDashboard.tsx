@@ -61,9 +61,21 @@ export default function UnifiedDashboard() {
 
   const exportReport = async () => {
     try {
-      // Send analytics report via email
-      const userEmail = 'user@example.com' // Get from auth context
-      await fetch('/api/email/reports', {
+      const authResponse = await fetch('/api/auth/me')
+      if (!authResponse.ok) {
+        throw new Error('Unable to load account email')
+      }
+
+      const authData: {
+        user?: { email?: string | null }
+        profile?: { email?: string | null }
+      } = await authResponse.json()
+      const userEmail = authData.profile?.email || authData.user?.email
+      if (!userEmail) {
+        throw new Error('No account email available')
+      }
+
+      const response = await fetch('/api/email/reports', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -75,6 +87,9 @@ export default function UnifiedDashboard() {
           }
         })
       })
+      if (!response.ok) {
+        throw new Error('Report email request failed')
+      }
       alert('Report sent to your email!')
     } catch (error) {
       console.error('Export error:', error)

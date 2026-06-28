@@ -22,7 +22,19 @@ export async function GET(request: NextRequest) {
     const { data: { user }, error } = await supabase.auth.getUser()
 
     if (user) {
-      return applyCookies(withNoStore(NextResponse.json({ user }, { status: 200 })))
+      const { data: profile, error: profileError } = await supabase
+        .from('users')
+        .select(
+          'id,email,plan,stripe_customer_id,stripe_subscription_id,email_automation_provisioned,is_admin,role,onboarding_seen,onboarding_step,onboarding_complete'
+        )
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (profileError) {
+        console.warn('Auth /me profile lookup failed:', profileError.message)
+      }
+
+      return applyCookies(withNoStore(NextResponse.json({ user, profile: profile || null }, { status: 200 })))
     }
 
     if (error) {

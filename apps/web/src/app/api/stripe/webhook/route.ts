@@ -190,8 +190,7 @@ async function handleCheckoutSessionCompleted(session: any) {
       .update({
         stripe_customer_id: customerId,
         stripe_subscription_id: subscriptionId,
-        subscription_plan: plan,
-        subscription_status: 'active',
+        plan,
         updated_at: new Date().toISOString(),
       })
       .eq('id', userId)
@@ -294,9 +293,10 @@ async function sendWelcomeEmail(email: string, listName: string) {
 
 async function handleSubscriptionUpdated(subscription: any) {
   const customerId = subscription.customer
-  const status = subscription.status
+  const plan = subscription.metadata?.plan
 
   if (!customerId) return
+  if (!plan) return
 
   try {
     const adminClient = createServiceRoleClient()
@@ -304,7 +304,8 @@ async function handleSubscriptionUpdated(subscription: any) {
     const { error } = await adminClient
       .from('users')
       .update({
-        subscription_status: status,
+        plan,
+        stripe_subscription_id: subscription.id,
         updated_at: new Date().toISOString(),
       })
       .eq('stripe_customer_id', customerId)
@@ -328,7 +329,8 @@ async function handleSubscriptionDeleted(subscription: any) {
     const { error } = await adminClient
       .from('users')
       .update({
-        subscription_status: 'canceled',
+        plan: null,
+        stripe_subscription_id: null,
         updated_at: new Date().toISOString(),
       })
       .eq('stripe_customer_id', customerId)
@@ -353,28 +355,16 @@ async function handleInvoicePaymentSucceeded(invoice: any) {
     // Get user info
     const { data: userData } = await adminClient
       .from('users')
-      .select('id, email, subscription_plan, email_automation_provisioned')
+      .select('id, email, plan, email_automation_provisioned')
       .eq('stripe_customer_id', customerId)
       .single()
 
-    const { error } = await adminClient
-      .from('users')
-      .update({
-        subscription_status: 'active',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('stripe_customer_id', customerId)
+    console.log(`Payment succeeded for customer ${customerId}`)
 
-    if (error) {
-      console.error('Failed to update payment status:', error)
-    } else {
-      console.log(`Payment succeeded for customer ${customerId}`)
-      
-      // If email provisioning has not run yet, run it now.
-      const alreadyProvisioned = Boolean(userData?.email_automation_provisioned)
-      if (userData && !alreadyProvisioned && userData.email) {
-        await provisionEmailAutomation(userData.id, userData.email, userData.subscription_plan)
-      }
+    // If email provisioning has not run yet, run it now.
+    const alreadyProvisioned = Boolean(userData?.email_automation_provisioned)
+    if (userData && !alreadyProvisioned && userData.email) {
+      await provisionEmailAutomation(userData.id, userData.email, userData.plan)
     }
   } catch (error) {
     console.error('Error updating payment status:', error)
@@ -386,21 +376,5 @@ async function handleInvoicePaymentFailed(invoice: any) {
   
   if (!customerId) return
 
-  try {
-    const adminClient = createServiceRoleClient()
-
-    const { error } = await adminClient
-      .from('users')
-      .update({
-        subscription_status: 'past_due',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('stripe_customer_id', customerId)
-
-    if (error) {
-      console.error('Failed to update payment status:', error)
-    }
-  } catch (error) {
-    console.error('Error updating payment status:', error)
-  }
+  console.warn(`Payment failed for customer ${customerId}`)
 }

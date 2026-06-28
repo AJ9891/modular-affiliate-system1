@@ -14,6 +14,7 @@ export const PUBLIC_PATHS = [
   '/niches',
   '/do_not_click',
   '/f',  // Funnel pages
+  '/p',  // Public pages
 ] as const
 
 export type PublicPath = typeof PUBLIC_PATHS[number]

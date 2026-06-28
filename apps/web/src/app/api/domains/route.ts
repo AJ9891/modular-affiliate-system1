@@ -34,13 +34,13 @@ export async function GET(request: NextRequest) {
     const userData = await fetchUserProfile(
       adminClient,
       user.id,
-      'custom_domain, subdomain, subscription_plan, email, is_admin, role'
+      'custom_domain, subdomain, plan, email, is_admin, role'
     )
 
     return ok({
       subdomain: userData?.subdomain || null,
       customDomain: userData?.custom_domain || null,
-      plan: userData?.subscription_plan || 'starter',
+      plan: userData?.plan || 'free',
       canAddCustomDomain: canUseCustomDomain(userData)
     })
   } catch (err: unknown) {
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     const userData = await fetchUserProfile(
       adminClient,
       user.id,
-      'subscription_plan, is_admin, role'
+      'plan, is_admin, role'
     )
 
     if (type === 'custom' && !canUseCustomDomain(userData)) {

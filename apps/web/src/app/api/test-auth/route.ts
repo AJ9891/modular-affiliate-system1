@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
+import { requireDebugAccess } from '@/lib/debug-access'
 import { createServerRouteClient, loadSupabaseEnv } from '@/lib/supabase-server'
 
 export async function GET() {
+  const access = await requireDebugAccess()
+  if (!access.allowed) return access.response
+
   try {
     loadSupabaseEnv()
     const supabase = await createServerRouteClient()

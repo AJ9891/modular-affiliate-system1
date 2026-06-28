@@ -25,6 +25,7 @@ import {
 } from '@/lib/launchpad/startupChecklist'
 import {
   LAUNCHPAD_TEMPLATE_CARDS,
+  buildLaunchpadFunnelCreateInput,
   type LaunchpadTemplateCard,
 } from '@/lib/launchpad/templateCatalog'
 import type { LaunchpadCopilotTargetStep } from '@/lib/launchpad/copilot'
@@ -1202,11 +1203,7 @@ export default function LaunchpadPage() {
       const response = await fetch('/api/funnels', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: template.name,
-          template: template.category,
-          niche: selectedNiche || 'general'
-        }),
+        body: JSON.stringify(buildLaunchpadFunnelCreateInput(template, selectedNiche || 'general')),
         signal: AbortSignal.timeout(10000) // 10 second timeout
       })
       
@@ -1755,8 +1752,13 @@ export default function LaunchpadPage() {
   const runLaunchChecks = async () => {
     const previewPath = getPublicFunnelPath()
     const trackingPath = getAttachedTrackingPath()
+    const funnelId = getCreatedFunnelId()
     if (!previewPath) {
       setStepValidationError('Preview URL is not ready. Save your funnel draft first.')
+      return false
+    }
+    if (!funnelId) {
+      setStepValidationError('Funnel draft is not ready. Save your funnel draft first.')
       return false
     }
     if (!trackingPath) {
@@ -1768,7 +1770,7 @@ export default function LaunchpadPage() {
       setLaunchChecksRunning(true)
       setStepValidationError(null)
 
-      const previewResponse = await fetch(previewPath, {
+      const previewResponse = await fetch(`/api/funnels/${encodeURIComponent(funnelId)}`, {
         method: 'GET',
         cache: 'no-store',
       })

@@ -33,14 +33,18 @@ export default function SubscriptionPage() {
       }
 
       const data = await res.json()
-      setUser(data.user)
+      const profile = data.profile || {}
+      const mergedUser = { ...data.user, ...profile }
+      setUser(mergedUser)
 
       // Get subscription info
-      if (data.user.subscription_plan) {
+      const plan = profile.plan || data.user.subscription_plan
+      if (plan) {
         setSubscription({
-          plan: data.user.subscription_plan,
-          status: data.user.subscription_status || 'active',
+          plan,
+          status: data.user.subscription_status || (profile.stripe_subscription_id ? 'active' : 'inactive'),
           currentPeriodEnd: data.user.subscription_period_end,
+          customer_id: profile.stripe_customer_id,
         })
       }
     } catch (error) {

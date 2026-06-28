@@ -378,7 +378,7 @@ export class PlanManager {
         // Check funnel count
         const { count: funnelCount } = await this.supabase
           .from('funnels')
-          .select('id', { count: 'exact', head: true })
+          .select('funnel_id', { count: 'exact', head: true })
           .eq('user_id', userId)
           .eq('active', true)
 

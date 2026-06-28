@@ -1,21 +1,22 @@
 import { NextResponse } from 'next/server'
-import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
+import { requireDebugAccess } from '@/lib/debug-access'
+import { createServiceRoleClient } from '@/lib/supabase-server'
 
 export async function POST() {
+  const access = await requireDebugAccess()
+  if (!access.allowed) return access.response
+
   try {
-    const supabase = await createRouteHandlerClientCompat()
+    const admin = createServiceRoleClient()
     const testEmail = `test-${Date.now()}@example.com`
     const testPassword = 'TestPassword123!'
 
     console.log('Creating test user:', testEmail)
 
-    // Try to sign up
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await admin.auth.admin.createUser({
       email: testEmail,
       password: testPassword,
-      options: {
-        emailRedirectTo: undefined, // Disable email confirmation
-      }
+      email_confirm: true,
     })
 
     if (error) {
@@ -27,25 +28,10 @@ export async function POST() {
       }, { status: 400 })
     }
 
-    // Try to sign in immediately
-    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-      email: testEmail,
-      password: testPassword,
-    })
-
     return NextResponse.json({
       status: 'success',
-      signup: {
+      createdUser: {
         user: data.user,
-        session: data.session,
-        confirmation_required: !data.session
-      },
-      login: loginError ? {
-        error: loginError.message
-      } : {
-        success: true,
-        user: loginData.user,
-        session: !!loginData.session
       },
       testCredentials: {
         email: testEmail,

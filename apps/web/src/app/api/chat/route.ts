@@ -337,7 +337,7 @@ export async function PATCH(request: NextRequest) {
         // Get user details
         const { data: userData } = await supabase
           .from('users')
-          .select('email, name, subscription_plan')
+          .select('email, plan')
           .eq('id', user.id)
           .single()
 
@@ -375,7 +375,7 @@ export async function PATCH(request: NextRequest) {
                 <table style="width: 100%; border-collapse: collapse;">
                   <tr>
                     <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;"><strong>Name:</strong></td>
-                    <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${userData?.name || 'N/A'}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${userData?.email || user.email || 'N/A'}</td>
                   </tr>
                   <tr>
                     <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;"><strong>Email:</strong></td>
@@ -383,7 +383,7 @@ export async function PATCH(request: NextRequest) {
                   </tr>
                   <tr>
                     <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;"><strong>Plan:</strong></td>
-                    <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${userData?.subscription_plan || 'Unknown'}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${userData?.plan || 'Unknown'}</td>
                   </tr>
                   <tr>
                     <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;"><strong>User ID:</strong></td>

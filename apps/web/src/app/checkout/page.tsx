@@ -65,8 +65,6 @@ export default function CheckoutPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           plan: selectedPlan,
-          userId: 'user-id', // This should come from auth context
-          email: 'user@example.com', // This should come from auth context
         }),
       })
 

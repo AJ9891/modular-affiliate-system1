@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { checkSupabase } from '@/lib/check-supabase'
 import { createServiceRoleClient, createServerRouteClient } from '@/lib/supabase-server'
 import { requireUser } from '@/lib/authz'
+import { requireDebugAccess } from '@/lib/debug-access'
 
 export async function POST(request: NextRequest) {
   const check = checkSupabase()
   if (check) return check
+
+  const access = await requireDebugAccess()
+  if (!access.allowed) return access.response
   
   try {
     const supabase = await createServerRouteClient()

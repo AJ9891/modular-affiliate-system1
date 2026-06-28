@@ -18,16 +18,16 @@ export async function GET(
       .select(`
         id,
         email,
-        name,
         subdomain,
-        subscription_plan,
+        plan,
         is_admin,
         funnels (
-          id,
+          funnel_id,
           name,
           slug,
-          is_published,
-          config
+          status,
+          active,
+          blocks
         )
       `)
       .eq('subdomain', subdomain)
@@ -43,7 +43,7 @@ export async function GET(
     // If no specific slug, show the default funnel or landing page
     if (slug.length === 0) {
       // Find the default/primary funnel
-      const defaultFunnel = user.funnels.find(f => f.is_published) || user.funnels[0]
+      const defaultFunnel = user.funnels.find((f: any) => f.status === 'published' || f.active) || user.funnels[0]
       
       if (defaultFunnel) {
         // Redirect to the funnel
@@ -55,14 +55,14 @@ export async function GET(
         return NextResponse.json({
           message: 'Coming Soon',
           subdomain,
-          owner: user.name
+          owner: user.email
         })
       }
     }
 
     // Handle specific funnel routing
     const funnelSlug = slug[0]
-    const funnel = user.funnels.find(f => f.slug === funnelSlug && f.is_published)
+    const funnel = user.funnels.find((f: any) => f.slug === funnelSlug && (f.status === 'published' || f.active))
     
     if (!funnel) {
       return NextResponse.json(
@@ -76,7 +76,7 @@ export async function GET(
       funnel,
       owner: {
         id: user.id,
-        name: user.name,
+        name: user.email,
         subdomain: user.subdomain
       }
     })

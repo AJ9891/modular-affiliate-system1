@@ -29,7 +29,7 @@ export type UserProfile = {
   email?: string
   is_admin?: boolean
   role?: string | null
-  subscription_plan?: string
+  plan?: string | null
   subdomain?: string | null
   custom_domain?: string | null
 }
@@ -37,7 +37,7 @@ export type UserProfile = {
 export async function fetchUserProfile(
   adminClient: SupabaseClient,
   userId: string,
-  columns = 'id,email,is_admin,subscription_plan,subdomain,custom_domain'
+  columns = 'id,email,is_admin,role,plan,subdomain,custom_domain'
 ): Promise<UserProfile | null> {
   const { data, error } = await adminClient
     .from('users')
@@ -54,5 +54,5 @@ export async function fetchUserProfile(
 
 export function canUseCustomDomain(profile?: UserProfile | null) {
   if (!profile) return false
-  return hasAdminAccess(profile) || profile.subscription_plan === 'agency'
+  return hasAdminAccess(profile) || profile.plan === 'agency'
 }
