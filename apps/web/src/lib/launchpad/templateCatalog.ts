@@ -1,4 +1,4 @@
-import { getTemplateById } from '@/config/funnelTemplates'
+import { getTemplateById, type BlockConfig, type FunnelTemplate } from '@/config/funnelTemplates'
 import type { StartupFunnelType } from '@/lib/launchpad/startupChecklist'
 
 export interface LaunchpadTemplateCard {
@@ -8,6 +8,14 @@ export interface LaunchpadTemplateCard {
   conversions: string
   category: StartupFunnelType
   templateId: string
+}
+
+export interface LaunchpadFunnelCreateInput {
+  name: string
+  template: string
+  niche: string
+  blocks: BlockConfig[]
+  theme?: FunnelTemplate['theme']
 }
 
 const TEMPLATE_CARD_CONFIG: Array<{
@@ -60,6 +68,21 @@ export const LAUNCHPAD_TEMPLATE_CARDS: LaunchpadTemplateCard[] = TEMPLATE_CARD_C
   }
 })
 
-export function getLaunchpadTemplateByCategory(category: StartupFunnelType) {
+export function getLaunchpadTemplateByCategory(category: StartupFunnelType): LaunchpadTemplateCard | null {
   return LAUNCHPAD_TEMPLATE_CARDS.find((template) => template.category === category) || null
+}
+
+export function buildLaunchpadFunnelCreateInput(
+  template: LaunchpadTemplateCard,
+  niche: string
+): LaunchpadFunnelCreateInput {
+  const resolvedTemplate = getTemplateById(template.templateId)
+
+  return {
+    name: template.name,
+    template: template.templateId,
+    niche: niche || 'general',
+    blocks: resolvedTemplate?.blocks || [],
+    theme: resolvedTemplate?.theme,
+  }
 }
