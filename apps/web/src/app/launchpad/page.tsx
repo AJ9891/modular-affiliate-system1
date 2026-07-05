@@ -105,6 +105,27 @@ const QUICK_GOALS = [
 type QuickProductType = typeof QUICK_PRODUCT_TYPES[number]['id']
 type QuickTrafficSource = typeof QUICK_TRAFFIC_SOURCES[number]['id']
 type QuickGoal = typeof QUICK_GOALS[number]['id']
+type LaunchKitBrandMode = 'rocket' | 'antiguru' | 'meltdown'
+type LaunchKitTone = 'professional' | 'casual' | 'urgent' | 'friendly'
+
+type AiLaunchKitResult = {
+  funnelId: string
+  publicUrl: string
+  leadMagnet?: {
+    id?: string
+    url?: string
+    storageUrl?: string
+  }
+  emailSequence?: {
+    id?: string
+    name?: string
+    emails?: number
+  }
+  variants?: Array<{
+    id: string
+    name: string
+  }>
+}
 
 const GOAL_TO_TEMPLATE: Record<QuickGoal, StartupFunnelType> = {
   'lead-capture': 'lead-gen',
@@ -413,6 +434,19 @@ export default function LaunchpadPage() {
   const [quickTrafficSource, setQuickTrafficSource] = useState<QuickTrafficSource>('organic')
   const [quickGoal, setQuickGoal] = useState<QuickGoal>('lead-capture')
   const [quickStartCreating, setQuickStartCreating] = useState(false)
+  const [aiLaunchKitCreating, setAiLaunchKitCreating] = useState(false)
+  const [aiLaunchKitResult, setAiLaunchKitResult] = useState<AiLaunchKitResult | null>(null)
+  const [aiLaunchKitForm, setAiLaunchKitForm] = useState({
+    productName: '',
+    niche: '',
+    audience: '',
+    campaignName: '',
+    offerSummary: '',
+    keyBenefits: '',
+    leadMagnetTitle: '',
+    brandMode: 'rocket' as LaunchKitBrandMode,
+    tone: 'professional' as LaunchKitTone,
+  })
   const [duplicateFunnels, setDuplicateFunnels] = useState<FunnelRecord[]>([])
   const [duplicateFunnelsLoading, setDuplicateFunnelsLoading] = useState(false)
   const [selectingDraftFunnel, setSelectingDraftFunnel] = useState(false)
@@ -1458,6 +1492,91 @@ export default function LaunchpadPage() {
     }
   }
 
+  const createAiLaunchKit = async () => {
+    const productName = aiLaunchKitForm.productName.trim()
+    const niche = aiLaunchKitForm.niche.trim() || selectedNiche || 'general'
+    const audience = aiLaunchKitForm.audience.trim()
+
+    if (!productName || !audience) {
+      setStepValidationError('Product name and audience are required for an AI launch kit.')
+      return
+    }
+
+    const keyBenefits = aiLaunchKitForm.keyBenefits
+      .split('\n')
+      .map((benefit) => benefit.trim())
+      .filter(Boolean)
+      .slice(0, 6)
+
+    try {
+      setAiLaunchKitCreating(true)
+      setAiLaunchKitResult(null)
+      setStepValidationError(null)
+      setOperationNotice('Creating AI launch kit...')
+
+      const response = await fetch('/api/launchpad', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productName,
+          niche,
+          audience,
+          campaignName: aiLaunchKitForm.campaignName.trim() || undefined,
+          offerSummary: aiLaunchKitForm.offerSummary.trim() || undefined,
+          keyBenefits: keyBenefits.length > 0 ? keyBenefits : undefined,
+          leadMagnetTitle: aiLaunchKitForm.leadMagnetTitle.trim() || undefined,
+          brandMode: aiLaunchKitForm.brandMode,
+          tone: aiLaunchKitForm.tone,
+        }),
+        signal: AbortSignal.timeout(60000),
+      })
+
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok || payload?.success === false || !payload?.funnelId) {
+        setStepValidationError(payload?.error || 'Failed to create AI launch kit.')
+        return
+      }
+
+      const publicUrl = String(payload.publicUrl || '')
+      const slug = publicUrl.startsWith('/f/') ? decodeURIComponent(publicUrl.slice(3)) : null
+      const result: AiLaunchKitResult = {
+        funnelId: String(payload.funnelId),
+        publicUrl,
+        leadMagnet: payload.leadMagnet,
+        emailSequence: payload.emailSequence,
+        variants: Array.isArray(payload.variants) ? payload.variants : [],
+      }
+
+      setAiLaunchKitResult(result)
+      setCreatedFunnel({
+        funnelId: result.funnelId,
+        slug,
+        publicUrl,
+        funnel: {
+          funnel_id: result.funnelId,
+          slug,
+          name: aiLaunchKitForm.campaignName.trim() || `${productName} Launchpad`,
+          status: 'draft',
+        },
+      })
+      setSelectedNiche(niche)
+      setOfferAttached(false)
+      setAttachedOfferId(null)
+      setEmailAutomationReady(Boolean(result.emailSequence?.id))
+      setFunnelPublished(false)
+      resetLaunchChecks()
+      setOperationNotice('AI launch kit created. Review the assets, then attach an offer before publishing.')
+
+      await loadUserData()
+      await loadDuplicateFunnels()
+    } catch (error) {
+      console.error('Failed to create AI launch kit:', error)
+      setStepValidationError('AI launch kit generation timed out or failed.')
+    } finally {
+      setAiLaunchKitCreating(false)
+    }
+  }
+
   const duplicateFunnel = async () => {
     if (!duplicateSourceFunnelId) {
       setStepValidationError('Select a source funnel to duplicate.')
@@ -2232,6 +2351,174 @@ export default function LaunchpadPage() {
           </section>
 
           <div className="mb-12 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <section className="card-premium rounded-xl border border-[var(--border-elevated)] p-6 lg:col-span-2">
+              <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-bold text-text-primary">AI Launch Kit</h2>
+                  <p className="mt-1 text-sm text-text-secondary">
+                    Generate a draft funnel, lead magnet, email sequence, and test variants from one offer brief.
+                  </p>
+                </div>
+                <span className="inline-flex items-center gap-1 rounded-full border border-violet-300/35 bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-100">
+                  <Sparkles size={12} /> Full Kit
+                </span>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="text-left text-xs text-text-secondary">
+                  Product Name
+                  <input
+                    value={aiLaunchKitForm.productName}
+                    onChange={(event) => setAiLaunchKitForm((prev) => ({ ...prev, productName: event.target.value }))}
+                    placeholder="Example: Launchpad Pro"
+                    className="hud-input mt-1 w-full"
+                  />
+                </label>
+                <label className="text-left text-xs text-text-secondary">
+                  Audience
+                  <input
+                    value={aiLaunchKitForm.audience}
+                    onChange={(event) => setAiLaunchKitForm((prev) => ({ ...prev, audience: event.target.value }))}
+                    placeholder="Example: solo affiliate marketers"
+                    className="hud-input mt-1 w-full"
+                  />
+                </label>
+                <label className="text-left text-xs text-text-secondary">
+                  Niche
+                  <select
+                    value={aiLaunchKitForm.niche || selectedNiche || 'general'}
+                    onChange={(event) => setAiLaunchKitForm((prev) => ({ ...prev, niche: event.target.value }))}
+                    className="hud-select mt-1 w-full"
+                  >
+                    {NICHE_OPTIONS.map((niche) => (
+                      <option key={niche.id} value={niche.id}>
+                        {niche.emoji} {niche.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-left text-xs text-text-secondary">
+                  Campaign Name
+                  <input
+                    value={aiLaunchKitForm.campaignName}
+                    onChange={(event) => setAiLaunchKitForm((prev) => ({ ...prev, campaignName: event.target.value }))}
+                    placeholder="Optional"
+                    className="hud-input mt-1 w-full"
+                  />
+                </label>
+                <label className="text-left text-xs text-text-secondary md:col-span-2">
+                  Offer Summary
+                  <textarea
+                    value={aiLaunchKitForm.offerSummary}
+                    onChange={(event) => setAiLaunchKitForm((prev) => ({ ...prev, offerSummary: event.target.value }))}
+                    placeholder="What the product does, why it matters, and what action the visitor should take."
+                    className="hud-input mt-1 min-h-24 w-full"
+                  />
+                </label>
+                <label className="text-left text-xs text-text-secondary">
+                  Key Benefits
+                  <textarea
+                    value={aiLaunchKitForm.keyBenefits}
+                    onChange={(event) => setAiLaunchKitForm((prev) => ({ ...prev, keyBenefits: event.target.value }))}
+                    placeholder={'One benefit per line'}
+                    className="hud-input mt-1 min-h-24 w-full"
+                  />
+                </label>
+                <label className="text-left text-xs text-text-secondary">
+                  Lead Magnet Title
+                  <input
+                    value={aiLaunchKitForm.leadMagnetTitle}
+                    onChange={(event) => setAiLaunchKitForm((prev) => ({ ...prev, leadMagnetTitle: event.target.value }))}
+                    placeholder="Optional"
+                    className="hud-input mt-1 w-full"
+                  />
+                </label>
+                <label className="text-left text-xs text-text-secondary">
+                  Brand Mode
+                  <select
+                    value={aiLaunchKitForm.brandMode}
+                    onChange={(event) =>
+                      setAiLaunchKitForm((prev) => ({ ...prev, brandMode: event.target.value as LaunchKitBrandMode }))
+                    }
+                    className="hud-select mt-1 w-full"
+                  >
+                    <option value="rocket">Rocket</option>
+                    <option value="antiguru">Anti-Guru</option>
+                    <option value="meltdown">Meltdown</option>
+                  </select>
+                </label>
+                <label className="text-left text-xs text-text-secondary">
+                  Tone
+                  <select
+                    value={aiLaunchKitForm.tone}
+                    onChange={(event) =>
+                      setAiLaunchKitForm((prev) => ({ ...prev, tone: event.target.value as LaunchKitTone }))
+                    }
+                    className="hud-select mt-1 w-full"
+                  >
+                    <option value="professional">Professional</option>
+                    <option value="casual">Casual</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="friendly">Friendly</option>
+                  </select>
+                </label>
+              </div>
+
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={createAiLaunchKit}
+                  disabled={aiLaunchKitCreating}
+                  className="btn-launch-premium rounded-lg px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {aiLaunchKitCreating ? 'Generating kit...' : 'Generate AI Launch Kit'}
+                </button>
+                {aiLaunchKitResult?.publicUrl ? (
+                  <a
+                    href={aiLaunchKitResult.publicUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="hud-button-secondary rounded-lg px-4 py-2 text-sm"
+                  >
+                    Open Draft Funnel
+                  </a>
+                ) : null}
+              </div>
+
+              {aiLaunchKitResult ? (
+                <div className="mt-5 grid gap-3 md:grid-cols-4">
+                  <div className="rounded-lg border border-[var(--border-elevated)] bg-[rgba(10,16,24,0.45)] p-3">
+                    <p className="text-xs uppercase tracking-system text-text-secondary">Funnel</p>
+                    <p className="mt-1 break-all text-sm font-semibold text-text-primary">{aiLaunchKitResult.publicUrl}</p>
+                  </div>
+                  <div className="rounded-lg border border-[var(--border-elevated)] bg-[rgba(10,16,24,0.45)] p-3">
+                    <p className="text-xs uppercase tracking-system text-text-secondary">Lead Magnet</p>
+                    <p className="mt-1 text-sm font-semibold text-text-primary">
+                      {aiLaunchKitResult.leadMagnet?.id ? 'Created' : 'Not returned'}
+                    </p>
+                    {aiLaunchKitResult.leadMagnet?.url ? (
+                      <a href={aiLaunchKitResult.leadMagnet.url} className="mt-1 block text-xs text-cyan-100 hover:underline">
+                        Download route
+                      </a>
+                    ) : null}
+                  </div>
+                  <div className="rounded-lg border border-[var(--border-elevated)] bg-[rgba(10,16,24,0.45)] p-3">
+                    <p className="text-xs uppercase tracking-system text-text-secondary">Email Sequence</p>
+                    <p className="mt-1 text-sm font-semibold text-text-primary">
+                      {aiLaunchKitResult.emailSequence?.emails || 0} emails
+                    </p>
+                    <p className="mt-1 truncate text-xs text-text-secondary">{aiLaunchKitResult.emailSequence?.name || 'No sequence name'}</p>
+                  </div>
+                  <div className="rounded-lg border border-[var(--border-elevated)] bg-[rgba(10,16,24,0.45)] p-3">
+                    <p className="text-xs uppercase tracking-system text-text-secondary">Variants</p>
+                    <p className="mt-1 text-sm font-semibold text-text-primary">
+                      {aiLaunchKitResult.variants?.length || 0} generated
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+            </section>
+
             <section className="card-premium rounded-xl border border-[var(--border-elevated)] p-6">
               <div className="mb-4 flex items-start justify-between gap-3">
                 <div>

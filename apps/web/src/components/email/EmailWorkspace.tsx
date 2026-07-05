@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Mail, Users, Bot } from 'lucide-react'
+import { CheckCircle, Mail, Users } from 'lucide-react'
 import {
   createAutomation,
   createCampaignDraft,
@@ -18,6 +18,9 @@ import { CockpitEmptyState } from '@/components/ui/CockpitEmptyState'
 import { useBrandMode, type BrandModeKey } from '@/contexts/BrandModeContext'
 import EmailSkeleton from './EmailSkeleton'
 
+const DEFAULT_CAMPAIGN_HTML = '<h1>Hello from Launchpad</h1><p>Your campaign draft is ready.</p>'
+const DEFAULT_SUBSCRIBER_SELECTION_LIMIT = 10
+
 function mapModeToEmailPersonality(mode: BrandModeKey): EmailPersonality {
   if (mode === 'meltdown') return 'glitch'
   if (mode === 'antiguru') return 'anchor'
@@ -28,6 +31,18 @@ function personalityLabel(personality: EmailPersonality): string {
   if (personality === 'glitch') return 'Glitch'
   if (personality === 'anchor') return 'Anchor'
   return 'Rocket'
+}
+
+function getTemplateKey(template: EmailTemplate): string {
+  return template.id || template.name
+}
+
+function getTemplateBody(template: EmailTemplate): string {
+  return template.html || template.text || DEFAULT_CAMPAIGN_HTML
+}
+
+function formatCountLabel(count: number, singular: string, plural = `${singular}s`) {
+  return `${count} ${count === 1 ? singular : plural}`
 }
 
 export default function EmailWorkspace() {
@@ -41,11 +56,13 @@ export default function EmailWorkspace() {
 
   const [automationName, setAutomationName] = useState('Welcome Sequence')
   const [campaignSubject, setCampaignSubject] = useState('Campaign Update')
-  const [campaignHtml, setCampaignHtml] = useState('<h1>Hello from Launchpad</h1><p>Your campaign draft is ready.</p>')
+  const [campaignHtml, setCampaignHtml] = useState(DEFAULT_CAMPAIGN_HTML)
 
   const [savingAutomation, setSavingAutomation] = useState(false)
   const [savingCampaign, setSavingCampaign] = useState(false)
   const [selectedTemplateKey, setSelectedTemplateKey] = useState<string | null>(null)
+  const [selectedSubscriberEmails, setSelectedSubscriberEmails] = useState<string[]>([])
+  const subscriberSelectionInitializedRef = useRef(false)
 
   useEffect(() => {
     let active = true
@@ -92,6 +109,26 @@ export default function EmailWorkspace() {
     return Array.from(map.values())
   }, [subscribers])
 
+  const selectedSubscriberEmailSet = useMemo(() => new Set(selectedSubscriberEmails), [selectedSubscriberEmails])
+  const selectedSubscribers = useMemo(
+    () => uniqueSubscribers.filter((subscriber) => selectedSubscriberEmailSet.has(subscriber.email)),
+    [selectedSubscriberEmailSet, uniqueSubscribers]
+  )
+
+  useEffect(() => {
+    setSelectedSubscriberEmails((current) => {
+      const validEmails = new Set(uniqueSubscribers.map((subscriber) => subscriber.email))
+      const prunedSelection = current.filter((email) => validEmails.has(email))
+
+      if (!subscriberSelectionInitializedRef.current && uniqueSubscribers.length > 0) {
+        subscriberSelectionInitializedRef.current = true
+        return uniqueSubscribers.slice(0, DEFAULT_SUBSCRIBER_SELECTION_LIMIT).map((subscriber) => subscriber.email)
+      }
+
+      return prunedSelection
+    })
+  }, [uniqueSubscribers])
+
   const templatesByPersonality = useMemo(() => {
     const grouped = {
       rocket: [] as EmailTemplate[],
@@ -122,6 +159,10 @@ export default function EmailWorkspace() {
     return templatesByPersonality.rocket
   }, [selectedPersonality, templatesByPersonality])
   const selectedPersonalityLabel = useMemo(() => personalityLabel(selectedPersonality), [selectedPersonality])
+  const selectedTemplate = useMemo(() => {
+    if (!selectedTemplateKey) return null
+    return templates.find((template) => getTemplateKey(template) === selectedTemplateKey) || null
+  }, [selectedTemplateKey, templates])
 
   useEffect(() => {
     const templateId = searchParams.get('templateId')
@@ -129,16 +170,16 @@ export default function EmailWorkspace() {
       return
     }
 
-    const chosenTemplate = templates.find((template) => (template.id || template.name) === templateId)
+    const chosenTemplate = templates.find((template) => getTemplateKey(template) === templateId)
     if (!chosenTemplate) {
       return
     }
 
     setCampaignSubject(chosenTemplate.subject)
-    setCampaignHtml(chosenTemplate.html || chosenTemplate.text || campaignHtml)
+    setCampaignHtml(getTemplateBody(chosenTemplate))
     setSelectedTemplateKey(templateId)
     setNotice(`Loaded template: ${chosenTemplate.name}`)
-  }, [campaignHtml, searchParams, selectedTemplateKey, templates])
+  }, [searchParams, selectedTemplateKey, templates])
 
   async function handleSetupDefaultAutomations() {
     try {
@@ -175,8 +216,8 @@ export default function EmailWorkspace() {
   }
 
   async function handleCreateCampaignDraft() {
-    if (uniqueSubscribers.length === 0) {
-      setError('No subscribers available for campaign draft.')
+    if (selectedSubscribers.length === 0) {
+      setError('Select at least one subscriber for the campaign draft.')
       return
     }
 
@@ -187,13 +228,40 @@ export default function EmailWorkspace() {
         name: `Campaign ${new Date().toLocaleDateString()}`,
         subject: campaignSubject,
         html: campaignHtml,
-        recipients: uniqueSubscribers.slice(0, 10).map((subscriber) => ({ email: subscriber.email })),
+        recipients: selectedSubscribers.map((subscriber) => ({ email: subscriber.email })),
       })
+      setNotice(`Campaign draft created for ${formatCountLabel(selectedSubscribers.length, 'selected subscriber')}.`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create campaign draft')
     } finally {
       setSavingCampaign(false)
     }
+  }
+
+  function toggleSubscriberSelection(email: string) {
+    setNotice(null)
+    setSelectedSubscriberEmails((current) =>
+      current.includes(email) ? current.filter((selectedEmail) => selectedEmail !== email) : [...current, email]
+    )
+  }
+
+  function selectAllSubscribers() {
+    setNotice(null)
+    setSelectedSubscriberEmails(uniqueSubscribers.map((subscriber) => subscriber.email))
+  }
+
+  function clearSubscriberSelection() {
+    setNotice(null)
+    setSelectedSubscriberEmails([])
+  }
+
+  function handleSelectTemplate(template: EmailTemplate) {
+    const templateKey = getTemplateKey(template)
+    setCampaignSubject(template.subject)
+    setCampaignHtml(getTemplateBody(template))
+    setSelectedTemplateKey(templateKey)
+    setError(null)
+    setNotice(`Loaded template: ${template.name}`)
   }
 
   if (loading) {
@@ -214,13 +282,15 @@ export default function EmailWorkspace() {
 
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <DashboardPanel title="Templates" icon={<Mail size={16} />} value={selectedPersonalityTemplates.length} tone="info">
-            <p className="text-xs text-text-secondary">Showing {selectedPersonalityLabel} templates.</p>
+            <p className="text-xs text-text-secondary">
+              {selectedTemplate ? `Loaded: ${selectedTemplate.name}` : `Showing ${selectedPersonalityLabel} templates.`}
+            </p>
           </DashboardPanel>
           <DashboardPanel title="Subscribers" icon={<Users size={16} />} value={uniqueSubscribers.length} tone="neutral">
             <p className="text-xs text-text-secondary">Distinct contacts available for campaigns.</p>
           </DashboardPanel>
-          <DashboardPanel title="Automation Engine" icon={<Bot size={16} />} value="Active" tone="success">
-            <p className="text-xs text-text-secondary">Sequencing controls ready for execution.</p>
+          <DashboardPanel title="Selected" icon={<CheckCircle size={16} />} value={selectedSubscribers.length} tone="success">
+            <p className="text-xs text-text-secondary">Contacts included in the next campaign draft.</p>
           </DashboardPanel>
         </section>
 
@@ -253,7 +323,12 @@ export default function EmailWorkspace() {
             title="Campaign Draft Composer"
             description="Draft outbound campaign payload for selected subscribers."
             actions={
-              <button type="button" onClick={handleCreateCampaignDraft} disabled={savingCampaign} className="hud-button-primary px-3 py-1.5 text-xs">
+              <button
+                type="button"
+                onClick={handleCreateCampaignDraft}
+                disabled={savingCampaign || selectedSubscribers.length === 0}
+                className="hud-button-primary px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-60"
+              >
                 {savingCampaign ? 'Creating...' : 'Create Draft'}
               </button>
             }
@@ -267,7 +342,9 @@ export default function EmailWorkspace() {
                 placeholder="Campaign subject"
               />
               <textarea className="hud-input min-h-32" value={campaignHtml} onChange={(event) => setCampaignHtml(event.target.value)} />
-              <p className="text-xs text-text-secondary">Draft payload uses up to 10 subscribers as recipients.</p>
+              <p className="text-xs text-text-secondary">
+                Draft payload uses {formatCountLabel(selectedSubscribers.length, 'selected subscriber')} as recipients.
+              </p>
             </div>
           </WorkspacePanel>
         </section>
@@ -275,7 +352,7 @@ export default function EmailWorkspace() {
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <WorkspacePanel
             title={`${selectedPersonalityLabel} Template Library`}
-            description="Template inventory filtered by active brand personality."
+            description="Select one of the built-in email templates to load it into the campaign composer."
             className="lg:col-span-2"
             expandable
           >
@@ -292,12 +369,34 @@ export default function EmailWorkspace() {
                   {selectedPersonalityLabel} ({selectedPersonalityTemplates.length})
                 </h3>
                 <div className="space-y-2">
-                  {selectedPersonalityTemplates.map((template) => (
-                    <div key={template.id || template.name} className="rounded border border-[var(--border-subtle)] p-2">
-                      <p className="text-sm font-medium text-text-primary">{template.name}</p>
-                      <p className="text-xs text-text-secondary">{template.subject}</p>
-                    </div>
-                  ))}
+                  {selectedPersonalityTemplates.map((template) => {
+                    const templateKey = getTemplateKey(template)
+                    const selected = selectedTemplateKey === templateKey
+
+                    return (
+                      <button
+                        key={templateKey}
+                        type="button"
+                        onClick={() => handleSelectTemplate(template)}
+                        className={`w-full rounded border p-3 text-left transition ${
+                          selected
+                            ? 'border-[var(--border-focus)] bg-[rgba(var(--accent-rgb),0.10)]'
+                            : 'border-[var(--border-subtle)] hover:border-[var(--border-elevated)]'
+                        }`}
+                        aria-pressed={selected}
+                      >
+                        <span className="flex flex-wrap items-start justify-between gap-2">
+                          <span>
+                            <span className="block text-sm font-medium text-text-primary">{template.name}</span>
+                            <span className="mt-1 block text-xs text-text-secondary">{template.subject}</span>
+                          </span>
+                          <span className="rounded-full border border-[var(--border-subtle)] px-2 py-0.5 text-[11px] uppercase tracking-system text-text-secondary">
+                            {selected ? 'Selected' : template.source || 'local'}
+                          </span>
+                        </span>
+                      </button>
+                    )
+                  })}
                   {selectedPersonalityTemplates.length === 0 && (
                     <CockpitEmptyState
                       compact
@@ -310,7 +409,23 @@ export default function EmailWorkspace() {
             )}
           </WorkspacePanel>
 
-          <WorkspacePanel title="Audience Snapshot" description="Latest subscribers available for campaign targeting." expandable>
+          <WorkspacePanel
+            title="Audience Selection"
+            description="Choose the subscriber emails to include in the campaign draft."
+            actions={
+              uniqueSubscribers.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={selectAllSubscribers} className="hud-button-secondary px-3 py-1.5 text-xs">
+                    Select All
+                  </button>
+                  <button type="button" onClick={clearSubscriberSelection} className="hud-button-secondary px-3 py-1.5 text-xs">
+                    Clear
+                  </button>
+                </div>
+              ) : null
+            }
+            expandable
+          >
             <div className="space-y-2">
               {uniqueSubscribers.length === 0 && (
                 <CockpitEmptyState
@@ -320,14 +435,37 @@ export default function EmailWorkspace() {
                   primaryAction={{ label: 'Go to Funnels', href: '/funnels' }}
                 />
               )}
-              {uniqueSubscribers.slice(0, 8).map((subscriber) => (
-                <div key={subscriber.email} className="rounded-lg border border-[var(--border-subtle)] p-3">
-                  <p className="font-medium text-text-primary">{subscriber.email}</p>
-                  <p className="text-xs text-text-secondary">
-                    Source: {subscriber.source || subscriber.utm_source || 'direct'} · {new Date(subscriber.created_at).toLocaleDateString()}
-                  </p>
+              {uniqueSubscribers.length > 0 && (
+                <div className="max-h-[28rem] space-y-2 overflow-y-auto pr-1">
+                  {uniqueSubscribers.map((subscriber) => {
+                    const selected = selectedSubscriberEmailSet.has(subscriber.email)
+
+                    return (
+                      <label
+                        key={subscriber.email}
+                        className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition ${
+                          selected
+                            ? 'border-[var(--border-focus)] bg-[rgba(var(--accent-rgb),0.10)]'
+                            : 'border-[var(--border-subtle)] hover:border-[var(--border-elevated)]'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="mt-1 h-4 w-4 rounded border-[var(--border-elevated)] accent-[rgb(var(--accent-rgb))]"
+                          checked={selected}
+                          onChange={() => toggleSubscriberSelection(subscriber.email)}
+                        />
+                        <span className="min-w-0">
+                          <span className="block break-all font-medium text-text-primary">{subscriber.email}</span>
+                          <span className="block text-xs text-text-secondary">
+                            Source: {subscriber.source || subscriber.utm_source || 'direct'} · {new Date(subscriber.created_at).toLocaleDateString()}
+                          </span>
+                        </span>
+                      </label>
+                    )
+                  })}
                 </div>
-              ))}
+              )}
             </div>
           </WorkspacePanel>
         </section>
