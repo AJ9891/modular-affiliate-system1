@@ -6,6 +6,11 @@ import { checkUserCanPerform, incrementUserUsage } from '@/lib/plan-manager'
 import { AI_MODELS, openai } from '@/lib/openai'
 import { emailService } from '@/lib/email/service'
 import type { AutomationSequence } from '@/lib/email/types'
+import { canCreateLaunchpad } from '@/features/launchpad/domain/launchpad.rules'
+import { CURRENT_WORKFLOW_VERSION } from '@/features/launchpad/domain/launchpad.constants'
+import { createLogger } from '@/lib/observability/logger'
+
+const launchpadLogger = createLogger('launchpad')
 
 type BrandModeKey = 'rocket' | 'antiguru' | 'meltdown'
 type Tone = 'professional' | 'casual' | 'urgent' | 'friendly'
@@ -192,6 +197,64 @@ async function checkPlanLimit(userId: string) {
   if (!canCreateEmailSequence) {
     throw new HttpError('Plan limit reached for email sequences', 402)
   }
+}
+
+async function assertLaunchpadCapacity(userId: string) {
+  const admin = createServiceRoleClient()
+  const [{ data: user, error: userError }, { count, error: countError }] = await Promise.all([
+    admin.from('users').select('max_launchpads').eq('id', userId).single(),
+    admin
+      .from('launchpads')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .neq('status', 'archived'),
+  ])
+
+  if (userError) {
+    throw new Error(`Unable to load launchpad capacity: ${userError.message}`)
+  }
+
+  if (countError) {
+    throw new Error(`Unable to count active launchpads: ${countError.message}`)
+  }
+
+  if (!canCreateLaunchpad({
+    activeCount: count ?? 0,
+    maxLaunchpads: user.max_launchpads ?? 0,
+  })) {
+    throw new HttpError('Launchpad capacity reached for this plan', 402)
+  }
+}
+
+async function saveLaunchpadRecord(
+  userId: string,
+  input: LaunchpadInput,
+  funnelId: string
+) {
+  const admin = createServiceRoleClient()
+  const { data, error } = await admin
+    .from('launchpads')
+    .insert({
+      user_id: userId,
+      name: input.campaignName || `${input.productName} Launchpad`,
+      niche: input.niche,
+      campaign_name: input.campaignName || null,
+      funnel_id: funnelId,
+      status: 'draft',
+      workflow_version: CURRENT_WORKFLOW_VERSION,
+    })
+    .select('id')
+    .single()
+
+  if (error) {
+    if (error.message.toLowerCase().includes('capacity')) {
+      throw new HttpError('Launchpad capacity reached for this plan', 402)
+    }
+    throw new Error(`Unable to save launchpad: ${error.message}`)
+  }
+
+  return data.id as string
 }
 
 function getBrandProfile(brandMode: BrandModeKey = 'rocket') {
@@ -703,12 +766,14 @@ export async function createLaunchpad(
   input: LaunchpadInput,
   options: { userEmail?: string | null } = {}
 ) {
+  launchpadLogger.info('launchpad.create.started', { userId })
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     throw new HttpError('Supabase service role is required to create launchpads', 500)
   }
 
   await ensureUserRow(userId, options.userEmail)
   await checkPlanLimit(userId)
+  await assertLaunchpadCapacity(userId)
 
   const brand = getBrandProfile(input.brandMode || 'rocket')
 
@@ -725,8 +790,15 @@ export async function createLaunchpad(
   }
 
   const variants = await createABVariants(userId, savedFunnel.funnel_id, funnel)
+  const launchpadId = await saveLaunchpadRecord(userId, input, savedFunnel.funnel_id)
+  launchpadLogger.info('launchpad.create.completed', {
+    userId,
+    launchpadId,
+    funnelId: savedFunnel.funnel_id,
+  })
 
   return {
+    launchpadId,
     funnelId: savedFunnel.funnel_id,
     publicUrl: `/f/${savedFunnel.slug}`,
     variants,

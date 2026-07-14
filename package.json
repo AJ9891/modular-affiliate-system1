@@ -35,14 +35,18 @@
     "mcp:logs": "# pipe or view logs depending on your process manager"
   },
   "devDependencies": {
-    "markdownlint-cli2": "^0.21.0",
+    "markdownlint-cli2": "^0.23.0",
     "markdownlint-cli2-formatter-pretty": "^0.0.9",
-    "turbo": "^2.0.0"
+    "js-yaml": "^4.3.0",
+    "turbo": "^2.10.5"
   },
   "engines": {
     "node": ">=18.0.0"
   },
   "overrides": {
+    "@eslint/eslintrc": {
+      "js-yaml": "$js-yaml"
+    },
     "next": {
       "postcss": "8.5.12"
     },
