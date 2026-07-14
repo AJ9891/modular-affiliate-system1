@@ -18,12 +18,14 @@ export async function getLaunchpad(id: string): Promise<Launchpad> {
 export async function updateLaunchpadStage({
   id,
   expectedStage,
+  expectedVersion,
   nextStage,
   offerId,
   funnelId,
 }: {
   id: string
   expectedStage: LaunchpadStage
+  expectedVersion: number
   nextStage: LaunchpadStage
   offerId?: string
   funnelId?: string
@@ -31,6 +33,7 @@ export async function updateLaunchpadStage({
   const { data, error } = await supabase.rpc('advance_launchpad_stage', {
     p_launchpad_id: id,
     p_expected_stage: expectedStage,
+    p_expected_version: expectedVersion,
     p_next_stage: nextStage,
     p_offer_id: offerId ?? null,
     p_funnel_id: funnelId ?? null,

@@ -7,6 +7,10 @@ import { AI_MODELS, openai } from '@/lib/openai'
 import { emailService } from '@/lib/email/service'
 import type { AutomationSequence } from '@/lib/email/types'
 import { canCreateLaunchpad } from '@/features/launchpad/domain/launchpad.rules'
+import { CURRENT_WORKFLOW_VERSION } from '@/features/launchpad/domain/launchpad.constants'
+import { createLogger } from '@/lib/observability/logger'
+
+const launchpadLogger = createLogger('launchpad')
 
 type BrandModeKey = 'rocket' | 'antiguru' | 'meltdown'
 type Tone = 'professional' | 'casual' | 'urgent' | 'friendly'
@@ -203,6 +207,7 @@ async function assertLaunchpadCapacity(userId: string) {
       .from('launchpads')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
+      .is('deleted_at', null)
       .neq('status', 'archived'),
   ])
 
@@ -237,6 +242,7 @@ async function saveLaunchpadRecord(
       campaign_name: input.campaignName || null,
       funnel_id: funnelId,
       status: 'draft',
+      workflow_version: CURRENT_WORKFLOW_VERSION,
     })
     .select('id')
     .single()
@@ -760,6 +766,7 @@ export async function createLaunchpad(
   input: LaunchpadInput,
   options: { userEmail?: string | null } = {}
 ) {
+  launchpadLogger.info('launchpad.create.started', { userId })
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     throw new HttpError('Supabase service role is required to create launchpads', 500)
   }
@@ -784,6 +791,11 @@ export async function createLaunchpad(
 
   const variants = await createABVariants(userId, savedFunnel.funnel_id, funnel)
   const launchpadId = await saveLaunchpadRecord(userId, input, savedFunnel.funnel_id)
+  launchpadLogger.info('launchpad.create.completed', {
+    userId,
+    launchpadId,
+    funnelId: savedFunnel.funnel_id,
+  })
 
   return {
     launchpadId,
