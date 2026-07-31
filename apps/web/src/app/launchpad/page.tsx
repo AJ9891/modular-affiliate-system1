@@ -23,6 +23,7 @@ import {
   type StartupFunnelType,
   type StartupTrafficGoal,
 } from '@/lib/launchpad/startupChecklist'
+import { buildOfferTrackingPath } from '@/lib/launchpad/trackingLinks'
 import {
   LAUNCHPAD_TEMPLATE_CARDS,
   buildLaunchpadFunnelCreateInput,
@@ -205,9 +206,7 @@ function stripTrackingParams(urlValue: string) {
 }
 
 function buildTrackingHref(offerId: string, funnelId: string, campaign: string) {
-  return `/api/redirect/${offerId}?aff_funnel=${encodeURIComponent(
-    funnelId
-  )}&utm_source=launchpad&utm_medium=funnel&utm_campaign=${encodeURIComponent(campaign)}`
+  return buildOfferTrackingPath({ offerId, funnelId, campaign })
 }
 
 function extractRedirectOfferId(urlValue: string) {
@@ -467,6 +466,14 @@ export default function LaunchpadPage() {
   useEffect(() => {
     loadUserData()
 
+    const forceStartupChecklist = searchParams.get('checklist') === '1'
+    if (forceStartupChecklist) {
+      // Explicit inbound checklist links must work even when this browser has
+      // cached a previously completed onboarding session.
+      setPreflightComplete(true)
+      setStartupChecklistComplete(false)
+    }
+
     const niche = searchParams.get('niche')
     if (niche) {
       setSelectedNiche(niche)
@@ -483,11 +490,11 @@ export default function LaunchpadPage() {
         setLaunchIntent(savedIntent)
       }
       const preflightSaved = localStorage.getItem(PREFLIGHT_COMPLETE_KEY)
-      if (preflightSaved === '1') {
+      if (!forceStartupChecklist && preflightSaved === '1') {
         setPreflightComplete(true)
       }
       const startupChecklistSaved = localStorage.getItem(STARTUP_CHECKLIST_COMPLETE_KEY)
-      if (startupChecklistSaved === '1') {
+      if (!forceStartupChecklist && startupChecklistSaved === '1') {
         setStartupChecklistComplete(true)
       }
       const savedNiche = localStorage.getItem('launchpad_selected_niche')
@@ -845,7 +852,7 @@ export default function LaunchpadPage() {
     const funnelId = getCreatedFunnelId()
     if (!funnelId || !attachedOfferId) return null
 
-    return `/api/redirect/${attachedOfferId}?aff_funnel=${encodeURIComponent(funnelId)}&utm_source=launchpad&utm_medium=funnel&utm_campaign=onboarding`
+    return buildOfferTrackingPath({ offerId: attachedOfferId, funnelId, campaign: 'onboarding' })
   }
 
   const resetLaunchChecks = () => {
@@ -985,7 +992,11 @@ export default function LaunchpadPage() {
 
       const rawBlocks = typeof funnel.blocks === 'string' ? JSON.parse(funnel.blocks) : (funnel.blocks || {})
       const currentBlocks = Array.isArray(rawBlocks?.blocks) ? rawBlocks.blocks : []
-      const trackingHref = `/api/redirect/${selectedOffer.id}?aff_funnel=${encodeURIComponent(funnelId)}&utm_source=launchpad&utm_medium=funnel&utm_campaign=onboarding`
+      const trackingHref = buildOfferTrackingPath({
+        offerId: selectedOffer.id,
+        funnelId,
+        campaign: 'onboarding',
+      })
 
       let patched = false
       const nextBlocks = currentBlocks.map((block: Record<string, unknown>) => {
