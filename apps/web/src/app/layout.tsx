@@ -29,9 +29,6 @@ export const metadata: Metadata = {
     "email automation",
     "digital marketing system",
   ],
-  alternates: {
-    canonical: "/",
-  },
   robots: {
     index: true,
     follow: true,
@@ -45,18 +42,26 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    url: "https://www.launchpad4success.pro",
     siteName: "Launchpad4Success.pro",
     title: "Launchpad4Success.pro | Build High-Converting Affiliate Funnels",
     description:
       "Launchpad4Success.pro helps creators and affiliate marketers launch conversion-focused funnels and scalable marketing workflows.",
     locale: "en_US",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Launchpad4Success affiliate funnel mission control",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Launchpad4Success.pro | Build High-Converting Affiliate Funnels",
     description:
       "Build, launch, and scale affiliate funnels with Launchpad4Success.pro.",
+    images: ["/opengraph-image"],
   },
 }
 
