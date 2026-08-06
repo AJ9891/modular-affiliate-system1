@@ -1,4 +1,29 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
+
+export const metadata: Metadata = {
+  title: 'Features',
+  description:
+    'Explore Launchpad4Success funnel building, AI content, analytics, templates, tracking, and testing features.',
+  alternates: {
+    canonical: '/features',
+  },
+  openGraph: {
+    type: 'website',
+    url: '/features',
+    title: 'Launchpad4Success Features',
+    description:
+      'Explore funnel building, AI content, analytics, templates, tracking, and testing in one platform.',
+    images: ['/opengraph-image'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Launchpad4Success Features',
+    description:
+      'Explore funnel building, AI content, analytics, templates, tracking, and testing in one platform.',
+    images: ['/opengraph-image'],
+  },
+}
 
 export default function Features() {
   return (
