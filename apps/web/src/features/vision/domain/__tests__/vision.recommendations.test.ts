@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { attachVisionContext, recommendNextAction } from '../vision.recommendations'
+import { attachVisionContext, recommendNextAction, VISION_ACTION_DEFINITIONS } from '../vision.recommendations'
 import type { VisionContext } from '../vision.types'
 
 const context: VisionContext = {
@@ -17,6 +17,11 @@ describe('Vision recommendations', () => {
 
   it('routes high traffic and low conversion to the optimizer', () => {
     expect(recommendNextAction(context).actionId).toBe('optimize-funnel')
+  })
+
+  it('uses routes that exist in the application', () => {
+    expect(VISION_ACTION_DEFINITIONS['configure-email'].href).toBe('/email')
+    expect(VISION_ACTION_DEFINITIONS['upgrade-capacity'].href).toBe('/subscription')
   })
 
   it('attaches stable resource context without allowing invented routes', () => {
