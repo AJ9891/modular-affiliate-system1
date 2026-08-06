@@ -14,7 +14,7 @@ import { BrandModeGlowSync } from "@/components/BrandModeGlowSync"
 import ConditionalSidebar from "@/components/ConditionalSidebar"
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.launchpad4success.pro"),
+  metadataBase: new URL("https://launchpad4success.pro"),
   title: {
     default: "Launchpad4Success.pro | Build High-Converting Affiliate Funnels",
     template: "%s | Launchpad4Success.pro",
@@ -30,9 +30,6 @@ export const metadata: Metadata = {
     "email automation",
     "digital marketing system",
   ],
-  alternates: {
-    canonical: "/",
-  },
   robots: {
     index: true,
     follow: true,
@@ -46,18 +43,26 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    url: "https://www.launchpad4success.pro",
     siteName: "Launchpad4Success.pro",
     title: "Launchpad4Success.pro | Build High-Converting Affiliate Funnels",
     description:
       "Launchpad4Success.pro helps creators and affiliate marketers launch conversion-focused funnels and scalable marketing workflows.",
     locale: "en_US",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Launchpad4Success affiliate funnel mission control",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Launchpad4Success.pro | Build High-Converting Affiliate Funnels",
     description:
       "Build, launch, and scale affiliate funnels with Launchpad4Success.pro.",
+    images: ["/opengraph-image"],
   },
 }
 
@@ -72,13 +77,13 @@ export default function RootLayout({
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    "@id": "https://www.launchpad4success.pro/#organization",
+    "@id": "https://launchpad4success.pro/#organization",
     "name": "Launchpad 4 Success",
-    "url": "https://www.launchpad4success.pro",
+    "url": "https://launchpad4success.pro",
     "description": "Launchpad 4 Success is an independent marketing platform created by Abbigal Jurek, focused on practical tools, systems, and automation for online marketing. The platform is not affiliated with third-party Launchpad review, coaching, or consulting services.",
     "founder": {
       "@type": "Person",
-      "@id": "https://www.launchpad4success.pro/#person",
+      "@id": "https://launchpad4success.pro/#person",
       "name": "Abbigal Jurek"
     },
     "brand": {
@@ -90,15 +95,15 @@ export default function RootLayout({
   const personSchema = {
     "@context": "https://schema.org",
     "@type": "Person",
-    "@id": "https://www.launchpad4success.pro/#person",
+    "@id": "https://launchpad4success.pro/#person",
     "name": "Abbigal Jurek",
     "creatorOf": {
       "@type": "Organization",
-      "@id": "https://www.launchpad4success.pro/#organization"
+      "@id": "https://launchpad4success.pro/#organization"
     },
     "worksFor": {
       "@type": "Organization",
-      "@id": "https://www.launchpad4success.pro/#organization"
+      "@id": "https://launchpad4success.pro/#organization"
     },
     "description": "Creator of Launchpad 4 Success, an independent marketing platform focused on clear systems, automation, and practical implementation."
   };

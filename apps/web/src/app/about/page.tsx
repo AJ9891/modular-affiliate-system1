@@ -1,8 +1,27 @@
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "About - Launchpad 4 Success",
-  description: "Learn about Launchpad 4 Success, an independent marketing platform created by Abbigal Jurek, focused on practical tools, clear explanations, and real-world implementation.",
+  title: "About",
+  description:
+    "Learn about Launchpad 4 Success, an independent marketing platform created by Abbigal Jurek, focused on practical tools, clear explanations, and real-world implementation.",
+  alternates: {
+    canonical: "/about",
+  },
+  openGraph: {
+    type: "website",
+    url: "/about",
+    title: "About Launchpad 4 Success",
+    description:
+      "Learn about the independent Launchpad 4 Success platform and its creator, Abbigal Jurek.",
+    images: ["/opengraph-image"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "About Launchpad 4 Success",
+    description:
+      "Learn about the independent Launchpad 4 Success platform and its creator, Abbigal Jurek.",
+    images: ["/opengraph-image"],
+  },
 }
 
 export default function AboutPage() {
@@ -12,7 +31,7 @@ export default function AboutPage() {
     "name": "About Launchpad 4 Success",
     "mainEntity": {
       "@type": "Organization",
-      "@id": "https://www.launchpad4success.pro/#organization"
+      "@id": "https://launchpad4success.pro/#organization"
     }
   };
 

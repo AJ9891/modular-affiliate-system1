@@ -13,6 +13,9 @@ export const PUBLIC_PATHS = [
   '/get-started',
   '/niches',
   '/do_not_click',
+  '/robots.txt',
+  '/sitemap.xml',
+  '/opengraph-image',
   '/f',  // Funnel pages
   '/p',  // Public pages
 ] as const

@@ -23,7 +23,7 @@ export default function Footer() {
         </p>
         <nav aria-label="Footer links" className="text-xs text-gray-400 flex items-center justify-center gap-4 flex-wrap">
           <a href="/about" className="hover:text-white transition-colors">About</a>
-          <a href="/pricing" className="hover:text-white transition-colors">Pricing</a>
+          <a href="/#tiers" className="hover:text-white transition-colors">Pricing</a>
           <a href="/features" className="hover:text-white transition-colors">Features</a>
         </nav>
       </div>

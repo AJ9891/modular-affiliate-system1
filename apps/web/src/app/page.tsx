@@ -2,9 +2,36 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Launchpad4Success.pro | AI Funnels That Ship Fast',
+  title: {
+    absolute: 'Launchpad4Success.pro | AI Funnels That Ship Fast',
+  },
   description:
     'Build, launch, and scale affiliate funnels with automation, analytics, and AI support in one control center.',
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    type: 'website',
+    url: '/',
+    title: 'Launchpad4Success.pro | AI Funnels That Ship Fast',
+    description:
+      'Build, launch, and scale affiliate funnels with automation, analytics, and AI support in one control center.',
+    images: [
+      {
+        url: '/opengraph-image',
+        width: 1200,
+        height: 630,
+        alt: 'Launchpad4Success affiliate funnel mission control',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Launchpad4Success.pro | AI Funnels That Ship Fast',
+    description:
+      'Build, launch, and scale affiliate funnels with automation, analytics, and AI support in one control center.',
+    images: ['/opengraph-image'],
+  },
 }
 
 const featureCards = [
