@@ -5,9 +5,19 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/api/", "/admin", "/admin/", "/dashboard", "/dashboard/"],
+      disallow: [
+        "/api/",
+        "/admin",
+        "/admin/",
+        "/dashboard",
+        "/dashboard/",
+        "/launchpad",
+        "/launchpad/",
+        "/ai-generator",
+        "/ai-generator/",
+      ],
     },
-    sitemap: "https://www.launchpad4success.pro/sitemap.xml",
-    host: "https://www.launchpad4success.pro",
+    sitemap: "https://launchpad4success.pro/sitemap.xml",
+    host: "https://launchpad4success.pro",
   }
 }
