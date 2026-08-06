@@ -8,14 +8,23 @@ const PUBLIC_PATHS = new Set([
   '/pricing',
   '/signup',
   '/login',
-  '/do_not_click'
+  '/do_not_click',
+  '/about',
+  '/features',
+  '/get-started',
+  '/sitemap.xml'
 ])
 
 function isPublicPath(pathname: string) {
   if (PUBLIC_PATHS.has(pathname)) return true
   // allow static and api auth helpers
   if (pathname.startsWith('/_next')) return true
-  if (pathname.startsWith('/favicon') || pathname.startsWith('/robots')) return true
+  if (
+    pathname.startsWith('/favicon') ||
+    pathname.startsWith('/robots') ||
+    pathname.startsWith('/sitemap') ||
+    pathname.startsWith('/opengraph-image')
+  ) return true
   if (pathname.startsWith('/api/auth')) return true
   // Let API routes handle auth/authorization themselves and return JSON errors.
   if (pathname.startsWith('/api/')) return true
