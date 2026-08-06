@@ -5,9 +5,9 @@ export const VISION_ACTION_DEFINITIONS: Record<VisionActionId, Omit<VisionRecomm
   'view-analytics': { actionId: 'view-analytics', label: 'View Analytics', href: '/analytics', description: 'Inspect traffic, conversions, and revenue.', reason: 'Performance data will show where the journey is leaking.' },
   'optimize-funnel': { actionId: 'optimize-funnel', label: 'Optimize Funnel', href: '/ai-optimizer', description: 'Improve a selected funnel using its real performance.', reason: 'Traffic is present, but the conversion rate is below 1%.' },
   'manage-offers': { actionId: 'manage-offers', label: 'Manage Offers', href: '/offers', description: 'Attach and maintain affiliate destinations.', reason: 'Offer setup is the next required commercial step.' },
-  'configure-email': { actionId: 'configure-email', label: 'Configure Email', href: '/email-automation', description: 'Provision and configure the follow-up sequence.', reason: 'Leads exist, but email automation is not ready.' },
+  'configure-email': { actionId: 'configure-email', label: 'Configure Email', href: '/email', description: 'Provision and configure the follow-up sequence.', reason: 'Leads exist, but email automation is not ready.' },
   'resume-draft': { actionId: 'resume-draft', label: 'Resume Draft', href: '/launchpad', description: 'Continue an unfinished Launchpad.', reason: 'An unfinished Launchpad is ready to resume.' },
-  'upgrade-capacity': { actionId: 'upgrade-capacity', label: 'Review Capacity', href: '/settings/billing', description: 'Review plan capacity and active Launchpads.', reason: 'Active Launchpads have reached the current plan limit.' },
+  'upgrade-capacity': { actionId: 'upgrade-capacity', label: 'Review Capacity', href: '/subscription', description: 'Review plan capacity and active Launchpads.', reason: 'Active Launchpads have reached the current plan limit.' },
   'open-admin': { actionId: 'open-admin', label: 'Open Admin', href: '/admin', description: 'Manage authorized platform operations.', reason: 'Administrative controls match this request.' },
 }
 
