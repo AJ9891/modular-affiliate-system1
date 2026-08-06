@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 export default function Footer() {
@@ -22,9 +23,9 @@ export default function Footer() {
           Launchpad4Success.pro publishes practical affiliate marketing systems, funnel strategy, conversion optimization guidance, and email automation workflows for creators and digital businesses.
         </p>
         <nav aria-label="Footer links" className="text-xs text-gray-400 flex items-center justify-center gap-4 flex-wrap">
-          <a href="/about" className="hover:text-white transition-colors">About</a>
-          <a href="/#tiers" className="hover:text-white transition-colors">Pricing</a>
-          <a href="/features" className="hover:text-white transition-colors">Features</a>
+          <Link href="/about" className="hover:text-white transition-colors">About</Link>
+          <Link href="/#tiers" className="hover:text-white transition-colors">Pricing</Link>
+          <Link href="/features" className="hover:text-white transition-colors">Features</Link>
         </nav>
       </div>
     </footer>
