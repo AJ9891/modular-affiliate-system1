@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -21,6 +21,8 @@ interface UserFunnel {
 
 export default function AIOptimizerPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const requestedFunnelId = searchParams.get('funnelId')
   const [funnels, setFunnels] = useState<UserFunnel[]>([])
   const [selectedFunnelId, setSelectedFunnelId] = useState<string>('')
   const [loading, setLoading] = useState(true)
@@ -71,8 +73,13 @@ export default function AIOptimizerPage() {
 
       setFunnels(processedFunnels)
       
-      // Auto-select the first funnel if available
-      if (processedFunnels.length > 0) {
+      // Preserve the funnel selected by Vision when it belongs to this user.
+      const requestedFunnel = processedFunnels.find(
+        (funnel: UserFunnel) => funnel.id === requestedFunnelId
+      )
+      if (requestedFunnel) {
+        setSelectedFunnelId(requestedFunnel.id)
+      } else if (processedFunnels.length > 0) {
         setSelectedFunnelId(processedFunnels[0].id)
       }
     } catch (error) {
