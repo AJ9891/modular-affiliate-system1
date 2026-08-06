@@ -1,4 +1,29 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
+
+export const metadata: Metadata = {
+  title: 'Get Started',
+  description:
+    'Create your Launchpad4Success account, choose a niche, build a funnel, and begin tracking your affiliate marketing system.',
+  alternates: {
+    canonical: '/get-started',
+  },
+  openGraph: {
+    type: 'website',
+    url: '/get-started',
+    title: 'Get Started with Launchpad4Success',
+    description:
+      'Create an account, choose a niche, build a funnel, and launch your affiliate marketing system.',
+    images: ['/opengraph-image'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Get Started with Launchpad4Success',
+    description:
+      'Create an account, choose a niche, build a funnel, and launch your affiliate marketing system.',
+    images: ['/opengraph-image'],
+  },
+}
 
 export default function GetStarted() {
   return (
