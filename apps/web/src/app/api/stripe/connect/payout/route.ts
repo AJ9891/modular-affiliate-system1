@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     // Idempotency: if there is a pending/paid payout with same idempotency key, reuse
     if (idempotencyKey) {
-      const { data: existing } = await supabase
+      const { data: existing } = await db
         .from('affiliate_payouts')
         .select('stripe_transfer_id, status')
         .eq('idempotency_key', idempotencyKey)
