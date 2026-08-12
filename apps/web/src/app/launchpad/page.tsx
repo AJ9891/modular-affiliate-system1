@@ -47,7 +47,6 @@ import {
   shouldShowJourneyCheckIn,
 } from '@/lib/launchpad/journeySupport'
 
-export const runtime = 'edge'
 
 import { 
   Rocket, 
