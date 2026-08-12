@@ -45,6 +45,11 @@ export async function POST(request: NextRequest) {
           card_payments: { requested: true },
           transfers: { requested: true },
         },
+        metadata: {
+          launchpad_user_id: user.id,
+        },
+      }, {
+        idempotencyKey: `stripe-connect-${user.id}`,
       })
 
       accountId = account.id
