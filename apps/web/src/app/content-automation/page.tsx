@@ -1,5 +1,5 @@
-import ContentAutomationWorkspace from '@/components/content/ContentAutomationWorkspace'
+import ContentAutomationExperience from '@/components/content/ContentAutomationExperience'
 
 export default function ContentAutomationPage() {
-  return <ContentAutomationWorkspace />
+  return <ContentAutomationExperience />
 }
