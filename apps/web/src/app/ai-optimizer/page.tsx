@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,7 +19,26 @@ interface UserFunnel {
   clicks_count?: number
 }
 
+function OptimizerFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-rocket-500"></div>
+        <p className="text-text-secondary">Loading AI Optimizer...</p>
+      </div>
+    </div>
+  )
+}
+
 export default function AIOptimizerPage() {
+  return (
+    <Suspense fallback={<OptimizerFallback />}>
+      <AIOptimizerContent />
+    </Suspense>
+  )
+}
+
+function AIOptimizerContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const requestedFunnelId = searchParams.get('funnelId')
