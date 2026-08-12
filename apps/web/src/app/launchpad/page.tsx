@@ -353,6 +353,10 @@ function createSmartDefaultBlocks({
 export default function LaunchpadPage() {
   const ONBOARDING_COMPLETE = 6
   const searchParams = useSearchParams()
+  const forceStartupChecklist = searchParams.get('checklist') === '1'
+  const requestedLaunchpadId = searchParams.get('launchpadId')
+  const requestedFunnelId = searchParams.get('funnelId')
+  const resumeRequested = Boolean(requestedLaunchpadId || requestedFunnelId)
   const [currentStep, setCurrentStep] = useState(0)
   const [setupComplete, setSetupComplete] = useState(false)
   const [_userProfile, setUserProfile] = useState<any>(null)
@@ -466,12 +470,19 @@ export default function LaunchpadPage() {
   useEffect(() => {
     loadUserData()
 
-    const forceStartupChecklist = searchParams.get('checklist') === '1'
     if (forceStartupChecklist) {
       // Explicit inbound checklist links must work even when this browser has
       // cached a previously completed onboarding session.
       setPreflightComplete(true)
       setStartupChecklistComplete(false)
+    }
+
+    if (resumeRequested) {
+      setPreflightComplete(true)
+      setStartupChecklistComplete(true)
+      setSetupComplete(false)
+      setCurrentStep(5)
+      if (requestedFunnelId) setSelectedPublishDraftId(requestedFunnelId)
     }
 
     const niche = searchParams.get('niche')
@@ -2280,7 +2291,7 @@ export default function LaunchpadPage() {
     )
   }
 
-  if (setupComplete || stats.funnels > 0) {
+  if ((setupComplete || stats.funnels > 0) && !forceStartupChecklist && !resumeRequested) {
     const conversionRate = stats.visitors > 0 ? (stats.conversions / stats.visitors) * 100 : 0
     const activeMilestone = milestoneQueue[0] || null
     const journeyRecommendation = getJourneyRecommendation({
