@@ -188,7 +188,9 @@ export async function generateContentBundle(
         nicheHint: input.nicheHint,
       })
     } catch (error) {
-      warnings.push('Direct URL ingestion failed. Used metadata fallback extraction.')
+      const reason = error instanceof Error ? error.message : 'Unknown fetch error'
+      console.warn('Direct URL ingestion failed:', { sourceUrl, reason })
+      warnings.push(`Direct URL ingestion failed: ${reason}. Used URL-based fallback extraction.`)
       const fallback = buildFallbackIngestedUrl(sourceUrl)
       signals = extractOfferSignals(fallback, {
         audienceHint: input.audienceHint,
