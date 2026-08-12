@@ -10,7 +10,7 @@ export const GET = withRouteHandler(async ({ request, supabase, user }) => {
   const funnelId = searchParams.get('funnelId')
 
   try {
-    const { payload, cache } = await getAnalyticsSummary(supabase, {
+    const { payload, cache, degraded } = await getAnalyticsSummary(supabase, {
       userId: user!.id,
       range,
       funnelId,
@@ -19,6 +19,7 @@ export const GET = withRouteHandler(async ({ request, supabase, user }) => {
     return NextResponse.json(payload, {
       headers: {
         'X-Cache': cache,
+        ...(degraded ? { 'X-Analytics-Degraded': '1' } : {}),
       },
     })
   } catch (error) {
