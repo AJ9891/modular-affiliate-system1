@@ -40,18 +40,24 @@ export default function KeywordLookupPanel({ onKeywordSelected }: KeywordLookupP
       </div>
 
       <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          className="hud-input"
-          placeholder="Seed keyword"
-        />
-        <input
-          value={locale}
-          onChange={(event) => setLocale(event.target.value)}
-          className="hud-input"
-          placeholder="Locale (en-US)"
-        />
+        <label className="space-y-1 text-xs font-medium text-text-secondary">
+          <span>Keyword topic</span>
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            className="hud-input w-full"
+            placeholder="e.g. paint by number art"
+          />
+        </label>
+        <label className="space-y-1 text-xs font-medium text-text-secondary">
+          <span>Search locale</span>
+          <input
+            value={locale}
+            onChange={(event) => setLocale(event.target.value)}
+            className="hud-input w-full"
+            placeholder="en-US"
+          />
+        </label>
         <button type="button" onClick={runLookup} disabled={loading} className="hud-button-primary px-4 py-2">
           {loading ? 'Looking up...' : 'Lookup Keywords'}
         </button>
