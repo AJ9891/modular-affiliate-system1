@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server'
 import Stripe from 'stripe'
 
-const STRIPE_API_VERSION: Stripe.LatestApiVersion = '2026-02-25.clover'
+const STRIPE_API_VERSION: Stripe.LatestApiVersion = '2025-12-15.clover'
 const LOCALHOST_FALLBACK_URL = 'http://localhost:3000'
 
 export function getStripeServerClient() {
