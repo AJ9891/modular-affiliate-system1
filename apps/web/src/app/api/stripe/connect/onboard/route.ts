@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       accountId = account.id
 
       // Save the account ID to the database
-      const { error: saveError } = await supabase
+      const { error: saveError } = await db
         .from('users')
         .update({
           stripe_connect_account_id: accountId,
