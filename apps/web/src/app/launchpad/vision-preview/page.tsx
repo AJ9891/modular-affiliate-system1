@@ -1,60 +1,40 @@
 'use client'
 
+import { useEffect, useMemo, useState } from 'react'
+import { BarChart3, Brain, Mail, Rocket, ShieldCheck, Terminal } from 'lucide-react'
 import { LaunchpadVision } from '@/components/LaunchpadVision'
-import { Sparkles, Rocket, BarChart3, ShieldCheck, Brain, Terminal } from 'lucide-react'
+import { loadVisionContext } from '@/features/vision/api/vision.repository'
+import { VISION_ACTION_DEFINITIONS } from '@/features/vision/domain/vision.recommendations'
+import type { VisionAction, VisionContext, VisionStat } from '@/features/vision/domain/vision.types'
 
-const mockStats = [
-  { label: 'Active Funnels', value: '12', hint: '3 launched this week' },
-  { label: 'Leads', value: '18,420', hint: '+6.4% vs last 7d' },
-  { label: 'Revenue', value: '$128,900', hint: 'MRR · Stripe synced' },
-  { label: 'Conversions', value: '4.9%', hint: 'Across all funnels' },
-]
+const actionPresentation = {
+  'build-funnel': { icon: Rocket, accent: 'cyan' }, 'view-analytics': { icon: BarChart3, accent: 'blue' },
+  'optimize-funnel': { icon: Brain, accent: 'amber' }, 'manage-offers': { icon: ShieldCheck, accent: 'cyan' },
+  'configure-email': { icon: Mail, accent: 'purple' }, 'open-admin': { icon: Terminal, accent: 'blue' },
+} as const
 
-const mockActions = [
-  {
-    title: 'Visual Funnel Builder',
-    description: 'Drag blocks, preview live, publish instantly.',
-    href: '/visual-builder',
-    icon: Rocket,
-    accent: 'cyan' as const,
-  },
-  {
-    title: 'AI Generator',
-    description: 'Codex writes hero, email, and CTA copy to match intent.',
-    href: '/ai-generator',
-    icon: Sparkles,
-    accent: 'purple' as const,
-  },
-  {
-    title: 'Radar Module',
-    description: 'Open cockpit to access the radar module.',
-    href: '/cockpit',
-    icon: BarChart3,
-    accent: 'blue' as const,
-  },
-  {
-    title: 'Optimizer',
-    description: 'Autotune steps, run A/Bs, enforce guardrails.',
-    href: '/ai-optimizer',
-    icon: Brain,
-    accent: 'amber' as const,
-  },
-  {
-    title: 'Affiliate HQ',
-    description: 'Links, commissions, fraud checks, payouts.',
-    href: '/offers',
-    icon: ShieldCheck,
-    accent: 'cyan' as const,
-  },
-  {
-    title: 'Admin',
-    description: 'Users, roles, system logs, feature flags.',
-    href: '/admin',
-    icon: Terminal,
-    accent: 'blue' as const,
-  },
-]
+const actions: VisionAction[] = Object.entries(actionPresentation).map(([id, presentation]) => {
+  const definition = VISION_ACTION_DEFINITIONS[id as keyof typeof actionPresentation]
+  return { id: definition.actionId, label: definition.label, description: definition.description, href: definition.href, icon: presentation.icon, accent: presentation.accent }
+})
+
+function statsFrom(context: VisionContext): VisionStat[] {
+  const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
+  return [
+    { label: 'Active Launchpads', value: `${context.launchpads.active}/${context.launchpads.capacity}`, hint: `${context.launchpads.drafts} drafts · ${context.launchpads.live} live` },
+    { label: 'Visitors', value: context.performance.visitors.toLocaleString(), hint: 'Last 30 days' },
+    { label: 'Revenue', value: currency.format(context.performance.revenue), hint: `${context.performance.conversions.toLocaleString()} conversions` },
+    { label: 'Conversion Rate', value: `${context.performance.conversionRate.toFixed(2)}%`, hint: 'Tracked funnel performance' },
+  ]
+}
 
 export default function VisionPreviewPage() {
-  return <LaunchpadVision stats={mockStats} actions={mockActions} userPlan="Pro" />
+  const [context, setContext] = useState<VisionContext | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  useEffect(() => { loadVisionContext(window.location.pathname).then(setContext).catch((cause: unknown) => setError(cause instanceof Error ? cause.message : 'Vision context could not be loaded.')) }, [])
+  const stats = useMemo(() => context ? statsFrom(context) : [], [context])
+
+  if (error) return <main className="min-h-screen bg-[#0a0f1d] p-10 text-slate-100"><h1 className="text-2xl font-semibold">Vision needs platform context</h1><p className="mt-3 text-slate-300">{error}</p></main>
+  if (!context) return <main className="min-h-screen bg-[#0a0f1d] p-10 text-cyan-100">Reading your Launchpads and performance…</main>
+  return <LaunchpadVision stats={stats} actions={actions} context={context} />
 }

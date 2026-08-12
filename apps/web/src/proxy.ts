@@ -127,7 +127,9 @@ export async function proxy(req: NextRequest) {
   if (requiresAuth && !user) {
     const redirectUrl = getSubdomainRedirectUrl(req, '/login')
     const loginUrl = new URL(redirectUrl)
-    loginUrl.searchParams.set('redirect', req.nextUrl.pathname)
+    // Preserve entry-mode and attribution parameters across authentication.
+    // Login validates this as a same-origin relative path before navigating.
+    loginUrl.searchParams.set('redirect', `${req.nextUrl.pathname}${req.nextUrl.search}`)
     return withAuthGate(NextResponse.redirect(loginUrl), 'redirect:auth-required')
   }
 

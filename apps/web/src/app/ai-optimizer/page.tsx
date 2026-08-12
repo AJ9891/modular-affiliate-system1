@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -19,8 +19,29 @@ interface UserFunnel {
   clicks_count?: number
 }
 
+function OptimizerFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-rocket-500"></div>
+        <p className="text-text-secondary">Loading AI Optimizer...</p>
+      </div>
+    </div>
+  )
+}
+
 export default function AIOptimizerPage() {
+  return (
+    <Suspense fallback={<OptimizerFallback />}>
+      <AIOptimizerContent />
+    </Suspense>
+  )
+}
+
+function AIOptimizerContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const requestedFunnelId = searchParams.get('funnelId')
   const [funnels, setFunnels] = useState<UserFunnel[]>([])
   const [selectedFunnelId, setSelectedFunnelId] = useState<string>('')
   const [loading, setLoading] = useState(true)
@@ -71,8 +92,13 @@ export default function AIOptimizerPage() {
 
       setFunnels(processedFunnels)
       
-      // Auto-select the first funnel if available
-      if (processedFunnels.length > 0) {
+      // Preserve the funnel selected by Vision when it belongs to this user.
+      const requestedFunnel = processedFunnels.find(
+        (funnel: UserFunnel) => funnel.id === requestedFunnelId
+      )
+      if (requestedFunnel) {
+        setSelectedFunnelId(requestedFunnel.id)
+      } else if (processedFunnels.length > 0) {
         setSelectedFunnelId(processedFunnels[0].id)
       }
     } catch (error) {
