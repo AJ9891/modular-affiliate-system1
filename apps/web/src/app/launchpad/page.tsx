@@ -8,6 +8,8 @@ import StartupChecklistScreen from '@/components/launchpad/StartupChecklistScree
 import GuidedBuilderFlight from '@/components/launchpad/GuidedBuilderFlight'
 import LaunchpadCopilotAssist from '@/components/launchpad/LaunchpadCopilotAssist'
 import LaunchpadAutoSellSection from '@/components/launchpad/LaunchpadAutoSellSection'
+export const runtime = 'nodejs'
+
 import {
   LAUNCHPAD_INTENT_OPTIONS,
   getIntentPreset,
