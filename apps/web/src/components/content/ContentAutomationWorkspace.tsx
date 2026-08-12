@@ -56,6 +56,16 @@ export default function ContentAutomationWorkspace() {
     loadIntegrations()
   }, [])
 
+  function handleKeywordSelected(keyword: string) {
+    setSelectedKeyword(keyword)
+    setWarnings([])
+  }
+
+  function handleSourceUrlChange(value: string) {
+    setSourceUrl(value)
+    setWarnings([])
+  }
+
   async function handleGenerate() {
     if (!sourceUrl.trim() && !selectedKeyword.trim()) {
       setError('Provide a source URL or select a keyword')
@@ -120,7 +130,7 @@ export default function ContentAutomationWorkspace() {
 
         {error && <section className="rounded-lg border border-red-500/40 bg-red-500/10 p-4 text-red-200">{error}</section>}
 
-        <KeywordLookupPanel onKeywordSelected={setSelectedKeyword} />
+        <KeywordLookupPanel onKeywordSelected={handleKeywordSelected} />
 
         <section className="hud-panel space-y-3">
           <div>
@@ -129,18 +139,24 @@ export default function ContentAutomationWorkspace() {
           </div>
 
           <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
-            <input
-              value={sourceUrl}
-              onChange={(event) => setSourceUrl(event.target.value)}
-              className="hud-input md:col-span-2"
-              placeholder="Optional source URL"
-            />
-            <input
-              value={selectedKeyword}
-              onChange={(event) => setSelectedKeyword(event.target.value)}
-              className="hud-input"
-              placeholder="Selected keyword"
-            />
+            <label className="space-y-1 text-xs font-medium text-text-secondary md:col-span-2">
+              <span>Source URL (optional)</span>
+              <input
+                value={sourceUrl}
+                onChange={(event) => handleSourceUrlChange(event.target.value)}
+                className="hud-input w-full"
+                placeholder="https://example.com/product"
+              />
+            </label>
+            <label className="space-y-1 text-xs font-medium text-text-secondary">
+              <span>Keyword</span>
+              <input
+                value={selectedKeyword}
+                onChange={(event) => handleKeywordSelected(event.target.value)}
+                className="hud-input w-full"
+                placeholder="Select or enter a keyword"
+              />
+            </label>
             <select value={tone} onChange={(event) => setTone(event.target.value as typeof tone)} className="hud-select">
               <option value="professional">Professional</option>
               <option value="casual">Casual</option>
