@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
+import { createServiceRoleClient } from '@/lib/supabase-server'
 import { checkSupabase } from '@/lib/check-supabase'
 import { getStripeServerClient } from '@/lib/stripe-server'
 
@@ -13,6 +14,7 @@ export async function GET(request: NextRequest) {
   try {
     const stripe = getStripeServerClient()
     const supabase = await createRouteHandlerClientCompat()
+    const db = createServiceRoleClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
@@ -20,7 +22,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user's Stripe Connect account
-    const { data: userData, error: userQueryError } = await supabase
+    const { data: userData, error: userQueryError } = await db
       .from('users')
       .select('stripe_connect_account_id, stripe_connect_onboarding_complete, stripe_connect_charges_enabled, stripe_connect_payouts_enabled')
       .eq('id', user.id)
@@ -51,7 +53,7 @@ export async function GET(request: NextRequest) {
         chargesEnabled !== userData.stripe_connect_charges_enabled ||
         payoutsEnabled !== userData.stripe_connect_payouts_enabled) {
 
-      const { error: updateError } = await supabase
+      const { error: updateError } = await db
         .from('users')
         .update({
           stripe_connect_onboarding_complete: onboardingComplete,

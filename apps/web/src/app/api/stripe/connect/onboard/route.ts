@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
+import { createServiceRoleClient } from '@/lib/supabase-server'
 import { checkSupabase } from '@/lib/check-supabase'
 import { getStripeServerClient, resolveAppBaseUrl } from '@/lib/stripe-server'
 
@@ -14,6 +15,7 @@ export async function POST(request: NextRequest) {
     const stripe = getStripeServerClient()
     const appBaseUrl = resolveAppBaseUrl(request)
     const supabase = await createRouteHandlerClientCompat()
+    const db = createServiceRoleClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
@@ -21,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already has a Stripe Connect account
-    const { data: userData, error: userQueryError } = await supabase
+    const { data: userData, error: userQueryError } = await db
       .from('users')
       .select('stripe_connect_account_id, stripe_connect_onboarding_complete')
       .eq('id', user.id)
@@ -43,12 +45,17 @@ export async function POST(request: NextRequest) {
           card_payments: { requested: true },
           transfers: { requested: true },
         },
+        metadata: {
+          launchpad_user_id: user.id,
+        },
+      }, {
+        idempotencyKey: `stripe-connect-${user.id}`,
       })
 
       accountId = account.id
 
       // Save the account ID to the database
-      const { error: saveError } = await supabase
+      const { error: saveError } = await db
         .from('users')
         .update({
           stripe_connect_account_id: accountId,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClientCompat } from '@/lib/subdomain-auth'
+import { createServiceRoleClient } from '@/lib/supabase-server'
 import { checkSupabase } from '@/lib/check-supabase'
 import { payoutSchema } from '@/lib/validators/stripe'
 import { log } from '@/lib/log'
@@ -19,6 +20,7 @@ export async function POST(request: NextRequest) {
   try {
     const stripe = getStripeServerClient()
     const supabase = await createRouteHandlerClientCompat()
+    const db = createServiceRoleClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
@@ -26,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Only admins can process payouts
-    const { data: userData } = await supabase
+    const { data: userData } = await db
       .from('users')
       .select('is_admin, role')
       .eq('id', user.id)
@@ -43,7 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get affiliate's Stripe Connect account
-    const { data: affiliateData } = await supabase
+    const { data: affiliateData } = await db
       .from('users')
       .select('stripe_connect_account_id, stripe_connect_payouts_enabled')
       .eq('id', affiliateId)
@@ -59,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     // Idempotency: if there is a pending/paid payout with same idempotency key, reuse
     if (idempotencyKey) {
-      const { data: existing } = await supabase
+      const { data: existing } = await db
         .from('affiliate_payouts')
         .select('stripe_transfer_id, status')
         .eq('idempotency_key', idempotencyKey)
@@ -77,7 +79,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Record the payout as pending
-    const { data: pendingRows, error: insertErr } = await supabase
+    const { data: pendingRows, error: insertErr } = await db
       .from('affiliate_payouts')
       .insert({
         user_id: affiliateId,
@@ -127,11 +129,11 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString(),
       }
       const { error: payoutError } = payoutId
-        ? await supabase
+        ? await db
           .from('affiliate_payouts')
           .update(payoutPayload)
           .eq('id', payoutId)
-        : await supabase
+        : await db
           .from('affiliate_payouts')
           .insert({
             user_id: affiliateId,
@@ -165,7 +167,7 @@ export async function POST(request: NextRequest) {
       })
     } catch (transferError: any) {
       if (payoutId) {
-        const { error: updateError } = await supabase
+        const { error: updateError } = await db
           .from('affiliate_payouts')
           .update({
             status: 'failed',
