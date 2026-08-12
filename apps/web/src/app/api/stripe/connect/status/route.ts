@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
         chargesEnabled !== userData.stripe_connect_charges_enabled ||
         payoutsEnabled !== userData.stripe_connect_payouts_enabled) {
 
-      const { error: updateError } = await supabase
+      const { error: updateError } = await db
         .from('users')
         .update({
           stripe_connect_onboarding_complete: onboardingComplete,
