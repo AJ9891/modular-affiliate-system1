@@ -76,16 +76,17 @@ function chunkArray<T>(items: T[], size: number): T[][] {
 export async function getAnalyticsSummary(
   supabase: SupabaseClient,
   input: GetAnalyticsSummaryInput
-): Promise<{ payload: AnalyticsSummary; cache: 'HIT' | 'MISS' }> {
+): Promise<{ payload: AnalyticsSummary; cache: 'HIT' | 'MISS'; degraded: boolean }> {
   const { userId, range, funnelId } = input
   const cacheKey = getAnalyticsCacheKey(userId, range, funnelId)
   const cachedPayload = getCachedAnalytics(cacheKey)
   if (cachedPayload) {
-    return { payload: cachedPayload, cache: 'HIT' }
+    return { payload: cachedPayload, cache: 'HIT', degraded: false }
   }
 
   const startDate = rangeToStartDate(range)
   const payload = createEmptyAnalyticsPayload()
+  let degraded = false
   const reader = process.env.SUPABASE_SERVICE_ROLE_KEY ? createServiceRoleClient() : supabase
 
   let funnelQuery = reader
@@ -104,15 +105,14 @@ export async function getAnalyticsSummary(
       throw funnelError
     }
     console.warn('Analytics funnel lookup degraded:', funnelError)
-    setCachedAnalytics(cacheKey, payload)
-    return { payload, cache: 'MISS' }
+    return { payload, cache: 'MISS', degraded: true }
   }
 
   const funnelIds = (funnelRows || []).map((row) => row.funnel_id).filter(Boolean)
 
   if (funnelIds.length === 0) {
     setCachedAnalytics(cacheKey, payload)
-    return { payload, cache: 'MISS' }
+    return { payload, cache: 'MISS', degraded: false }
   }
 
   const [
@@ -144,6 +144,7 @@ export async function getAnalyticsSummary(
   if (clicksError) {
     console.warn('Analytics clicks degraded:', clicksError)
   }
+  degraded = Boolean(leadsError || clicksError)
 
   const leads = (leadsData || []) as Array<{
     email?: string | null
@@ -189,6 +190,7 @@ export async function getAnalyticsSummary(
 
     const recoverableError = conversionResults.find((result) => result.error)?.error
     if (recoverableError) {
+      degraded = true
       console.warn('Analytics conversions degraded:', recoverableError)
     } else {
       conversions = conversionResults.flatMap((result) => result.data || []) as Array<{
@@ -276,6 +278,6 @@ export async function getAnalyticsSummary(
     recentActivity,
   }
 
-  setCachedAnalytics(cacheKey, responsePayload)
-  return { payload: responsePayload, cache: 'MISS' }
+  if (!degraded) setCachedAnalytics(cacheKey, responsePayload)
+  return { payload: responsePayload, cache: 'MISS', degraded }
 }
