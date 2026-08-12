@@ -31,7 +31,7 @@ export function useVision(context: VisionContext, mode: BrandModeKey) {
     id: makeId(), role: 'system',
     content: `System online. ${context.user.plan} plan detected. I can read your Launchpad and performance state, then route you with context attached.`,
   }), [context.user.plan])
-  const { messages, append } = useVisionMemory(initial)
+  const { messages, append } = useVisionMemory(initial, context.user.id)
   const [isThinking, setIsThinking] = useState(false)
 
   const submit = (rawPrompt: string) => {
