@@ -71,7 +71,12 @@ export interface CampaignBuildResponse {
     message: string
   }
   content: GeneratedContentPayload
-  saved: { funnelId: string | null }
+  saved: {
+    campaignId: string
+    campaignStatus: 'draft'
+    funnelId: string | null
+    savedAt: string
+  }
   warnings: string[]
   phases: string[]
 }
@@ -84,6 +89,24 @@ export async function buildCampaign(input: {
   tone: 'professional' | 'casual' | 'urgent' | 'friendly'
 }) {
   return api.post<CampaignBuildResponse>('/api/content/campaign', input)
+}
+
+export interface CampaignDraftSummary {
+  campaign_id: string
+  funnel_id: string | null
+  status: 'draft' | 'published' | 'archived'
+  title: string
+  goal: 'sales' | 'leads' | 'traffic' | 'promotion'
+  tone: 'professional' | 'casual' | 'urgent' | 'friendly'
+  source_url: string | null
+  keyword: string
+  ingestion: CampaignBuildResponse['ingestion']
+  created_at: string
+  updated_at: string
+}
+
+export async function listCampaignDrafts() {
+  return api.get<{ success: boolean; campaigns: CampaignDraftSummary[] }>('/api/content/campaign')
 }
 
 export async function lookupGoogleKeywords(input: {
