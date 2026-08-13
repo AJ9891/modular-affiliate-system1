@@ -74,6 +74,7 @@ export default function CampaignWizard() {
   const [keywordOptions, setKeywordOptions] = useState<string[]>([])
   const [style, setStyle] = useState<BrandStyle>('anchor')
   const [content, setContent] = useState<GeneratedContentPayload | null>(null)
+  const [campaignId, setCampaignId] = useState<string | null>(null)
   const [funnelId, setFunnelId] = useState<string | null>(null)
   const [warnings, setWarnings] = useState<string[]>([])
   const [ingestion, setIngestion] = useState<CampaignBuildResponse['ingestion'] | null>(null)
@@ -158,6 +159,7 @@ export default function CampaignWizard() {
         tone: STYLE_TONES[style],
       })
       setContent(response.content)
+      setCampaignId(response.saved.campaignId)
       setFunnelId(response.saved.funnelId)
       setWarnings(response.warnings || [])
       setIngestion(response.ingestion)
@@ -397,7 +399,8 @@ export default function CampaignWizard() {
                   </article>
                 </div>
                 <div className="rounded-lg border border-[var(--border-subtle)] p-4 text-sm text-text-secondary">
-                  Campaign saved as a draft{funnelId ? '.' : ', but the funnel could not be saved.'}
+                  {campaignId ? 'Campaign saved as your private draft.' : 'Campaign draft could not be saved.'}
+                  {campaignId && !funnelId ? ' The campaign is safe, but its funnel record could not be linked.' : ''}
                 </div>
                 <button type="button" className="hud-button-secondary px-4 py-2" onClick={() => setStep(1)}>
                   Build another campaign
