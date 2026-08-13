@@ -109,6 +109,25 @@ export async function listCampaignDrafts() {
   return api.get<{ success: boolean; campaigns: CampaignDraftSummary[] }>('/api/content/campaign')
 }
 
+export type CampaignSection = 'funnel' | 'article' | 'emails'
+
+export async function updateCampaignDraft(campaignId: string, content: GeneratedContentPayload) {
+  return api.patch<{
+    success: boolean
+    campaign: { campaign_id: string; status: 'draft'; updated_at: string }
+    content: GeneratedContentPayload
+  }>(`/api/content/campaign/${campaignId}`, { content })
+}
+
+export async function regenerateCampaignSection(campaignId: string, section: CampaignSection) {
+  return api.post<{
+    success: boolean
+    section: CampaignSection
+    content: GeneratedContentPayload
+    savedAt: string
+  }>(`/api/content/campaign/${campaignId}`, { section })
+}
+
 export async function lookupGoogleKeywords(input: {
   query: string
   locale?: string
