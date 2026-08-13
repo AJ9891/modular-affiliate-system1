@@ -128,6 +128,22 @@ export async function regenerateCampaignSection(campaignId: string, section: Cam
   }>(`/api/content/campaign/${campaignId}`, { section })
 }
 
+export interface CampaignPublishResponse {
+  success: boolean
+  mode: 'now' | 'schedule'
+  message: string
+  publicPath?: string
+  funnel?: { funnel_id: string; slug: string; status: 'published' }
+  schedule?: { id: string; run_at: string; status: 'queued' }
+}
+
+export async function publishCampaign(
+  campaignId: string,
+  input: { mode: 'now' } | { mode: 'schedule'; runAt: string }
+) {
+  return api.post<CampaignPublishResponse>(`/api/content/campaign/${campaignId}/publish`, input)
+}
+
 export async function lookupGoogleKeywords(input: {
   query: string
   locale?: string
