@@ -204,7 +204,7 @@ export async function generateContentBundle(
       productName: seed,
       niche: input.nicheHint || 'Marketing',
       audience: input.audienceHint || 'Growth-focused teams',
-      offerSummary: `${seed} helps teams publish content consistently and improve search visibility.`,
+      offerSummary: input.nicheHint || `${seed} helps teams publish content consistently and improve search visibility.`,
       keyBenefits: [
         'Faster production cycle for SEO content',
         'Clear conversion-focused structure',
