@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import CampaignPublishingPanel from './CampaignPublishingPanel'
 import {
   regenerateCampaignSection,
   updateCampaignDraft,
@@ -178,6 +179,12 @@ export default function CampaignReviewEditor({ campaignId, content, onChange }: 
           </article>
         ))}
       </section>
+
+      <CampaignPublishingPanel
+        campaignId={campaignId}
+        content={content}
+        disabled={saving || Boolean(regenerating)}
+      />
     </div>
   )
 }
