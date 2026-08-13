@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { withRouteHandler } from '@/features/shared/api/route-handler'
 import { readJson } from '@/lib/http'
 import {
@@ -44,7 +45,7 @@ function isGeneratedContent(value: unknown): value is GeneratedContentBundle {
 }
 
 async function syncLinkedFunnel(
-  supabase: Parameters<Parameters<typeof withRouteHandler>[0]>[0]['supabase'],
+  supabase: SupabaseClient,
   userId: string,
   funnelId: string | null,
   content: GeneratedContentBundle
