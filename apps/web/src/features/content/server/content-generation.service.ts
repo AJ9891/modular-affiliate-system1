@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createServiceRoleClient } from '@/lib/supabase-server'
-import { ingestOfferUrl, buildFallbackIngestedUrl } from '@/lib/funnels/urlIngestion'
+import { ingestOfferUrl, buildFallbackIngestedUrl, type IngestedUrlData } from '@/lib/funnels/urlIngestion'
 import { extractOfferSignals } from '@/lib/funnels/offerSignalExtractor'
 import { generateFunnelFromOffer } from '@/lib/ai/tasks/generateFunnelFromOffer'
 import { AI_MODELS, openai } from '@/lib/openai'
@@ -15,6 +15,7 @@ export interface GenerateContentInput {
   audienceHint?: string
   nicheHint?: string
   persist?: boolean
+  ingestedUrl?: IngestedUrlData
 }
 
 export interface GeneratedContentBundle {
@@ -182,7 +183,7 @@ export async function generateContentBundle(
 
   if (sourceUrl) {
     try {
-      const ingested = await ingestOfferUrl(sourceUrl)
+      const ingested = input.ingestedUrl || await ingestOfferUrl(sourceUrl)
       signals = extractOfferSignals(ingested, {
         audienceHint: input.audienceHint,
         nicheHint: input.nicheHint,
@@ -203,7 +204,7 @@ export async function generateContentBundle(
       productName: seed,
       niche: input.nicheHint || 'Marketing',
       audience: input.audienceHint || 'Growth-focused teams',
-      offerSummary: `${seed} helps teams publish content consistently and improve search visibility.`,
+      offerSummary: input.nicheHint || `${seed} helps teams publish content consistently and improve search visibility.`,
       keyBenefits: [
         'Faster production cycle for SEO content',
         'Clear conversion-focused structure',

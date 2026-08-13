@@ -179,6 +179,18 @@ export async function ingestOfferUrl(rawUrl: string): Promise<IngestedUrlData> {
 
     const contentText = stripHtml(html).slice(0, MAX_TEXT_LENGTH)
     const headings = extractHeadings(html)
+    const loginText = `${title} ${description} ${contentText.slice(0, 1200)}`.toLowerCase()
+    const looksLoginGated =
+      /\b(sign in|log in|login required|authentication required)\b/.test(loginText) &&
+      !/\b(product|pricing|features|benefits|shop|buy)\b/.test(contentText.toLowerCase())
+
+    if (looksLoginGated) {
+      throw new Error('Login is required to read this page')
+    }
+
+    if (contentText.split(/\s+/).filter(Boolean).length < 20) {
+      throw new Error('Page did not contain enough readable content')
+    }
 
     return {
       normalizedUrl: response.url || parsedUrl.toString(),

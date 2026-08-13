@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from 'react'
 import {
-  generateContent,
+  buildCampaign as requestCampaignBuild,
   lookupGoogleKeywords,
+  type CampaignBuildResponse,
   type GeneratedContentPayload,
 } from '@/lib/api/content-automation'
 
@@ -41,13 +42,6 @@ const STYLES: Array<{ id: BrandStyle; title: string; description: string; sample
   },
 ]
 
-const GOAL_AUDIENCES: Record<CampaignGoal, string> = {
-  sales: 'People comparing options and ready to make a purchase',
-  leads: 'Interested visitors willing to exchange their email for useful information',
-  traffic: 'Searchers looking for practical answers and relevant resources',
-  promotion: 'Potential customers who need to understand the product and its benefits',
-}
-
 const STYLE_TONES = {
   boost: 'friendly',
   anchor: 'professional',
@@ -82,6 +76,7 @@ export default function CampaignWizard() {
   const [content, setContent] = useState<GeneratedContentPayload | null>(null)
   const [funnelId, setFunnelId] = useState<string | null>(null)
   const [warnings, setWarnings] = useState<string[]>([])
+  const [ingestion, setIngestion] = useState<CampaignBuildResponse['ingestion'] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [keywordLoading, setKeywordLoading] = useState(false)
   const [building, setBuilding] = useState(false)
@@ -154,17 +149,18 @@ export default function CampaignWizard() {
       setBuilding(true)
       setError(null)
       setWarnings([])
-      const response = await generateContent({
+      setIngestion(null)
+      const response = await requestCampaignBuild({
         sourceUrl: normalizeOptionalUrl(sourceUrl),
+        productDescription: productDescription.trim() || undefined,
+        goal,
         keyword: finalKeyword,
         tone: STYLE_TONES[style],
-        audienceHint: GOAL_AUDIENCES[goal],
-        nicheHint: productDescription.trim() || undefined,
-        persist: true,
       })
       setContent(response.content)
       setFunnelId(response.saved.funnelId)
       setWarnings(response.warnings || [])
+      setIngestion(response.ingestion)
       setStep(6)
     } catch (buildError) {
       setError(buildError instanceof Error ? buildError.message : 'Campaign generation failed.')
@@ -359,6 +355,21 @@ export default function CampaignWizard() {
               <p className="text-xs uppercase tracking-system text-text-secondary">Step 6</p>
               <h2 className="text-2xl font-semibold text-text-primary">{content ? 'Your campaign is ready' : 'Build your campaign first'}</h2>
             </div>
+
+            {ingestion && (
+              <div
+                className={`rounded-lg border p-3 text-sm ${
+                  ingestion.status === 'success' || ingestion.status === 'not_provided'
+                    ? 'border-emerald-500/35 bg-emerald-500/10 text-emerald-200'
+                    : 'border-amber-500/35 bg-amber-500/10 text-amber-200'
+                }`}
+              >
+                <p className="font-medium">
+                  {ingestion.status === 'success' ? '✓ Product page read' : ingestion.status === 'not_provided' ? '✓ Product description used' : 'Product page unavailable'}
+                </p>
+                <p className="mt-1">{ingestion.message}</p>
+              </div>
+            )}
 
             {warnings.length > 0 && (
               <div className="rounded-lg border border-amber-500/35 bg-amber-500/10 p-3 text-sm text-amber-200">

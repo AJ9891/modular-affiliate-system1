@@ -55,6 +55,37 @@ export async function generateContent(input: {
   )
 }
 
+export type CampaignIngestionStatus =
+  | 'success'
+  | 'login_required'
+  | 'blocked'
+  | 'timeout'
+  | 'unreadable'
+  | 'not_provided'
+
+export interface CampaignBuildResponse {
+  success: boolean
+  ingestion: {
+    status: CampaignIngestionStatus
+    sourceUrl?: string
+    message: string
+  }
+  content: GeneratedContentPayload
+  saved: { funnelId: string | null }
+  warnings: string[]
+  phases: string[]
+}
+
+export async function buildCampaign(input: {
+  sourceUrl?: string
+  productDescription?: string
+  goal: 'sales' | 'leads' | 'traffic' | 'promotion'
+  keyword: string
+  tone: 'professional' | 'casual' | 'urgent' | 'friendly'
+}) {
+  return api.post<CampaignBuildResponse>('/api/content/campaign', input)
+}
+
 export async function lookupGoogleKeywords(input: {
   query: string
   locale?: string
