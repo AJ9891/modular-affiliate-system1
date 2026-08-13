@@ -36,6 +36,19 @@ function classifyIngestionError(error: unknown): { status: Exclude<IngestionStat
   return { status: 'unreadable', message: 'Launchpad could not find enough readable product information on this page. Add a product description to continue.' }
 }
 
+export const GET = withRouteHandler(async ({ supabase, user }) => {
+  const { data, error } = await supabase
+    .from('campaigns')
+    .select('campaign_id, funnel_id, status, title, goal, tone, source_url, keyword, ingestion, created_at, updated_at')
+    .eq('user_id', user!.id)
+    .order('updated_at', { ascending: false })
+    .limit(50)
+
+  if (error) throw error
+
+  return NextResponse.json({ success: true, campaigns: data || [] })
+})
+
 export const POST = withRouteHandler(async ({ request, supabase, user }) => {
   const body = await readJson<Record<string, unknown>>(request)
   const sourceUrl = normalizeOptionalUrl(body.sourceUrl)
@@ -98,12 +111,39 @@ export const POST = withRouteHandler(async ({ request, supabase, user }) => {
     persist: true,
   })
 
+  const combinedWarnings = [...warnings, ...generationWarnings]
+  const { data: campaign, error: campaignError } = await supabase
+    .from('campaigns')
+    .insert({
+      user_id: user!.id,
+      funnel_id: funnelId,
+      status: 'draft',
+      title: bundle.title,
+      goal,
+      tone,
+      source_url: sourceUrl || null,
+      product_description: productDescription || null,
+      keyword,
+      ingestion,
+      content: bundle,
+      warnings: combinedWarnings,
+    })
+    .select('campaign_id, status, created_at, updated_at')
+    .single()
+
+  if (campaignError) throw campaignError
+
   return NextResponse.json({
     success: true,
     ingestion,
     content: bundle,
-    saved: { funnelId },
-    warnings: [...warnings, ...generationWarnings],
+    saved: {
+      campaignId: campaign.campaign_id,
+      campaignStatus: campaign.status,
+      funnelId,
+      savedAt: campaign.updated_at,
+    },
+    warnings: combinedWarnings,
     phases: ['source_checked', 'funnel_created', 'article_written', 'emails_prepared', 'draft_saved'],
   })
 })
