@@ -114,7 +114,7 @@ export type CampaignSection = 'funnel' | 'article' | 'emails'
 export async function updateCampaignDraft(campaignId: string, content: GeneratedContentPayload) {
   return api.patch<{
     success: boolean
-    campaign: { campaign_id: string; status: 'draft'; updated_at: string }
+    campaign: { campaign_id: string; status: 'draft' | 'published' | 'archived'; updated_at: string }
     content: GeneratedContentPayload
   }>(`/api/content/campaign/${campaignId}`, { content })
 }
@@ -126,6 +126,22 @@ export async function regenerateCampaignSection(campaignId: string, section: Cam
     content: GeneratedContentPayload
     savedAt: string
   }>(`/api/content/campaign/${campaignId}`, { section })
+}
+
+export interface CampaignPublishResponse {
+  success: boolean
+  mode: 'now' | 'schedule'
+  message: string
+  publicPath?: string
+  funnel?: { funnel_id: string; slug: string; status: 'published' }
+  schedule?: { id: string; run_at: string; status: 'queued' }
+}
+
+export async function publishCampaign(
+  campaignId: string,
+  input: { mode: 'now' } | { mode: 'schedule'; runAt: string }
+) {
+  return api.post<CampaignPublishResponse>(`/api/content/campaign/${campaignId}/publish`, input)
 }
 
 export async function lookupGoogleKeywords(input: {
