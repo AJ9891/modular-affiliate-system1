@@ -47,6 +47,27 @@ export const POST = withRouteHandler(async ({ request, supabase, user, params })
   }
 
   if (mode === 'schedule') {
+    const { data: integration, error: integrationError } = await supabase
+      .from('cms_integrations')
+      .select('id, provider')
+      .eq('user_id', user!.id)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (integrationError) throw integrationError
+    if (!integration) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Connect an active CMS or webhook before scheduling external publishing.',
+          needsIntegration: true,
+        },
+        { status: 409 }
+      )
+    }
+
     const runAt = typeof body.runAt === 'string' ? new Date(body.runAt) : new Date(Number.NaN)
     if (Number.isNaN(runAt.getTime())) {
       return NextResponse.json({ success: false, error: 'Choose a valid publishing date and time.' }, { status: 400 })
@@ -68,6 +89,7 @@ export const POST = withRouteHandler(async ({ request, supabase, user, params })
           campaignId: campaign.campaign_id,
           content: campaign.content,
           destination: 'active_cms_integration',
+          integrationId: integration.id,
         },
         funnel_id: funnel.funnel_id,
         created_at: now,
