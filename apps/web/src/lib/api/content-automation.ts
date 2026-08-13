@@ -114,7 +114,7 @@ export type CampaignSection = 'funnel' | 'article' | 'emails'
 export async function updateCampaignDraft(campaignId: string, content: GeneratedContentPayload) {
   return api.patch<{
     success: boolean
-    campaign: { campaign_id: string; status: 'draft'; updated_at: string }
+    campaign: { campaign_id: string; status: 'draft' | 'published' | 'archived'; updated_at: string }
     content: GeneratedContentPayload
   }>(`/api/content/campaign/${campaignId}`, { content })
 }
