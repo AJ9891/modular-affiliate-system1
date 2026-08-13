@@ -42,13 +42,6 @@ const STYLES: Array<{ id: BrandStyle; title: string; description: string; sample
   },
 ]
 
-const GOAL_AUDIENCES: Record<CampaignGoal, string> = {
-  sales: 'People comparing options and ready to make a purchase',
-  leads: 'Interested visitors willing to exchange their email for useful information',
-  traffic: 'Searchers looking for practical answers and relevant resources',
-  promotion: 'Potential customers who need to understand the product and its benefits',
-}
-
 const STYLE_TONES = {
   boost: 'friendly',
   anchor: 'professional',
