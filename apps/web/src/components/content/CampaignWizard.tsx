@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import CampaignReviewEditor from './CampaignReviewEditor'
 import {
   buildCampaign as requestCampaignBuild,
   lookupGoogleKeywords,
@@ -381,27 +382,15 @@ export default function CampaignWizard() {
 
             {content ? (
               <>
-                <div className="grid gap-4 md:grid-cols-3">
-                  <article className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-4">
-                    <p className="text-xs uppercase tracking-system text-emerald-300">✓ Funnel ready</p>
-                    <h3 className="mt-2 font-semibold text-text-primary">{content.funnel.headline}</h3>
-                    <p className="mt-2 text-sm text-text-secondary">{content.funnel.subheadline}</p>
-                  </article>
-                  <article className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-4">
-                    <p className="text-xs uppercase tracking-system text-emerald-300">✓ Article ready</p>
-                    <h3 className="mt-2 font-semibold text-text-primary">{content.article.metaTitle}</h3>
-                    <p className="mt-2 text-sm text-text-secondary">{content.article.metaDescription}</p>
-                  </article>
-                  <article className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-4">
-                    <p className="text-xs uppercase tracking-system text-emerald-300">✓ Emails ready</p>
-                    <h3 className="mt-2 font-semibold text-text-primary">{content.emails.length} messages created</h3>
-                    <p className="mt-2 text-sm text-text-secondary">{content.emails[0]?.subject || 'Email sequence prepared'}</p>
-                  </article>
-                </div>
                 <div className="rounded-lg border border-[var(--border-subtle)] p-4 text-sm text-text-secondary">
                   {campaignId ? 'Campaign saved as your private draft.' : 'Campaign draft could not be saved.'}
                   {campaignId && !funnelId ? ' The campaign is safe, but its funnel record could not be linked.' : ''}
                 </div>
+                {campaignId ? (
+                  <CampaignReviewEditor campaignId={campaignId} content={content} onChange={setContent} />
+                ) : (
+                  <p className="text-sm text-text-secondary">Editing becomes available after the draft is saved.</p>
+                )}
                 <button type="button" className="hud-button-secondary px-4 py-2" onClick={() => setStep(1)}>
                   Build another campaign
                 </button>
