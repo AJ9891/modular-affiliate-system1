@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createServerRouteClient } from '@/lib/supabase-server';
+import { isMissingAuthSessionError } from '@/lib/auth/errors';
 
 export async function GET(request: Request) {
   const isDevelopment = process.env.NODE_ENV === 'development';
@@ -16,6 +17,10 @@ export async function GET(request: Request) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError) {
+      if (isMissingAuthSessionError(authError)) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
       const errorDetails = {
         message: 'Authentication error',
         error: authError,
@@ -118,6 +123,10 @@ export async function POST(request: Request) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError) {
+      if (isMissingAuthSessionError(authError)) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
       console.error('Authentication error:', authError);
       return NextResponse.json({ error: 'Authentication failed' }, { status: 401 });
     }
