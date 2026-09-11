@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { usePathname } from 'next/navigation';
 import { BrandBrain, UIExpressionProfile } from '@/types/brand-brain';
+import { isPublicPath } from '@/config/publicPaths';
 
 // Default UI Expression Profile
 const defaultUIExpressionProfile: UIExpressionProfile = {
@@ -30,6 +32,7 @@ const defaultUIExpressionProfile: UIExpressionProfile = {
 };
 
 export function useBrandBrain() {
+  const pathname = usePathname();
   const [brandProfiles, setBrandProfiles] = useState<any[]>([]);
   const [activeProfile, setActiveProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
@@ -193,8 +196,16 @@ export function useBrandBrain() {
   };
 
   useEffect(() => {
-    fetchProfiles();
-  }, []);
+    // Public routes use the canonical default expression profile and do not
+    // need a user-owned BrandBrain lookup. This avoids anonymous 401 traffic.
+    if (isPublicPath(pathname)) {
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    void fetchProfiles();
+  }, [pathname]);
 
   // Computed UI Expression Profile from active profile
   const ui = useMemo(() => {

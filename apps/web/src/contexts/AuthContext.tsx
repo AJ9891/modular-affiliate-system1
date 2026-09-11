@@ -60,8 +60,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    checkAuth()
-  }, [])
+    // Public marketing and funnel pages do not need a session probe.
+    // Avoid turning anonymous page views into expected 401 traffic.
+    if (isPublicPath(pathname) || pathname.startsWith('/subdomain/')) {
+      setLoading(false)
+      return
+    }
+
+    void checkAuth()
+  }, [pathname])
 
   const login = async (email: string, password: string) => {
     try {

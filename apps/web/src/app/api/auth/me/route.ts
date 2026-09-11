@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { checkSupabase } from '@/lib/check-supabase'
 import { createSubdomainRouteHandlerClientWithResponse } from '@/lib/subdomain-auth'
+import { isMissingAuthSessionError } from '@/lib/auth/errors'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
       return applyCookies(withNoStore(NextResponse.json({ user, profile: profile || null }, { status: 200 })))
     }
 
-    if (error) {
+    if (error && !isMissingAuthSessionError(error)) {
       console.error('Auth /me error:', error.message)
     }
 
