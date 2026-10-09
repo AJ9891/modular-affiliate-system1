@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { notFound } from 'next/navigation'
 import RenderFunnel from '@/components/RenderFunnel'
 
 const publicKey =
@@ -25,8 +26,12 @@ export default async function FunnelPage({ params }: FunnelPageProps) {
     .limit(1)
     .maybeSingle()
 
-  if (error || !funnel) {
-    return <div>Funnel not found</div>
+  if (error) {
+    throw error
+  }
+
+  if (!funnel) {
+    notFound()
   }
 
   return <RenderFunnel funnel={funnel} />
