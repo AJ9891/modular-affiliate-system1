@@ -45,7 +45,8 @@ jobs:
         working-directory: ./apps/web
       
       - name: Run tests
-        run: npm test
+        run: npm run test:run
+        working-directory: ./apps/web
 
   deploy-web:
     needs: build
