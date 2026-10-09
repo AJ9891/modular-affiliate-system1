@@ -23,7 +23,7 @@ jobs:
         run: corepack enable
       
       - name: Install dependencies
-        run: npm ci --no-optional --force
+        run: npm ci --include=optional
       
       - name: Lint
         run: npm run lint
