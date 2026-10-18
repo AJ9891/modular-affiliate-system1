@@ -364,6 +364,10 @@ export class AutoresponderEmailProvider implements EmailProvider {
       }
     }
 
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Persistent email automation storage is unavailable')
+    }
+
     return Array.from(automationStore.values()).filter(
       (sequence) =>
         sequence.active &&
