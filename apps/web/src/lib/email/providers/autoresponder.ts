@@ -183,6 +183,10 @@ export class AutoresponderEmailProvider implements EmailProvider {
       }
     }
 
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Persistent autoresponder queue is unavailable; refusing to store jobs in process memory')
+    }
+
     const id = generateId('queue')
     queuedJobs.set(id, {
       id,
@@ -532,9 +536,10 @@ export class AutoresponderEmailProvider implements EmailProvider {
     campaignStore.set(campaignId, { campaign, stats })
 
     if (!scheduled && recipients.length > 0) {
-      let delivered = 0
+      let accepted = 0
+      let queued = 0
       for (const recipient of recipients) {
-        await this.tryImmediateSend(
+        const sendResult = await this.tryImmediateSend(
           {
             to: recipient,
             from: { email: campaign.fromEmail || defaultFromEmail, name: campaign.fromName || defaultFromName },
@@ -551,13 +556,14 @@ export class AutoresponderEmailProvider implements EmailProvider {
             metadata: { source: 'campaign', campaign_id: campaignId },
           }
         )
-        delivered += 1
+        if (sendResult.queued) queued += 1
+        else accepted += 1
       }
 
       const finalStats: EmailStats = {
         ...stats,
-        sent: delivered,
-        delivered,
+        sent: accepted,
+        delivered: 0,
       }
 
       campaignStore.set(campaignId, { campaign, stats: finalStats })
@@ -566,8 +572,8 @@ export class AutoresponderEmailProvider implements EmailProvider {
         const { error } = await admin
           .from('email_campaigns')
           .update({
-            status: 'sent',
-            sent_at: new Date().toISOString(),
+            status: queued > 0 ? 'sending' : 'sent',
+            sent_at: queued > 0 ? null : new Date().toISOString(),
             stats: finalStats,
             updated_at: new Date().toISOString(),
           })
@@ -578,7 +584,7 @@ export class AutoresponderEmailProvider implements EmailProvider {
         }
       }
 
-      return { id: campaignId, status: 'sent' }
+      return { id: campaignId, status: queued > 0 ? 'sending' : 'sent' }
     }
 
     return { id: campaignId, status }
@@ -745,9 +751,13 @@ export class AutoresponderEmailProvider implements EmailProvider {
         { onConflict: 'user_id,email,list_name' }
       )
 
-      if (error && !isSchemaError(error)) {
+      if (error && (!isSchemaError(error) || process.env.NODE_ENV === 'production')) {
         throw new Error(error.message || 'Failed to save subscriber')
       }
+    }
+
+    if (!admin && process.env.NODE_ENV === 'production') {
+      throw new Error('Persistent subscriber storage is unavailable')
     }
 
     subscriberStore.set(`${userId || 'global'}:${params.email}:${listName}`, { ...params, userId })
@@ -877,10 +887,16 @@ export class AutoresponderEmailProvider implements EmailProvider {
           }
 
           const attempts = Number(job.attempts || 0) + 1
-          await admin
+          const { data: claimed, error: claimError } = await admin
             .from('email_autoresponder_jobs')
             .update({ status: 'sending', attempts, updated_at: new Date().toISOString() })
             .eq('id', job.id)
+            .eq('status', 'queued')
+            .select('id')
+            .maybeSingle()
+
+          if (claimError) throw new Error(claimError.message || 'Failed to claim autoresponder job')
+          if (!claimed) { processed -= 1; continue }
 
           try {
             await this.tryImmediateSend(params, {
@@ -922,9 +938,13 @@ export class AutoresponderEmailProvider implements EmailProvider {
         return { processed, sent, failed }
       }
 
-      if (error && !isSchemaError(error)) {
+      if (error && (!isSchemaError(error) || process.env.NODE_ENV === 'production')) {
         throw new Error(error.message || 'Failed to load queued autoresponder jobs')
       }
+    }
+
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Persistent autoresponder queue is unavailable')
     }
 
     const dueJobs = Array.from(queuedJobs.values())
