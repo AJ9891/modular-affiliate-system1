@@ -4,6 +4,7 @@ import { leadCaptureSchema } from '@/lib/security'
 import { emailService } from '@/lib/email/service'
 import { createSubdomainRouteHandlerClient } from '@/lib/subdomain-auth'
 import { withTrace } from '@/lib/observability/tracing'
+import { resolvePublishedFunnel } from '@/lib/tracking/public-funnel'
 
 function isRecoverableDbError(issue: unknown): boolean {
   if (!issue || typeof issue !== 'object') return false
@@ -51,19 +52,28 @@ export const POST = withRateLimit(
       let funnelName = 'Launchpad List'
       let ownerUserId: string | null = sessionUser?.id || null
       if (funnel_id) {
-        const { data: funnel } = await supabase
+        const { data: funnel, error: funnelError } = await supabase
           .from('funnels')
-          .select('name,user_id')
+          .select('funnel_id,name,user_id,status,active')
           .eq('funnel_id', funnel_id)
-          .single()
+          .maybeSingle()
         
-        if (funnel?.name) {
-          funnelName = funnel.name
+        if (funnelError) {
+          throw funnelError
         }
 
-        if (funnel?.user_id) {
-          ownerUserId = funnel.user_id
+        const publicFunnel = resolvePublishedFunnel(funnel, funnel_id)
+        if (!publicFunnel) {
+          return NextResponse.json({ success: false, error: 'Published funnel not found' }, { status: 404 })
         }
+
+        funnelName = typeof funnel?.name === 'string' ? funnel.name : funnelName
+        ownerUserId = publicFunnel.ownerUserId
+      } else if (!sessionUser) {
+        return NextResponse.json(
+          { success: false, error: 'A published funnel is required' },
+          { status: 400 }
+        )
       }
 
       // Save lead to database

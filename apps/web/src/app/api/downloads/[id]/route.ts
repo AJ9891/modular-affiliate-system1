@@ -67,24 +67,14 @@ export async function GET(
         .update({ download_count: download.download_count + 1 })
         .eq('id', id);
 
-      // Also capture as a lead if email is provided
-      // Silent fail if lead already exists
-      try {
-        await supabase.from('leads').insert({
-          email: email,
-          user_id: download.user_id || null,
-          funnel_id: funnelId || null,
-          generation_id: generationId || null,
-          variant_id: variantId || null,
-          source: 'download',
-          metadata: {
-            download_id: id,
-            download_title: download.title
-          }
-        });
-      } catch {
-        // Ignore lead insertion errors (e.g., duplicate email)
-      }
+      const { error: leadError } = await supabase.rpc('record_public_download_lead', {
+        p_download_id: id,
+        p_email: email,
+        p_funnel_id: funnelId || null,
+        p_generation_id: generationId || null,
+        p_variant_id: variantId || null,
+      })
+      if (leadError) console.error('Download lead capture failed:', leadError)
     }
 
     // Redirect to the actual file

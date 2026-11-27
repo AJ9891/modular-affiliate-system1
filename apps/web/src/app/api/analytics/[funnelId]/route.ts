@@ -30,6 +30,7 @@ export async function GET(
       .from('conversions')
       .select('*')
       .in('click_id', clickIds)
+      .eq('is_verified', true)
 
     if (conversionsError) {
       return NextResponse.json({ error: conversionsError.message }, { status: 400 })

@@ -125,6 +125,14 @@ export class SesEmailProvider implements EmailProvider {
               Charset: 'UTF-8',
             },
           },
+          ...(params.unsubscribeUrl
+            ? {
+                Headers: [
+                  { Name: 'List-Unsubscribe', Value: `<${params.unsubscribeUrl}>` },
+                  { Name: 'List-Unsubscribe-Post', Value: 'List-Unsubscribe=One-Click' },
+                ],
+              }
+            : {}),
         },
       },
       ConfigurationSetName: sesConfigurationSetName,

@@ -177,6 +177,7 @@ export async function getAnalyticsSummary(
           .from('conversions')
           .select('conversion_id,click_id,amount,converted_at')
           .in('click_id', batch)
+          .eq('is_verified', true)
           .gte('converted_at', startDate.toISOString()),
       ),
     )

@@ -74,6 +74,51 @@ This allows timestamped files such as `20260211_*` and `20260419_*` to be picked
 
 If you apply manually in SQL Editor, follow the same rule: legacy core first, then the remaining files by filename order.
 
+## Launchpad VIP Readiness (Phase 1)
+
+The following migrations are additive and must be applied after the legacy core migrations, in filename order:
+
+1. `20261127_email_delivery_reliability.sql` - queued-job idempotency, bounded retry support, atomic job claiming, and email suppression records.
+2. `20261127_harden_public_tracking.sql` - derive public tracking ownership from published funnels, prevent public authoritative conversion inserts, and preserve secure download lead capture.
+3. `20261127_membership_integrations.sql` - tenant-scoped membership integration credentials, idempotent event records, and enrollment state.
+
+Do not run these against production until reviewed and approved. Validate them against a non-production Supabase database first. The five-minute queue cron is configured in the web and root `vercel.json` files; the deployment must support that cron frequency and set `AUTORESPONDER_CRON_SECRET` (and `CRON_SECRET` when required by Vercel Cron).
+
+### Email configuration
+
+- Set `EMAIL_UNSUBSCRIBE_SECRET` to at least 32 random characters; authenticated encrypted tokens bind an unsubscribe to a normalized address and tenant.
+- Set `EMAIL_PROVIDER=autoresponder` to use the durable queue. Configure verified SES sender identities and `AWS_REGION`; prefer a runtime IAM role. Static `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are optional and should not be committed.
+- Configure `NEXT_PUBLIC_APP_URL` (or `NEXT_PUBLIC_BASE_URL`) to the canonical HTTPS origin so email unsubscribe links resolve correctly.
+- Marketing jobs are suppressed after unsubscribe; Launchpad transactional messages are explicitly marked transactional and are not blocked by marketing unsubscribes.
+
+### Bellaneuvo membership events
+
+Bellaneuvo keeps its Stripe account, webhook secret, billing, and database credentials separate. Its backend must verify Stripe webhook signatures and paid status, then send a server-to-server request to `POST /api/integrations/membership/events` with `Authorization: Bearer <integration-token>`. Generate a cryptographically random token with at least 32 bytes of entropy, store the raw token only in Bellaneuvo's secret store, and place only its SHA-256 hash in Launchpad's `membership_integrations.api_key_hash`. Provision the row with the fixed Launchpad `user_id` and that tenant's active `purchase` automation. Do not share either application's Supabase service-role key.
+
+Enrollment payload:
+
+```json
+{
+  "type": "membership.enrolled",
+  "eventId": "stable-provider-event-id",
+  "membershipId": "stable-membership-id",
+  "email": "member@example.test",
+  "paymentStatus": "paid"
+}
+```
+
+Cancellation payload:
+
+```json
+{
+  "type": "membership.cancelled",
+  "eventId": "stable-provider-event-id",
+  "membershipId": "stable-membership-id"
+}
+```
+
+`eventId` must be stable across retries. The endpoint rejects extra fields and unpaid enrollment events, deduplicates events, and scopes automation lookup, enrollment state, and queued-message cancellation to the integration's configured tenant.
+
 ## What Each Migration Does
 
 ### Core Schema

@@ -148,6 +148,7 @@ export async function POST(request: NextRequest) {
       .from('conversions')
       .select('amount, clicks!inner(funnel_id)')
       .in('clicks.funnel_id', targetFunnelIds)
+      .eq('is_verified', true)
       .gte('converted_at', startIso)
       .lte('converted_at', endIso)
 
