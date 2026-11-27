@@ -7,6 +7,7 @@ import {
   ATTRIBUTION_COOKIE_MAX_AGE,
   ATTRIBUTION_SESSION_COOKIE,
 } from '@/lib/attribution-audit'
+import { resolvePublishedFunnel } from '@/lib/tracking/public-funnel'
 
 function isRecoverableDbError(issue: unknown): boolean {
   if (!issue || typeof issue !== 'object') return false
@@ -31,20 +32,29 @@ export async function POST(request: NextRequest) {
     const supabase = await createRouteHandlerClientCompat()
 
     const body = await request.json()
-    const { offer_id, funnel_id, utm_source, utm_medium, utm_campaign, generation_id, variant_id } = body
-
     const {
-      data: { user: sessionUser },
-    } = await supabase.auth.getUser()
+      offer_id,
+      funnel_id,
+      utm_source,
+      utm_medium,
+      utm_campaign,
+      generation_id,
+      variant_id,
+    } = body
 
-    let ownerUserId: string | null = sessionUser?.id || null
-    if (!ownerUserId && funnel_id) {
-      const { data: funnelOwner } = await supabase
-        .from('funnels')
-        .select('user_id')
-        .eq('funnel_id', funnel_id)
-        .maybeSingle()
-      ownerUserId = funnelOwner?.user_id || null
+    if (typeof funnel_id !== 'string') {
+      return NextResponse.json({ error: 'A published funnel is required' }, { status: 400 })
+    }
+
+    const { data: funnel } = await supabase
+      .from('funnels')
+      .select('funnel_id,user_id,status,active')
+      .eq('funnel_id', funnel_id)
+      .maybeSingle()
+    const publicFunnel = resolvePublishedFunnel(funnel, funnel_id)
+
+    if (!publicFunnel) {
+      return NextResponse.json({ error: 'Published funnel not found' }, { status: 404 })
     }
 
     // Generate unique click ID
@@ -57,7 +67,7 @@ export async function POST(request: NextRequest) {
       .from('clicks')
       .insert({
         click_id,
-        user_id: ownerUserId,
+        user_id: publicFunnel.ownerUserId,
         offer_id,
         funnel_id,
         generation_id: generation_id || null,
@@ -80,8 +90,8 @@ export async function POST(request: NextRequest) {
     const { error: analyticsError } = await supabase
       .from('analytics_events')
       .insert({
-        user_id: ownerUserId,
-        funnel_id,
+        user_id: publicFunnel.ownerUserId,
+        funnel_id: publicFunnel.funnelId,
         session_id: sessionId,
         event_type: 'cta_click',
         path: pagePath,
@@ -131,7 +141,7 @@ export async function POST(request: NextRequest) {
         clickId: click_id,
         attributionSessionId,
         offerId: offer_id || null,
-        funnelId: funnel_id || null,
+        funnelId: publicFunnel.funnelId,
         source: 'api.track.click',
         metadata: {
           utm_source: utm_source || null,
@@ -146,7 +156,7 @@ export async function POST(request: NextRequest) {
       clickId: click_id,
       attributionSessionId,
       offerId: offer_id || null,
-      funnelId: funnel_id || null,
+      funnelId: publicFunnel.funnelId,
       source: 'api.track.click',
       metadata: {
         utm_source: utm_source || null,

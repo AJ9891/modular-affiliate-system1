@@ -17,7 +17,7 @@ function createEmailProvider(): EmailProvider {
   const providerKey = resolveProviderKey()
 
   if (providerKey === 'ses') {
-    return new SesEmailProvider()
+    return new AutoresponderEmailProvider(new SesEmailProvider())
   }
 
   return new AutoresponderEmailProvider()

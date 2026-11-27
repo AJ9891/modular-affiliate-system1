@@ -38,6 +38,13 @@ export interface AutomationSequence {
   active: boolean
 }
 
+export interface AutomationTriggerContext {
+  expectedUserId?: string
+  expectedTrigger?: AutomationSequence['trigger']
+  idempotencyKeyPrefix?: string
+  metadata?: Record<string, unknown>
+}
+
 export interface EmailStats {
   sent: number
   delivered: number
@@ -58,16 +65,21 @@ export interface AddSubscriberParams {
   listName?: string
   customFields?: Record<string, any>
   tags?: string[]
+  triggerAutomations?: boolean
 }
 
 export interface SendEmailParams {
   to: EmailRecipient
+  userId?: string | null
   from: { email: string; name: string }
   subject: string
   html: string
   text?: string
   trackOpens?: boolean
   trackClicks?: boolean
+  messageType?: 'marketing' | 'transactional'
+  idempotencyKey?: string
+  unsubscribeUrl?: string
 }
 
 export interface SendAnalyticsReportParams {
@@ -88,13 +100,17 @@ export interface SendAnalyticsReportParams {
 }
 
 export interface EmailProvider {
-  sendEmail(params: SendEmailParams): Promise<{ id: string }>
+  sendEmail(params: SendEmailParams): Promise<{ id: string; status?: string }>
   saveTemplate(template: EmailTemplate): Promise<EmailTemplate>
   getTemplates(): Promise<EmailTemplate[]>
   createCampaign(campaign: EmailCampaign): Promise<{ id: string; status?: string }>
   getCampaignStats(campaignId: string): Promise<EmailStats>
   createAutomation(sequence: AutomationSequence): Promise<AutomationSequence>
-  triggerAutomation(automationId: string, recipient: EmailRecipient): Promise<Record<string, any>>
+  triggerAutomation(
+    automationId: string,
+    recipient: EmailRecipient,
+    context?: AutomationTriggerContext
+  ): Promise<Record<string, any>>
   addSubscriber(params: AddSubscriberParams): Promise<Record<string, any>>
   sendAnalyticsReport(params: SendAnalyticsReportParams): Promise<{ id: string }>
   setupDefaultAutomations(userId?: string | null): Promise<AutomationSequence[]>

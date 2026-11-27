@@ -41,7 +41,10 @@ async function safeCount(table: string) {
 async function safeRevenue() {
   try {
     const adminClient = createServiceRoleClient()
-    const { data } = await adminClient.from('conversions').select('amount')
+    const { data } = await adminClient
+      .from('conversions')
+      .select('amount')
+      .eq('is_verified', true)
     return (data || []).reduce((sum, row: Record<string, unknown>) => {
       const amount = typeof row.amount === 'number' ? row.amount : Number(row.amount || 0)
       return sum + (Number.isFinite(amount) ? amount : 0)

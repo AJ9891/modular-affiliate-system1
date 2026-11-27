@@ -79,6 +79,7 @@ Launchpad4Success Team`
     subject: 'Your Launchpad4Success beta invite',
     html,
     text,
+    messageType: 'transactional',
     trackOpens: true,
     trackClicks: true,
   })

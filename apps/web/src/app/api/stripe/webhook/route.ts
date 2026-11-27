@@ -223,6 +223,7 @@ async function provisionEmailAutomation(userId: string, email: string, plan: str
       listName,
       email,
       name: email.split('@')[0],
+      triggerAutomations: false,
       tags: ['launchpad4success', 'paid-subscriber', `plan-${plan}`, `${emailProviderName}-provisioned`],
       customFields: {
         user_id: userId,
@@ -252,7 +253,7 @@ async function provisionEmailAutomation(userId: string, email: string, plan: str
       }
 
       // Send welcome email with provider-agnostic setup info.
-      await sendWelcomeEmail(email, listName)
+      await sendWelcomeEmail(userId, email, listName)
     }
   } catch (error) {
     console.error('Error provisioning email profile:', error)
@@ -260,15 +261,18 @@ async function provisionEmailAutomation(userId: string, email: string, plan: str
   }
 }
 
-async function sendWelcomeEmail(email: string, listName: string) {
+async function sendWelcomeEmail(userId: string, email: string, listName: string) {
   try {
-    await emailService.sendEmail({
+    const delivery = await emailService.sendEmail({
       to: { email },
       from: {
         email: process.env.EMAIL_DEFAULT_FROM || 'user@launchpad4success.pro',
         name: 'Launchpad4Success Team'
       },
       subject: 'Welcome to Launchpad4Success email automation',
+      userId,
+      messageType: 'transactional',
+      idempotencyKey: `launchpad-welcome:${userId}:${email.trim().toLowerCase()}`,
       html: `
         <h1>Welcome to Launchpad4Success!</h1>
         <p>Your email automation is now active and included with your subscription.</p>
@@ -285,7 +289,7 @@ async function sendWelcomeEmail(email: string, listName: string) {
         <p>Best,<br>The Launchpad4Success Team</p>
       `
     })
-    console.log(`Welcome email sent to ${email}`)
+    console.log(`Welcome email ${delivery.status || 'queued'} for ${email}`)
   } catch (error) {
     console.error('Error sending welcome email:', error)
   }

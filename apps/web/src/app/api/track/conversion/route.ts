@@ -2,18 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import {
-  appendAttributionAuditEvent,
   ATTRIBUTION_CLICK_COOKIE,
   ATTRIBUTION_SESSION_COOKIE,
 } from '@/lib/attribution-audit'
 
-interface ConversionPayload {
-  offer_id?: string | null
-  amount?: number | null
-  order_id?: string | null
+interface PublicConversionPayload {
   funnel_id?: string | null
-  generation_id?: string | null
-  variant_id?: string | null
+  path?: string | null
 }
 
 const TRANSPARENT_GIF = Uint8Array.from([
@@ -21,20 +16,7 @@ const TRANSPARENT_GIF = Uint8Array.from([
   249, 4, 1, 0, 0, 0, 0, 44, 0, 0, 0, 0, 1, 0, 1, 0, 0, 2, 2, 68, 1, 0, 59,
 ])
 
-function isRecoverableDbError(issue: unknown): boolean {
-  if (!issue || typeof issue !== 'object') return false
-  const candidate = issue as { code?: string; message?: string }
-  const code = candidate.code || ''
-  const message = (candidate.message || '').toLowerCase()
-  return (
-    code === '42P01' ||
-    code === 'PGRST205' ||
-    code === '42703' ||
-    message.includes('could not find the table') ||
-    message.includes('schema cache') ||
-    message.includes('column')
-  )
-}
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 function pixelResponse(): NextResponse {
   return new NextResponse(TRANSPARENT_GIF, {
@@ -46,101 +28,51 @@ function pixelResponse(): NextResponse {
   })
 }
 
-async function recordConversion(
+async function recordPublicConversionEvent(
   supabase: ReturnType<typeof createRouteHandlerClient>,
   cookieStore: Awaited<ReturnType<typeof cookies>>,
-  payload: ConversionPayload
-) {
-  const { offer_id, amount, order_id, funnel_id, generation_id, variant_id } = payload
-
-  // Get click ID from cookie for attribution
-  const click_id = cookieStore.get(ATTRIBUTION_CLICK_COOKIE)?.value
-  const attributionSessionId = cookieStore.get(ATTRIBUTION_SESSION_COOKIE)?.value || null
-
-  const {
-    data: { user: sessionUser },
-  } = await supabase.auth.getUser()
-
-  let ownerUserId: string | null = sessionUser?.id || null
-  if (!ownerUserId && funnel_id) {
-    const { data: funnelOwner } = await supabase
-      .from('funnels')
-      .select('user_id')
-      .eq('funnel_id', funnel_id)
-      .maybeSingle()
-    ownerUserId = funnelOwner?.user_id || null
+  payload: PublicConversionPayload
+): Promise<string | null> {
+  if (!payload.funnel_id || !uuidPattern.test(payload.funnel_id)) {
+    throw new Error('A valid funnel_id is required')
   }
 
-  const ownerFunnelId: string | null = typeof funnel_id === 'string' ? funnel_id : null
-  const ownerGenerationId: string | null = typeof generation_id === 'string' ? generation_id : null
-  const ownerVariantId: string | null = typeof variant_id === 'string' ? variant_id : null
-  const conversionAmount = typeof amount === 'number' && Number.isFinite(amount) ? amount : null
+  const rawClickId = cookieStore.get(ATTRIBUTION_CLICK_COOKIE)?.value
+  const clickId = rawClickId && uuidPattern.test(rawClickId) ? rawClickId : null
+  const sessionId = cookieStore.get(ATTRIBUTION_SESSION_COOKIE)?.value || null
 
-  const { data, error } = await supabase
-    .from('conversions')
-    .insert({
-      conversion_id: crypto.randomUUID(),
-      user_id: ownerUserId,
-      click_id: click_id || null,
-      offer_id,
-      funnel_id: ownerFunnelId,
-      generation_id: ownerGenerationId,
-      variant_id: ownerVariantId,
-      amount: conversionAmount,
-      order_id,
-      converted_at: new Date().toISOString(),
-    })
-    .select()
+  const { data, error } = await supabase.rpc('record_public_conversion_event', {
+    p_funnel_id: payload.funnel_id,
+    p_click_id: clickId,
+    p_session_id: sessionId,
+    p_path: payload.path || null,
+  })
 
   if (error) {
     throw error
   }
 
-  const conversion = data[0]
-  await appendAttributionAuditEvent({
-    eventType: 'conversion_tracked',
-    clickId: click_id || null,
-    conversionId: conversion?.conversion_id || null,
-    attributionSessionId,
-    offerId: offer_id || null,
-    amount: conversionAmount,
-    currency: 'usd',
-    source: 'api.track.conversion',
-    metadata: {
-      order_id: order_id || null,
-    },
-  })
-
-  return conversion
+  return typeof data === 'string' ? data : null
 }
 
 export async function POST(request: NextRequest) {
   const cookieStore = await cookies()
   const cookieAdapter = (() => cookieStore) as unknown as () => ReturnType<typeof cookies>
   const supabase = createRouteHandlerClient({ cookies: cookieAdapter })
-  
+
   try {
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database not configured' },
-        { status: 503 }
-      )
+    const body = await request.json() as PublicConversionPayload
+    const eventId = await recordPublicConversionEvent(supabase, cookieStore, body)
+
+    if (!eventId) {
+      return NextResponse.json({ error: 'Published funnel or attribution not found' }, { status: 404 })
     }
 
-    const body = await request.json()
-    const conversion = await recordConversion(supabase, cookieStore, body)
-
-    return NextResponse.json({
-      conversion,
-      tracked: true
-    }, { status: 201 })
+    return NextResponse.json({ eventId, tracked: true, revenueVerified: false }, { status: 201 })
   } catch (error) {
-    if (!isRecoverableDbError(error)) {
-      console.error('Conversion tracking error:', error)
-    }
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Internal server error' },
-      { status: isRecoverableDbError(error) ? 400 : 500 }
+      { status: error instanceof Error && error.message.includes('valid funnel_id') ? 400 : 500 }
     )
   }
 }
@@ -149,26 +81,15 @@ export async function GET(request: NextRequest) {
   const cookieStore = await cookies()
   const cookieAdapter = (() => cookieStore) as unknown as () => ReturnType<typeof cookies>
   const supabase = createRouteHandlerClient({ cookies: cookieAdapter })
+  const params = request.nextUrl.searchParams
 
   try {
-    if (!supabase) {
-      return pixelResponse()
-    }
-
-    const params = request.nextUrl.searchParams
-    const amountParam = params.get('amount')
-    await recordConversion(supabase, cookieStore, {
-      offer_id: params.get('offer_id'),
-      amount: amountParam ? Number(amountParam) : null,
-      order_id: params.get('order_id'),
+    await recordPublicConversionEvent(supabase, cookieStore, {
       funnel_id: params.get('funnel_id'),
-      generation_id: params.get('generation_id'),
-      variant_id: params.get('variant_id'),
+      path: params.get('path'),
     })
-  } catch (error) {
-    if (!isRecoverableDbError(error)) {
-      console.error('Conversion pixel tracking error:', error)
-    }
+  } catch {
+    // Tracking pixels must not break the page rendering the image.
   }
 
   return pixelResponse()

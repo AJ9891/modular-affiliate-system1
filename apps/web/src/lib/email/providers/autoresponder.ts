@@ -1,9 +1,13 @@
 import { log } from '@/lib/log'
 import { SesEmailProvider } from '@/lib/email/providers/ses'
 import { createServiceRoleClient } from '@/lib/supabase-server'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { getEmailRetryDelayMs, isTransientEmailFailure, MAX_EMAIL_ATTEMPTS } from '@/lib/email/reliability'
+import { createUnsubscribeUrl } from '@/lib/email/unsubscribe'
 import type {
   AddSubscriberParams,
   AutomationSequence,
+  AutomationTriggerContext,
   EmailCampaign,
   EmailProvider,
   EmailRecipient,
@@ -20,21 +24,24 @@ const defaultQueueLimit = 50
 const templateStore = new Map<string, EmailTemplate>()
 const automationStore = new Map<string, AutomationSequence & { userId?: string | null }>()
 const campaignStore = new Map<string, { campaign: EmailCampaign; stats: EmailStats }>()
-const subscriberStore = new Map<string, AddSubscriberParams & { userId?: string | null }>()
-const queuedJobs = new Map<
+const subscriberStore = new Map<
   string,
-  {
-    id: string
-    userId: string | null
-    automationId: string | null
-    recipient: EmailRecipient
-    params: SendEmailParams
-    scheduledFor: string
-    status: 'queued' | 'failed'
-    attempts: number
-    lastError?: string
-  }
+  AddSubscriberParams & { userId?: string | null; status: 'active' | 'unsubscribed' | 'bounced' }
 >()
+const queuedJobs = new Map<string, {
+  id: string
+  idempotencyKey: string
+  userId: string | null
+  automationId: string | null
+  recipient: EmailRecipient
+  params: SendEmailParams
+  scheduledFor: string
+  status: 'queued' | 'sending' | 'sent' | 'failed' | 'cancelled'
+  attempts: number
+  maxAttempts: number
+  lastError?: string
+  metadata: Record<string, unknown>
+}>()
 
 function generateId(prefix: string): string {
   return `${prefix}_${crypto.randomUUID()}`
@@ -119,31 +126,27 @@ function buildReportHtml(params: SendAnalyticsReportParams): string {
 }
 
 type QueueJobPayload = {
+  idempotencyKey: string
   userId: string | null
   automationId: string | null
   recipient: EmailRecipient
   params: SendEmailParams
   scheduledFor: string
-  status?: 'queued' | 'sending' | 'sent' | 'failed'
-  attempts?: number
+  status?: 'queued'
   lastError?: string
-  sentAt?: string | null
   metadata?: Record<string, unknown>
 }
 
-export class AutoresponderEmailProvider implements EmailProvider {
-  private transport: SesEmailProvider
+type EmailTransport = Pick<EmailProvider, 'sendEmail'>
 
-  constructor() {
-    this.transport = new SesEmailProvider()
-  }
+export class AutoresponderEmailProvider implements EmailProvider {
+  constructor(
+    private readonly transport: EmailTransport = new SesEmailProvider(),
+    private readonly clientFactory: () => SupabaseClient | null = () => createServiceRoleClient()
+  ) {}
 
   private getAdminClient() {
-    try {
-      return createServiceRoleClient()
-    } catch {
-      return null
-    }
+    return this.clientFactory()
   }
 
   private async insertQueueJob(payload: QueueJobPayload) {
@@ -152,6 +155,9 @@ export class AutoresponderEmailProvider implements EmailProvider {
       const insertPayload = {
         user_id: payload.userId,
         automation_id: payload.automationId,
+        idempotency_key: payload.idempotencyKey,
+        message_type: payload.params.messageType || 'marketing',
+        max_attempts: MAX_EMAIL_ATTEMPTS,
         recipient_email: payload.recipient.email,
         recipient_name: payload.recipient.name || null,
         from_email: payload.params.from.email || defaultFromEmail,
@@ -160,86 +166,132 @@ export class AutoresponderEmailProvider implements EmailProvider {
         html: payload.params.html,
         text: payload.params.text || htmlToText(payload.params.html),
         scheduled_for: payload.scheduledFor,
-        status: payload.status || 'queued',
-        attempts: payload.attempts ?? 0,
+        status: 'queued',
+        attempts: 0,
         last_error: payload.lastError || null,
         metadata: payload.metadata || {},
-        sent_at: payload.sentAt || null,
         updated_at: new Date().toISOString(),
       }
 
       const { data, error } = await admin
         .from('email_autoresponder_jobs')
-        .insert(insertPayload)
+        .upsert(insertPayload, { onConflict: 'idempotency_key', ignoreDuplicates: true })
         .select('id')
-        .single()
+        .maybeSingle()
 
       if (!error && data?.id) {
         return data.id as string
       }
 
-      if (error && !isSchemaError(error)) {
+      if (error) {
         throw new Error(error.message || 'Failed to queue autoresponder job')
       }
+
+      const { data: existing, error: lookupError } = await admin
+        .from('email_autoresponder_jobs')
+        .select('id')
+        .eq('idempotency_key', payload.idempotencyKey)
+        .single()
+      if (lookupError || !existing?.id) {
+        throw new Error(lookupError?.message || 'Unable to resolve idempotent email job')
+      }
+      return existing.id as string
     }
+
+    const existing = Array.from(queuedJobs.values()).find(
+      (job) => job.idempotencyKey === payload.idempotencyKey
+    )
+    if (existing) return existing.id
 
     const id = generateId('queue')
     queuedJobs.set(id, {
       id,
+      idempotencyKey: payload.idempotencyKey,
       userId: payload.userId,
       automationId: payload.automationId,
       recipient: payload.recipient,
       params: payload.params,
       scheduledFor: payload.scheduledFor,
-      status: payload.status === 'failed' ? 'failed' : 'queued',
-      attempts: payload.attempts ?? 0,
+      status: 'queued',
+      attempts: 0,
+      maxAttempts: MAX_EMAIL_ATTEMPTS,
       lastError: payload.lastError,
+      metadata: payload.metadata || {},
     })
     return id
   }
 
-  private async tryImmediateSend(
+  private async enqueueEmail(
     params: SendEmailParams,
     context: {
-      userId: string | null
-      automationId: string | null
-      queueOnFailure: boolean
+      automationId?: string | null
+      scheduledFor?: string
+      idempotencyKey?: string
       metadata?: Record<string, unknown>
+    } = {}
+  ): Promise<string> {
+    const normalizedParams: SendEmailParams = {
+      ...params,
+      to: { ...params.to, email: params.to.email.trim().toLowerCase() },
+      userId: params.userId || null,
+      messageType: params.messageType || 'marketing',
     }
-  ): Promise<{ id: string; queued: boolean }> {
-    try {
-      const sent = await this.transport.sendEmail(params)
 
-      await this.insertQueueJob({
-        userId: context.userId,
-        automationId: context.automationId,
-        recipient: params.to,
-        params,
-        scheduledFor: new Date().toISOString(),
-        status: 'sent',
-        attempts: 1,
-        sentAt: new Date().toISOString(),
-        metadata: context.metadata,
-      })
+    return this.insertQueueJob({
+      idempotencyKey: context.idempotencyKey || params.idempotencyKey || generateId('email'),
+      userId: normalizedParams.userId || null,
+      automationId: context.automationId || null,
+      recipient: normalizedParams.to,
+      params: normalizedParams,
+      scheduledFor: context.scheduledFor || new Date().toISOString(),
+      metadata: context.metadata,
+    })
+  }
 
-      return { id: sent.id, queued: false }
-    } catch (error) {
-      if (!context.queueOnFailure) {
-        throw error
-      }
+  private async isSuppressed(userId: string | null, email: string): Promise<boolean> {
+    const admin = this.getAdminClient()
+    if (admin) {
+      const { data: suppression, error: suppressionError } = await admin
+        .from('email_suppressions')
+        .select('id')
+        .eq('tenant_scope', userId || 'global')
+        .eq('email', email.trim().toLowerCase())
+        .maybeSingle()
+      if (suppressionError) throw new Error(suppressionError.message || 'Failed to check email suppression')
+      if (suppression) return true
 
-      const queuedId = await this.insertQueueJob({
-        userId: context.userId,
-        automationId: context.automationId,
-        recipient: params.to,
-        params,
-        scheduledFor: new Date().toISOString(),
-        status: 'queued',
-        attempts: 0,
-        lastError: error instanceof Error ? error.message : 'Immediate send failed',
-        metadata: context.metadata,
-      })
-      return { id: queuedId, queued: true }
+      let query = admin
+        .from('email_subscribers')
+        .select('id')
+        .ilike('email', email)
+        .in('status', ['unsubscribed', 'bounced'])
+
+      query = userId ? query.eq('user_id', userId) : query.is('user_id', null)
+      const { data, error } = await query.limit(1)
+      if (error) throw new Error(error.message || 'Failed to check email suppression')
+      return Boolean(data?.length)
+    }
+
+    return Array.from(subscriberStore.values()).some(
+      (subscriber) =>
+        subscriber.userId === userId &&
+        subscriber.email.trim().toLowerCase() === email.trim().toLowerCase() &&
+        (subscriber.status === 'unsubscribed' || subscriber.status === 'bounced')
+    )
+  }
+
+  private async addUnsubscribeDetails(params: SendEmailParams): Promise<SendEmailParams> {
+    if (params.messageType === 'transactional') return params
+
+    const unsubscribeUrl = createUnsubscribeUrl({
+      email: params.to.email,
+      userId: params.userId || null,
+    })
+    return {
+      ...params,
+      unsubscribeUrl,
+      html: `${params.html}<p><a href="${unsubscribeUrl}">Unsubscribe from marketing emails</a></p>`,
+      text: `${params.text || htmlToText(params.html)}\n\nUnsubscribe: ${unsubscribeUrl}`,
     }
   }
 
@@ -276,54 +328,61 @@ export class AutoresponderEmailProvider implements EmailProvider {
 
   private async triggerSequence(
     sequence: AutomationSequence & { userId?: string | null },
-    recipient: EmailRecipient
+    recipient: EmailRecipient,
+    context: {
+      idempotencyKeyPrefix?: string
+      metadata?: Record<string, unknown>
+    } = {}
   ): Promise<{ immediate: number; queued: number }> {
     let immediate = 0
     let queued = 0
     const now = Date.now()
 
-    for (const step of sequence.emails) {
+    for (const [stepIndex, step] of sequence.emails.entries()) {
       const delayHours = Number(step.delay || 0)
       const runAt = new Date(now + Math.max(0, delayHours) * 60 * 60 * 1000).toISOString()
+      const idempotencyKey = `${context.idempotencyKeyPrefix || `automation:${sequence.id}:${recipient.email.toLowerCase()}`}:${stepIndex}`
+      const metadata = {
+        ...context.metadata,
+        trigger: sequence.trigger,
+        automation_name: sequence.name,
+        sequence_step: stepIndex,
+        mode: delayHours <= 0 ? 'immediate' : 'delayed',
+        ...(delayHours > 0 ? { delay_hours: delayHours } : {}),
+      }
 
       const params: SendEmailParams = {
         to: recipient,
+        userId: sequence.userId || null,
         from: { email: defaultFromEmail, name: defaultFromName },
         subject: step.template.subject,
         html: step.template.html,
         text: step.template.text,
         trackClicks: true,
         trackOpens: true,
+        messageType: 'marketing',
+        idempotencyKey,
       }
 
       if (delayHours <= 0) {
-        await this.tryImmediateSend(params, {
-          userId: sequence.userId || null,
+        await this.enqueueEmail(params, {
           automationId: sequence.id || null,
-          queueOnFailure: true,
-          metadata: { trigger: sequence.trigger, automation_name: sequence.name, mode: 'immediate' },
+          idempotencyKey,
+          metadata,
         })
         immediate += 1
       } else {
-        await this.insertQueueJob({
-          userId: sequence.userId || null,
+        await this.enqueueEmail(params, {
           automationId: sequence.id || null,
-          recipient,
-          params,
           scheduledFor: runAt,
-          status: 'queued',
-          attempts: 0,
-          metadata: {
-            trigger: sequence.trigger,
-            automation_name: sequence.name,
-            mode: 'delayed',
-            delay_hours: delayHours,
-          },
+          idempotencyKey,
+          metadata,
         })
         queued += 1
       }
     }
 
+    if (immediate > 0) await this.runDueJobs(immediate)
     return { immediate, queued }
   }
 
@@ -368,14 +427,26 @@ export class AutoresponderEmailProvider implements EmailProvider {
     )
   }
 
-  async sendEmail(params: SendEmailParams): Promise<{ id: string }> {
-    const result = await this.tryImmediateSend(params, {
-      userId: null,
-      automationId: null,
-      queueOnFailure: true,
+  async sendEmail(params: SendEmailParams): Promise<{ id: string; status?: string }> {
+    const id = await this.enqueueEmail(params, {
       metadata: { source: 'direct-send' },
     })
-    return { id: result.id }
+    await this.runDueJobs(1, id)
+    const admin = this.getAdminClient()
+    if (admin) {
+      const { data, error } = await admin
+        .from('email_autoresponder_jobs')
+        .select('status')
+        .eq('id', id)
+        .single()
+      if (error) throw new Error(error.message || 'Failed to load email job status')
+      if (data.status === 'failed') throw new Error('Email delivery failed permanently')
+      return { id, status: data.status }
+    }
+
+    const status = queuedJobs.get(id)?.status
+    if (status === 'failed') throw new Error('Email delivery failed permanently')
+    return { id, status }
   }
 
   async saveTemplate(template: EmailTemplate): Promise<EmailTemplate> {
@@ -514,6 +585,7 @@ export class AutoresponderEmailProvider implements EmailProvider {
     const admin = this.getAdminClient()
     if (admin) {
       const { error } = await admin.from('email_campaigns').insert({
+        sendshark_id: campaignId,
         provider_campaign_id: campaignId,
         user_id: campaign.userId || null,
         name: campaign.name,
@@ -524,64 +596,100 @@ export class AutoresponderEmailProvider implements EmailProvider {
         updated_at: new Date().toISOString(),
       })
 
-      if (error && !isSchemaError(error)) {
+      if (error) {
         throw new Error(error.message || 'Failed to create campaign')
       }
     }
 
     campaignStore.set(campaignId, { campaign, stats })
 
-    if (!scheduled && recipients.length > 0) {
-      let delivered = 0
-      for (const recipient of recipients) {
-        await this.tryImmediateSend(
-          {
-            to: recipient,
-            from: { email: campaign.fromEmail || defaultFromEmail, name: campaign.fromName || defaultFromName },
-            subject: campaign.subject,
-            html: campaign.template.html,
-            text: campaign.template.text,
-            trackClicks: true,
-            trackOpens: true,
+    for (const [recipientIndex, recipient] of recipients.entries()) {
+      const email = recipient.email.trim().toLowerCase()
+      const idempotencyKey = `campaign:${campaignId}:${email}`
+      await this.enqueueEmail(
+        {
+          to: { ...recipient, email },
+          userId: campaign.userId || null,
+          from: { email: campaign.fromEmail || defaultFromEmail, name: campaign.fromName || defaultFromName },
+          subject: campaign.subject,
+          html: campaign.template.html,
+          text: campaign.template.text,
+          trackClicks: true,
+          trackOpens: true,
+          messageType: 'marketing',
+          idempotencyKey,
+        },
+        {
+          idempotencyKey,
+          scheduledFor: scheduled
+            ? campaign.scheduledAt!.toISOString()
+            : now.toISOString(),
+          metadata: {
+            source: 'campaign',
+            campaign_id: campaignId,
+            recipient_index: recipientIndex,
           },
-          {
-            userId: campaign.userId || null,
-            automationId: null,
-            queueOnFailure: true,
-            metadata: { source: 'campaign', campaign_id: campaignId },
-          }
-        )
-        delivered += 1
-      }
-
-      const finalStats: EmailStats = {
-        ...stats,
-        sent: delivered,
-        delivered,
-      }
-
-      campaignStore.set(campaignId, { campaign, stats: finalStats })
-
-      if (admin) {
-        const { error } = await admin
-          .from('email_campaigns')
-          .update({
-            status: 'sent',
-            sent_at: new Date().toISOString(),
-            stats: finalStats,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('provider_campaign_id', campaignId)
-
-        if (error && !isSchemaError(error)) {
-          throw new Error(error.message || 'Failed to finalize campaign status')
         }
-      }
-
-      return { id: campaignId, status: 'sent' }
+      )
     }
 
-    return { id: campaignId, status }
+    if (!scheduled && recipients.length > 0) {
+      await this.runDueJobs(Math.min(Math.max(recipients.length, defaultQueueLimit), 200))
+      if (admin) {
+        const finalStatus = await this.refreshCampaignStatus(admin, campaignId)
+        return { id: campaignId, status: finalStatus }
+      }
+
+      const campaignJobs = Array.from(queuedJobs.values()).filter(
+        (job) => job.metadata.campaign_id === campaignId
+      )
+      const finalStatus = campaignJobs.some((job) => job.status === 'queued' || job.status === 'sending')
+        ? 'sending'
+        : campaignJobs.some((job) => job.status === 'failed')
+          ? 'paused'
+          : 'sent'
+      return { id: campaignId, status: finalStatus }
+    }
+
+    return { id: campaignId, status: scheduled ? 'scheduled' : status }
+  }
+
+  private async refreshCampaignStatus(admin: SupabaseClient, campaignId: string): Promise<string> {
+    const { data: jobs, error: jobsError } = await admin
+      .from('email_autoresponder_jobs')
+      .select('status')
+      .contains('metadata', { campaign_id: campaignId })
+
+    if (jobsError) throw new Error(jobsError.message || 'Failed to refresh campaign status')
+
+    const statuses = (jobs || []).map((job) => job.status as string)
+    const sentCount = statuses.filter((jobStatus) => jobStatus === 'sent').length
+    const nextStatus = statuses.some((jobStatus) => jobStatus === 'queued' || jobStatus === 'sending')
+      ? 'sending'
+      : statuses.some((jobStatus) => jobStatus === 'failed')
+        ? 'paused'
+        : 'sent'
+
+    const { data: campaignRow, error: campaignReadError } = await admin
+      .from('email_campaigns')
+      .select('stats')
+      .eq('provider_campaign_id', campaignId)
+      .single()
+    if (campaignReadError) throw new Error(campaignReadError.message || 'Failed to load campaign stats')
+
+    const currentStats = (campaignRow?.stats || {}) as Partial<EmailStats>
+    const { error } = await admin
+      .from('email_campaigns')
+      .update({
+        status: nextStatus,
+        sent_at: nextStatus === 'sent' ? new Date().toISOString() : null,
+        stats: { ...currentStats, sent: sentCount, delivered: sentCount },
+        updated_at: new Date().toISOString(),
+      })
+      .eq('provider_campaign_id', campaignId)
+
+    if (error) throw new Error(error.message || 'Failed to update campaign status')
+    return nextStatus
   }
 
   async getCampaignStats(campaignId: string): Promise<EmailStats> {
@@ -669,7 +777,11 @@ export class AutoresponderEmailProvider implements EmailProvider {
     return stored
   }
 
-  async triggerAutomation(automationId: string, recipient: EmailRecipient): Promise<Record<string, any>> {
+  async triggerAutomation(
+    automationId: string,
+    recipient: EmailRecipient,
+    context: AutomationTriggerContext = {}
+  ): Promise<Record<string, any>> {
     let sequence: (AutomationSequence & { userId?: string | null }) | null = null
 
     const admin = this.getAdminClient()
@@ -702,6 +814,13 @@ export class AutoresponderEmailProvider implements EmailProvider {
       throw new Error(`Automation not found: ${automationId}`)
     }
 
+    if (context.expectedUserId && sequence.userId !== context.expectedUserId) {
+      throw new Error('Automation does not belong to the requested tenant')
+    }
+    if (context.expectedTrigger && sequence.trigger !== context.expectedTrigger) {
+      throw new Error('Automation trigger does not match the requested event')
+    }
+
     if (!sequence.active) {
       return {
         automationId,
@@ -712,7 +831,10 @@ export class AutoresponderEmailProvider implements EmailProvider {
       }
     }
 
-    const { immediate, queued } = await this.triggerSequence(sequence, recipient)
+    const { immediate, queued } = await this.triggerSequence(sequence, recipient, {
+      idempotencyKeyPrefix: context.idempotencyKeyPrefix,
+      metadata: context.metadata,
+    })
     return {
       automationId,
       triggered: true,
@@ -729,13 +851,27 @@ export class AutoresponderEmailProvider implements EmailProvider {
         : null)
     const listName = params.listName || params.listId || 'Launchpad List'
     const tags = Array.isArray(params.tags) ? params.tags : []
+    const email = params.email.trim().toLowerCase()
+    let status: 'active' | 'unsubscribed' | 'bounced' = 'active'
 
     const admin = this.getAdminClient()
     if (admin) {
-      const { error } = await admin.from('email_subscribers').upsert(
+      let existingQuery = admin
+        .from('email_subscribers')
+        .select('status')
+        .ilike('email', email)
+        .eq('list_name', listName)
+      existingQuery = userId ? existingQuery.eq('user_id', userId) : existingQuery.is('user_id', null)
+      const { data: existing, error: existingError } = await existingQuery.maybeSingle()
+      if (existingError) throw new Error(existingError.message || 'Failed to load subscriber status')
+      if (existing?.status === 'unsubscribed' || existing?.status === 'bounced') {
+        status = existing.status
+      }
+
+      const { data, error } = await admin.from('email_subscribers').upsert(
         {
           user_id: userId,
-          email: params.email,
+          email,
           name: params.name || null,
           list_name: listName,
           tags,
@@ -743,22 +879,32 @@ export class AutoresponderEmailProvider implements EmailProvider {
           updated_at: new Date().toISOString(),
         },
         { onConflict: 'user_id,email,list_name' }
-      )
+      ).select('status').single()
 
-      if (error && !isSchemaError(error)) {
+      if (error) {
         throw new Error(error.message || 'Failed to save subscriber')
+      }
+      if (data?.status === 'unsubscribed' || data?.status === 'bounced') {
+        status = data.status
       }
     }
 
-    subscriberStore.set(`${userId || 'global'}:${params.email}:${listName}`, { ...params, userId })
+    subscriberStore.set(`${userId || 'global'}:${email}:${listName}`, {
+      ...params,
+      email,
+      userId,
+      status,
+    })
 
-    const sequences = await this.getActiveSignupSequences(userId)
+    const sequences = params.triggerAutomations === false
+      ? []
+      : await this.getActiveSignupSequences(userId)
     let queuedAutomationJobs = 0
     let immediateSends = 0
 
     for (const sequence of sequences) {
       const result = await this.triggerSequence(sequence, {
-        email: params.email,
+        email,
         name: params.name,
         customFields: params.customFields,
       })
@@ -841,7 +987,7 @@ export class AutoresponderEmailProvider implements EmailProvider {
     return created
   }
 
-  async runDueJobs(limit = defaultQueueLimit) {
+  async runDueJobs(limit = defaultQueueLimit, jobId?: string) {
     const resolvedLimit = Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : defaultQueueLimit
     let sent = 0
     let failed = 0
@@ -849,106 +995,139 @@ export class AutoresponderEmailProvider implements EmailProvider {
 
     const admin = this.getAdminClient()
     if (admin) {
-      const { data, error } = await admin
-        .from('email_autoresponder_jobs')
-        .select(
-          'id, user_id, automation_id, recipient_email, recipient_name, from_email, from_name, subject, html, text, scheduled_for, status, attempts, metadata'
-        )
-        .eq('status', 'queued')
-        .lte('scheduled_for', new Date().toISOString())
-        .order('scheduled_for', { ascending: true })
-        .limit(resolvedLimit)
+      const { data, error } = await admin.rpc('claim_due_email_autoresponder_jobs', {
+        p_limit: resolvedLimit,
+        p_job_id: jobId || null,
+      })
+      if (error) {
+        throw new Error(error.message || 'Failed to claim queued autoresponder jobs')
+      }
 
-      if (!error && Array.isArray(data)) {
-        for (const job of data) {
-          processed += 1
+      const campaignIds = new Set<string>()
+      for (const job of data || []) {
+        processed += 1
+        const userId = job.user_id || null
+        const messageType = job.message_type === 'transactional' ? 'transactional' : 'marketing'
+        const campaignId = (job.metadata as Record<string, unknown> | null)?.campaign_id
+        if (typeof campaignId === 'string') campaignIds.add(campaignId)
 
-          const params: SendEmailParams = {
-            to: { email: job.recipient_email, name: job.recipient_name || undefined },
-            from: {
-              email: job.from_email || defaultFromEmail,
-              name: job.from_name || defaultFromName,
-            },
-            subject: job.subject,
-            html: job.html,
-            text: job.text || undefined,
-            trackClicks: true,
-            trackOpens: true,
-          }
-
-          const attempts = Number(job.attempts || 0) + 1
-          await admin
+        if (messageType === 'marketing' && await this.isSuppressed(userId, job.recipient_email)) {
+          const { error: suppressionError } = await admin
             .from('email_autoresponder_jobs')
-            .update({ status: 'sending', attempts, updated_at: new Date().toISOString() })
-            .eq('id', job.id)
-
-          try {
-            await this.tryImmediateSend(params, {
-              userId: job.user_id || null,
-              automationId: job.automation_id || null,
-              queueOnFailure: false,
-              metadata: {
-                ...(job.metadata || {}),
-                queue_job_id: job.id,
-                source: 'queue-runner',
-              },
+            .update({
+              status: 'cancelled',
+              last_error: 'Recipient unsubscribed or bounced before delivery',
+              updated_at: new Date().toISOString(),
             })
-
-            await admin
-              .from('email_autoresponder_jobs')
-              .update({
-                status: 'sent',
-                sent_at: new Date().toISOString(),
-                last_error: null,
-                updated_at: new Date().toISOString(),
-              })
-              .eq('id', job.id)
-            sent += 1
-          } catch (sendError) {
-            const lastError =
-              sendError instanceof Error ? sendError.message : 'Failed to send autoresponder job'
-            await admin
-              .from('email_autoresponder_jobs')
-              .update({
-                status: 'failed',
-                last_error: lastError,
-                updated_at: new Date().toISOString(),
-              })
-              .eq('id', job.id)
-            failed += 1
-          }
+            .eq('id', job.id)
+          if (suppressionError) throw new Error(suppressionError.message || 'Failed to cancel suppressed email')
+          continue
         }
 
-        return { processed, sent, failed }
+        const params: SendEmailParams = {
+          to: { email: job.recipient_email, name: job.recipient_name || undefined },
+          userId,
+          from: {
+            email: job.from_email || defaultFromEmail,
+            name: job.from_name || defaultFromName,
+          },
+          subject: job.subject,
+          html: job.html,
+          text: job.text || undefined,
+          trackClicks: true,
+          trackOpens: true,
+          messageType,
+        }
+
+        let deliveryError: unknown
+        try {
+          await this.transport.sendEmail(await this.addUnsubscribeDetails(params))
+        } catch (error) {
+          deliveryError = error
+        }
+
+        if (deliveryError) {
+          const attempts = Number(job.attempts || 0)
+          const maxAttempts = Number(job.max_attempts || MAX_EMAIL_ATTEMPTS)
+          const retry = isTransientEmailFailure(deliveryError) && attempts < maxAttempts
+          const message = deliveryError instanceof Error ? deliveryError.message : 'Email delivery failed'
+          const { error: updateError } = await admin
+            .from('email_autoresponder_jobs')
+            .update({
+              status: retry ? 'queued' : 'failed',
+              scheduled_for: retry
+                ? new Date(Date.now() + getEmailRetryDelayMs(attempts)).toISOString()
+                : job.scheduled_for,
+              last_error: message.slice(0, 1000),
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', job.id)
+          if (updateError) throw new Error(updateError.message || 'Failed to record email delivery failure')
+          failed += 1
+        } else {
+          const { error: updateError } = await admin
+            .from('email_autoresponder_jobs')
+            .update({
+              status: 'sent',
+              sent_at: new Date().toISOString(),
+              last_error: null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', job.id)
+          if (updateError) throw new Error(updateError.message || 'Failed to finalize email delivery')
+          sent += 1
+        }
+
       }
 
-      if (error && !isSchemaError(error)) {
-        throw new Error(error.message || 'Failed to load queued autoresponder jobs')
+      for (const campaignId of campaignIds) {
+        await this.refreshCampaignStatus(admin, campaignId)
       }
+      return { processed, sent, failed }
     }
 
     const dueJobs = Array.from(queuedJobs.values())
-      .filter((job) => job.status === 'queued' && Date.parse(job.scheduledFor) <= Date.now())
+      .filter(
+        (job) =>
+          job.status === 'queued' &&
+          Date.parse(job.scheduledFor) <= Date.now() &&
+          (!jobId || job.id === jobId)
+      )
       .slice(0, resolvedLimit)
 
     for (const job of dueJobs) {
+      job.status = 'sending'
+      job.attempts += 1
+    }
+
+    for (const job of dueJobs) {
       processed += 1
+      if (
+        (job.params.messageType || 'marketing') === 'marketing' &&
+        await this.isSuppressed(job.userId, job.recipient.email)
+      ) {
+        job.status = 'cancelled'
+        job.lastError = 'Recipient unsubscribed or bounced before delivery'
+        continue
+      }
+
       try {
-        await this.tryImmediateSend(job.params, {
-          userId: job.userId,
-          automationId: job.automationId,
-          queueOnFailure: false,
-          metadata: { source: 'queue-runner-memory', queue_job_id: job.id },
-        })
-        queuedJobs.delete(job.id)
+        await this.transport.sendEmail(await this.addUnsubscribeDetails(job.params))
+        job.status = 'sent'
+        job.lastError = undefined
         sent += 1
       } catch (sendError) {
-        job.status = 'failed'
-        job.attempts += 1
         job.lastError = sendError instanceof Error ? sendError.message : 'Failed to send autoresponder job'
-        queuedJobs.set(job.id, job)
+        job.status =
+          isTransientEmailFailure(sendError) && job.attempts < job.maxAttempts
+            ? 'queued'
+            : 'failed'
+        if (job.status === 'queued') {
+          job.scheduledFor = new Date(Date.now() + getEmailRetryDelayMs(job.attempts)).toISOString()
+        }
         failed += 1
       }
+      queuedJobs.set(job.id, job)
     }
 
     return { processed, sent, failed }

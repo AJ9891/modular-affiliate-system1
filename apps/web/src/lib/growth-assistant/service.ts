@@ -279,6 +279,7 @@ async function fetchConversions(
     .from('conversions')
     .select('conversion_id,click_id,amount,converted_at')
     .in('click_id', clickIds)
+    .eq('is_verified', true)
     .gte('converted_at', startIso)
     .lt('converted_at', endIso)
 
